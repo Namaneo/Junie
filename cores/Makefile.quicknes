@@ -1,0 +1,6 @@
+TARGET      := libquicknes.a
+
+BUILD_DIR   := $(TARGET:lib%.a=%)
+BUILD_FLAGS := TARGET=../$(TARGET)
+
+include Makefile.common

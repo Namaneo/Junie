@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en-us">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+
+    <style>
+        html {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+    </style>
+</head>
+
+<body>
+    <script type="text/javascript" src="/matoya.js"></script>
+    <script type="text/javascript">
+
+        //Override logging functions
+        var log   = console.log;
+        var error = console.error;
+
+        console.log   = (data) => data && data != '\n' && log(data);
+        console.error = (data) => data && data != '\n' && error(data);
+
+        //Unlock audio context
+        var unlock = () => {
+            if (MTY.audio?.ctx?.state == 'suspended')
+                MTY.audio.ctx.resume();
+        };
+
+        window.addEventListener('click',    unlock);
+        window.addEventListener('touchend', unlock);
+
+        //Define cores mapping
+        const cores = {
+            "quicknes": { name: "QuickNES",        library: "quicknes" },
+            "snes9x":   { name: "Snes9x",          library: "snes9x"   },
+            "genesis":  { name: "Genesis Plus GX", library: "genesis"  },
+            "mgba":     { name: "mGBA",            library: "mgba"     },
+            "melonds":  { name: "melonDS",         library: "melonds"  },
+        };
+
+        //Define systems mapping
+        const systems = {
+            "NES":              cores["quicknes"],
+            "SNES":             cores["snes9x"],
+            "Master System":    cores["genesis"],
+            "Mega Drive":       cores["genesis"],
+            "Game Boy":         cores["mgba"],
+            "Game Boy Color":   cores["mgba"],
+            "Game Boy Advance": cores["mgba"],
+            "Nintendo DS":      cores["melonds"],
+        };
+
+        //Retrieve context parameters
+        const params = decodeURI(window.location.pathname).split('/');
+        const system = params[1];
+        const core   = systems[system];
+        const game   = params[2];
+
+        //Start core execution
+        MTY_Start(`/${core.library}.wasm`, {
+            js_get_host:  (value, length) => MTY_StrToC(window.location.hostname, value, length),
+            js_get_port:  ()              => window.location.port ?? 0,
+            js_is_secure: ()              => location.protocol.indexOf('https') != -1,
+
+            js_get_system: (value, length) => MTY_StrToC(system,    value, length),
+            js_get_core:   (value, length) => MTY_StrToC(core.name, value, length),
+            js_get_game:   (value, length) => MTY_StrToC(game,      value, length),
+        });
+
+        //Prevent mobile keyboard
+        MTY.clip.readOnly = true;
+
+    </script>
+</body>
+
+</html>

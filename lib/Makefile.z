@@ -1,0 +1,12 @@
+TARGET := libz.a
+
+all: $(TARGET)
+
+$(TARGET):
+	@cd zlib && ./configure
+	@make -C zlib $(TARGET) CC="$(CC)" AR="$(AR)" RANLIB="$(RANLIB)"
+	@cp zlib/$(TARGET) .
+
+clean:
+	@make -C zlib distclean
+	@rm -f $(TARGET)

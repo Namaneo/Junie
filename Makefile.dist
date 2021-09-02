@@ -1,0 +1,37 @@
+dist: \
+	dist_linux-x64___12.16.2 \
+	dist_linux-x86___12.16.2 \
+	dist_windows-x64_12.18.2 \
+	dist_windows-x86_12.18.2 \
+	dist_macos-x64___12.18.2 \
+	dist_alpine-x64__12.9.1  \
+	dist_alpine-x86__12.10.0 \
+	dist_clean
+
+dist_global: all
+	@rm -rf   $(TMP_DIR) $(DIST_DIR)
+	@mkdir -p $(TMP_DIR)/dist $(TMP_DIR)/build $(DIST_DIR)
+
+	@cp -R $(OUT_DIR) $(TMP_DIR)/dist
+	@cp --parents $(ASSETS_DIR)/*.png $(TMP_DIR)/dist
+
+	@npm install
+	@npx ncc build server.js -o $(TMP_DIR)/build -m
+
+dist_%: dist_global
+	$(eval platform := $(word 2, $(subst _, , $@)))
+	$(eval version  := $(word 3, $(subst _, , $@)))
+
+	@mkdir -p $(DIST_DIR)/$(platform)/games $(DIST_DIR)/$(platform)/system
+	@cp -R $(TMP_DIR)/dist/* $(DIST_DIR)/$(platform)
+
+	@cat $(TMP_DIR)/build/index.js | npx nexe server.js \
+		-t $(platform)-$(version) \
+		-o $(DIST_DIR)/$(platform)/server \
+		-r node_modules/serve-index/public/style.css \
+		-r node_modules/serve-index/public/directory.html
+
+	@(cd $(DIST_DIR)/$(platform)   && zip -r ../$(TARGET)-$(platform) .)
+
+dist_clean:
+	rm -rf $(TMP_DIR)

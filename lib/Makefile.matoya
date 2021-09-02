@@ -1,0 +1,11 @@
+TARGET := libmatoya.a
+
+all: $(TARGET)
+
+$(TARGET):
+	@make -C matoya WASM=1 CC="$(CC)" AR="$(AR)"
+	@cp matoya/bin/web/wasm32/libmatoya.a .
+
+clean:
+	@make -C matoya clean
+	@rm -f libmatoya.a
