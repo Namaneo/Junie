@@ -37,7 +37,7 @@ SRC := \
 OBJ := $(SRC:.c=.o)
 
 CFLAGS  := \
-	-I$(SRC_DIR) -I$(INC_DIR) -Wall
+	-I$(SRC_DIR) -I$(INC_DIR) -Wall -O3
 LDFLAGS := \
 	-L$(LIB_DIR) -L$(CORES_DIR) \
 	-lretro -lmatoya -lz \

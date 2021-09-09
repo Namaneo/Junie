@@ -184,6 +184,7 @@ void save_memory(JUN_Core *this, uint32_t type, const char *path)
 
     JUN_FilesystemSave(path, buffer, size);
 }
+
 void JUN_CoreSaveMemories(JUN_Core *this)
 {
     if (MTY_TimeDiff(this->last_save, MTY_GetTime()) < 1000)
