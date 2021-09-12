@@ -74,7 +74,6 @@ JUN_Core *JUN_CoreInitialize(const char *game_path, const char *sram_path, const
     map_symbol(retro_get_memory_size);
     map_symbol(retro_get_memory_data);
 
-    //TODO: Needs a menu and a better large file handling
     map_symbol(retro_serialize_size);
     map_symbol(retro_serialize);
     map_symbol(retro_unserialize);
@@ -194,6 +193,19 @@ void JUN_CoreSaveMemories(JUN_Core *this)
 
     save_memory(this, RETRO_MEMORY_SAVE_RAM, this->sram_path);
     save_memory(this, RETRO_MEMORY_RTC,      this->rtc_path);
+}
+
+void JUN_CoreSaveState(JUN_Core *this)
+{
+    size_t size = this->retro_serialize_size();
+
+    void *data = MTY_Alloc(size, 1);
+
+    this->retro_serialize(data, size);
+
+    //TODO: Needs a better large file handling
+
+    MTY_Free(data);
 }
 
 void JUN_CoreDestroy(JUN_Core **this)

@@ -6,15 +6,17 @@
 
 #include "input.h"
 
-#define CONTROLLER_WIDTH  640.0f
-#define CONTROLLER_HEIGHT 960.0f
+enum JUN_MenuType
+{
+    MENU_TOGGLE_GAMEPAD = 0,
+    MENU_TOGGLE_AUDIO   = 1,
+    MENU_SAVE_STATE     = 2,
+    MENU_MAX            = 3,
+};
 
-#define MENUS_TOTAL          1
-#define MENUS_TOGGLE_GAMEPAD 0
-
-#define INPUTS_LEFT_TOTAL    6
-#define INPUTS_RIGHT_TOTAL   6
-#define INPUTS_TOTAL         INPUTS_LEFT_TOTAL + INPUTS_RIGHT_TOTAL
+#define INPUT_LEFT_TOTAL    6
+#define INPUT_RIGHT_TOTAL   6
+#define INPUT_TOTAL         INPUT_LEFT_TOTAL + INPUT_RIGHT_TOTAL
 
 #define MAX_POINTERS         2
 
@@ -54,13 +56,15 @@ struct JUN_InputInstance
 struct JUN_Input
 {
    bool virtual_pad;
+   bool mute_audio;
+   bool save_state;
 
    float frame_width;
    float frame_height;
    float view_width;
    float view_height;
 
-   uint32_t bindings[INPUTS_TOTAL];
+   uint32_t bindings[INPUT_TOTAL];
 
    union
    {
@@ -75,15 +79,25 @@ struct JUN_Input
       };
    };
 
-   JUN_InputStatus menus[MENUS_TOTAL];
-   JUN_InputStatus inputs[INPUTS_TOTAL];
+   JUN_InputStatus menus[MENU_MAX];
+   JUN_InputStatus inputs[INPUT_TOTAL];
 
    JUN_InputPointer pointers[MAX_POINTERS];
 };
 
-static void toggle_virtual_pad(JUN_Input *this)
+static void toggle_gamepad(JUN_Input *this)
 {
     this->virtual_pad = !this->virtual_pad;
+}
+
+static void toggle_audio(JUN_Input *this)
+{
+    this->mute_audio = !this->mute_audio;
+}
+
+static void should_save_state(JUN_Input *this)
+{
+    this->save_state = true;
 }
 
 JUN_Input *JUN_InputInitialize()
@@ -91,20 +105,33 @@ JUN_Input *JUN_InputInitialize()
     JUN_Input *input = MTY_Alloc(1, sizeof(JUN_Input));
 
     input->virtual_pad = true;
+    input->mute_audio  = true;
 
     /* Menu controller */
 
-    input->menus[MENUS_TOGGLE_GAMEPAD].center.x = 315;
-    input->menus[MENUS_TOGGLE_GAMEPAD].center.y = 55;
-    input->menus[MENUS_TOGGLE_GAMEPAD].radius = 120;
-    input->menus[MENUS_TOGGLE_GAMEPAD].callback = toggle_virtual_pad;
+    input->menus[MENU_TOGGLE_AUDIO].center.x = 165;
+    input->menus[MENU_TOGGLE_AUDIO].center.y = 55;
+    input->menus[MENU_TOGGLE_AUDIO].radius = 80;
+    input->menus[MENU_TOGGLE_AUDIO].callback = toggle_audio;
 
-    JUN_InputStatus *menu_inputs[MENUS_TOTAL] =
+    input->menus[MENU_TOGGLE_GAMEPAD].center.x = 315;
+    input->menus[MENU_TOGGLE_GAMEPAD].center.y = 55;
+    input->menus[MENU_TOGGLE_GAMEPAD].radius = 80;
+    input->menus[MENU_TOGGLE_GAMEPAD].callback = toggle_gamepad;
+
+    input->menus[MENU_SAVE_STATE].center.x = 465;
+    input->menus[MENU_SAVE_STATE].center.y = 55;
+    input->menus[MENU_SAVE_STATE].radius = 80;
+    input->menus[MENU_SAVE_STATE].callback = should_save_state;
+
+    JUN_InputStatus *menu_inputs[MENU_MAX] =
     {
-        &input->menus[MENUS_TOGGLE_GAMEPAD],
+        &input->menus[MENU_TOGGLE_AUDIO],
+        &input->menus[MENU_TOGGLE_GAMEPAD],
+        &input->menus[MENU_SAVE_STATE],
     };
 
-    input->menu.inputs_size = MENUS_TOTAL;
+    input->menu.inputs_size = MENU_MAX;
     input->menu.inputs = MTY_Dup(menu_inputs, sizeof menu_inputs);
 
     /* Left controller */
@@ -131,9 +158,9 @@ JUN_Input *JUN_InputInitialize()
 
     input->inputs[RETRO_DEVICE_ID_JOYPAD_SELECT].center.x = 540;
     input->inputs[RETRO_DEVICE_ID_JOYPAD_SELECT].center.y = 870;
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_SELECT].radius = 120;
+    input->inputs[RETRO_DEVICE_ID_JOYPAD_SELECT].radius = 80;
 
-    JUN_InputStatus *left_inputs[INPUTS_LEFT_TOTAL] =
+    JUN_InputStatus *left_inputs[INPUT_LEFT_TOTAL] =
     {
         &input->inputs[RETRO_DEVICE_ID_JOYPAD_UP],
         &input->inputs[RETRO_DEVICE_ID_JOYPAD_DOWN],
@@ -143,7 +170,7 @@ JUN_Input *JUN_InputInitialize()
         &input->inputs[RETRO_DEVICE_ID_JOYPAD_SELECT],
     };
 
-    input->left.inputs_size = INPUTS_LEFT_TOTAL;
+    input->left.inputs_size = INPUT_LEFT_TOTAL;
     input->left.inputs = MTY_Dup(left_inputs, sizeof left_inputs);
 
     /* Right controller */
@@ -170,9 +197,9 @@ JUN_Input *JUN_InputInitialize()
 
     input->inputs[RETRO_DEVICE_ID_JOYPAD_START].center.x = 100;
     input->inputs[RETRO_DEVICE_ID_JOYPAD_START].center.y = 870;
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_START].radius = 120;
+    input->inputs[RETRO_DEVICE_ID_JOYPAD_START].radius = 80;
 
-    JUN_InputStatus *right_inputs[INPUTS_RIGHT_TOTAL] =
+    JUN_InputStatus *right_inputs[INPUT_RIGHT_TOTAL] =
     {
         &input->inputs[RETRO_DEVICE_ID_JOYPAD_A],
         &input->inputs[RETRO_DEVICE_ID_JOYPAD_B],
@@ -182,7 +209,7 @@ JUN_Input *JUN_InputInitialize()
         &input->inputs[RETRO_DEVICE_ID_JOYPAD_START],
     };
 
-    input->right.inputs_size = INPUTS_RIGHT_TOTAL;
+    input->right.inputs_size = INPUT_RIGHT_TOTAL;
     input->right.inputs = MTY_Dup(right_inputs, sizeof right_inputs);
 
     return input;
@@ -224,14 +251,29 @@ JUN_TextureData *JUN_InputGetMetrics(JUN_Input *this, JUN_TextureType type)
     return &this->instances[type].texture;
 }
 
+bool JUN_InputHasAudio(JUN_Input *this)
+{
+    return !this->mute_audio;
+}
+
 bool JUN_InputHasJoypad(JUN_Input *this)
 {
     return this->virtual_pad;
 }
 
+bool JUN_InputShouldSaveState(JUN_Input *this)
+{
+    return this->save_state;
+}
+
+void JUN_InputSetStateSaved(JUN_Input *this)
+{
+    this->save_state = false;
+}
+
 static void set_key(JUN_Input *this, const MTY_Key key, bool pressed)
 {
-    for (uint8_t i = 0; i < INPUTS_TOTAL; ++i)
+    for (uint8_t i = 0; i < INPUT_TOTAL; ++i)
     {
         if (this->inputs[i].key == key)
         {
@@ -250,10 +292,10 @@ static void set_button(JUN_Input *this, JUN_InputInstance *controller, JUN_Input
     {
         JUN_InputStatus *input = controller->inputs[i];
 
-        float distance_x = powf(x - input->center.x / CONTROLLER_WIDTH,  2);
-        float distance_y = powf(y - input->center.y / CONTROLLER_HEIGHT, 2);
+        float distance_x = powf(x - input->center.x / controller->texture.image_width,  2);
+        float distance_y = powf(y - input->center.y / controller->texture.image_height, 2);
 
-        bool insideCircle = distance_x + distance_y < powf(input->radius / CONTROLLER_WIDTH, 2);
+        bool insideCircle = distance_x + distance_y < powf(input->radius / controller->texture.image_width, 2);
 
         if (insideCircle)
         {
@@ -353,9 +395,8 @@ void JUN_InputSetStatus(JUN_Input *this, const MTY_Event *event)
         if (!pointer)
             return;
 
-        pointer->pressed = pointer->pressed;
-        pointer->x       = event->motion.x;
-        pointer->y       = event->motion.y;
+        pointer->x = event->motion.x;
+        pointer->y = event->motion.y;
     }
 
     if (!pointer)
@@ -378,7 +419,7 @@ int16_t JUN_InputGetStatus(JUN_Input *this, uint32_t device, uint32_t retro_key)
 {
     if (device == RETRO_DEVICE_JOYPAD)
     {
-        if (retro_key >= INPUTS_TOTAL)
+        if (retro_key >= INPUT_TOTAL)
             return false;
             
         return this->inputs[retro_key].pressed;

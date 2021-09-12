@@ -224,11 +224,13 @@ static void set_texture_metrics(JUN_Video *this, JUN_TextureType type)
     //Set texture metrics
     JUN_InputSetMetrics(this->input, &(JUN_TextureData)
     {
-        .id     = type,
-        .x      = x,
-        .y      = y,
-        .width  = width,
-        .height = height,
+        .id           = type,
+        .x            = x,
+        .y            = y,
+        .width        = width,
+        .height       = height,
+        .image_width  = file->width,
+        .image_height = file->height,
     });
 }
 

@@ -37,7 +37,8 @@ static int16_t input_state(unsigned port, unsigned device, unsigned index, unsig
 
 static size_t audio_sample_batch(const int16_t *data, size_t frames)
 {
-    JUN_AudioQueue(app->audio, data, frames);
+    if (JUN_InputHasAudio(app->input))
+        JUN_AudioQueue(app->audio, data, frames);
 
     return frames;
 }
@@ -87,6 +88,12 @@ static bool app_func(void *opaque)
         JUN_CoreRun(app->core);
 
         JUN_CoreSaveMemories(app->core);
+
+        if (JUN_InputShouldSaveState(app->input))
+        {
+            JUN_CoreSaveState(app->core);
+            JUN_InputSetStateSaved(app->input);
+        }
     }
 
     JUN_VideoPresent(app->video);
