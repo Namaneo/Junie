@@ -285,17 +285,18 @@ static void set_key(JUN_Input *this, const MTY_Key key, bool pressed)
 
 static void set_button(JUN_Input *this, JUN_InputInstance *controller, JUN_InputPointer *pointer)
 {
-    float x = (pointer->x - controller->texture.x) / controller->texture.width;
-    float y = (pointer->y - controller->texture.y) / controller->texture.height;
-
     for (size_t i = 0; i < controller->inputs_size; ++i)
     {
         JUN_InputStatus *input = controller->inputs[i];
 
-        float distance_x = powf(x - input->center.x / controller->texture.image_width,  2);
-        float distance_y = powf(y - input->center.y / controller->texture.image_height, 2);
+        float center_x = input->center.x * (controller->texture.width  / controller->texture.image_width);
+        float center_y = input->center.y * (controller->texture.height / controller->texture.image_height);
+        float radius   = input->radius   * (controller->texture.width  / controller->texture.image_width);
 
-        bool insideCircle = distance_x + distance_y < powf(input->radius / controller->texture.image_width, 2);
+        float distance_x = powf(pointer->x - (center_x + controller->texture.x), 2);
+        float distance_y = powf(pointer->y - (center_y + controller->texture.y), 2);
+
+        bool insideCircle = distance_x + distance_y < powf(radius, 2);
 
         if (insideCircle)
         {
