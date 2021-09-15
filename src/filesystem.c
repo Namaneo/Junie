@@ -99,8 +99,8 @@ void JUN_FilesystemSave(const char *path, void *buffer, size_t size)
     file->buffer = buffer;
     file->size = size;
 
-    if (!MTY_WriteFile(file->path, file->buffer, file->size))
-        MTY_Log("Could not write file: '%s'", file->path);
+    //TODO: Should call JUN_VfsSaveFile
+    JUN_InteropWriteFile(file->path, file->buffer, file->size);
 }
 
 void JUN_FilesystemDestroy()

@@ -2,6 +2,8 @@
 
 #include "matoya.h"
 
+#include "interop.h"
+
 #include "vfs.h"
 
 #define VFS_INTERFACE_VERSION 2
@@ -108,7 +110,7 @@ JUN_File *JUN_VfsGetExistingFile(const char *path)
     }
 
     size_t size;
-    void *buffer = MTY_ReadFile(path, &size);
+    void *buffer = JUN_InteropReadFile(path, &size);
 
     if (buffer)
     {
@@ -212,8 +214,8 @@ static int64_t write(JUN_File *stream, const void *s, uint64_t len)
 
     stream->offset += len;
 
-    if (!MTY_WriteFile(stream->path, stream->buffer, stream->size))
-        MTY_Log("Could not write file: '%s'", stream->path);
+    //TODO: Should be in JUN_VfsSaveFile
+    JUN_InteropWriteFile(stream->path, stream->buffer, stream->size);
 
     return 0;
 }

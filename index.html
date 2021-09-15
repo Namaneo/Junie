@@ -22,15 +22,59 @@
     <script type="text/javascript" src="/matoya.js"></script>
     <script type="text/javascript">
 
+        //TODO: move all database-related stuff into a dedicated JS module
+        let database;
+        let files = {};
+
+        const request = window.indexedDB.open('Junie', 1);
+
+        request.onupgradeneeded = event =>
+        {
+            const database = event.target.result;
+
+            if (event.oldVersion < 1) {
+                database.createObjectStore('files', { keyPath: 'path', unique: true });
+            }
+        };
+
+        request.onsuccess = event => 
+        {
+            database = event.target.result;
+
+            const transaction = database.transaction('files', 'readwrite');
+            const store       = transaction.objectStore('files');
+
+            store.getAll().onsuccess = event => {
+                for (const file of event.target.result) {
+                    files[file.path] = mty_b64_to_buf(file.data);
+                }
+            }
+
+            //Begin: compatibility with older versions
+            for (let i = 0; i < localStorage.length; ++i) {
+                const path = localStorage.key(i);
+                const data = localStorage.getItem(path);
+
+                const entry = { path: `/${path}`, data: data };
+
+                store.put(entry);
+
+                files[entry.path] = mty_b64_to_buf(entry.data);
+            }
+
+            localStorage.clear();
+            //End: compatibility with older versions
+        };
+
         //Override logging functions
-        var log   = console.log;
-        var error = console.error;
+        const log   = console.log;
+        const error = console.error;
 
         console.log   = (data) => data && data != '\n' && log(data);
         console.error = (data) => data && data != '\n' && error(data);
 
         //Unlock audio context
-        var unlock = () => {
+        const unlock = () => {
             if (MTY.audio?.ctx?.state == 'suspended')
                 MTY.audio.ctx.resume();
         };
@@ -74,6 +118,36 @@
             js_get_system: (value, length) => MTY_StrToC(system,    value, length),
             js_get_core:   (value, length) => MTY_StrToC(core.name, value, length),
             js_get_game:   (value, length) => MTY_StrToC(game,      value, length),
+
+            js_read_file:  (path, length) => {
+                const transaction = database.transaction('files', 'readwrite');
+                const store       = transaction.objectStore('files');
+                
+                const file = files[MTY_StrToJS(path)];
+                if (!file)
+                    return null;
+
+                const result = MTY_Alloc(file.length, 1);
+                const view = new Uint8Array(mty_mem(), result, file.length);
+                view.set(file);
+
+                MTY_SetUint32(length, file.length);
+
+                return result;
+            },
+            js_write_file: (path, cdata, length) => {
+                const transaction = database.transaction('files', 'readwrite');
+                const store       = transaction.objectStore('files');
+
+                const buffer = new Uint8Array(length);
+                const data   = new Uint8Array(mty_mem(), cdata, length);
+                buffer.set(data);
+
+                store.put({ 
+                    path: MTY_StrToJS(path), 
+                    data: mty_buf_to_b64(data) 
+                });
+            },
         });
 
         //Prevent mobile keyboard
