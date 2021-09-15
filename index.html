@@ -135,7 +135,7 @@
 
                 return result;
             },
-            js_write_file: (path, cdata, length) => {
+            js_write_file: (cpath, cdata, length) => {
                 const transaction = database.transaction('files', 'readwrite');
                 const store       = transaction.objectStore('files');
 
@@ -143,10 +143,11 @@
                 const data   = new Uint8Array(mty_mem(), cdata, length);
                 buffer.set(data);
 
-                store.put({ 
-                    path: MTY_StrToJS(path), 
-                    data: mty_buf_to_b64(data) 
-                });
+                const path = MTY_StrToJS(cpath)
+
+                files[path] = data;
+
+                store.put({ path: path, data: mty_buf_to_b64(data) });
             },
         });
 

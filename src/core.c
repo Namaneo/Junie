@@ -10,6 +10,7 @@ struct JUN_Core
     bool initialized;
 
     char *game_path;
+    char *state_path;
     char *sram_path;
     char *rtc_path;
 
@@ -49,15 +50,16 @@ struct JUN_Core
 #define map_symbol(function) this->function = function
 
 //TODO: ugly parameters here, must be improved
-JUN_Core *JUN_CoreInitialize(const char *game_path, const char *sram_path, const char *rtc_path)
+JUN_Core *JUN_CoreInitialize(const char *game_path, const char *state_path, const char *sram_path, const char *rtc_path)
 {
     JUN_Core *this = MTY_Alloc(1, sizeof(JUN_Core));
 
     this->configuration = JUN_ConfigurationInitialize();
 
-    this->game_path = MTY_Strdup(game_path);
-    this->sram_path = MTY_Strdup(sram_path);
-    this->rtc_path  = MTY_Strdup(rtc_path);
+    this->game_path  = MTY_Strdup(game_path);
+    this->state_path = MTY_Strdup(state_path);
+    this->sram_path  = MTY_Strdup(sram_path);
+    this->rtc_path   = MTY_Strdup(rtc_path);
 
     map_symbol(retro_init);
     map_symbol(retro_load_game);
@@ -144,31 +146,6 @@ void JUN_CoreRun(JUN_Core *this)
     this->retro_run();
 }
 
-static void restore_memory(JUN_Core *this, uint32_t type, const char *path)
-{
-    void *buffer = this->retro_get_memory_data(type);
-    if (!buffer)
-        return;
-
-    size_t size = this->retro_get_memory_size(type);
-    if (!size)
-        return;
-
-    JUN_File *file = JUN_FilesystemGet(path, false);
-    if (!file) 
-        return;
-
-    //TODO: warn/backup if sizes differ
-
-    memcpy(buffer, file->buffer, size);
-}
-
-void JUN_CoreRestoreMemories(JUN_Core *this)
-{
-    restore_memory(this, RETRO_MEMORY_SAVE_RAM, this->sram_path);
-    restore_memory(this, RETRO_MEMORY_RTC,      this->rtc_path);
-}
-
 void save_memory(JUN_Core *this, uint32_t type, const char *path)
 {
     void *buffer = this->retro_get_memory_data(type);
@@ -178,8 +155,6 @@ void save_memory(JUN_Core *this, uint32_t type, const char *path)
     size_t size = this->retro_get_memory_size(type);
     if (!size)
         return;
-
-    //TODO: warn/backup if sizes differ
 
     JUN_FilesystemSave(path, buffer, size);
 }
@@ -195,6 +170,29 @@ void JUN_CoreSaveMemories(JUN_Core *this)
     save_memory(this, RETRO_MEMORY_RTC,      this->rtc_path);
 }
 
+static void restore_memory(JUN_Core *this, uint32_t type, const char *path)
+{
+    void *buffer = this->retro_get_memory_data(type);
+    if (!buffer)
+        return;
+
+    size_t size = this->retro_get_memory_size(type);
+    if (!size)
+        return;
+
+    JUN_File *file = JUN_FilesystemGet(path, false);
+    if (!file) 
+        return;
+
+    memcpy(buffer, file->buffer, size);
+}
+
+void JUN_CoreRestoreMemories(JUN_Core *this)
+{
+    restore_memory(this, RETRO_MEMORY_SAVE_RAM, this->sram_path);
+    restore_memory(this, RETRO_MEMORY_RTC,      this->rtc_path);
+}
+
 void JUN_CoreSaveState(JUN_Core *this)
 {
     size_t size = this->retro_serialize_size();
@@ -203,9 +201,20 @@ void JUN_CoreSaveState(JUN_Core *this)
 
     this->retro_serialize(data, size);
 
-    //TODO: Needs a better large file handling
+    JUN_VfsSaveFile(this->state_path, data, size);
 
     MTY_Free(data);
+}
+
+void JUN_CoreRestoreState(JUN_Core *this)
+{
+    size_t size = this->retro_serialize_size();
+
+    JUN_File *file = JUN_VfsGetExistingFile(this->state_path);
+    if (!file)
+        return;
+
+    this->retro_unserialize(file->buffer, size);
 }
 
 void JUN_CoreDestroy(JUN_Core **this)

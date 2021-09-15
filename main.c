@@ -94,6 +94,12 @@ static bool app_func(void *opaque)
             JUN_CoreSaveState(app->core);
             JUN_InputSetStateSaved(app->input);
         }
+
+        if (JUN_InputShouldRestoreState(app->input))
+        {
+            JUN_CoreRestoreState(app->core);
+            JUN_InputSetStateRestored(app->input);
+        }
     }
 
     JUN_VideoPresent(app->video);

@@ -88,13 +88,15 @@ JUN_File *JUN_VfsGetFiles()
     return files;
 }
 
-JUN_File *JUN_VfsGetNewFile()
+JUN_File *JUN_VfsGetNewFile(const char *path)
 {
     for (int i = 0; i < MAX_FILES; ++i)
     {
         if (!files[i].exists)
         {
             files[i].exists = true;
+            files[i].path = MTY_Strdup(path);
+
             return &files[i];
         }
     }
@@ -114,9 +116,8 @@ JUN_File *JUN_VfsGetExistingFile(const char *path)
 
     if (buffer)
     {
-        JUN_File *file = JUN_VfsGetNewFile();
+        JUN_File *file = JUN_VfsGetNewFile(path);
 
-        file->path = path;
         file->buffer = buffer;
         file->size = size;
 
@@ -124,6 +125,41 @@ JUN_File *JUN_VfsGetExistingFile(const char *path)
     }
 
     return NULL;
+}
+
+void JUN_VfsSaveFile(const char *path, void *buffer, size_t length)
+{
+    JUN_File *file = JUN_VfsGetExistingFile(path);
+
+    if (!file)
+        file = JUN_VfsGetNewFile(path);
+
+    file->size = length;
+    file->buffer = file->buffer 
+        ? MTY_Realloc(file->buffer, file->size, 1)
+        : MTY_Alloc(file->size, 1);
+
+    memcpy(file->buffer, buffer, file->size);
+
+    JUN_InteropWriteFile(file->path, file->buffer, file->size);
+}
+
+void JUN_VfsDestroy()
+{
+    for (int i = 0; i < MAX_FILES; ++i)
+    {
+        if (files[i].path)
+            MTY_Free(files[i].path);
+
+        if (files[i].buffer)
+            MTY_Free(files[i].buffer);
+    }
+
+    MTY_Free(files);
+    files = NULL;
+
+    MTY_Free(interface);
+    interface = NULL;
 }
 
 /* V1 */
@@ -144,9 +180,8 @@ static JUN_File *open(const char *path, unsigned mode, unsigned hints)
     if (!(mode & RETRO_VFS_FILE_ACCESS_WRITE))
         return NULL;
 
-    file = JUN_VfsGetNewFile();
+    file = JUN_VfsGetNewFile(path);
 
-    file->path = MTY_Strdup(path);
     file->mode = mode;
     file->hints = hints;
 
@@ -214,8 +249,7 @@ static int64_t write(JUN_File *stream, const void *s, uint64_t len)
 
     stream->offset += len;
 
-    //TODO: Should be in JUN_VfsSaveFile
-    JUN_InteropWriteFile(stream->path, stream->buffer, stream->size);
+    JUN_VfsSaveFile(stream->path, stream->buffer, stream->size);
 
     return 0;
 }
@@ -255,7 +289,8 @@ static int rename(const char *old_path, const char *new_path)
     if (!file)
         return -1;
 
-    file->path = new_path;
+    MTY_Free(file->path);
+    file->path = MTY_Strdup(new_path);
 
     return 0;
 }
@@ -308,13 +343,4 @@ static bool dirent_is_dir(JUN_Directory *dirstream)
 static int closedir(JUN_Directory *dirstream)
 {
     return -1;
-}
-
-void JUN_VfsDestroy()
-{
-    MTY_Free(files);
-    files = NULL;
-
-    MTY_Free(interface);
-    interface = NULL;
 }

@@ -30,9 +30,8 @@ void JUN_FilesystemInitialize()
 
 void JUN_FilesystemDownload(const char *path, JUN_VfsCallback callback, void *opaque)
 {
-    JUN_File *file = JUN_VfsGetNewFile();
+    JUN_File *file = JUN_VfsGetNewFile(path);
 
-    file->path = MTY_Strdup(path);
     file->remote = true;
     file->state = MTY_ASYNC_CONTINUE;
     file->callback = callback;
@@ -91,16 +90,7 @@ JUN_File *JUN_FilesystemGet(const char *path, bool image)
 
 void JUN_FilesystemSave(const char *path, void *buffer, size_t size)
 {
-    JUN_File *file = JUN_VfsGetExistingFile(path);
-    if (!file)
-        file = JUN_VfsGetNewFile();
-
-    file->path = path;
-    file->buffer = buffer;
-    file->size = size;
-
-    //TODO: Should call JUN_VfsSaveFile
-    JUN_InteropWriteFile(file->path, file->buffer, file->size);
+    JUN_VfsSaveFile(path, buffer, size);
 }
 
 void JUN_FilesystemDestroy()

@@ -18,7 +18,7 @@ struct JUN_CoreCallbacks
     retro_input_state_t        input_state;
 };
 
-JUN_Core *JUN_CoreInitialize(const char *game_path, const char *sram_path, const char *rtc_path);
+JUN_Core *JUN_CoreInitialize(const char *game_path, const char *state_path, const char *sram_path, const char *rtc_path);
 JUN_Configuration *JUN_CoreGetConfiguration(JUN_Core *this);
 void JUN_CoreSetCallbacks(JUN_Core *this, JUN_CoreCallbacks *callbacks);
 bool JUN_CoreHasStarted(JUN_Core *this);
@@ -26,7 +26,8 @@ double JUN_CoreGetSampleRate(JUN_Core *this);
 double JUN_CoreGetFramesPerSecond(JUN_Core *this);
 bool JUN_CoreStartGame(JUN_Core *this);
 void JUN_CoreRun(JUN_Core *this);
-void JUN_CoreRestoreMemories(JUN_Core *this);
 void JUN_CoreSaveMemories(JUN_Core *this);
+void JUN_CoreRestoreMemories(JUN_Core *this);
 void JUN_CoreSaveState(JUN_Core *this);
+void JUN_CoreRestoreState(JUN_Core *this);
 void JUN_CoreDestroy(JUN_Core **this);

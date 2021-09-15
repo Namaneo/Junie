@@ -42,6 +42,10 @@ JUN_App *JUN_AppInitialize(MTY_AppFunc app_func, MTY_EventFunc event_func)
     this->directories.save   = MTY_SprintfD("/save/%s",   system_name);
     this->directories.games  = MTY_SprintfD("/games/%s",  system_name);
 
+    char *state_name = JUN_ToolboxReplaceExtension(game_name, "state");
+    char *state_path = MTY_SprintfD("%s/%s", this->directories.save, state_name);
+    MTY_Free(state_name);
+
     char *sram_name = JUN_ToolboxReplaceExtension(game_name, "srm");
     char *sram_path = MTY_SprintfD("%s/%s", this->directories.save, sram_name);
     MTY_Free(sram_name);
@@ -52,7 +56,7 @@ JUN_App *JUN_AppInitialize(MTY_AppFunc app_func, MTY_EventFunc event_func)
 
     this->game_path = MTY_SprintfD("%s/%s", this->directories.games, game_name);
 
-    this->public.core  = JUN_CoreInitialize(this->game_path, sram_path, rtc_path);
+    this->public.core  = JUN_CoreInitialize(this->game_path, state_path, sram_path, rtc_path);
     this->public.input = JUN_InputInitialize();
     this->public.audio = JUN_AudioInitialize();
     this->public.video = JUN_VideoInitialize(this->public.input, app_func, event_func);

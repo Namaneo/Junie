@@ -11,7 +11,8 @@ enum JUN_MenuType
     MENU_TOGGLE_GAMEPAD = 0,
     MENU_TOGGLE_AUDIO   = 1,
     MENU_SAVE_STATE     = 2,
-    MENU_MAX            = 3,
+    MENU_RESTORE_STATE  = 3,
+    MENU_MAX            = 4,
 };
 
 #define INPUT_LEFT_TOTAL    6
@@ -58,6 +59,7 @@ struct JUN_Input
    bool virtual_pad;
    bool mute_audio;
    bool save_state;
+   bool restore_state;
 
    float frame_width;
    float frame_height;
@@ -100,6 +102,11 @@ static void should_save_state(JUN_Input *this)
     this->save_state = true;
 }
 
+static void should_restore_state(JUN_Input *this)
+{
+    this->restore_state = true;
+}
+
 JUN_Input *JUN_InputInitialize()
 {
     JUN_Input *input = MTY_Alloc(1, sizeof(JUN_Input));
@@ -109,26 +116,32 @@ JUN_Input *JUN_InputInitialize()
 
     /* Menu controller */
 
-    input->menus[MENU_TOGGLE_AUDIO].center.x = 165;
-    input->menus[MENU_TOGGLE_AUDIO].center.y = 55;
+    input->menus[MENU_TOGGLE_AUDIO].center.x = 85;
+    input->menus[MENU_TOGGLE_AUDIO].center.y = 60;
     input->menus[MENU_TOGGLE_AUDIO].radius = 80;
     input->menus[MENU_TOGGLE_AUDIO].callback = toggle_audio;
 
-    input->menus[MENU_TOGGLE_GAMEPAD].center.x = 315;
-    input->menus[MENU_TOGGLE_GAMEPAD].center.y = 55;
+    input->menus[MENU_TOGGLE_GAMEPAD].center.x = 240;
+    input->menus[MENU_TOGGLE_GAMEPAD].center.y = 60;
     input->menus[MENU_TOGGLE_GAMEPAD].radius = 80;
     input->menus[MENU_TOGGLE_GAMEPAD].callback = toggle_gamepad;
 
-    input->menus[MENU_SAVE_STATE].center.x = 465;
-    input->menus[MENU_SAVE_STATE].center.y = 55;
+    input->menus[MENU_SAVE_STATE].center.x = 395;
+    input->menus[MENU_SAVE_STATE].center.y = 60;
     input->menus[MENU_SAVE_STATE].radius = 80;
     input->menus[MENU_SAVE_STATE].callback = should_save_state;
+
+    input->menus[MENU_RESTORE_STATE].center.x = 550;
+    input->menus[MENU_RESTORE_STATE].center.y = 60;
+    input->menus[MENU_RESTORE_STATE].radius = 80;
+    input->menus[MENU_RESTORE_STATE].callback = should_restore_state;
 
     JUN_InputStatus *menu_inputs[MENU_MAX] =
     {
         &input->menus[MENU_TOGGLE_AUDIO],
         &input->menus[MENU_TOGGLE_GAMEPAD],
         &input->menus[MENU_SAVE_STATE],
+        &input->menus[MENU_RESTORE_STATE],
     };
 
     input->menu.inputs_size = MENU_MAX;
@@ -249,26 +262,6 @@ void JUN_InputSetMetrics(JUN_Input *this, JUN_TextureData *texture)
 JUN_TextureData *JUN_InputGetMetrics(JUN_Input *this, JUN_TextureType type)
 {
     return &this->instances[type].texture;
-}
-
-bool JUN_InputHasAudio(JUN_Input *this)
-{
-    return !this->mute_audio;
-}
-
-bool JUN_InputHasJoypad(JUN_Input *this)
-{
-    return this->virtual_pad;
-}
-
-bool JUN_InputShouldSaveState(JUN_Input *this)
-{
-    return this->save_state;
-}
-
-void JUN_InputSetStateSaved(JUN_Input *this)
-{
-    this->save_state = false;
 }
 
 static void set_key(JUN_Input *this, const MTY_Key key, bool pressed)
@@ -452,4 +445,35 @@ void JUN_InputDestroy(JUN_Input **input)
 
     MTY_Free(*input);
     *input = NULL;
+}
+
+
+bool JUN_InputHasAudio(JUN_Input *this)
+{
+    return !this->mute_audio;
+}
+
+bool JUN_InputHasJoypad(JUN_Input *this)
+{
+    return this->virtual_pad;
+}
+
+bool JUN_InputShouldSaveState(JUN_Input *this)
+{
+    return this->save_state;
+}
+
+void JUN_InputSetStateSaved(JUN_Input *this)
+{
+    this->save_state = false;
+}
+
+bool JUN_InputShouldRestoreState(JUN_Input *this)
+{
+    return this->restore_state;
+}
+
+void JUN_InputSetStateRestored(JUN_Input *this)
+{
+    this->restore_state = false;
 }

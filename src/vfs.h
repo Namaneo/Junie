@@ -16,7 +16,7 @@ struct retro_vfs_file_handle
 {
     bool exists;
 
-    const char *path;
+    char *path;
     unsigned mode;
     unsigned hints;
 
@@ -40,6 +40,7 @@ void JUN_VfsInitialize();
 JUN_Files *JUN_VfsGetInterface();
 uint32_t JUN_VfsGetInterfaceVersion();
 JUN_File *JUN_VfsGetFiles();
-JUN_File *JUN_VfsGetNewFile();
+JUN_File *JUN_VfsGetNewFile(const char *path);
 JUN_File *JUN_VfsGetExistingFile(const char *path);
+void JUN_VfsSaveFile(const char *path, void *buffer, size_t length);
 void JUN_VfsDestroy();
