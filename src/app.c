@@ -57,7 +57,8 @@ JUN_App *JUN_AppInitialize(MTY_AppFunc app_func, MTY_EventFunc event_func)
     this->game_path = MTY_SprintfD("%s/%s", this->directories.games, game_name);
 
     this->public.core  = JUN_CoreInitialize(this->game_path, state_path, sram_path, rtc_path);
-    this->public.input = JUN_InputInitialize();
+    this->public.menu  = JUN_MenuInitialize();
+    this->public.input = JUN_InputInitialize(this->public.menu);
     this->public.audio = JUN_AudioInitialize();
     this->public.video = JUN_VideoInitialize(this->public.input, app_func, event_func);
 
@@ -265,6 +266,7 @@ void JUN_AppDestroy(JUN_App **public)
     MTY_Free((*this)->directories.games);
 
     JUN_CoreDestroy(&(*this)->public.core);
+    JUN_MenuDestroy(&(*this)->public.menu);
     JUN_InputDestroy(&(*this)->public.input);
     JUN_AudioDestroy(&(*this)->public.audio);
     JUN_VideoDestroy(&(*this)->public.video);

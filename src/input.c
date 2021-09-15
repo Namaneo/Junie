@@ -6,22 +6,11 @@
 
 #include "input.h"
 
-enum JUN_MenuType
-{
-    MENU_TOGGLE_GAMEPAD = 0,
-    MENU_TOGGLE_AUDIO   = 1,
-    MENU_SAVE_STATE     = 2,
-    MENU_RESTORE_STATE  = 3,
-    MENU_MAX            = 4,
-};
-
 #define INPUT_LEFT_TOTAL    6
 #define INPUT_RIGHT_TOTAL   6
 #define INPUT_TOTAL         INPUT_LEFT_TOTAL + INPUT_RIGHT_TOTAL
 
 #define MAX_POINTERS         2
-
-typedef void (*JUN_InputCallback)(JUN_Input *this);
 
 typedef struct JUN_InputPointer  JUN_InputPointer;
 typedef struct JUN_InputStatus   JUN_InputStatus;
@@ -43,7 +32,7 @@ struct JUN_InputStatus
     float radius;
     bool pressed;
     JUN_InputPointer *locked_by;
-    JUN_InputCallback callback;
+    JUN_MenuCallback callback;
 };
 
 struct JUN_InputInstance
@@ -56,176 +45,139 @@ struct JUN_InputInstance
 
 struct JUN_Input
 {
-   bool virtual_pad;
-   bool mute_audio;
-   bool save_state;
-   bool restore_state;
+    JUN_Menu *menu;
 
-   float frame_width;
-   float frame_height;
-   float view_width;
-   float view_height;
-
-   uint32_t bindings[INPUT_TOTAL];
-
-   union
-   {
-      JUN_InputInstance instances[CONTROLLER_MAX];
-
-      struct
-      {
-         JUN_InputInstance menu;
-         JUN_InputInstance left;
-         JUN_InputInstance right;
-         JUN_InputInstance loading;
-      };
-   };
-
-   JUN_InputStatus menus[MENU_MAX];
-   JUN_InputStatus inputs[INPUT_TOTAL];
-
-   JUN_InputPointer pointers[MAX_POINTERS];
+    float frame_width;
+    float frame_height;
+    float view_width;
+    float view_height;
+ 
+    JUN_InputInstance instances[CONTROLLER_MAX];
+ 
+    JUN_InputStatus menus[MENU_MAX];
+    JUN_InputStatus inputs[INPUT_TOTAL];
+ 
+    JUN_InputPointer pointers[MAX_POINTERS];
 };
 
-static void toggle_gamepad(JUN_Input *this)
+JUN_Input *JUN_InputInitialize(JUN_Menu *menu)
 {
-    this->virtual_pad = !this->virtual_pad;
-}
+    JUN_Input *this = MTY_Alloc(1, sizeof(JUN_Input));
 
-static void toggle_audio(JUN_Input *this)
-{
-    this->mute_audio = !this->mute_audio;
-}
-
-static void should_save_state(JUN_Input *this)
-{
-    this->save_state = true;
-}
-
-static void should_restore_state(JUN_Input *this)
-{
-    this->restore_state = true;
-}
-
-JUN_Input *JUN_InputInitialize()
-{
-    JUN_Input *input = MTY_Alloc(1, sizeof(JUN_Input));
-
-    input->virtual_pad = true;
-    input->mute_audio  = true;
+    this->menu = menu;
 
     /* Menu controller */
 
-    input->menus[MENU_TOGGLE_AUDIO].center.x = 85;
-    input->menus[MENU_TOGGLE_AUDIO].center.y = 60;
-    input->menus[MENU_TOGGLE_AUDIO].radius = 80;
-    input->menus[MENU_TOGGLE_AUDIO].callback = toggle_audio;
+    this->menus[MENU_TOGGLE_AUDIO].center.x = 85;
+    this->menus[MENU_TOGGLE_AUDIO].center.y = 60;
+    this->menus[MENU_TOGGLE_AUDIO].radius = 80;
+    this->menus[MENU_TOGGLE_AUDIO].callback = JUN_MenuToggleAudio;
 
-    input->menus[MENU_TOGGLE_GAMEPAD].center.x = 240;
-    input->menus[MENU_TOGGLE_GAMEPAD].center.y = 60;
-    input->menus[MENU_TOGGLE_GAMEPAD].radius = 80;
-    input->menus[MENU_TOGGLE_GAMEPAD].callback = toggle_gamepad;
+    this->menus[MENU_TOGGLE_GAMEPAD].center.x = 240;
+    this->menus[MENU_TOGGLE_GAMEPAD].center.y = 60;
+    this->menus[MENU_TOGGLE_GAMEPAD].radius = 80;
+    this->menus[MENU_TOGGLE_GAMEPAD].callback = JUN_MenuToggleGamepad;
 
-    input->menus[MENU_SAVE_STATE].center.x = 395;
-    input->menus[MENU_SAVE_STATE].center.y = 60;
-    input->menus[MENU_SAVE_STATE].radius = 80;
-    input->menus[MENU_SAVE_STATE].callback = should_save_state;
+    this->menus[MENU_SAVE_STATE].center.x = 395;
+    this->menus[MENU_SAVE_STATE].center.y = 60;
+    this->menus[MENU_SAVE_STATE].radius = 80;
+    this->menus[MENU_SAVE_STATE].callback = JUN_MenuShouldSaveState;
 
-    input->menus[MENU_RESTORE_STATE].center.x = 550;
-    input->menus[MENU_RESTORE_STATE].center.y = 60;
-    input->menus[MENU_RESTORE_STATE].radius = 80;
-    input->menus[MENU_RESTORE_STATE].callback = should_restore_state;
+    this->menus[MENU_RESTORE_STATE].center.x = 550;
+    this->menus[MENU_RESTORE_STATE].center.y = 60;
+    this->menus[MENU_RESTORE_STATE].radius = 80;
+    this->menus[MENU_RESTORE_STATE].callback = JUN_MenuShouldRestoreState;
 
     JUN_InputStatus *menu_inputs[MENU_MAX] =
     {
-        &input->menus[MENU_TOGGLE_AUDIO],
-        &input->menus[MENU_TOGGLE_GAMEPAD],
-        &input->menus[MENU_SAVE_STATE],
-        &input->menus[MENU_RESTORE_STATE],
+        &this->menus[MENU_TOGGLE_AUDIO],
+        &this->menus[MENU_TOGGLE_GAMEPAD],
+        &this->menus[MENU_SAVE_STATE],
+        &this->menus[MENU_RESTORE_STATE],
     };
 
-    input->menu.inputs_size = MENU_MAX;
-    input->menu.inputs = MTY_Dup(menu_inputs, sizeof menu_inputs);
+    this->instances[CONTROLLER_MENU].inputs_size = MENU_MAX;
+    this->instances[CONTROLLER_MENU].inputs = MTY_Dup(menu_inputs, sizeof menu_inputs);
 
     /* Left controller */
 
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_UP].center.x = 290;
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_UP].center.y = 310;
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_UP].radius = 120;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_UP].center.x = 290;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_UP].center.y = 310;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_UP].radius = 120;
 
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_DOWN].center.x = 290;
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_DOWN].center.y = 660;
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_DOWN].radius = 120;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_DOWN].center.x = 290;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_DOWN].center.y = 660;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_DOWN].radius = 120;
 
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_LEFT].center.x = 120;
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_LEFT].center.y = 490;
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_LEFT].radius = 120;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_LEFT].center.x = 120;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_LEFT].center.y = 490;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_LEFT].radius = 120;
 
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_RIGHT].center.x = 470;
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_RIGHT].center.y = 490;
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_RIGHT].radius = 120;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_RIGHT].center.x = 470;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_RIGHT].center.y = 490;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_RIGHT].radius = 120;
 
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_L].center.x = 150;
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_L].center.y = 60;
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_L].radius = 120;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_L].center.x = 150;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_L].center.y = 60;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_L].radius = 120;
 
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_SELECT].center.x = 540;
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_SELECT].center.y = 870;
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_SELECT].radius = 80;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_SELECT].center.x = 540;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_SELECT].center.y = 870;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_SELECT].radius = 80;
 
     JUN_InputStatus *left_inputs[INPUT_LEFT_TOTAL] =
     {
-        &input->inputs[RETRO_DEVICE_ID_JOYPAD_UP],
-        &input->inputs[RETRO_DEVICE_ID_JOYPAD_DOWN],
-        &input->inputs[RETRO_DEVICE_ID_JOYPAD_LEFT],
-        &input->inputs[RETRO_DEVICE_ID_JOYPAD_RIGHT],
-        &input->inputs[RETRO_DEVICE_ID_JOYPAD_L],
-        &input->inputs[RETRO_DEVICE_ID_JOYPAD_SELECT],
+        &this->inputs[RETRO_DEVICE_ID_JOYPAD_UP],
+        &this->inputs[RETRO_DEVICE_ID_JOYPAD_DOWN],
+        &this->inputs[RETRO_DEVICE_ID_JOYPAD_LEFT],
+        &this->inputs[RETRO_DEVICE_ID_JOYPAD_RIGHT],
+        &this->inputs[RETRO_DEVICE_ID_JOYPAD_L],
+        &this->inputs[RETRO_DEVICE_ID_JOYPAD_SELECT],
     };
 
-    input->left.inputs_size = INPUT_LEFT_TOTAL;
-    input->left.inputs = MTY_Dup(left_inputs, sizeof left_inputs);
+    this->instances[CONTROLLER_LEFT].inputs_size = INPUT_LEFT_TOTAL;
+    this->instances[CONTROLLER_LEFT].inputs = MTY_Dup(left_inputs, sizeof left_inputs);
 
     /* Right controller */
 
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_A].center.x = 490;
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_A].center.y = 490;
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_A].radius = 120;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_A].center.x = 490;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_A].center.y = 490;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_A].radius = 120;
 
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_B].center.x = 310;
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_B].center.y = 670;
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_B].radius = 120;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_B].center.x = 310;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_B].center.y = 670;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_B].radius = 120;
 
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_X].center.x = 310;
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_X].center.y = 300;
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_X].radius = 120;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_X].center.x = 310;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_X].center.y = 300;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_X].radius = 120;
 
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_Y].center.x = 130;
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_Y].center.y = 490;
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_Y].radius = 120;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_Y].center.x = 130;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_Y].center.y = 490;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_Y].radius = 120;
 
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_R].center.x = 470;
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_R].center.y = 60;
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_R].radius = 120;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_R].center.x = 470;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_R].center.y = 60;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_R].radius = 120;
 
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_START].center.x = 100;
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_START].center.y = 870;
-    input->inputs[RETRO_DEVICE_ID_JOYPAD_START].radius = 80;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_START].center.x = 100;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_START].center.y = 870;
+    this->inputs[RETRO_DEVICE_ID_JOYPAD_START].radius = 80;
 
     JUN_InputStatus *right_inputs[INPUT_RIGHT_TOTAL] =
     {
-        &input->inputs[RETRO_DEVICE_ID_JOYPAD_A],
-        &input->inputs[RETRO_DEVICE_ID_JOYPAD_B],
-        &input->inputs[RETRO_DEVICE_ID_JOYPAD_X],
-        &input->inputs[RETRO_DEVICE_ID_JOYPAD_Y],
-        &input->inputs[RETRO_DEVICE_ID_JOYPAD_R],
-        &input->inputs[RETRO_DEVICE_ID_JOYPAD_START],
+        &this->inputs[RETRO_DEVICE_ID_JOYPAD_A],
+        &this->inputs[RETRO_DEVICE_ID_JOYPAD_B],
+        &this->inputs[RETRO_DEVICE_ID_JOYPAD_X],
+        &this->inputs[RETRO_DEVICE_ID_JOYPAD_Y],
+        &this->inputs[RETRO_DEVICE_ID_JOYPAD_R],
+        &this->inputs[RETRO_DEVICE_ID_JOYPAD_START],
     };
 
-    input->right.inputs_size = INPUT_RIGHT_TOTAL;
-    input->right.inputs = MTY_Dup(right_inputs, sizeof right_inputs);
+    this->instances[CONTROLLER_RIGHT].inputs_size = INPUT_RIGHT_TOTAL;
+    this->instances[CONTROLLER_RIGHT].inputs = MTY_Dup(right_inputs, sizeof right_inputs);
 
-    return input;
+    return this;
 }
 
 void JUN_InputSetBinding(JUN_Input *this, const char *joypad, char *keyboard)
@@ -301,8 +253,9 @@ static void set_button(JUN_Input *this, JUN_InputInstance *controller, JUN_Input
             input->pressed = false;
         }
 
+        //TODO: JUN_Menu dependency only for this... 
         if (input->pressed && input->callback)
-            input->callback(this);
+            input->callback(this->menu);
     }
 }
 
@@ -396,12 +349,12 @@ void JUN_InputSetStatus(JUN_Input *this, const MTY_Event *event)
     if (!pointer)
         return;
 
-    set_button(this, &this->menu, pointer);
+    set_button(this, &this->instances[CONTROLLER_MENU], pointer);
 
-    if (this->virtual_pad) 
+    if (JUN_MenuHasGamepad(this->menu)) 
     {
-        set_button(this, &this->left,  pointer);
-        set_button(this, &this->right, pointer);
+        set_button(this, &this->instances[CONTROLLER_LEFT],  pointer);
+        set_button(this, &this->instances[CONTROLLER_RIGHT], pointer);
     }
     else
     {
@@ -437,43 +390,12 @@ int16_t JUN_InputGetStatus(JUN_Input *this, uint32_t device, uint32_t retro_key)
     return false;
 }
 
-void JUN_InputDestroy(JUN_Input **input)
+void JUN_InputDestroy(JUN_Input **this)
 {
-    MTY_Free((*input)->menu.inputs);
-    MTY_Free((*input)->left.inputs);
-    MTY_Free((*input)->right.inputs);
+    MTY_Free((*this)->instances[CONTROLLER_MENU].inputs);
+    MTY_Free((*this)->instances[CONTROLLER_LEFT].inputs);
+    MTY_Free((*this)->instances[CONTROLLER_RIGHT].inputs);
 
-    MTY_Free(*input);
-    *input = NULL;
-}
-
-
-bool JUN_InputHasAudio(JUN_Input *this)
-{
-    return !this->mute_audio;
-}
-
-bool JUN_InputHasJoypad(JUN_Input *this)
-{
-    return this->virtual_pad;
-}
-
-bool JUN_InputShouldSaveState(JUN_Input *this)
-{
-    return this->save_state;
-}
-
-void JUN_InputSetStateSaved(JUN_Input *this)
-{
-    this->save_state = false;
-}
-
-bool JUN_InputShouldRestoreState(JUN_Input *this)
-{
-    return this->restore_state;
-}
-
-void JUN_InputSetStateRestored(JUN_Input *this)
-{
-    this->restore_state = false;
+    MTY_Free(*this);
+    *this = NULL;
 }

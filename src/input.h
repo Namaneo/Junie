@@ -1,5 +1,6 @@
 #pragma once
 
+#include "menu.h"
 #include "texture.h"
 
 typedef struct JUN_Input JUN_Input;
@@ -15,7 +16,7 @@ enum JUN_TextureType
     CONTROLLER_MAX   = 4,
 };
 
-JUN_Input *JUN_InputInitialize();
+JUN_Input *JUN_InputInitialize(JUN_Menu *menu);
 void JUN_InputSetBinding(JUN_Input *this, const char *joypad_key, char *keyboard_key);
 void JUN_InputSetFrameMetrics(JUN_Input *this, float width, float height);
 void JUN_InputSetWindowMetrics(JUN_Input *this, float width, float height);
@@ -24,11 +25,3 @@ JUN_TextureData *JUN_InputGetMetrics(JUN_Input *this, JUN_TextureType type);
 void JUN_InputSetStatus(JUN_Input *this, const MTY_Event *event);
 int16_t JUN_InputGetStatus(JUN_Input *this, uint32_t device, uint32_t retro_key);
 void JUN_InputDestroy(JUN_Input **input);
-
-//TODO: Should go into a dedicated menu module
-bool JUN_InputHasAudio(JUN_Input *this);
-bool JUN_InputHasJoypad(JUN_Input *this);
-bool JUN_InputShouldSaveState(JUN_Input *this);
-void JUN_InputSetStateSaved(JUN_Input *this);
-bool JUN_InputShouldRestoreState(JUN_Input *this);
-void JUN_InputSetStateRestored(JUN_Input *this);

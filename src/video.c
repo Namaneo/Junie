@@ -234,7 +234,7 @@ static void set_texture_metrics(JUN_Video *this, JUN_TextureType type)
     });
 }
 
-static void draw_controller(JUN_Video *this)
+static void draw_controller(JUN_Video *this, bool has_gamepad)
 {
     //Get window metrics
     uint32_t view_width, view_height; 
@@ -247,7 +247,7 @@ static void draw_controller(JUN_Video *this)
     JUN_TextureDraw(textures, JUN_InputGetMetrics(this->input, CONTROLLER_MENU));
 
     //Draw the gamepad if enabled
-    if (JUN_InputHasJoypad(this->input))
+    if (has_gamepad)
     {
         JUN_TextureDraw(textures, JUN_InputGetMetrics(this->input, CONTROLLER_LEFT));
         JUN_TextureDraw(textures, JUN_InputGetMetrics(this->input, CONTROLLER_RIGHT));
@@ -263,13 +263,17 @@ static void draw_controller(JUN_Video *this)
     JUN_TextureDestroy(&textures);
 }
 
-void JUN_VideoDrawController(JUN_Video *this)
+void JUN_VideoDrawController(JUN_Video *this, bool has_gamepad)
 {
     set_texture_metrics(this, CONTROLLER_MENU);
-    set_texture_metrics(this, CONTROLLER_LEFT);
-    set_texture_metrics(this, CONTROLLER_RIGHT);
 
-    draw_controller(this);
+    if (has_gamepad)
+    {
+        set_texture_metrics(this, CONTROLLER_LEFT);
+        set_texture_metrics(this, CONTROLLER_RIGHT);
+    }
+
+    draw_controller(this, has_gamepad);
 }
 
 void JUN_VideoDrawLoadingScreen(JUN_Video *this)

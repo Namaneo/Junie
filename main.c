@@ -19,7 +19,7 @@ static void video_refresh(const void *data, unsigned width, unsigned height, siz
     JUN_VideoUpdateContext(app->video, width, height, pitch);
 
     JUN_VideoDrawFrame(app->video, data);
-    JUN_VideoDrawController(app->video);
+    JUN_VideoDrawController(app->video, JUN_MenuHasGamepad(app->menu));
 }
 
 static void input_poll()
@@ -37,7 +37,7 @@ static int16_t input_state(unsigned port, unsigned device, unsigned index, unsig
 
 static size_t audio_sample_batch(const int16_t *data, size_t frames)
 {
-    if (JUN_InputHasAudio(app->input))
+    if (JUN_MenuHasAudio(app->menu))
         JUN_AudioQueue(app->audio, data, frames);
 
     return frames;
@@ -89,16 +89,16 @@ static bool app_func(void *opaque)
 
         JUN_CoreSaveMemories(app->core);
 
-        if (JUN_InputShouldSaveState(app->input))
+        if (JUN_MenuHasPendingStateSave(app->menu))
         {
             JUN_CoreSaveState(app->core);
-            JUN_InputSetStateSaved(app->input);
+            JUN_MenuSetStateSaved(app->menu);
         }
 
-        if (JUN_InputShouldRestoreState(app->input))
+        if (JUN_MenuHasPendingStateRestore(app->menu))
         {
             JUN_CoreRestoreState(app->core);
-            JUN_InputSetStateRestored(app->input);
+            JUN_MenuSetStateRestored(app->menu);
         }
     }
 
