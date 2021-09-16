@@ -1,6 +1,6 @@
 #pragma once
 
-#include "menu.h"
+#include "state.h"
 #include "texture.h"
 
 typedef struct JUN_Input JUN_Input;
@@ -16,7 +16,19 @@ enum JUN_TextureType
     CONTROLLER_MAX   = 4,
 };
 
-JUN_Input *JUN_InputInitialize(JUN_Menu *menu);
+typedef enum JUN_MenuType JUN_MenuType;
+
+enum JUN_MenuType
+{
+    MENU_TOGGLE_GAMEPAD = 0,
+    MENU_TOGGLE_AUDIO   = 1,
+    MENU_SAVE_STATE     = 2,
+    MENU_RESTORE_STATE  = 3,
+    MENU_FAST_FORWARD   = 4,
+    MENU_MAX            = 5,
+};
+
+JUN_Input *JUN_InputInitialize(JUN_State *state);
 void JUN_InputSetBinding(JUN_Input *this, const char *joypad_key, char *keyboard_key);
 void JUN_InputSetFrameMetrics(JUN_Input *this, float width, float height);
 void JUN_InputSetWindowMetrics(JUN_Input *this, float width, float height);

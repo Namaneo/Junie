@@ -32,7 +32,7 @@ struct JUN_InputStatus
     float radius;
     bool pressed;
     JUN_InputPointer *locked_by;
-    JUN_MenuCallback callback;
+    JUN_StateCallback callback;
 };
 
 struct JUN_InputInstance
@@ -45,7 +45,7 @@ struct JUN_InputInstance
 
 struct JUN_Input
 {
-    JUN_Menu *menu;
+    JUN_State *state;
 
     float frame_width;
     float frame_height;
@@ -60,33 +60,44 @@ struct JUN_Input
     JUN_InputPointer pointers[MAX_POINTERS];
 };
 
-JUN_Input *JUN_InputInitialize(JUN_Menu *menu)
+static void toggle_audio(JUN_State *state)         { state->has_audio            = !state->has_audio;             }
+static void toggle_gamepad(JUN_State *state)       { state->has_gamepad          = !state->has_gamepad;           }
+static void should_save_state(JUN_State *state)    { state->should_save_state    = true;                          }
+static void should_restore_state(JUN_State *state) { state->should_restore_state = true;                          }
+static void fast_forward(JUN_State *state)         { state->fast_forward         = (state->fast_forward + 1) % 4; }
+
+JUN_Input *JUN_InputInitialize(JUN_State *state)
 {
     JUN_Input *this = MTY_Alloc(1, sizeof(JUN_Input));
 
-    this->menu = menu;
+    this->state = state;
 
     /* Menu controller */
 
-    this->menus[MENU_TOGGLE_AUDIO].center.x = 85;
+    this->menus[MENU_TOGGLE_AUDIO].center.x = 55;
     this->menus[MENU_TOGGLE_AUDIO].center.y = 60;
     this->menus[MENU_TOGGLE_AUDIO].radius = 80;
-    this->menus[MENU_TOGGLE_AUDIO].callback = JUN_MenuToggleAudio;
+    this->menus[MENU_TOGGLE_AUDIO].callback = toggle_audio;
 
-    this->menus[MENU_TOGGLE_GAMEPAD].center.x = 240;
+    this->menus[MENU_TOGGLE_GAMEPAD].center.x = 210;
     this->menus[MENU_TOGGLE_GAMEPAD].center.y = 60;
     this->menus[MENU_TOGGLE_GAMEPAD].radius = 80;
-    this->menus[MENU_TOGGLE_GAMEPAD].callback = JUN_MenuToggleGamepad;
+    this->menus[MENU_TOGGLE_GAMEPAD].callback = toggle_gamepad;
 
-    this->menus[MENU_SAVE_STATE].center.x = 395;
+    this->menus[MENU_SAVE_STATE].center.x = 400;
     this->menus[MENU_SAVE_STATE].center.y = 60;
     this->menus[MENU_SAVE_STATE].radius = 80;
-    this->menus[MENU_SAVE_STATE].callback = JUN_MenuShouldSaveState;
+    this->menus[MENU_SAVE_STATE].callback = should_save_state;
 
-    this->menus[MENU_RESTORE_STATE].center.x = 550;
+    this->menus[MENU_RESTORE_STATE].center.x = 510;
     this->menus[MENU_RESTORE_STATE].center.y = 60;
     this->menus[MENU_RESTORE_STATE].radius = 80;
-    this->menus[MENU_RESTORE_STATE].callback = JUN_MenuShouldRestoreState;
+    this->menus[MENU_RESTORE_STATE].callback = should_restore_state;
+
+    this->menus[MENU_FAST_FORWARD].center.x = 665;
+    this->menus[MENU_FAST_FORWARD].center.y = 60;
+    this->menus[MENU_FAST_FORWARD].radius = 80;
+    this->menus[MENU_FAST_FORWARD].callback = fast_forward;
 
     JUN_InputStatus *menu_inputs[MENU_MAX] =
     {
@@ -94,6 +105,7 @@ JUN_Input *JUN_InputInitialize(JUN_Menu *menu)
         &this->menus[MENU_TOGGLE_GAMEPAD],
         &this->menus[MENU_SAVE_STATE],
         &this->menus[MENU_RESTORE_STATE],
+        &this->menus[MENU_FAST_FORWARD],
     };
 
     this->instances[CONTROLLER_MENU].inputs_size = MENU_MAX;
@@ -253,9 +265,9 @@ static void set_button(JUN_Input *this, JUN_InputInstance *controller, JUN_Input
             input->pressed = false;
         }
 
-        //TODO: JUN_Menu dependency only for this... 
+        //TODO: JUN_State dependency only for this... 
         if (input->pressed && input->callback)
-            input->callback(this->menu);
+            input->callback(this->state);
     }
 }
 
@@ -351,7 +363,7 @@ void JUN_InputSetStatus(JUN_Input *this, const MTY_Event *event)
 
     set_button(this, &this->instances[CONTROLLER_MENU], pointer);
 
-    if (JUN_MenuHasGamepad(this->menu)) 
+    if (this->state->has_gamepad) 
     {
         set_button(this, &this->instances[CONTROLLER_LEFT],  pointer);
         set_button(this, &this->instances[CONTROLLER_RIGHT], pointer);

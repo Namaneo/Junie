@@ -3,7 +3,7 @@
 #include "matoya.h"
 
 #include "core.h"
-#include "menu.h"
+#include "state.h"
 #include "input.h"
 #include "audio.h"
 #include "video.h"
@@ -13,7 +13,7 @@ typedef struct JUN_App JUN_App;
 struct JUN_App
 {
     JUN_Core  *core;
-    JUN_Menu  *menu;
+    JUN_State *state;
     JUN_Input *input;
     JUN_Audio *audio;
     JUN_Video *video;

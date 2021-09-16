@@ -16,6 +16,7 @@ JUN_Audio *JUN_AudioInitialize()
 
 void JUN_AudioPrepare(JUN_Audio *this, double sample_rate, double frames_per_second)
 {
+    //TODO: adjust sample rate based on the fast forward value
     double custom_rate = (sample_rate / frames_per_second) * TARGET_FPS;
     
     this->instance = MTY_AudioCreate(custom_rate, 75, 150);

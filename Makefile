@@ -23,11 +23,11 @@ SRC := main.c \
 	$(SRC_DIR)/vfs.c \
 	$(SRC_DIR)/wasi.c \
 	$(SRC_DIR)/core.c \
-	$(SRC_DIR)/menu.c \
 	$(SRC_DIR)/video.c \
 	$(SRC_DIR)/audio.c \
 	$(SRC_DIR)/input.c \
 	$(SRC_DIR)/enums.c \
+	$(SRC_DIR)/state.c \
 	$(SRC_DIR)/texture.c \
 	$(SRC_DIR)/interop.c \
 	$(SRC_DIR)/toolbox.c \
