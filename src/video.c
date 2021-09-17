@@ -21,6 +21,8 @@ struct JUN_Video
     unsigned width;
     unsigned height;
     size_t pitch;
+
+    JUN_Texture *ui;   
 };
 
 JUN_Video *JUN_VideoInitialize(JUN_Input *input, MTY_AppFunc app_func, MTY_EventFunc event_func)
@@ -110,7 +112,96 @@ void JUN_VideoUpdateContext(JUN_Video *this, unsigned width, unsigned height, si
         this->buffer = MTY_Alloc(this->width * this->bits_per_pixel * this->height, 1);
 
         JUN_InputSetFrameMetrics(this->input, this->width, this->height);
+
+        JUN_VideoUpdateUI(this);
     }
+}
+
+static void set_texture_metrics(JUN_Video *this, JUN_TextureType type, uint32_t view_width, uint32_t view_height)
+{
+    //Declare variables
+    float x, y, width, height;
+
+    //Retrieve controller files
+    JUN_File *file  = JUN_FilesystemGet(this->assets[type], true);
+    if (!file)
+        return;
+
+    //Create textures on first call
+    if (!MTY_WindowHasUITexture(this->app, 0, type + 1))
+        MTY_WindowSetUITexture(this->app, 0, type + 1, file->buffer, file->width, file->height);
+
+    //Compute file aspect ratio
+    float aspect_ratio = (float)file->width / (float)file->height;
+
+    //Deduce real image width and height
+    width = view_width / 2.0f;
+    height = width / aspect_ratio;
+
+    //Scale the other way if the image height is too big 
+    if (height > view_height)
+    {
+        height = view_height;
+        width = height * aspect_ratio;
+    }
+
+    //Position the final image
+    if (type == CONTROLLER_MENU)
+    {
+        x = view_width / 2 - width / 2;
+        y = 0;
+    }
+    if (type == CONTROLLER_LEFT)
+    {
+        x = 0;
+        y = view_height - height;
+    }
+    if (type == CONTROLLER_RIGHT)
+    {
+        x = view_width  - width;
+        y = view_height - height;
+    }
+    if (type == LOADING_SCREEN)
+    {
+        x = view_width / 2  - width / 2;
+        y = view_height / 2 - height / 2;
+    }
+
+    //Set texture metrics
+    JUN_InputSetMetrics(this->input, &(JUN_TextureData)
+    {
+        .id           = type,
+        .x            = x,
+        .y            = y,
+        .width        = width,
+        .height       = height,
+        .image_width  = file->width,
+        .image_height = file->height,
+    });
+}
+
+void JUN_VideoUpdateUI(JUN_Video *this)
+{
+    //Get window metrics
+    uint32_t view_width, view_height;
+    refresh_viewport_size(this, &view_width, &view_height);
+
+    //Update texture metrics
+    set_texture_metrics(this, CONTROLLER_MENU,  view_width, view_height);
+    set_texture_metrics(this, CONTROLLER_LEFT,  view_width, view_height);
+    set_texture_metrics(this, CONTROLLER_RIGHT, view_width, view_height);
+
+    //Destroy previous textures
+    if (this->ui)
+        JUN_TextureDestroy(&this->ui);
+
+    //Create texture context
+    this->ui = JUN_TextureCreateContext(view_width, view_height, 1);
+
+    //Draw all textures
+    JUN_TextureDraw(this->ui, JUN_InputGetMetrics(this->input, CONTROLLER_MENU));
+    JUN_TextureDraw(this->ui, JUN_InputGetMetrics(this->input, CONTROLLER_LEFT));
+    JUN_TextureDraw(this->ui, JUN_InputGetMetrics(this->input, CONTROLLER_RIGHT));
 }
 
 void JUN_VideoDrawFrame(JUN_Video *this, const void *data)
@@ -167,113 +258,13 @@ void JUN_VideoDrawFrame(JUN_Video *this, const void *data)
     );
 }
 
-static void set_texture_metrics(JUN_Video *this, JUN_TextureType type)
+void JUN_VideoDrawUI(JUN_Video *this, bool has_gamepad)
 {
-    //Declare variables
-    float x, y, width, height;
-
-    //Retrieve controller files
-    JUN_File *file  = JUN_FilesystemGet(this->assets[type], true);
-    if (!file)
-        return;
-
-    //Create textures on first call
-    if (!MTY_WindowHasUITexture(this->app, 0, type + 1))
-        MTY_WindowSetUITexture(this->app, 0, type + 1, file->buffer, file->width, file->height);
-
-    //Get window metrics
-    uint32_t window_width, window_height;
-    refresh_viewport_size(this, &window_width, &window_height);
-
-    //Compute file aspect ratio
-    float aspect_ratio = (float)file->width / (float)file->height;
-
-    //Deduce real image width and height
-    width = window_width / 2.0f;
-    height = width / aspect_ratio;
-
-    //Scale the other way if the image height is too big 
-    if (height > window_height)
-    {
-        height = window_height;
-        width = height * aspect_ratio;
-    }
-
-    //Position the final image
-    if (type == CONTROLLER_MENU)
-    {
-        x = window_width / 2 - width / 2;
-        y = 0;
-    }
-    if (type == CONTROLLER_LEFT)
-    {
-        x = 0;
-        y = window_height - height;
-    }
-    if (type == CONTROLLER_RIGHT)
-    {
-        x = window_width  - width;
-        y = window_height - height;
-    }
-    if (type == LOADING_SCREEN)
-    {
-        x = window_width / 2  - width / 2;
-        y = window_height / 2 - height / 2;
-    }
-
-    //Set texture metrics
-    JUN_InputSetMetrics(this->input, &(JUN_TextureData)
-    {
-        .id           = type,
-        .x            = x,
-        .y            = y,
-        .width        = width,
-        .height       = height,
-        .image_width  = file->width,
-        .image_height = file->height,
-    });
-}
-
-static void draw_controller(JUN_Video *this, bool has_gamepad)
-{
-    //Get window metrics
-    uint32_t view_width, view_height; 
-    refresh_viewport_size(this, &view_width, &view_height);
-
-    //Create texture context
-    JUN_Texture *textures = JUN_TextureCreateContext(view_width, view_height, 1);
-
-    //Draw the menu
-    JUN_TextureDraw(textures, JUN_InputGetMetrics(this->input, CONTROLLER_MENU));
-
-    //Draw the gamepad if enabled
-    if (has_gamepad)
-    {
-        JUN_TextureDraw(textures, JUN_InputGetMetrics(this->input, CONTROLLER_LEFT));
-        JUN_TextureDraw(textures, JUN_InputGetMetrics(this->input, CONTROLLER_RIGHT));
-    }
-
     //Produce drawing data
-    MTY_DrawData *draw_data = JUN_TextureProduce(textures);
+    MTY_DrawData *draw_data = JUN_TextureProduce(this->ui, !has_gamepad);
 
     //Draw the controller
     MTY_WindowDrawUI(this->app, 0, draw_data);
-
-    //Release texture resources
-    JUN_TextureDestroy(&textures);
-}
-
-void JUN_VideoDrawController(JUN_Video *this, bool has_gamepad)
-{
-    set_texture_metrics(this, CONTROLLER_MENU);
-
-    if (has_gamepad)
-    {
-        set_texture_metrics(this, CONTROLLER_LEFT);
-        set_texture_metrics(this, CONTROLLER_RIGHT);
-    }
-
-    draw_controller(this, has_gamepad);
 }
 
 void JUN_VideoDrawLoadingScreen(JUN_Video *this)
@@ -286,13 +277,13 @@ void JUN_VideoDrawLoadingScreen(JUN_Video *this)
     JUN_Texture *textures = JUN_TextureCreateContext(view_width, view_height, 1);
 
     //Set loading screen metrics
-    set_texture_metrics(this, LOADING_SCREEN);
+    set_texture_metrics(this, LOADING_SCREEN, view_width, view_height);
 
     //Draw the menu
     JUN_TextureDraw(textures, JUN_InputGetMetrics(this->input, LOADING_SCREEN));
 
     //Produce drawing data
-    MTY_DrawData *draw_data = JUN_TextureProduce(textures);
+    MTY_DrawData *draw_data = JUN_TextureProduce(textures, 0);
 
     //Draw the controller
     MTY_WindowDrawUI(this->app, 0, draw_data);

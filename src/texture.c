@@ -89,8 +89,12 @@ void JUN_TextureDraw(JUN_Texture *context, JUN_TextureData *texture)
     };
 }
 
-MTY_DrawData *JUN_TextureProduce(JUN_Texture *context)
+MTY_DrawData *JUN_TextureProduce(JUN_Texture *context, size_t length)
 {
+    //Set number of commands to produce 
+    if (length == 0)
+        length = context->length;
+
     //Fill drawing data
     *context->draw_data = (MTY_DrawData)
     {
@@ -98,10 +102,10 @@ MTY_DrawData *JUN_TextureProduce(JUN_Texture *context)
         .displaySize    = { context->view_width, context->view_height },
 
         .cmdList        = context->commands,
-        .cmdListLength  = context->length,
-        .cmdListMax     = context->length * sizeof(MTY_CmdList),
+        .cmdListLength  = length,
+        .cmdListMax     = length * sizeof(MTY_CmdList),
 
-        .vtxTotalLength = context->length * 4,
+        .vtxTotalLength = length * 4,
         .idxTotalLength = 6,
     };
 

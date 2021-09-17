@@ -19,7 +19,7 @@ static void video_refresh(const void *data, unsigned width, unsigned height, siz
     JUN_VideoUpdateContext(app->video, width, height, pitch);
 
     JUN_VideoDrawFrame(app->video, data);
-    JUN_VideoDrawController(app->video, app->state->has_gamepad);
+    JUN_VideoDrawUI(app->video, app->state->has_gamepad);
 }
 
 static void input_poll()
@@ -116,10 +116,8 @@ static void event_func(const MTY_Event *event, void *opaque)
 {
     JUN_InputSetStatus(app->input, event);
 
-    if (event->type != MTY_EVENT_MOTION)
-    {
-        MTY_PrintEvent(event);
-    }
+    if (event->type == MTY_EVENT_SIZE)
+        JUN_VideoUpdateUI(app->video);
 
     if (event->type == MTY_EVENT_CLOSE)
         app->quit = true;
