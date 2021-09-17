@@ -10,7 +10,7 @@
 #define INPUT_RIGHT_TOTAL   6
 #define INPUT_TOTAL         INPUT_LEFT_TOTAL + INPUT_RIGHT_TOTAL
 
-#define MAX_POINTERS         2
+#define MAX_POINTERS         4
 
 typedef struct JUN_InputPointer  JUN_InputPointer;
 typedef struct JUN_InputStatus   JUN_InputStatus;
@@ -344,6 +344,8 @@ void JUN_InputSetStatus(JUN_Input *this, const MTY_Event *event)
         pointer->pressed = event->button.pressed;
         pointer->x       = event->button.x;
         pointer->y       = event->button.y;
+
+        set_button(this, &this->instances[CONTROLLER_MENU], pointer);
     }
 
     if (event->type == MTY_EVENT_MOTION)
@@ -359,8 +361,6 @@ void JUN_InputSetStatus(JUN_Input *this, const MTY_Event *event)
 
     if (!pointer)
         return;
-
-    set_button(this, &this->instances[CONTROLLER_MENU], pointer);
 
     if (this->state->has_gamepad) 
     {
