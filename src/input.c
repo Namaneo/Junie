@@ -265,7 +265,6 @@ static void set_button(JUN_Input *this, JUN_InputInstance *controller, JUN_Input
             input->pressed = false;
         }
 
-        //TODO: JUN_State dependency only for this... 
         if (input->pressed && input->callback)
             input->callback(this->state);
     }
@@ -384,7 +383,7 @@ int16_t JUN_InputGetStatus(JUN_Input *this, uint32_t device, uint32_t retro_key)
         return this->inputs[retro_key].pressed;
     }
 
-    if (device == RETRO_DEVICE_POINTER)
+    if (device == RETRO_DEVICE_POINTER && !this->state->has_gamepad)
     {
         switch (retro_key)
         {
