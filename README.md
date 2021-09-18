@@ -14,15 +14,21 @@ Junie currently runs on most recent browsers, though your experience will probab
 [GraviBots](https://retrosouls.itch.io/gravibots16bit). 
 I haven't played those games yet but will do for sure!
 
+![](assets/showcase.png)
+
+*Disclaimer: development is still in progress. I'll try my best not to break anything between releases (especially regarding local save files), but it's probably a good idea for you to test releases before updating.*
+
 # Supported features:
 
 - [x] All the systems described in the [Folder structure](#folder-structure).
-- [x] Save files (stored in your browser's local storage).
+- [x] Save files (stored inside your browser's storage).
 - [x] Additional core-specific system files.
 - [x] Core-specific configurations override.
 - [x] Multi-touch controller, with D-pad used as a joystick.
-- [x] Touch inputs, enabled by pressing the top button.
 - [x] Re-mappable keyboard to joypad bindings. 
+- [x] Touch inputs, enabled by pressing the top button.
+- [x] Savestates creation and restore.
+- [x] Fast-forward up to 4 times the original speed.
 
 # Folder structure
 
@@ -170,17 +176,13 @@ Well, when I wrote "wide range of cores", it might be a little exagerated...
 Junie is using the [wasi-sdk](https://github.com/WebAssembly/wasi-sdk) to build the cores, and it currently lacks features that cores sometimes use extensively. 
 Right now, the most problematic ones are threading and JIT backend. Also, no OpenGL support at this time (this one is actually doable but probably requires a lot of work).
 
-That said, even after disabling all the above features when building the cores, performance is still far beyond acceptable for very-retro cores. You will however have some trouble with 3D games on Nintendo DS (2D games run quite fine, as far as I've tested). Low-end mobile phones might also have struggle with the SNES.
+That said, even after disabling all the above features when building the cores, performance is still far beyond acceptable for most cores. You will however have some trouble with 3D games on Nintendo DS (2D games run quite fine on recent hardware, as far as I've tested). Low-end mobile phones might also have struggle with the SNES.
 
 ## Game sizes
 
-Just a note to warn you about game sizes. There is currently no cache mechanism to keep games data between reloads. For instance, each time you will start Nintendo DS game, you will download 20 to 200MB.
+Just a note to warn you about game sizes. There is currently no managed cache mechanism to keep game files data between reloads. For instance, depending on how you browser handles them, you might download 20 to 200MB files each time you start a game.
 
 For those who have a low data plan on their mobile phones: be careful, your browser might still cache them, but might not! Improving this will probably be one of my top priorities.
-
-## Save files
-
-As of now, Junie stores save files in your browser's local storage, and never removes anything. This will probably change in the future, but if your saves are missing after an update, don't worry too much: it's still there, and Junie is probably the faulty one not seeing them correctly.
 
 # Next steps
 
@@ -214,4 +216,9 @@ As of now, Junie stores save files in your browser's local storage, and never re
 ## Assets
 
 - Original controller assets come from the [Delta emulator](https://github.com/rileytestut/Delta).
+- Menu graphics come from the [Google Material Icons](https://fonts.google.com/icons).
 - Loading screen comes from [Pixel Art Maker](http://pixelartmaker.com/art/8f6c49d5035cd32) (not sure exactly who to credit).
+
+# License
+
+Junie is licensed under the [GNU General Public License v3.0](https://github.com/Namaneo/Junie/blob/main/LICENSE.md). When applicable, dependencies listed in the [Credits](#credits) section retain their original licenses.
