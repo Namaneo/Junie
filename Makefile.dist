@@ -1,3 +1,5 @@
+VERSION := 0.2.0
+
 dist: \
 	dist_linux-x64___12.16.2 \
 	dist_linux-x86___12.16.2 \
@@ -31,7 +33,7 @@ dist_%: dist_global
 		-r node_modules/serve-index/public/style.css \
 		-r node_modules/serve-index/public/directory.html
 
-	@(cd $(DIST_DIR)/$(platform)   && zip -r ../$(TARGET)-$(platform) .)
+	@(cd $(DIST_DIR)/$(platform) && zip -r ../$(TARGET)-$(VERSION)-$(platform) .)
 
 dist_clean:
 	rm -rf $(TMP_DIR)

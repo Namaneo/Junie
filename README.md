@@ -18,7 +18,7 @@ I haven't played those games yet but will do for sure!
 
 *Disclaimer: development is still in progress. I'll try my best not to break anything between releases (especially regarding local save files), but it's probably a good idea for you to test releases before updating.*
 
-# Supported features:
+# Supported features
 
 - [x] All the systems described in the [Folder structure](#folder-structure).
 - [x] Save files (stored inside your browser's storage).
@@ -27,7 +27,7 @@ I haven't played those games yet but will do for sure!
 - [x] Multi-touch controller, with D-pad used as a joystick.
 - [x] Re-mappable keyboard to joypad bindings. 
 - [x] Touch inputs, enabled by pressing the top button.
-- [x] Savestates creation and restore.
+- [x] Savestate creation and restore.
 - [x] Fast-forward up to 4 times the original speed.
 
 # Folder structure
