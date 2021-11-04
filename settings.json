@@ -27,7 +27,8 @@
             "firmware.bin"
         ],
         "configurations": {
-            "melonds_touch_mode": "Touch"
+            "melonds_touch_mode": "Touch",
+            "melonds_randomize_mac_address": "enabled"
         }
     }
 }
