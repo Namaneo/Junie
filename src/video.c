@@ -22,6 +22,9 @@ struct JUN_Video
     unsigned height;
     size_t pitch;
 
+    unsigned view_width;
+    unsigned view_height;
+
     JUN_Texture *ui;   
 };
 
@@ -95,27 +98,6 @@ bool JUN_VideoSetPixelFormat(JUN_Video *this, enum retro_pixel_format *format)
     return false;
 }
 
-void JUN_VideoUpdateContext(JUN_Video *this, unsigned width, unsigned height, size_t pitch)
-{
-    if (this->width != width || this->height != height || this->pitch != pitch)
-    {
-        MTY_Log("%u x %u (%zu)", width, height, pitch);
-
-        if (this->buffer)
-        {
-            MTY_Free(this->buffer);
-        }
-    
-        this->width = width;
-        this->height = height;
-        this->pitch = pitch;
-        this->buffer = MTY_Alloc(this->width * this->bits_per_pixel * this->height, 1);
-
-        JUN_InputSetFrameMetrics(this->input, this->width, this->height);
-
-        JUN_VideoUpdateUI(this);
-    }
-}
 
 static void set_texture_metrics(JUN_Video *this, JUN_TextureType type, uint32_t view_width, uint32_t view_height)
 {
@@ -180,28 +162,55 @@ static void set_texture_metrics(JUN_Video *this, JUN_TextureType type, uint32_t 
     });
 }
 
-void JUN_VideoUpdateUI(JUN_Video *this)
+static void update_ui_context(JUN_Video *this)
 {
-    //Get window metrics
-    uint32_t view_width, view_height;
-    refresh_viewport_size(this, &view_width, &view_height);
-
     //Update texture metrics
-    set_texture_metrics(this, CONTROLLER_MENU,  view_width, view_height);
-    set_texture_metrics(this, CONTROLLER_LEFT,  view_width, view_height);
-    set_texture_metrics(this, CONTROLLER_RIGHT, view_width, view_height);
+    set_texture_metrics(this, CONTROLLER_MENU,  this->view_width, this->view_height);
+    set_texture_metrics(this, CONTROLLER_LEFT,  this->view_width, this->view_height);
+    set_texture_metrics(this, CONTROLLER_RIGHT, this->view_width, this->view_height);
 
     //Destroy previous textures
     if (this->ui)
         JUN_TextureDestroy(&this->ui);
 
     //Create texture context
-    this->ui = JUN_TextureCreateContext(view_width, view_height, 1);
+    this->ui = JUN_TextureCreateContext(this->view_width, this->view_height, 1);
 
     //Draw all textures
     JUN_TextureDraw(this->ui, JUN_InputGetMetrics(this->input, CONTROLLER_MENU));
     JUN_TextureDraw(this->ui, JUN_InputGetMetrics(this->input, CONTROLLER_LEFT));
     JUN_TextureDraw(this->ui, JUN_InputGetMetrics(this->input, CONTROLLER_RIGHT));
+}
+
+void JUN_VideoUpdateContext(JUN_Video *this, unsigned width, unsigned height, size_t pitch)
+{
+    if (this->width != width || this->height != height || this->pitch != pitch)
+    {
+        MTY_Log("%u x %u (%zu)", width, height, pitch);
+
+        if (this->buffer)
+        {
+            MTY_Free(this->buffer);
+        }
+    
+        this->width = width;
+        this->height = height;
+        this->pitch = pitch;
+        this->buffer = MTY_Alloc(this->width * this->bits_per_pixel * this->height, 1);
+
+        JUN_InputSetFrameMetrics(this->input, this->width, this->height);
+    }
+
+    uint32_t view_width, view_height;
+    refresh_viewport_size(this, &view_width, &view_height);
+
+    if (this->view_width != view_width || this->view_height != view_height)
+    {
+        this->view_width  = view_width;
+        this->view_height = view_height;
+
+        update_ui_context(this);
+    }
 }
 
 void JUN_VideoDrawFrame(JUN_Video *this, const void *data)

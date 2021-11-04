@@ -116,9 +116,6 @@ static void event_func(const MTY_Event *event, void *opaque)
 {
     JUN_InputSetStatus(app->input, event);
 
-    if (event->type == MTY_EVENT_SIZE)
-        JUN_VideoUpdateUI(app->video);
-
     if (event->type == MTY_EVENT_CLOSE)
         app->quit = true;
 }
