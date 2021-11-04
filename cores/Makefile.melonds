@@ -2,5 +2,6 @@ TARGET      := libmelonds.a
 
 BUILD_DIR   := $(TARGET:lib%.a=%)
 BUILD_FLAGS := TARGET=../$(TARGET) HAVE_WIFI=0
+CXXFLAGS    := -I../override
 
 include Makefile.common

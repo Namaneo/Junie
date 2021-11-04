@@ -1,0 +1,16 @@
+#include <climits>
+
+namespace std
+{
+    typedef int once_flag;
+
+    class mutex {};
+    class recursive_mutex {};
+
+    template<typename _Mutex>
+    class lock_guard
+    {
+    public:
+        lock_guard(_Mutex& _) { }
+    };
+}
