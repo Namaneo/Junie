@@ -184,7 +184,7 @@ static void restore_memory(JUN_Core *this, uint32_t type, const char *path)
     if (!file) 
         return;
 
-    memcpy(buffer, file->buffer, size);
+    memcpy(buffer, file->buffer, file->size);
 }
 
 void JUN_CoreRestoreMemories(JUN_Core *this)
