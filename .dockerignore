@@ -4,6 +4,7 @@
 !assets/*.png
 !src/*.c
 !src/*.h
+!web/*.js
 !lib/Makefile*
 !cores/Makefile*
 !cores/override
