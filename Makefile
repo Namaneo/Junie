@@ -51,7 +51,7 @@ CORES := quicknes mgba snes9x genesis melonds
 all: clean $(TARGET)
 
 $(TARGET): $(CORES)
-	@cp index.html settings.json $(OUT_DIR)
+	@cp index.html settings.json web/* $(OUT_DIR)
 	@cp $(LIB_DIR)/matoya/src/unix/web/matoya.js $(OUT_DIR)
 
 $(CORES): deps $(OBJ)
