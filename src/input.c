@@ -12,10 +12,10 @@
 
 #define MAX_POINTERS         4
 
-typedef struct JUN_InputPointer  JUN_InputPointer;
-typedef struct JUN_InputStatus   JUN_InputStatus;
-typedef struct JUN_InputTexture  JUN_InputTexture;
-typedef struct JUN_InputInstance JUN_InputInstance;
+typedef struct JUN_InputPointer    JUN_InputPointer;
+typedef struct JUN_InputStatus     JUN_InputStatus;
+typedef struct JUN_InputTexture    JUN_InputTexture;
+typedef struct JUN_InputController JUN_InputController;
 
 struct JUN_InputPointer
 {
@@ -35,36 +35,24 @@ struct JUN_InputStatus
     JUN_StateCallback callback;
 };
 
-struct JUN_InputInstance
+struct JUN_InputController
 {
-   JUN_TextureData texture;
-
-   size_t inputs_size;
-   JUN_InputStatus **inputs;
+    uint8_t id;
+    size_t inputs_size;
+    JUN_InputStatus **inputs;
 };
 
 struct JUN_Input
 {
     JUN_State *state;
-
-    float frame_width;
-    float frame_height;
-    float view_width;
-    float view_height;
  
-    JUN_InputInstance instances[CONTROLLER_MAX];
+    JUN_InputController controllers[CONTROLLER_MAX];
  
     JUN_InputStatus menus[MENU_MAX];
     JUN_InputStatus inputs[INPUT_TOTAL];
  
     JUN_InputPointer pointers[MAX_POINTERS];
 };
-
-static void toggle_audio(JUN_State *state)         { state->has_audio            = !state->has_audio;             }
-static void toggle_gamepad(JUN_State *state)       { state->has_gamepad          = !state->has_gamepad;           }
-static void should_save_state(JUN_State *state)    { state->should_save_state    = true;                          }
-static void should_restore_state(JUN_State *state) { state->should_restore_state = true;                          }
-static void fast_forward(JUN_State *state)         { state->fast_forward         = (state->fast_forward + 1) % 4; }
 
 JUN_Input *JUN_InputInitialize(JUN_State *state)
 {
@@ -77,27 +65,27 @@ JUN_Input *JUN_InputInitialize(JUN_State *state)
     this->menus[MENU_TOGGLE_AUDIO].center.x = 55;
     this->menus[MENU_TOGGLE_AUDIO].center.y = 60;
     this->menus[MENU_TOGGLE_AUDIO].radius = 80;
-    this->menus[MENU_TOGGLE_AUDIO].callback = toggle_audio;
+    this->menus[MENU_TOGGLE_AUDIO].callback = JUN_StateToggleAudio;
 
     this->menus[MENU_TOGGLE_GAMEPAD].center.x = 210;
     this->menus[MENU_TOGGLE_GAMEPAD].center.y = 60;
     this->menus[MENU_TOGGLE_GAMEPAD].radius = 80;
-    this->menus[MENU_TOGGLE_GAMEPAD].callback = toggle_gamepad;
+    this->menus[MENU_TOGGLE_GAMEPAD].callback = JUN_StateToggleGamepad;
 
     this->menus[MENU_SAVE_STATE].center.x = 400;
     this->menus[MENU_SAVE_STATE].center.y = 60;
     this->menus[MENU_SAVE_STATE].radius = 80;
-    this->menus[MENU_SAVE_STATE].callback = should_save_state;
+    this->menus[MENU_SAVE_STATE].callback = JUN_StateToggleSaveState;
 
     this->menus[MENU_RESTORE_STATE].center.x = 510;
     this->menus[MENU_RESTORE_STATE].center.y = 60;
     this->menus[MENU_RESTORE_STATE].radius = 80;
-    this->menus[MENU_RESTORE_STATE].callback = should_restore_state;
+    this->menus[MENU_RESTORE_STATE].callback = JUN_StateToggleRestoreState;
 
     this->menus[MENU_FAST_FORWARD].center.x = 665;
     this->menus[MENU_FAST_FORWARD].center.y = 60;
     this->menus[MENU_FAST_FORWARD].radius = 80;
-    this->menus[MENU_FAST_FORWARD].callback = fast_forward;
+    this->menus[MENU_FAST_FORWARD].callback = JUN_StateToggleFastForward;
 
     JUN_InputStatus *menu_inputs[MENU_MAX] =
     {
@@ -108,8 +96,9 @@ JUN_Input *JUN_InputInitialize(JUN_State *state)
         &this->menus[MENU_FAST_FORWARD],
     };
 
-    this->instances[CONTROLLER_MENU].inputs_size = MENU_MAX;
-    this->instances[CONTROLLER_MENU].inputs = MTY_Dup(menu_inputs, sizeof menu_inputs);
+    this->controllers[CONTROLLER_MENU].id = CONTROLLER_MENU;
+    this->controllers[CONTROLLER_MENU].inputs_size = MENU_MAX;
+    this->controllers[CONTROLLER_MENU].inputs = MTY_Dup(menu_inputs, sizeof menu_inputs);
 
     /* Left controller */
 
@@ -147,8 +136,9 @@ JUN_Input *JUN_InputInitialize(JUN_State *state)
         &this->inputs[RETRO_DEVICE_ID_JOYPAD_SELECT],
     };
 
-    this->instances[CONTROLLER_LEFT].inputs_size = INPUT_LEFT_TOTAL;
-    this->instances[CONTROLLER_LEFT].inputs = MTY_Dup(left_inputs, sizeof left_inputs);
+    this->controllers[CONTROLLER_LEFT].id = CONTROLLER_LEFT;
+    this->controllers[CONTROLLER_LEFT].inputs_size = INPUT_LEFT_TOTAL;
+    this->controllers[CONTROLLER_LEFT].inputs = MTY_Dup(left_inputs, sizeof left_inputs);
 
     /* Right controller */
 
@@ -186,8 +176,9 @@ JUN_Input *JUN_InputInitialize(JUN_State *state)
         &this->inputs[RETRO_DEVICE_ID_JOYPAD_START],
     };
 
-    this->instances[CONTROLLER_RIGHT].inputs_size = INPUT_RIGHT_TOTAL;
-    this->instances[CONTROLLER_RIGHT].inputs = MTY_Dup(right_inputs, sizeof right_inputs);
+    this->controllers[CONTROLLER_RIGHT].id = CONTROLLER_RIGHT;
+    this->controllers[CONTROLLER_RIGHT].inputs_size = INPUT_RIGHT_TOTAL;
+    this->controllers[CONTROLLER_RIGHT].inputs = MTY_Dup(right_inputs, sizeof right_inputs);
 
     return this;
 }
@@ -206,28 +197,6 @@ void JUN_InputSetBinding(JUN_Input *this, const char *joypad, char *keyboard)
     MTY_Free(keyboard_key);
 }
 
-void JUN_InputSetFrameMetrics(JUN_Input *this, float width, float height)
-{
-    this->frame_width  = width;
-    this->frame_height = height;
-}
-
-void JUN_InputSetWindowMetrics(JUN_Input *this, float width, float height)
-{
-    this->view_width  = width;
-    this->view_height = height;
-}
-
-void JUN_InputSetMetrics(JUN_Input *this, JUN_TextureData *texture)
-{
-    this->instances[texture->id].texture = *texture;
-}
-
-JUN_TextureData *JUN_InputGetMetrics(JUN_Input *this, JUN_TextureType type)
-{
-    return &this->instances[type].texture;
-}
-
 static void set_key(JUN_Input *this, const MTY_Key key, bool pressed)
 {
     for (uint8_t i = 0; i < INPUT_TOTAL; ++i)
@@ -240,18 +209,20 @@ static void set_key(JUN_Input *this, const MTY_Key key, bool pressed)
     }
 }
 
-static void set_button(JUN_Input *this, JUN_InputInstance *controller, JUN_InputPointer *pointer)
+static void set_button(JUN_Input *this, JUN_InputController *controller, JUN_InputPointer *pointer)
 {
+    JUN_TextureData *texture = JUN_StateGetMetrics(this->state, controller->id);
+
     for (size_t i = 0; i < controller->inputs_size; ++i)
     {
         JUN_InputStatus *input = controller->inputs[i];
 
-        float center_x = input->center.x * (controller->texture.width  / controller->texture.image_width);
-        float center_y = input->center.y * (controller->texture.height / controller->texture.image_height);
-        float radius   = input->radius   * (controller->texture.width  / controller->texture.image_width);
+        float center_x = input->center.x * (texture->width  / texture->image_width);
+        float center_y = input->center.y * (texture->height / texture->image_height);
+        float radius   = input->radius   * (texture->width  / texture->image_width);
 
-        float distance_x = powf(pointer->x - (center_x + controller->texture.x), 2);
-        float distance_y = powf(pointer->y - (center_y + controller->texture.y), 2);
+        float distance_x = powf(pointer->x - (center_x + texture->x), 2);
+        float distance_y = powf(pointer->y - (center_y + texture->y), 2);
 
         bool insideCircle = distance_x + distance_y < powf(radius, 2);
 
@@ -272,23 +243,27 @@ static void set_button(JUN_Input *this, JUN_InputInstance *controller, JUN_Input
 
 static void set_touch(JUN_Input *this, JUN_InputPointer *pointer)
 {
-    float aspect_ratio = (float)this->frame_width / (float)this->frame_height;
+    float view_width, view_height, frame_width, frame_height;
+    JUN_StateGetWindowMetrics(this->state, &view_width,  &view_height);
+    JUN_StateGetFrameMetrics(this->state,  &frame_width, &frame_height);
 
-    float width        = this->view_width;
+    float aspect_ratio = frame_width / frame_height;
+
+    float width        = view_width;
     float height       = width / aspect_ratio;
     float correction_x = 0;
     float correction_y = 0;
 
-    if (height > this->view_height)
+    if (height > view_height)
     {
-        height     = this->view_height;
+        height     = view_height;
         width      = height * aspect_ratio;
-        correction_x = (this->view_width - width) / 2.0f;
+        correction_x = (view_width - width) / 2.0f;
     }
 
-    if (width == this->view_width)
+    if (width == view_width)
     {
-        correction_y = this->view_width * 0.1f;
+        correction_y = view_width * 0.1f;
     }
 
     pointer->x = pointer->x - correction_x;
@@ -297,11 +272,11 @@ static void set_touch(JUN_Input *this, JUN_InputPointer *pointer)
     if (pointer->x < 0 || pointer->x > width || pointer->y < 0 || pointer->y > height)
         return;
 
-    pointer->x = (pointer->x / width)  * this->frame_width;
-    pointer->y = (pointer->y / height) * this->frame_height;
+    pointer->x = (pointer->x / width)  * frame_width;
+    pointer->y = (pointer->y / height) * frame_height;
 
-    pointer->x = ((pointer->x * 0x10000) / this->frame_width)  - 0x8000;
-    pointer->y = ((pointer->y * 0x10000) / this->frame_height) - 0x8000;
+    pointer->x = ((pointer->x * 0x10000) / frame_width)  - 0x8000;
+    pointer->y = ((pointer->y * 0x10000) / frame_height) - 0x8000;
 }
 
 static JUN_InputPointer *get_pointer(JUN_Input *this, int32_t id)
@@ -345,7 +320,7 @@ void JUN_InputSetStatus(JUN_Input *this, const MTY_Event *event)
         pointer->x       = event->button.x;
         pointer->y       = event->button.y;
 
-        set_button(this, &this->instances[CONTROLLER_MENU], pointer);
+        set_button(this, &this->controllers[CONTROLLER_MENU], pointer);
     }
 
     if (event->type == MTY_EVENT_MOTION)
@@ -362,10 +337,10 @@ void JUN_InputSetStatus(JUN_Input *this, const MTY_Event *event)
     if (!pointer)
         return;
 
-    if (this->state->has_gamepad) 
+    if (JUN_StateHasGamepad(this->state)) 
     {
-        set_button(this, &this->instances[CONTROLLER_LEFT],  pointer);
-        set_button(this, &this->instances[CONTROLLER_RIGHT], pointer);
+        set_button(this, &this->controllers[CONTROLLER_LEFT],  pointer);
+        set_button(this, &this->controllers[CONTROLLER_RIGHT], pointer);
     }
     else
     {
@@ -383,7 +358,7 @@ int16_t JUN_InputGetStatus(JUN_Input *this, uint32_t device, uint32_t retro_key)
         return this->inputs[retro_key].pressed;
     }
 
-    if (device == RETRO_DEVICE_POINTER && !this->state->has_gamepad)
+    if (device == RETRO_DEVICE_POINTER && !JUN_StateHasGamepad(this->state))
     {
         switch (retro_key)
         {
@@ -403,9 +378,9 @@ int16_t JUN_InputGetStatus(JUN_Input *this, uint32_t device, uint32_t retro_key)
 
 void JUN_InputDestroy(JUN_Input **this)
 {
-    MTY_Free((*this)->instances[CONTROLLER_MENU].inputs);
-    MTY_Free((*this)->instances[CONTROLLER_LEFT].inputs);
-    MTY_Free((*this)->instances[CONTROLLER_RIGHT].inputs);
+    MTY_Free((*this)->controllers[CONTROLLER_MENU].inputs);
+    MTY_Free((*this)->controllers[CONTROLLER_LEFT].inputs);
+    MTY_Free((*this)->controllers[CONTROLLER_RIGHT].inputs);
 
     MTY_Free(*this);
     *this = NULL;

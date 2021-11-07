@@ -30,10 +30,6 @@ enum JUN_MenuType
 
 JUN_Input *JUN_InputInitialize(JUN_State *state);
 void JUN_InputSetBinding(JUN_Input *this, const char *joypad_key, char *keyboard_key);
-void JUN_InputSetFrameMetrics(JUN_Input *this, float width, float height);
-void JUN_InputSetWindowMetrics(JUN_Input *this, float width, float height);
-void JUN_InputSetMetrics(JUN_Input *this, JUN_TextureData *texture);
-JUN_TextureData *JUN_InputGetMetrics(JUN_Input *this, JUN_TextureType type);
 void JUN_InputSetStatus(JUN_Input *this, const MTY_Event *event);
 int16_t JUN_InputGetStatus(JUN_Input *this, uint32_t device, uint32_t retro_key);
 void JUN_InputDestroy(JUN_Input **input);

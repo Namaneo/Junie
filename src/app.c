@@ -60,7 +60,7 @@ JUN_App *JUN_AppInitialize(MTY_AppFunc app_func, MTY_EventFunc event_func)
     this->public.state = JUN_StateInitialize();
     this->public.input = JUN_InputInitialize(this->public.state);
     this->public.audio = JUN_AudioInitialize();
-    this->public.video = JUN_VideoInitialize(this->public.input, app_func, event_func);
+    this->public.video = JUN_VideoInitialize(this->public.state, app_func, event_func);
 
     return (JUN_App *)this;
 }

@@ -10,7 +10,7 @@ struct JUN_Video
     MTY_App *app;
     MTY_Renderer *renderer;
 
-    JUN_Input *input;
+    JUN_State *state;
 
     char *assets[CONTROLLER_MAX];
     
@@ -28,11 +28,11 @@ struct JUN_Video
     JUN_Texture *ui;   
 };
 
-JUN_Video *JUN_VideoInitialize(JUN_Input *input, MTY_AppFunc app_func, MTY_EventFunc event_func)
+JUN_Video *JUN_VideoInitialize(JUN_State *state, MTY_AppFunc app_func, MTY_EventFunc event_func)
 {
     JUN_Video *this = MTY_Alloc(1, sizeof(JUN_Video));
 
-    this->input = input;
+    this->state = state;
 
     MTY_WindowDesc description = {0};
 	description.title = "Junie";
@@ -55,7 +55,7 @@ JUN_Video *JUN_VideoInitialize(JUN_Input *input, MTY_AppFunc app_func, MTY_Event
 static void refresh_viewport_size(JUN_Video *this, uint32_t *view_width, uint32_t *view_height)
 {
     MTY_WindowGetSize(this->app, 0, view_width, view_height);
-    JUN_InputSetWindowMetrics(this->input, *view_width, *view_height);
+    JUN_StateSetWindowMetrics(this->state, *view_width, *view_height);
 }
 
 void JUN_VideoStart(JUN_Video *this)
@@ -150,7 +150,7 @@ static void set_texture_metrics(JUN_Video *this, JUN_TextureType type, uint32_t 
     }
 
     //Set texture metrics
-    JUN_InputSetMetrics(this->input, &(JUN_TextureData)
+    JUN_StateSetMetrics(this->state, &(JUN_TextureData)
     {
         .id           = type,
         .x            = x,
@@ -177,9 +177,9 @@ static void update_ui_context(JUN_Video *this)
     this->ui = JUN_TextureCreateContext(this->view_width, this->view_height, 1);
 
     //Draw all textures
-    JUN_TextureDraw(this->ui, JUN_InputGetMetrics(this->input, CONTROLLER_MENU));
-    JUN_TextureDraw(this->ui, JUN_InputGetMetrics(this->input, CONTROLLER_LEFT));
-    JUN_TextureDraw(this->ui, JUN_InputGetMetrics(this->input, CONTROLLER_RIGHT));
+    JUN_TextureDraw(this->ui, JUN_StateGetMetrics(this->state, CONTROLLER_MENU));
+    JUN_TextureDraw(this->ui, JUN_StateGetMetrics(this->state, CONTROLLER_LEFT));
+    JUN_TextureDraw(this->ui, JUN_StateGetMetrics(this->state, CONTROLLER_RIGHT));
 }
 
 void JUN_VideoUpdateContext(JUN_Video *this, unsigned width, unsigned height, size_t pitch)
@@ -198,7 +198,7 @@ void JUN_VideoUpdateContext(JUN_Video *this, unsigned width, unsigned height, si
         this->pitch = pitch;
         this->buffer = MTY_Alloc(this->width * this->bits_per_pixel * this->height, 1);
 
-        JUN_InputSetFrameMetrics(this->input, this->width, this->height);
+        JUN_StateSetFrameMetrics(this->state, this->width, this->height);
     }
 
     uint32_t view_width, view_height;
@@ -289,7 +289,7 @@ void JUN_VideoDrawLoadingScreen(JUN_Video *this)
     set_texture_metrics(this, LOADING_SCREEN, view_width, view_height);
 
     //Draw the menu
-    JUN_TextureDraw(textures, JUN_InputGetMetrics(this->input, LOADING_SCREEN));
+    JUN_TextureDraw(textures, JUN_StateGetMetrics(this->state, LOADING_SCREEN));
 
     //Produce drawing data
     MTY_DrawData *draw_data = JUN_TextureProduce(textures, 0);
