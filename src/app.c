@@ -244,7 +244,7 @@ bool JUN_AppEnvironment(JUN_App *public, unsigned cmd, void *data)
         }
         default:
         {
-            const char *name = JUN_EnumsGetString(JUN_ENUM_ENVIRONMENT, command);
+            const char *name = JUN_EnumsGetString(JUN_ENUM_ENVIRONMENT, cmd);
 
             MTY_Log("Unhandled command: %s (%d)", name, command);
 

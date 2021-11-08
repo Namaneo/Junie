@@ -88,6 +88,8 @@ static void register_environments()
     register_environment(this, RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2);
     register_environment(this, RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2_INTL);
     register_environment(this, RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK);
+    register_environment(this, RETRO_ENVIRONMENT_SET_VARIABLE);
+    register_environment(this, RETRO_ENVIRONMENT_GET_THROTTLE_STATE);
 }
 
 static void register_languages()
