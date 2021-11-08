@@ -18,3 +18,15 @@ const systems = {
     "Game Boy Advance": cores["mgba"],
     "Nintendo DS":      cores["melonds"],
 };
+
+//Define extensions mapping
+const extensions = {
+    'nes': 'NES',
+    'smc': 'SNES',
+    'sms': 'Master System',
+    'bin': 'Mega Drive',
+    'gb':  'Game Boy',
+    'gbc': 'Game Boy Color',
+    'gba': 'Game Boy Advance',
+    'nds': 'Nintendo DS',
+}

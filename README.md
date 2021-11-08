@@ -14,6 +14,8 @@ Junie currently runs on most recent browsers, though your experience will probab
 [GraviBots](https://retrosouls.itch.io/gravibots16bit). 
 I haven't played those games yet but will do for sure!
 
+If you prefer to play your own games, head to [this page](https://junie.herokuapp.com/play) and select a game with one of the following extensions: `nes`, `smc`, `sms`, `bin`, `gb`, `gbc`, `gba`, `nds`.
+
 ![](assets/showcase.png)
 
 *Disclaimer: development is still in progress. I'll try my best not to break anything between releases (especially regarding local save files), but it's probably a good idea for you to test releases before updating.*

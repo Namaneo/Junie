@@ -18,29 +18,64 @@
     
     <script type="text/javascript">
 
+        function run(system, core, game) {
+            //Start core execution
+            MTY_Start(`/${core.library}.wasm`, {
+                js_get_host:  (value, length) => MTY_StrToC(window.location.hostname, value, length),
+                js_get_port:  ()              => window.location.port ?? 0,
+                js_is_secure: ()              => location.protocol.indexOf('https') != -1,
+
+                js_get_system: (value, length) => MTY_StrToC(system,    value, length),
+                js_get_core:   (value, length) => MTY_StrToC(core.name, value, length),
+                js_get_game:   (value, length) => MTY_StrToC(game,      value, length),
+
+                js_read_file:  JUN_ReadFile,
+                js_write_file: JUN_WriteFile,
+            });
+
+            //Prevent mobile keyboard
+            MTY.clip.readOnly = true;
+        }
+
         //Retrieve context parameters
         const params = decodeURI(window.location.pathname).split('/');
         const system = params[1];
-        const core   = systems[system];
-        const game   = params[2];
 
-        //Start core execution
-        MTY_Start(`/${core.library}.wasm`, {
-            js_get_host:  (value, length) => MTY_StrToC(window.location.hostname, value, length),
-            js_get_port:  ()              => window.location.port ?? 0,
-            js_is_secure: ()              => location.protocol.indexOf('https') != -1,
+        if (system == 'play') {
+            var input = document.createElement('input');
+            input.type = 'file';
+            document.body.appendChild(input);
 
-            js_get_system: (value, length) => MTY_StrToC(system,    value, length),
-            js_get_core:   (value, length) => MTY_StrToC(core.name, value, length),
-            js_get_game:   (value, length) => MTY_StrToC(game,      value, length),
+            input.onchange = e => {
+                const file = e.target.files[0];
 
-            js_read_file:  JUN_ReadFile,
-            js_write_file: JUN_WriteFile,
-        });
+                const game      = file.name;
+                const extension = game.substring(game.lastIndexOf('.') + 1);
+                const system    = extensions[extension];
+                const core      = systems[system];
 
-        //Prevent mobile keyboard
-        MTY.clip.readOnly = true;
+                document.body.removeChild(input);
 
+                const _fetch = window.fetch;
+                window.fetch = (input, init) => {
+
+                    //Returning the local game file if the request matches
+                    if (input.endsWith(`${system}/${game}`)) {
+                        const response = new Response(file, { status: 200 });
+                        return new Promise(resolve => resolve(response));
+                    }
+
+                    return _fetch(input, init);
+                }
+
+                run(system, core, game);
+            }
+        } else {
+            const core = systems[system];
+            const game = params[2];
+
+            run(system, core, game)
+        }
     </script>
 </body>
 
