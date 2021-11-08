@@ -1,4 +1,4 @@
-VERSION := 0.2.2
+VERSION := 0.2.3
 
 dist: \
 	dist_linux-x64___12.16.2 \
