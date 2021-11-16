@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Options;
 
 namespace JunieAPI
 {
@@ -32,24 +33,25 @@ namespace JunieAPI
             services.Configure<SystemsOptions>(_configuration.GetSection("Systems"));
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IOptions<CommonOptions> options)
         {
             app.UseRouting();
             app.UseCors();
 
-            app.UseDefaultFiles(env.ContentRootPath, "../../ui/build", "");
-            app.UseStaticFiles(env.ContentRootPath,  "../../ui/build", "");
+            app.UseDefaultFiles(env.ContentRootPath, options.Value.Applications.Web);
+            app.UseStaticFiles(env.ContentRootPath,  options.Value.Applications.Web);
 
-            app.UseStaticFiles(env.ContentRootPath, "Assets", "/assets");
+            app.UseStaticFiles(env.ContentRootPath, options.Value.Assets.Web, "/assets");
 
             app.Map("/emulator", app =>
             {
-                app.UseStaticFiles(env.ContentRootPath, "../../app/bin",    "");
-                app.UseStaticFiles(env.ContentRootPath, "../../games",      "/games");
-                app.UseStaticFiles(env.ContentRootPath, "../../system",     "/system");
-                app.UseStaticFiles(env.ContentRootPath, "../../app/assets", "/assets");
+                app.UseStaticFiles(env.ContentRootPath, options.Value.Applications.Emulator);
 
-                app.UseIndexFile("../../app/bin/");
+                app.UseStaticFiles(env.ContentRootPath, options.Value.Assets.Games,    "/games");
+                app.UseStaticFiles(env.ContentRootPath, options.Value.Assets.System,   "/system");
+                app.UseStaticFiles(env.ContentRootPath, options.Value.Assets.Emulator, "/assets");
+
+                app.UseIndexFile(options.Value.Applications.Emulator);
             });
 
             app.Map("/api", app =>
@@ -58,7 +60,7 @@ namespace JunieAPI
                 app.UseEndpoints(endpoints => endpoints.MapControllers());
             });
 
-            app.UseIndexFile("../../ui/build");
+            app.UseIndexFile(options.Value.Applications.Web);
         }
     }
 }

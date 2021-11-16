@@ -6,7 +6,7 @@ namespace JunieAPI.Extensions
 {
     public static class IApplicationBuilderExtensions
     {
-        public static IApplicationBuilder UseDefaultFiles(this IApplicationBuilder app, string basePath, string physicalPath, string requestPath)
+        public static IApplicationBuilder UseDefaultFiles(this IApplicationBuilder app, string basePath, string physicalPath, string requestPath = "")
         {
             return app.UseDefaultFiles(new DefaultFilesOptions
             {
@@ -15,7 +15,7 @@ namespace JunieAPI.Extensions
             });
         }
 
-        public static IApplicationBuilder UseStaticFiles(this IApplicationBuilder app, string basePath, string physicalPath, string requestPath)
+        public static IApplicationBuilder UseStaticFiles(this IApplicationBuilder app, string basePath, string physicalPath, string requestPath = "")
         {
             return app.UseStaticFiles(new StaticFileOptions
             {
