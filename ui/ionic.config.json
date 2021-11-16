@@ -1,0 +1,7 @@
+{
+  "name": "JunieUI",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react"
+}

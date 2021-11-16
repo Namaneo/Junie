@@ -1,0 +1,9 @@
+.system-card {
+    text-align: center;
+}
+
+.system-card img {
+    max-height: 5vh;
+    max-width: 90%;
+    margin: 36px 8px 8px 8px;
+}
