@@ -8,8 +8,13 @@ node_modules
 include
 tmp
 bin
+obj
+build
 dist
 
 # Core files
 system
 games
+
+# .NET files
+*.Development.json
