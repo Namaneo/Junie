@@ -17,6 +17,10 @@
     <script type="text/javascript" src="/emulators.js"></script>
     
     <script type="text/javascript">
+        
+        //Disable keyboard for iframe compatibility
+        //TODO: this must be enabled in the future, but Chrome is complaining
+        navigator.keyboard = false;
 
         function run(system, core, game) {
             //Start core execution
