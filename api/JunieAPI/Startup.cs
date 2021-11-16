@@ -34,16 +34,75 @@ namespace JunieAPI
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseRouting();
-
             app.UseCors();
 
+            app.UseDefaultFiles(new DefaultFilesOptions
+            {
+                FileProvider = new PhysicalFileProvider(Path.Combine(env.ContentRootPath, "../../ui/build")),
+                RequestPath = ""
+            });
+
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(Path.Combine(env.ContentRootPath, "../../ui/build")),
+                RequestPath = ""
+            });
             app.UseStaticFiles(new StaticFileOptions
             {
                 FileProvider = new PhysicalFileProvider(Path.Combine(env.ContentRootPath, "Assets")),
                 RequestPath = "/assets"
             });
 
-            app.UseEndpoints(endpoints => endpoints.MapControllers());
+            app.Map("/emulator", app =>
+            {
+                app.UseStaticFiles(new StaticFileOptions
+                {
+                    FileProvider = new PhysicalFileProvider(Path.Combine(env.ContentRootPath, "../../app/bin")),
+                    RequestPath = "",
+                    ServeUnknownFileTypes = true,
+                });
+
+                app.UseStaticFiles(new StaticFileOptions
+                {
+                    FileProvider = new PhysicalFileProvider(Path.Combine(env.ContentRootPath, "../../games")),
+                    RequestPath = "/games",
+                    ServeUnknownFileTypes = true,
+                });
+
+                app.UseStaticFiles(new StaticFileOptions
+                {
+                    FileProvider = new PhysicalFileProvider(Path.Combine(env.ContentRootPath, "../../system")),
+                    RequestPath = "/system",
+                    ServeUnknownFileTypes = true,
+                });
+
+                app.UseStaticFiles(new StaticFileOptions
+                {
+                    FileProvider = new PhysicalFileProvider(Path.Combine(env.ContentRootPath, "../../app/assets")),
+                    RequestPath = "/assets",
+                    ServeUnknownFileTypes = true,
+                });
+
+                app.Use(async (context, task) =>
+                {
+                    var file = File.ReadAllBytes("../../app/bin/index.html");
+                    context.Response.ContentType = "text/html";
+                    await context.Response.Body.WriteAsync(file);
+                });
+            });
+
+            app.Map("/api", app =>
+            {
+                app.UseRouting();
+                app.UseEndpoints(endpoints => endpoints.MapControllers());
+            });
+
+            app.Use(async (context, task) =>
+            {
+                var file = File.ReadAllBytes("../../ui/build/index.html");
+                context.Response.ContentType = "text/html";
+                await context.Response.Body.WriteAsync(file);
+            });
         }
     }
 }

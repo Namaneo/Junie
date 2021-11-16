@@ -1,11 +1,9 @@
 import { Game } from "../models/Game";
 import { System } from "../models/System";
 
-export const apiHost: string = 'http://192.168.1.30:5000';
-
 //Generic API request sending
 async function request<T>(path: string): Promise<T> {
-    const response = await fetch(`${apiHost}/${path}`);
+    const response = await fetch(`api/${path}`);
     const data = await response.json();
     return data as T;
 };
@@ -27,7 +25,7 @@ export async function getSystems(): Promise<System[]> {
 export function getSystemCover(system: System) {
     const darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const cover = darkMode && system.coverDark ? system.coverDark : system.cover;
-    return `${apiHost}/assets/${cover}`;
+    return `assets/${cover}`;
 }
 
 export async function getGames(systemName: string): Promise<Game[]> {

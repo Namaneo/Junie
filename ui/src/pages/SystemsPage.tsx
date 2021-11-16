@@ -1,7 +1,7 @@
 import { IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonLoading, IonPage, IonTitle, IonToolbar } from '@ionic/react';
 import React, { useEffect, useState } from 'react';
 import { System } from '../models/System';
-import { apiHost, getSystemCover, getSystems } from '../services/Requests';
+import { getSystemCover, getSystems } from '../services/Requests';
 import './SystemsPage.css';
 
 interface SystemsState {

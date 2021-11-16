@@ -70,5 +70,3 @@ clean:
 clean-all: clean
 	-@make -C lib   clean
 	-@make -C cores clean
-
-include Makefile.dist

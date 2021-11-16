@@ -9,8 +9,6 @@ interface EmulatorProps {
 
 export const EmulatorPage: React.FC<RouteComponentProps<EmulatorProps>> = ({ match }) => {
 
-    const url = `http://192.168.1.30:8000/${match.params.system}/${match.params.game}`
-
     // const onLoad = () => {
     //     const frame = window.frames[0];
     //     const _fetch = frame.fetch
@@ -34,7 +32,7 @@ export const EmulatorPage: React.FC<RouteComponentProps<EmulatorProps>> = ({ mat
             </IonHeader>
 
             <IonContent>
-                <iframe className="emulator" src={url}></iframe>
+                <iframe className="emulator" src={`emulator/${match.params.system}/${match.params.game}`}></iframe>
             </IonContent>
 
         </IonPage>
