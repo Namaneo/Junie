@@ -1,20 +1,3 @@
-# Editor files
 .vscode
-node_modules
-
-# Build files
-*.a
-*.o
-include
-tmp
-bin
-obj
-build
-dist
-
-# Core files
 system
 games
-
-# .NET files
-*.Development.json
