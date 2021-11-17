@@ -41,15 +41,15 @@ namespace JunieAPI
             app.UseDefaultFiles(env.ContentRootPath, options.Value.Applications.Web);
             app.UseStaticFiles(env.ContentRootPath,  options.Value.Applications.Web);
 
-            app.UseStaticFiles(env.ContentRootPath, options.Value.Assets.Web, "/assets");
+            app.UseStaticFiles(env.ContentRootPath, options.Value.Assets.Visuals, "/assets");
 
             app.Map("/emulator", app =>
             {
                 app.UseStaticFiles(env.ContentRootPath, options.Value.Applications.Emulator);
 
-                app.UseStaticFiles(env.ContentRootPath, options.Value.Assets.Games,    "/games");
-                app.UseStaticFiles(env.ContentRootPath, options.Value.Assets.System,   "/system");
-                app.UseStaticFiles(env.ContentRootPath, options.Value.Assets.Emulator, "/assets");
+                app.UseStaticFiles(env.ContentRootPath, options.Value.Assets.Visuals, "/assets");
+                app.UseStaticFiles(env.ContentRootPath, options.Value.Assets.Games,   "/games");
+                app.UseStaticFiles(env.ContentRootPath, options.Value.Assets.System,  "/system");
 
                 app.UseIndexFile(options.Value.Applications.Emulator);
             });

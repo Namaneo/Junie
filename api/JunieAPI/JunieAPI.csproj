@@ -8,10 +8,4 @@
     <PublishTrimmed>True</PublishTrimmed>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Content Include="Assets\*.*">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>  
-  </ItemGroup>
-
 </Project>

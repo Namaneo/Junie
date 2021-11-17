@@ -16,9 +16,7 @@ namespace JunieAPI.Models
 
         public class AssetsOptions
         {
-            public string Web { get; set; }
-
-            public string Emulator { get; set; }
+            public string Visuals { get; set; }
 
             public string Games { get; set; }
 
