@@ -60,7 +60,7 @@ export const SavesPage: React.FC = () => {
   if (state.loading)
     return <IonPage><IonLoading isOpen /></IonPage>;
 
-  //Display all games cards
+  //Display all save files
   return (
     <IonPage>
 

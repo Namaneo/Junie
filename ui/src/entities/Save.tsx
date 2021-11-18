@@ -17,17 +17,25 @@ export class Save {
     }
   
     isMapped(systems: System[]) {
-      const system = systems.find(system => system.name == this.system);
+      const system = this.getSystem(systems);
       if (!system)
         return false;
   
-      const game = system.games.find(game => game.rom == `${this.game}.${system.extension}`)
+      const game = this.getGame(system);
       if (!game)
         return false;
   
       return true;
     }
   
+    getSystem(systems: System[]) {
+      return systems.find(system => system.name == this.system)!;
+    }
+
+    getGame(system: System) {
+      return system.games.find(game => game.rom == `${this.game}.${system.extension}`)!;
+    }
+
     private match(index: number) {
       const matches = this.files[0].path.match(/\/save\/(.*)\/(.*)\.(.*)/);
   

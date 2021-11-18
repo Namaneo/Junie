@@ -1,0 +1,16 @@
+.game {
+    text-decoration: none;
+}
+
+.game .card {
+    display: flex;
+}
+
+.game .card img {
+    max-width: 25%;
+}
+
+.game .card .header {
+    display: flex;
+    align-items: center;
+}
