@@ -14,7 +14,7 @@ app/bin:
 	( cd app && make )
 
 api/publish:
-	( cd api && dotnet publish -c Release -o publish )
+	( cd api && dotnet publish -c Release -r linux-x64 --self-contained -o publish )
 
 ui/build:
 	( cd ui && ionic build )

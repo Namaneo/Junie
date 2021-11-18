@@ -1,4 +1,6 @@
 using System.IO;
+using System.Linq;
+using System.Net.Http;
 using JunieAPI.Extensions;
 using JunieAPI.Models;
 using Microsoft.AspNetCore.Builder;
@@ -12,6 +14,8 @@ namespace JunieAPI
 {
     public class Startup
     {
+        private readonly HttpClient _client = new HttpClient();
+
         private readonly IConfiguration _configuration;
 
         public Startup(IConfiguration configuration)
@@ -33,25 +37,25 @@ namespace JunieAPI
             services.Configure<SystemsOptions>(_configuration.GetSection("Systems"));
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IOptions<CommonOptions> options)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IOptions<CommonOptions> common, IOptions<SystemsOptions> systems)
         {
             app.UseRouting();
             app.UseCors();
 
-            app.UseDefaultFiles(env.ContentRootPath, options.Value.Applications.Web);
-            app.UseStaticFiles(env.ContentRootPath,  options.Value.Applications.Web);
+            app.UseDefaultFiles(env.ContentRootPath, common.Value.Applications.Web);
+            app.UseStaticFiles(env.ContentRootPath,  common.Value.Applications.Web);
 
-            app.UseStaticFiles(env.ContentRootPath, options.Value.Assets.Visuals, "/assets");
+            app.UseStaticFiles(env.ContentRootPath, common.Value.Resources.Assets, "/assets");
 
             app.Map("/emulator", app =>
             {
-                app.UseStaticFiles(env.ContentRootPath, options.Value.Applications.Emulator);
+                app.UseStaticFiles(env.ContentRootPath, common.Value.Applications.Emulator);
 
-                app.UseStaticFiles(env.ContentRootPath, options.Value.Assets.Visuals, "/assets");
-                app.UseStaticFiles(env.ContentRootPath, options.Value.Assets.Games,   "/games");
-                app.UseStaticFiles(env.ContentRootPath, options.Value.Assets.System,  "/system");
+                app.UseStaticFiles(env.ContentRootPath, common.Value.Resources.Assets, "/assets");
+                app.UseStaticFiles(env.ContentRootPath, common.Value.Resources.Games,  "/games");
+                app.UseStaticFiles(env.ContentRootPath, common.Value.Resources.System, "/system");
 
-                app.UseIndexFile(options.Value.Applications.Emulator);
+                app.UseIndexFile(common.Value.Applications.Emulator);
             });
 
             app.Map("/api", app =>
@@ -60,7 +64,33 @@ namespace JunieAPI
                 app.UseEndpoints(endpoints => endpoints.MapControllers());
             });
 
-            app.UseIndexFile(options.Value.Applications.Web);
+            app.UseEndpoints(endpoints => endpoints.MapGet("/covers/{system}/{game}", async context =>
+            {
+                //TODO: ugly part, must be generic (?) and extracted from here
+                string system = (string)context.Request.RouteValues["system"];
+                string game   = (string)context.Request.RouteValues["game"];
+
+                string shortSystem = systems.Value.First(x => x.Value.FullName == system).Key;
+                string coverPath = Path.Combine(common.Value.Resources.Games, shortSystem, game);
+
+                if (File.Exists(coverPath))
+                {
+                    byte[] cachedContent = await File.ReadAllBytesAsync(coverPath);
+                    await context.Response.Body.WriteAsync(cachedContent, 0, cachedContent.Length);
+                    return;
+                }
+
+                string url = $"https://raw.githubusercontent.com/libretro-thumbnails/{system.Replace(' ', '_')}/master/Named_Boxarts/{game}";
+
+                HttpResponseMessage response = await _client.GetAsync(url);
+                byte[] content = await response.Content.ReadAsByteArrayAsync();
+
+                await File.WriteAllBytesAsync(coverPath, content);
+
+                await context.Response.Body.WriteAsync(content, 0, content.Length);
+            }));
+
+            app.UseIndexFile(common.Value.Applications.Web);
         }
     }
 }

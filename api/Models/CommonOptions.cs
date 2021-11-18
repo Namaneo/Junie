@@ -4,7 +4,7 @@ namespace JunieAPI.Models
     {
         public ApplicationsOptions Applications { get; set; }
 
-        public AssetsOptions Assets { get; set; }
+        public AssetsOptions Resources { get; set; }
 
 
         public class ApplicationsOptions
@@ -16,7 +16,7 @@ namespace JunieAPI.Models
 
         public class AssetsOptions
         {
-            public string Visuals { get; set; }
+            public string Assets { get; set; }
 
             public string Games { get; set; }
 

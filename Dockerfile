@@ -40,7 +40,7 @@ ADD ./ui/ ./
 RUN yarn ionic build
 
 # Run Junie
-FROM alpine AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:5.0 AS runtime
 
 WORKDIR /app
 
@@ -50,4 +50,4 @@ COPY --from=ui  /app/build/   ./ui/
 
 ADD ./assets/ ./assets/
 
-ENTRYPOINT [ "Junie" ]
+ENTRYPOINT [ "dotnet", "Junie.dll" ]

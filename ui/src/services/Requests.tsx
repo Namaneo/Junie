@@ -37,7 +37,7 @@ export async function getGames(systemName: string): Promise<Game[]> {
         games.push({
             name: name.replace(/ \(.*\)/g, ''),
             rom: `${name}.${system.extension}`,
-            cover: `https://raw.githubusercontent.com/libretro-thumbnails/${system.fullName?.replaceAll(' ', '_')}/master/Named_Boxarts/${name}.png`,
+            cover: `covers/${system.fullName}/${name}.png`,
         });
     }
 
