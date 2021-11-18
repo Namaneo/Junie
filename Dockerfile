@@ -14,7 +14,6 @@ RUN tar xvf wasi-sdk-12.0-linux.tar.gz
 
 ADD ./app/ ./
 
-RUN git init
 RUN make
 
 # Build API
@@ -27,11 +26,12 @@ ADD ./api/ ./
 RUN dotnet publish -c Release -o publish
 
 # Build UI
-FROM node as ui
+FROM node:16 as ui
 
 WORKDIR /app
 
 ADD ./ui/package.json ./
+ADD ./ui/yarn.lock    ./
 
 RUN yarn install
 

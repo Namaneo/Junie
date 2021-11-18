@@ -13,7 +13,7 @@ all: $(TARGET)
 
 $(TARGET):
 	CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)" \
-		make -C $(BUILD_DIR) $(BUILD_FLAGS) platform=$(PLATFORM)
+		make -C $(BUILD_DIR) $(BUILD_FLAGS) platform=$(PLATFORM) GIT_VERSION=
 
 clean:
 	make -C $(BUILD_DIR) $(BUILD_FLAGS) platform=$(PLATFORM) clean
