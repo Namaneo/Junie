@@ -31,9 +31,12 @@ FROM node as ui
 
 WORKDIR /app
 
+ADD ./ui/package.json ./
+
+RUN yarn install
+
 ADD ./ui/ ./
 
-RUN yarn
 RUN yarn ionic build
 
 # Run Junie
@@ -47,4 +50,4 @@ COPY --from=ui  /app/build/   ./ui/
 
 ADD ./assets/ ./assets/
 
-ENTRYPOINT [ "JunieAPI" ]
+ENTRYPOINT [ "Junie" ]

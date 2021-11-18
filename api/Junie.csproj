@@ -6,6 +6,7 @@
     <SelfContained>True</SelfContained>
     <PublishSingleFile>True</PublishSingleFile>
     <PublishTrimmed>True</PublishTrimmed>
+    <DebugType>Embedded</DebugType>
   </PropertyGroup>
 
 </Project>
