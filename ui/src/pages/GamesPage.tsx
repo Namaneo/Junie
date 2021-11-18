@@ -2,7 +2,7 @@ import { IonBackButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, Ion
 import { useEffect, useState } from "react";
 import { RouteComponentProps } from "react-router";
 import { Link } from "react-router-dom";
-import { Game } from "../models/Game";
+import { Game } from "../interfaces/Game";
 import { getGames } from "../services/Requests";
 import './GamesPage.css';
 
@@ -39,7 +39,7 @@ export const GamesPage: React.FC<RouteComponentProps<GamesProps>> = ({ match }) 
 
   //Show loader while loading data
   if (state.loading)
-    return <IonLoading isOpen />;
+    return <IonPage><IonLoading isOpen /></IonPage>;
 
   //Display all games cards
   return (
@@ -56,10 +56,10 @@ export const GamesPage: React.FC<RouteComponentProps<GamesProps>> = ({ match }) 
 
       <IonContent>
         {state.games.map(game =>
-          <Link key={game.name} to={`/games/${match.params.system}/${game.rom}`} className="game">
-            <IonCard class="card">
+          <Link className="game" key={game.name} to={`/games/${match.params.system}/${game.rom}`}>
+            <IonCard className="card">
               <img src={game.cover} />
-              <IonCardHeader class="header">
+              <IonCardHeader className="header">
                 <IonCardSubtitle>{game.name}</IonCardSubtitle>
               </IonCardHeader>
             </IonCard>

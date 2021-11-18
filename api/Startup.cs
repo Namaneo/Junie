@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -34,10 +35,10 @@ namespace JunieAPI
             }));
 
             services.Configure<CommonOptions>(_configuration.GetSection("Common"));
-            services.Configure<SystemsOptions>(_configuration.GetSection("Systems"));
+            services.Configure<LibraryOptions>(_configuration.GetSection("Library"));
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IOptions<CommonOptions> common, IOptions<SystemsOptions> systems)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IOptions<CommonOptions> common, IOptions<LibraryOptions> library)
         {
             app.UseRouting();
             app.UseCors();
@@ -67,11 +68,11 @@ namespace JunieAPI
             app.UseEndpoints(endpoints => endpoints.MapGet("/covers/{system}/{game}", async context =>
             {
                 //TODO: ugly part, must be generic (?) and extracted from here
-                string system = (string)context.Request.RouteValues["system"];
-                string game   = (string)context.Request.RouteValues["game"];
+                string systemName = (string)context.Request.RouteValues["system"];
+                string gameName   = (string)context.Request.RouteValues["game"];
 
-                string shortSystem = systems.Value.First(x => x.Value.FullName == system).Key;
-                string coverPath = Path.Combine(common.Value.Resources.Games, shortSystem, game);
+                SystemOptions system = library.Value.First(x => x.Name == systemName);
+                string coverPath = Path.Combine(common.Value.Resources.Games, system.Name, gameName);
 
                 if (File.Exists(coverPath))
                 {
@@ -80,7 +81,7 @@ namespace JunieAPI
                     return;
                 }
 
-                string url = $"https://raw.githubusercontent.com/libretro-thumbnails/{system.Replace(' ', '_')}/master/Named_Boxarts/{game}";
+                string url = $"https://raw.githubusercontent.com/libretro-thumbnails/{system.FullName.Replace(' ', '_')}/master/Named_Boxarts/{gameName}";
 
                 HttpResponseMessage response = await _client.GetAsync(url);
                 byte[] content = await response.Content.ReadAsByteArrayAsync();

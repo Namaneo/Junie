@@ -1,11 +1,10 @@
 let database;
 let files = {};
 
-const request = window.indexedDB.open('Junie', 1);
+const request = window.indexedDB.open('Junie', 10);
 
 //Check if a schema update is required
-request.onupgradeneeded = event =>
-{
+request.onupgradeneeded = event => {
     const database = event.target.result;
 
     if (event.oldVersion < 1) {
@@ -13,9 +12,11 @@ request.onupgradeneeded = event =>
     }
 };
 
+//Print error if anything wrong happens
+request.onerror = event => console.log(event);
+
 //Retrieve all files in memory
-request.onsuccess = event => 
-{
+request.onsuccess = event => {
     database = event.target.result;
 
     const transaction = database.transaction('files', 'readwrite');
@@ -26,21 +27,6 @@ request.onsuccess = event =>
             files[file.path] = mty_b64_to_buf(file.data);
         }
     }
-
-    //Begin: compatibility with older versions
-    for (let i = 0; i < localStorage.length; ++i) {
-        const path = localStorage.key(i);
-        const data = localStorage.getItem(path);
-
-        const entry = { path: `/${path}`, data: data };
-
-        store.put(entry);
-
-        files[entry.path] = mty_b64_to_buf(entry.data);
-    }
-
-    localStorage.clear();
-    //End: compatibility with older versions
 };
 
 //Read a file from memory storage

@@ -8,17 +8,6 @@ interface EmulatorProps {
 }
 
 export const EmulatorPage: React.FC<RouteComponentProps<EmulatorProps>> = ({ match }) => {
-
-    // const onLoad = () => {
-    //     const frame = window.frames[0];
-    //     const _fetch = frame.fetch
-    //     frame.fetch = (request) => {
-    //         console.log(request);
-    //         return _fetch(request);
-    //     }
-    // }
-
-    //Display game emulator
     return (
         <IonPage>
 

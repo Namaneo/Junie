@@ -1,3 +1,5 @@
+import { Game } from "./Game";
+
 export interface System {
   name?: string;
   fullName?: string;
@@ -6,4 +8,5 @@ export interface System {
   extension?: string;
   cover?: string;
   coverDark?: string;
+  games: Game[];
 }

@@ -1,5 +1,5 @@
-import { Game } from "../models/Game";
-import { System } from "../models/System";
+import { Game } from "../interfaces/Game";
+import { System } from "../interfaces/System";
 
 //Generic API request sending
 async function request<T>(path: string): Promise<T> {
@@ -10,15 +10,7 @@ async function request<T>(path: string): Promise<T> {
 
 //Retrieve all supported systems data
 export async function getSystems(): Promise<System[]> {
-    const systems: System[] = [];
-    const systemNames = await request<string[]>('systems');
-
-    for (let name of systemNames) {
-        const system = await request<System>(`systems/${name}`);
-        systems.push({ name, ...system });
-    }
-
-    return systems;
+    return await request<System[]>('library');
 };
 
 //Retrieve the system cover based on the dark mode preference
@@ -28,18 +20,8 @@ export function getSystemCover(system: System) {
     return `assets/${cover}`;
 }
 
+//Retrieve all available games for a given system
 export async function getGames(systemName: string): Promise<Game[]> {
-    const games: Game[] = [];
-    const system = await request<System>(`systems/${systemName}`);
-    const gameNames = await request<string[]>(`systems/${systemName}/games`);
-
-    for (let name of gameNames) {
-        games.push({
-            name: name.replace(/ \(.*\)/g, ''),
-            rom: `${name}.${system.extension}`,
-            cover: `covers/${system.fullName}/${name}.png`,
-        });
-    }
-
-    return games;
+    const system = await request<System>(`library/${systemName}`);
+    return system.games;
 };

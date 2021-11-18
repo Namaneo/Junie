@@ -1,6 +1,6 @@
 import { IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonLoading, IonPage, IonTitle, IonToolbar } from '@ionic/react';
 import React, { useEffect, useState } from 'react';
-import { System } from '../models/System';
+import { System } from '../interfaces/System';
 import { getSystemCover, getSystems } from '../services/Requests';
 import './SystemsPage.css';
 
@@ -33,7 +33,7 @@ export const SystemsPage: React.FC = () => {
 
   //Show loader while loading data
   if (state.loading)
-    return <IonLoading isOpen />;
+    return <IonPage><IonLoading isOpen /></IonPage>;
 
   //Display all systems cards
   return (
@@ -47,7 +47,7 @@ export const SystemsPage: React.FC = () => {
 
       <IonContent>
         {state.systems.map(system =>
-          <IonCard key={system.name} class="system-card" routerLink={`/games/${system.name}`}>
+          <IonCard className="system-card" key={system.name} routerLink={`/games/${system.name}`}>
             <img src={getSystemCover(system)} />
             <IonCardHeader>
               <IonCardSubtitle>{system.coreName}</IonCardSubtitle>
