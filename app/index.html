@@ -15,9 +15,9 @@
 
     <script type="text/javascript">
 
-        //Disable keyboard for iframe compatibility
-        //TODO: this must be enabled in the future, but Chrome is complaining
-        navigator.keyboard = false;
+        //Disable keyboard.getLayoutMap for iframe compatibility
+	if (navigator.keyboard)
+	    navigator.keyboard.getLayoutMap = () => new Promise(resolve => resolve({ get: (code) => null }));
 
         //Retrieve context parameters
         const params = decodeURI(window.location.pathname).split('/');
