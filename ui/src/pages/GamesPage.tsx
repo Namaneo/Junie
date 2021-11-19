@@ -37,11 +37,6 @@ export const GamesPage: React.FC<RouteComponentProps<GamesProps>> = ({ match }) 
     });
   });
 
-  //Show loader while loading data
-  if (state.loading)
-    return <IonPage><IonLoading isOpen /></IonPage>;
-
-  //Display all games cards
   return (
     <IonPage>
 
@@ -55,6 +50,7 @@ export const GamesPage: React.FC<RouteComponentProps<GamesProps>> = ({ match }) 
       </IonHeader>
 
       <IonContent>
+        <IonLoading isOpen={state.loading} />
         {state.games.map(game =>
           <Link className="game" key={game.name} to={`/games/${match.params.system}/${game.rom}`}>
             <IonCard className="card">

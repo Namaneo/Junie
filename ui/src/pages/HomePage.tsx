@@ -41,11 +41,6 @@ export const HomePage: React.FC = () => {
     setState({ ...state });
   });
 
-  //Show loader while loading data
-  if (state.loading)
-    return <IonPage><IonLoading isOpen /></IonPage>;
-
-  //Display all recently played games
   return (
     <IonPage>
 
@@ -56,6 +51,7 @@ export const HomePage: React.FC = () => {
       </IonHeader>
 
       <IonContent>
+        <IonLoading isOpen={state.loading} />
         {state.played.map(played =>
           <Link className="game" key={played.game.name} to={`/games/${played.system.name}/${played.game.rom}`}>
             <IonCard className="card">

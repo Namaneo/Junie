@@ -56,11 +56,6 @@ export const SavesPage: React.FC = () => {
     setState({ ...state });
   });
 
-  //Show loader while loading data
-  if (state.loading)
-    return <IonPage><IonLoading isOpen /></IonPage>;
-
-  //Display all save files
   return (
     <IonPage>
 
@@ -71,6 +66,7 @@ export const SavesPage: React.FC = () => {
       </IonHeader>
 
       <IonContent>
+        <IonLoading isOpen={state.loading} />
         <IonList>
           <IonItemGroup>
             {state.saves.map(save =>

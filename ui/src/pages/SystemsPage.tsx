@@ -31,11 +31,6 @@ export const SystemsPage: React.FC = () => {
     });
   });
 
-  //Show loader while loading data
-  if (state.loading)
-    return <IonPage><IonLoading isOpen /></IonPage>;
-
-  //Display all systems cards
   return (
     <IonPage>
 
@@ -46,6 +41,7 @@ export const SystemsPage: React.FC = () => {
       </IonHeader>
 
       <IonContent>
+        <IonLoading isOpen={state.loading} />
         {state.systems.map(system =>
           <IonCard className="system-card" key={system.name} routerLink={`/games/${system.name}`}>
             <img src={getSystemCover(system)} />
