@@ -1,5 +1,6 @@
-import { IonBackButton, IonButtons, IonContent, IonHeader, IonPage, IonTitle, IonToolbar } from "@ionic/react";
+import { IonBackButton, IonButtons, IonContent, IonHeader, IonPage, IonTitle, IonToolbar, useIonViewDidLeave, useIonViewWillEnter } from "@ionic/react";
 import { RouteComponentProps } from "react-router";
+import { next } from "../services/Events";
 import './EmulatorPage.css';
 
 interface EmulatorProps {
@@ -8,6 +9,10 @@ interface EmulatorProps {
 }
 
 export const EmulatorPage: React.FC<RouteComponentProps<EmulatorProps>> = ({ match }) => {
+
+    useIonViewWillEnter(() => next('tabs', false));
+    useIonViewDidLeave(() => next('tabs', true));
+
     return (
         <IonPage>
 

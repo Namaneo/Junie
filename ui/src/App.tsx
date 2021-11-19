@@ -3,12 +3,14 @@ import { IonApp, IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, Io
 import { IonReactRouter } from '@ionic/react-router';
 import { home, gameController, save } from 'ionicons/icons';
 import { setupConfig } from '@ionic/core';
+import { useState } from 'react';
 
 import { HomePage } from './pages/HomePage';
 import { SavesPage } from './pages/SavesPage';
 import { SystemsPage } from './pages/SystemsPage';
 import { GamesPage } from './pages/GamesPage';
 import { EmulatorPage } from './pages/EmulatorPage';
+import { subscribe } from './services/Events';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -35,6 +37,10 @@ const App: React.FC = () => {
     swipeBackEnabled: false,
   });
 
+  const [tabs, setTabs] = useState(true);
+
+  subscribe<boolean>('tabs', show => setTabs(show));
+
   return (
     <IonApp>
       <IonReactRouter>
@@ -52,7 +58,7 @@ const App: React.FC = () => {
             </Route>
           </IonRouterOutlet>
 
-          <IonTabBar slot="bottom">
+          <IonTabBar slot="bottom" hidden={!tabs}>
             <IonTabButton tab="home" href="/home">
               <IonIcon icon={home} />
               <IonLabel>Home</IonLabel>
