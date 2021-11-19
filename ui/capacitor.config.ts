@@ -2,7 +2,7 @@ import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'io.ionic.starter',
-  appName: 'JunieUI',
+  appName: 'Junie',
   webDir: 'build',
   bundledWebRuntime: false
 };
