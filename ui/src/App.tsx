@@ -1,6 +1,6 @@
 import { Redirect, Route } from 'react-router-dom';
 import { IonApp, IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs } from '@ionic/react';
-import { IonReactRouter } from '@ionic/react-router';
+import { IonReactHashRouter } from '@ionic/react-router';
 import { home, gameController, save } from 'ionicons/icons';
 import { setupConfig } from '@ionic/core';
 import { useState } from 'react';
@@ -43,7 +43,7 @@ const App: React.FC = () => {
 
   return (
     <IonApp>
-      <IonReactRouter>
+      <IonReactHashRouter>
         <IonTabs>
 
           <IonRouterOutlet>
@@ -74,7 +74,7 @@ const App: React.FC = () => {
           </IonTabBar>
 
         </IonTabs>
-      </IonReactRouter>
+      </IonReactHashRouter>
     </IonApp>
   )
 };

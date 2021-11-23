@@ -26,7 +26,7 @@ export const EmulatorPage: React.FC<RouteComponentProps<EmulatorProps>> = ({ mat
             </IonHeader>
 
             <IonContent>
-                <iframe className="emulator" src={`emulator/${match.params.system}/${match.params.game}`}></iframe>
+                <iframe className="emulator" src={`app/#/${match.params.system}/${match.params.game}`}></iframe>
             </IonContent>
 
         </IonPage>

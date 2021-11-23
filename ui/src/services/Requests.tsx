@@ -17,7 +17,7 @@ export async function getSystems(): Promise<System[]> {
 export function getSystemCover(system: System) {
     const darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const cover = darkMode && system.coverDark ? system.coverDark : system.cover;
-    return `assets/${cover}`;
+    return `assets/covers/${cover}`;
 }
 
 //Retrieve all available games for a given system

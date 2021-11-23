@@ -52,6 +52,10 @@ namespace JunieAPI.Controllers
         private List<GameOptions> GetGames(SystemOptions system)
         {
             var path = Path.Combine(_common.Value.Resources.Games, system.Name);
+
+            if (!Directory.Exists(path))
+                return new List<GameOptions>();
+
             var files = Directory.GetFiles(path).Where(x => Path.GetExtension(x) != ".png");
 
             return files.Select(x => Path.GetFileNameWithoutExtension(x)).Select(x => new GameOptions
