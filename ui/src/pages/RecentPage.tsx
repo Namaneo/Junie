@@ -6,16 +6,16 @@ import { Game } from '../interfaces/Game';
 import { System } from '../interfaces/System';
 import { getSaves } from '../services/Database';
 import { getSystems } from '../services/Requests';
-import './HomePage.css';
+import './RecentPage.css';
 
-interface HomeState {
+interface RecentState {
   loading: boolean;
   played: { system: System, game: Game}[];
 }
 
-export const HomePage: React.FC = () => {
+export const RecentPage: React.FC = () => {
 
-  const [state, setState] = useState<HomeState>({
+  const [state, setState] = useState<RecentState>({
     loading: true,
     played: [],
   });

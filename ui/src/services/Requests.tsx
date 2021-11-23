@@ -22,6 +22,7 @@ export function getSystemCover(system: System) {
 
 //Retrieve all available games for a given system
 export async function getGames(systemName: string): Promise<Game[]> {
-    const system = await request<System>(`library/${systemName}`);
-    return system.games;
+    const systems = await getSystems();
+    const system = systems.find(x => x.name == systemName);
+    return system?.games ?? [];
 };

@@ -1,11 +1,11 @@
 import { Redirect, Route } from 'react-router-dom';
 import { IonApp, IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs } from '@ionic/react';
 import { IonReactHashRouter } from '@ionic/react-router';
-import { home, gameController, save } from 'ionicons/icons';
+import { home, gameController, save, time } from 'ionicons/icons';
 import { setupConfig } from '@ionic/core';
 import { useState } from 'react';
 
-import { HomePage } from './pages/HomePage';
+import { RecentPage } from './pages/RecentPage';
 import { SavesPage } from './pages/SavesPage';
 import { SystemsPage } from './pages/SystemsPage';
 import { GamesPage } from './pages/GamesPage';
@@ -47,25 +47,25 @@ const App: React.FC = () => {
         <IonTabs>
 
           <IonRouterOutlet>
-            <Route exact path="/home" component={HomePage} />
             <Route exact path="/games" component={SystemsPage} />
             <Route exact path="/games/:system" component={GamesPage} />
             <Route exact path="/games/:system/:game" component={EmulatorPage} />
+            <Route exact path="/recent" component={RecentPage} />
             <Route exact path="/saves" component={SavesPage} />
 
             <Route exact path="/">
-              <Redirect to="/home" />
+              <Redirect to="/games" />
             </Route>
           </IonRouterOutlet>
 
           <IonTabBar slot="bottom" hidden={!tabs}>
-            <IonTabButton tab="home" href="/home">
-              <IonIcon icon={home} />
-              <IonLabel>Home</IonLabel>
-            </IonTabButton>
-            <IonTabButton tab="games" href="/games">
+          <IonTabButton tab="games" href="/games">
               <IonIcon icon={gameController} />
               <IonLabel>Games</IonLabel>
+            </IonTabButton>
+            <IonTabButton tab="recent" href="/recent">
+              <IonIcon icon={time} />
+              <IonLabel>Recent</IonLabel>
             </IonTabButton>
             <IonTabButton tab="saves" href="/saves">
               <IonIcon icon={save} />

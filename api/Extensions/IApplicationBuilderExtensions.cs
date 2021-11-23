@@ -24,15 +24,5 @@ namespace JunieAPI.Extensions
                 ServeUnknownFileTypes = true,
             });
         }
-
-        public static IApplicationBuilder UseIndexFile(this IApplicationBuilder app, string physicalPath)
-        {
-            return app.Use(async (context, task) =>
-            {
-                var file = File.ReadAllBytes(Path.Combine(physicalPath, "index.html"));
-                context.Response.ContentType = "text/html";
-                await context.Response.Body.WriteAsync(file);
-            });
-        }
     }
 }

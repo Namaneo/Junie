@@ -34,14 +34,6 @@ namespace JunieAPI.Controllers
             return systems;
         }
 
-        [HttpGet("{system}")]
-        public SystemOptions GetSystem(string system)
-        {
-            var value = _library.Value.First(x => x.Name == system);
-            value.Games = GetGames(value);
-            return value;
-        }
-
         [HttpGet("{system}/{game}")]
         public async Task<FileContentResult> GetGames(string system, string game)
         {
