@@ -17,7 +17,7 @@ ADD ./app/ ./
 RUN make
 
 # Build API
-FROM mcr.microsoft.com/dotnet/sdk:5.0 as api
+FROM mcr.microsoft.com/dotnet/sdk:6.0 as api
 
 WORKDIR /app
 
@@ -40,7 +40,7 @@ ADD ./ui/ ./
 RUN yarn ionic build
 
 # Run Junie
-FROM mcr.microsoft.com/dotnet/aspnet:5.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS runtime
 
 WORKDIR /app
 

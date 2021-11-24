@@ -3,12 +3,12 @@
   "name": "Junie",
   "icons": [
     {
-      "src": "assets/icon/favicon.png",
+      "src": "assets/favicon.png",
       "sizes": "64x64 32x32 24x24 16x16",
       "type": "image/x-icon"
     },
     {
-      "src": "assets/icon/icon.png",
+      "src": "assets/icon.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "maskable"
