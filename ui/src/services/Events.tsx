@@ -1,19 +1,26 @@
 import { Subject } from 'rxjs'
 
-type EventCallback<T> = (value: T) => void;
+export module Events {
 
-const subjects: { [subject: string]: Subject<any> } = { }
+    type EventCallback<T> = (value: T) => void;
 
-export function subscribe<T>(subject: string, callback: EventCallback<T>) {
-    if (!subjects[subject])
-        subjects[subject] = new Subject();
+    const subjects: { [subject: string]: Subject<any> } = {}
 
-    subjects[subject].subscribe(callback);
+    export function subscribe<T>(subject: string, callback: EventCallback<T>) {
+        if (!subjects[subject])
+            subjects[subject] = new Subject();
+
+        subjects[subject].subscribe(callback);
+    }
+
+    export function next<T>(subject: string, value: T) {
+        if (!subjects[subject])
+            subjects[subject] = new Subject();
+
+        subjects[subject].next(value);
+    }
+
 }
 
-export function next<T>(subject: string, value: T) {
-    if (!subjects[subject])
-        subjects[subject] = new Subject();
 
-    subjects[subject].next(value);
-}
+export default Events;

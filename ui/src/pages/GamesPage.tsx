@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { RouteComponentProps } from "react-router";
 import { Link } from "react-router-dom";
 import { Game } from "../interfaces/Game";
-import { getGames } from "../services/Requests";
+import Requests from "../services/Requests";
 import './GamesPage.css';
 
 interface GamesProps {
@@ -29,7 +29,7 @@ export const GamesPage: React.FC<RouteComponentProps<GamesProps>> = ({ match }) 
     if (state.response)
       return;
 
-    state.response = getGames(match.params.system).then(games => {
+    state.response = Requests.getGames(match.params.system).then(games => {
       state.games = games;
       state.loading = false;
 

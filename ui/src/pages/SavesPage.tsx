@@ -5,8 +5,8 @@ import { Save } from '../entities/Save';
 import { Game } from '../interfaces/Game';
 import { System } from '../interfaces/System';
 import { FixSaveModal } from '../modals/FixSaveModal';
-import { getSaves, removeSave, updateSave } from '../services/Database';
-import { getSystems } from '../services/Requests';
+import Database from '../services/Database';
+import Requests from '../services/Requests';
 import './SavesPage.css';
 
 interface SavesState {
@@ -32,7 +32,7 @@ export const SavesPage: React.FC = () => {
   }
 
   const deleteSave = async (save: Save) => {
-    state.saves = await removeSave(save);
+    state.saves = await Database.removeSave(save);
 
     setState({ ...state });
   };
@@ -41,7 +41,7 @@ export const SavesPage: React.FC = () => {
     systems: state.systems,
     dismiss: () => dismiss(),
     apply: async (system: System, game: Game) => {
-      state.saves = await updateSave(state.fixing!, system, game);
+      state.saves = await Database.updateSave(state.fixing!, system, game);
       dismiss();
 
       setState({ ...state });
@@ -49,8 +49,8 @@ export const SavesPage: React.FC = () => {
   });
 
   useIonViewWillEnter(async () => {
-    state.saves = await getSaves();
-    state.systems = await getSystems();
+    state.saves = await Database.getSaves();
+    state.systems = await Requests.getSystems();
     state.loading = false;
 
     setState({ ...state });

@@ -17,23 +17,15 @@ export class Save {
     }
   
     isMapped(systems: System[]) {
-      const system = this.getSystem(systems);
+      const system = systems.find(system => system.name == this.system);
       if (!system)
         return false;
   
-      const game = this.getGame(system);
+      const game = system.games.find(game => game.rom == `${this.game}.${system.extension}`);
       if (!game)
         return false;
   
       return true;
-    }
-  
-    getSystem(systems: System[]) {
-      return systems.find(system => system.name == this.system)!;
-    }
-
-    getGame(system: System) {
-      return system.games.find(game => game.rom == `${this.game}.${system.extension}`)!;
     }
 
     private match(index: number) {

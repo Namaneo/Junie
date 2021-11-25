@@ -4,6 +4,7 @@
 
 .game .card {
     display: flex;
+    justify-content: space-between;
 }
 
 .game .card img {
@@ -11,6 +12,5 @@
 }
 
 .game .card .header {
-    display: flex;
-    align-items: center;
+    align-self: center;
 }

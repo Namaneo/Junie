@@ -1,7 +1,7 @@
 import { Redirect, Route } from 'react-router-dom';
 import { IonApp, IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs } from '@ionic/react';
 import { IonReactHashRouter } from '@ionic/react-router';
-import { home, gameController, save, time } from 'ionicons/icons';
+import { gameController, save, time } from 'ionicons/icons';
 import { setupConfig } from '@ionic/core';
 import { useState } from 'react';
 
@@ -10,7 +10,7 @@ import { SavesPage } from './pages/SavesPage';
 import { SystemsPage } from './pages/SystemsPage';
 import { GamesPage } from './pages/GamesPage';
 import { EmulatorPage } from './pages/EmulatorPage';
-import { subscribe } from './services/Events';
+import Events from './services/Events';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -39,7 +39,7 @@ const App: React.FC = () => {
 
   const [tabs, setTabs] = useState(true);
 
-  subscribe<boolean>('tabs', show => setTabs(show));
+  Events.subscribe<boolean>('tabs', show => setTabs(show));
 
   return (
     <IonApp>
