@@ -24,14 +24,14 @@ namespace JunieAPI.Controllers
         }
 
         [HttpGet]
-        public LibraryOptions GetSystems()
+        public List<SystemOptions> GetSystems()
         {
             var systems = _library.Value;
             foreach (var system in systems)
             {
                 system.Games = GetGames(system);
             }
-            return systems;
+            return systems.Where(x => x.Games.Any()).ToList();
         }
 
         [HttpGet("{system}/{game}")]

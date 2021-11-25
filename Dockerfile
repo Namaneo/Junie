@@ -19,7 +19,7 @@ RUN make
 # Build API
 FROM mcr.microsoft.com/dotnet/sdk:6.0 as api
 
-WORKDIR /app
+WORKDIR /api
 
 ADD ./api/ ./
 
@@ -28,7 +28,7 @@ RUN dotnet publish -c Release -o publish
 # Build UI
 FROM node:16 as ui
 
-WORKDIR /app
+WORKDIR /ui
 
 ADD ./ui/package.json ./
 ADD ./ui/yarn.lock    ./
@@ -40,13 +40,13 @@ ADD ./ui/ ./
 RUN yarn ionic build
 
 # Run Junie
-FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS junie
 
-WORKDIR /app
+WORKDIR /junie
 
-COPY --from=api /app/publish/ ./
+COPY --from=api /api/publish/ ./
 COPY --from=app /app/bin/     ./app/
-COPY --from=ui  /app/build/   ./ui/
+COPY --from=ui  /ui/build/    ./ui/
 
 ADD ./assets/ ./assets/
 

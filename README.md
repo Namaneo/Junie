@@ -15,7 +15,7 @@ Junie currently runs on most recent browsers, though your experience will probab
 [GraviBots](https://retrosouls.itch.io/gravibots16bit). 
 I haven't played those games yet but will do for sure!
 
-![](assets/app/showcase.png)
+![](assets/showcase.png)
 
 *Disclaimer: development is still in progress. I'll try my best not to break anything between releases (especially regarding local save files), but it's probably a good idea for you to test releases before updating.*
 
@@ -61,7 +61,7 @@ system
 
 # Configuration
 
-Junie and the underlying cores can be configured using the `settings.json` file, located in the `bin` directory. A typical default configuration looks like that:
+Junie and the underlying cores can be configured using the `settings.json` file. A typical default configuration looks like that:
 
 ```json
 {
@@ -180,7 +180,7 @@ docker run \
     -d --rm \
     --name junie \
     -p 5000:5000 \
-    -v /path/to/settings.json:/app/app/settings.json \
+    -v /path/to/settings.json:/junie/app/settings.json \
     -v /path/to/system:/system \
     -v /path/to/games:/games \
     junie

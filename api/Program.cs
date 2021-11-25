@@ -1,3 +1,4 @@
+using System;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 
@@ -10,12 +11,17 @@ namespace JunieAPI
             CreateHostBuilder(args).Build().Run();
         }
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
+        public static IHostBuilder CreateHostBuilder(string[] args) 
+        {
+            string portStr = Environment.GetEnvironmentVariable("PORT");
+            ushort port = String.IsNullOrEmpty(portStr) ? (ushort)5000 : ushort.Parse(portStr); 
+
+            return Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
-                    webBuilder.ConfigureKestrel(x => x.ListenAnyIP(5000));
+                    webBuilder.ConfigureKestrel(x => x.ListenAnyIP(port));
                 });
+        }
     }
 }
