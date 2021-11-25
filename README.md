@@ -4,6 +4,7 @@ Junie is a [Libretro](https://www.libretro.com/index.php/home-2/) frontend that 
 * No installation on the end-devices.
 * Near-native performances thanks to WebAssembly.
 * Wide range of supported/compatible cores (... soon).
+* Progressive Web Application fully accessible offline.
 
 Junie currently runs on most recent browsers, though your experience will probably be the best on Chrome and Safari (I have issues on Firefox on my side, not sure if it's isolated to my computer).
 
@@ -14,9 +15,7 @@ Junie currently runs on most recent browsers, though your experience will probab
 [GraviBots](https://retrosouls.itch.io/gravibots16bit). 
 I haven't played those games yet but will do for sure!
 
-If you prefer to play your own games, head to [this page](https://junie.herokuapp.com/play) and select a game with one of the following extensions: `nes`, `smc`, `sms`, `bin`, `gb`, `gbc`, `gba`, `nds`.
-
-![](assets/showcase.png)
+![](assets/app/showcase.png)
 
 *Disclaimer: development is still in progress. I'll try my best not to break anything between releases (especially regarding local save files), but it's probably a good idea for you to test releases before updating.*
 
@@ -31,6 +30,7 @@ If you prefer to play your own games, head to [this page](https://junie.herokuap
 - [x] Touch inputs, enabled by pressing the top button.
 - [x] Savestate creation and restore.
 - [x] Fast-forward up to 4 times the original speed.
+- [x] Nice platform-specific user interface.
 
 # Folder structure
 
@@ -118,57 +118,6 @@ Those configurations will only be applied to the core they target. Section name 
 | dependencies | A list of extra dependencies the emulator might require. Files will be exposed to the core as follows: `/system/<core_name>/<file_name>`. |
 | configurations | A list of custom configurations to apply to the emulator. Details of available configurations for each core are logged in the browser console. |
 
-# Build & Run
-
-To initialize the submodules if you haven't already:
-
-```bash
-git submodule sync
-git submodule update --init
-```
-
-To build a local version of Junie:
-
-```bash
-make
-```
-
-To run the local version:
-
-```bash
-node server.js 
-```
-
-To package Junie for all the available platforms:
-
-```bash
-make dist
-```
-
-To run the packaged version, go to `dist/<platform>` and run:
-
-```bash
-./server   # UNIX platforms
-server.exe # Windows platform
-```
-
-If you prefer to use Docker, here you go:
-
-```bash
-# Build the image
-docker build -t junie .
-
-# Run the container
-docker run \
-    -d --rm \
-    --name junie \
-    -p 8000:8000 \
-    -v /path/to/settings.json:/app/bin/settings.json \
-    -v /path/to/system:/app/system \
-    -v /path/to/games:/app/games \
-    junie
-```
-
 # Side notes
 
 ## Cores compatibility
@@ -180,17 +129,66 @@ Right now, the most problematic ones are threading and JIT backend. Also, no Ope
 
 That said, even after disabling all the above features when building the cores, performance is still far beyond acceptable for most cores. You will however have some trouble with 3D games on Nintendo DS (2D games run quite fine on recent hardware, as far as I've tested). Low-end mobile phones might also have struggle with the SNES.
 
-## Game sizes
+# Build & Run
 
-Just a note to warn you about game sizes. There is currently no managed cache mechanism to keep game files data between reloads. For instance, depending on how you browser handles them, you might download 20 to 200MB files each time you start a game.
+## Prerequisites
 
-For those who have a low data plan on their mobile phones: be careful, your browser might still cache them, but might not! Improving this will probably be one of my top priorities.
+Junie is composed of 3 main components:
+* The **UI**: developed in JSX using React and Ionic, located in the [ui](ui) folder
+* The **API**: developed in C# using .NET Core 6.0, located in the [api](api) folder
+* The **Emulator**: developed in C using libmatoya, located in the [app](app) folder
+
+To initialize the submodules if you haven't already:
+
+```bash
+git submodule sync
+git submodule update --init
+```
+
+## Build
+
+After being sure all the dependencies are installed on your machine, you can build a local version of Junie just using:
+
+```bash
+make
+```
+
+If you want to pack everything in the same folder (linux build only for now), here you go:
+
+```bash
+make pack
+```
+
+## Run
+
+After a successful build, you can run Junie using:
+
+```bash
+./Junie
+```
+
+## Docker
+
+If you prefer to use Docker, no need for any local dependencies:
+
+```bash
+# Build the image
+docker build -t junie .
+
+# Run the container
+docker run \
+    -d --rm \
+    --name junie \
+    -p 5000:5000 \
+    -v /path/to/settings.json:/app/app/settings.json \
+    -v /path/to/system:/system \
+    -v /path/to/games:/games \
+    junie
+```
 
 # Next steps
 
-- [ ] Add a cache mechanism to keep games locally between reloads.
 - [ ] Synchronize save files for cross-browser play.
-- [ ] Develop a better UI (both directory listing and in-game).
 - [ ] Build Junie for `libmatoya`'s supported platforms as well.
 - [ ] Multiplayer support, both locally and through WebRTC.
 
@@ -200,6 +198,7 @@ For those who have a low data plan on their mobile phones: be careful, your brow
 
 - All of this could only be possible thanks to [libmatoya](https://github.com/matoya/libmatoya).
 - The [zlib](https://github.com/madler/zlib) library is required for some cores.
+- Thumbnails are retrieved from [libretro-thumbnails](https://github.com/libretro-thumbnails/libretro-thumbnails)
 - And of course, modules and headers from [libretro-common](https://github.com/libretro/libretro-common).
 
 ## Cores
@@ -209,11 +208,6 @@ For those who have a low data plan on their mobile phones: be careful, your brow
 - [melonDS](https://github.com/libretro/melonDS) for Nintendo DS emulation.
 - [Genesis Plus GX](https://github.com/libretro/Genesis-Plus-GX) for Mega Drive and Master System emulation.
 - [QuickNES](https://github.com/libretro/QuickNES_Core) for NES emulation.
-
-## Tools
-
-- [ncc](https://github.com/vercel/ncc) is used to build the server standalone.
-- [nexe](https://github.com/nexe/nexe) is used to package the server into executables.
  
 ## Assets
 
