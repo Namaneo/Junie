@@ -27,10 +27,10 @@ export const SystemsPage: React.FC = () => {
         </IonToolbar>
       </IonHeader>
 
-      <IonContent>
+      <IonContent className="systems-page">
         <IonLoading isOpen={loading} />
         {systems.map(system =>
-          <IonCard className="system-card" key={system.name} routerLink={`/games/${system.name}`}>
+          <IonCard className="card" key={system.name} routerLink={`/games/${system.name}`}>
             <img src={Requests.getSystemCover(system)} />
             <IonCardHeader>
               <IonCardSubtitle>{system.coreName}</IonCardSubtitle>

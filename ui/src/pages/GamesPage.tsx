@@ -3,6 +3,7 @@ import { useState } from "react";
 import { RouteComponentProps } from "react-router";
 import { Link } from "react-router-dom";
 import { Game } from "../interfaces/Game";
+import { System } from "../interfaces/System";
 import Requests from "../services/Requests";
 import './GamesPage.css';
 
@@ -13,14 +14,23 @@ interface GamesProps {
 export const GamesPage: React.FC<RouteComponentProps<GamesProps>> = ({ match }) => {
 
   const [loading, setLoading] = useState<boolean>(true)
-  const [games, setGames] = useState<Game[]>([]);
+  const [system, setSystem] = useState<System>({ games: [] });
+
+  const install = async (game: Game) => {
+    setLoading(true);
+
+    const path = `/app/games/${system.name}/${game.rom}`;
+    await fetch(path).then(response => response.arrayBuffer());
+
+    setLoading(false);
+  }
 
   useIonViewWillEnter(async () => {
     setLoading(true);
 
-    const games = await Requests.getGames(match.params.system);
+    const system = await Requests.getSystem(match.params.system);
 
-    setGames(games);
+    setSystem(system);
     setLoading(false);
   });
 
@@ -36,17 +46,15 @@ export const GamesPage: React.FC<RouteComponentProps<GamesProps>> = ({ match }) 
         </IonToolbar>
       </IonHeader>
 
-      <IonContent>
+      <IonContent className="games-page">
         <IonLoading isOpen={loading} />
-        {games.map(game =>
-          <Link className="game" key={game.name} to={`/games/${match.params.system}/${game.rom}`}>
-            <IonCard className="card">
-              <img src={game.cover} />
-              <IonCardHeader className="header">
-                <IonCardSubtitle>{game.name}</IonCardSubtitle>
-              </IonCardHeader>
-            </IonCard>
-          </Link>
+        {system.games.map(game =>
+          <IonCard className="card" onClick={() => install(game)}>
+            <img src={game.cover} />
+            <IonCardHeader className="header">
+              <IonCardSubtitle>{game.name}</IonCardSubtitle>
+            </IonCardHeader>
+          </IonCard>
         )}
       </IonContent>
 

@@ -1,17 +1,17 @@
-.game {
+.recent-page .game {
     text-decoration: none;
 }
 
-.game .card {
+.recent-page .game .card {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.game .card img {
+.recent-page .game .card img {
     max-width: 25%;
 }
 
-.game .card .header {
+.recent-page .game .card .header {
     flex: 1;
 }

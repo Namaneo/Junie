@@ -1,16 +1,13 @@
-.game {
-    text-decoration: none;
-}
-
-.game .card {
+.games-page .card {
     display: flex;
+    cursor: pointer;
 }
 
-.game .card img {
+.games-page .card img {
     max-width: 25%;
 }
 
-.game .card .header {
+.games-page .card .header {
     display: flex;
     align-items: center;
 }

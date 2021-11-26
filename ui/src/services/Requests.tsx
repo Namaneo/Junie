@@ -15,19 +15,23 @@ export module Requests {
         return await request<System[]>('library');
     };
 
+    //Retrieve all available games for a given system
+    export async function getSystem(systemName: string): Promise<System> {
+        const systems = await getSystems();
+        const system = systems.find(x => x.name == systemName);
+
+        if (!system)
+            throw new Error(`System '${systemName}' could not be found`);
+
+        return system;
+    };
+
     //Retrieve the system cover based on the dark mode preference
     export function getSystemCover(system: System) {
         const darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
         const cover = darkMode && system.coverDark ? system.coverDark : system.cover;
         return `assets/covers/${cover}`;
     }
-
-    //Retrieve all available games for a given system
-    export async function getGames(systemName: string): Promise<Game[]> {
-        const systems = await getSystems();
-        const system = systems.find(x => x.name == systemName);
-        return system?.games ?? [];
-    };
 
 }
 

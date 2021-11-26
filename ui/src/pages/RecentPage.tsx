@@ -63,7 +63,7 @@ export const RecentPage: React.FC = () => {
         </IonToolbar>
       </IonHeader>
 
-      <IonContent>
+      <IonContent className="recent-page">
         <IonLoading isOpen={loading} />
         {played.map(played =>
           <Link className="game" key={played.game.name} to={`/games/${played.system.name}/${played.game.rom}`}>
