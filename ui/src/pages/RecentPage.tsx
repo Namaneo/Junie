@@ -8,23 +8,24 @@ import Caches from '../services/Caches';
 import Requests from '../services/Requests';
 import './RecentPage.css';
 
-interface RecentState {
-  loading: boolean;
-  played: { request: Request, system: System, game: Game }[];
+interface PlayedGame {
+  request: Request,
+  system: System,
+  game: Game
 }
 
 export const RecentPage: React.FC = () => {
 
-  const [state, setState] = useState<RecentState>({
-    loading: true,
-    played: [],
-  });
+  const [loading, setLoading] = useState<boolean>(true)
+  const [played, setPlayed] = useState<PlayedGame[]>([])
 
   const retrieveGames = async () => {
+    setLoading(true);
+
     const systems = await Requests.getSystems();
     const cachedGames = await Caches.getGames();
 
-    state.played = [];
+    const played = [];
 
     for (const cachedGame of cachedGames) {
       const system = systems.find(system => system.name == cachedGame.system);
@@ -35,13 +36,11 @@ export const RecentPage: React.FC = () => {
       if (!game)
         continue;
 
-      state.played.push({ request: cachedGame.request, system, game });
+      played.push({ request: cachedGame.request, system, game });
     }
 
-    state.played.reverse();
-    state.loading = false;
-
-    setState({ ...state });
+    setPlayed(played);
+    setLoading(false);
   }
 
   const deleteGame = async (event: React.MouseEvent, request: Request) => {
@@ -65,8 +64,8 @@ export const RecentPage: React.FC = () => {
       </IonHeader>
 
       <IonContent>
-        <IonLoading isOpen={state.loading} />
-        {state.played.map(played =>
+        <IonLoading isOpen={loading} />
+        {played.map(played =>
           <Link className="game" key={played.game.name} to={`/games/${played.system.name}/${played.game.rom}`}>
             <IonCard className="card">
               <img src={played.game.cover} />

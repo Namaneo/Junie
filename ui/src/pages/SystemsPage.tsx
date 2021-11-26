@@ -1,34 +1,21 @@
-import { IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonLoading, IonPage, IonTitle, IonToolbar } from '@ionic/react';
-import React, { useEffect, useState } from 'react';
+import { IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonLoading, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
+import { useState } from 'react';
 import { System } from '../interfaces/System';
 import Requests from '../services/Requests';
 import './SystemsPage.css';
 
-interface SystemsState {
-  loading: boolean;
-  systems: System[];
-  response?: Promise<any>;
-}
-
 export const SystemsPage: React.FC = () => {
 
-  //Initialize default state
-  const [state, setState] = useState<SystemsState>({
-    loading: true,
-    systems: []
-  });
+  const [loading, setLoading] = useState<boolean>(true);
+  const [systems, setSystems] = useState<System[]>([]);
 
-  //Retrieve data on open
-  useEffect(() => {
-    if (state.response)
-      return;
+  useIonViewWillEnter(async () => {
+    setLoading(true);
 
-    state.response = Requests.getSystems().then(systems => {
-      state.systems = systems;
-      state.loading = false;
+    const systems = await Requests.getSystems();
 
-      setState({ ...state });
-    });
+    setSystems(systems);
+    setLoading(false);
   });
 
   return (
@@ -41,8 +28,8 @@ export const SystemsPage: React.FC = () => {
       </IonHeader>
 
       <IonContent>
-        <IonLoading isOpen={state.loading} />
-        {state.systems.map(system =>
+        <IonLoading isOpen={loading} />
+        {systems.map(system =>
           <IonCard className="system-card" key={system.name} routerLink={`/games/${system.name}`}>
             <img src={Requests.getSystemCover(system)} />
             <IonCardHeader>

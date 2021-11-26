@@ -9,51 +9,52 @@ import Database from '../services/Database';
 import Requests from '../services/Requests';
 import './SavesPage.css';
 
-interface SavesState {
-  loading: boolean;
-  saves: Save[];
-  fixing: Save | undefined;
-  systems: System[];
-  response?: Promise<void>;
-}
-
 export const SavesPage: React.FC = () => {
 
-  const [state, setState] = useState<SavesState>({
-    loading: true,
-    saves: [],
-    fixing: undefined,
-    systems: [],
-  });
+  let fixing: Save;
+
+  const [loading, setLoading] = useState<boolean>(true);
+  const [saves, setSaves] = useState<Save[]>([]);
+  const [systems, setSystems] = useState<System[]>([]);
 
   const showModal = (save: Save) => {
-    state.fixing = save;
+    fixing = save;
     present();
   }
 
   const deleteSave = async (save: Save) => {
-    state.saves = await Database.removeSave(save);
+    setLoading(true);
 
-    setState({ ...state });
+    const saves = await Database.removeSave(save);
+
+    setSaves(saves);
+    setLoading(false);
   };
 
   const [present, dismiss] = useIonModal(FixSaveModal, { 
-    systems: state.systems,
+    systems: systems,
     dismiss: () => dismiss(),
     apply: async (system: System, game: Game) => {
-      state.saves = await Database.updateSave(state.fixing!, system, game);
+      setLoading(true);
+
+      const saves = await Database.updateSave(fixing, system, game);
       dismiss();
 
-      setState({ ...state });
+      setSaves(saves);
+      setLoading(false);
     }
   });
 
   useIonViewWillEnter(async () => {
-    state.saves = await Database.getSaves();
-    state.systems = await Requests.getSystems();
-    state.loading = false;
+    setLoading(true);
 
-    setState({ ...state });
+    const saves = await Database.getSaves();
+    const systems = await Requests.getSystems();
+
+    setSaves(saves);
+    setSystems(systems);
+
+    setLoading(false);
   });
 
   return (
@@ -66,14 +67,14 @@ export const SavesPage: React.FC = () => {
       </IonHeader>
 
       <IonContent>
-        <IonLoading isOpen={state.loading} />
+        <IonLoading isOpen={loading} />
         <IonList>
           <IonItemGroup>
-            {state.saves.map(save =>
+            {saves.map(save =>
               <IonItemSliding key={save.game}>
                 <IonItem lines="full">
                   {
-                    save.isMapped(state.systems) ?
+                    save.isMapped(systems) ?
                       <IonIcon color="success" icon={checkmarkCircleOutline} slot="start"></IonIcon> :
                       <IonIcon color="danger" icon={closeCircleOutline} slot="start"></IonIcon>
                   }
@@ -82,7 +83,7 @@ export const SavesPage: React.FC = () => {
                     <h3>{save.system}</h3>
                   </IonLabel>
                   {
-                    !save.isMapped(state.systems) && <IonButton onClick={() => showModal(save)}>Fix</IonButton>
+                    !save.isMapped(systems) && <IonButton onClick={() => showModal(save)}>Fix</IonButton>
                   }
                 </IonItem>
                 <IonItemOptions side="end">

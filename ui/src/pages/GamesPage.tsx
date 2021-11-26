@@ -1,5 +1,5 @@
-import { IonBackButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonLoading, IonPage, IonTitle, IonToolbar } from "@ionic/react";
-import { useEffect, useState } from "react";
+import { IonBackButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonLoading, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from "@ionic/react";
+import { useState } from "react";
 import { RouteComponentProps } from "react-router";
 import { Link } from "react-router-dom";
 import { Game } from "../interfaces/Game";
@@ -10,31 +10,18 @@ interface GamesProps {
   system: string;
 }
 
-interface GamesState {
-  loading: boolean;
-  games: Game[];
-  response?: Promise<any>;
-}
-
 export const GamesPage: React.FC<RouteComponentProps<GamesProps>> = ({ match }) => {
 
-  //Initialize default state
-  const [state, setState] = useState<GamesState>({
-    loading: true,
-    games: []
-  });
+  const [loading, setLoading] = useState<boolean>(true)
+  const [games, setGames] = useState<Game[]>([]);
 
-  //Retrieve data on open
-  useEffect(() => {
-    if (state.response)
-      return;
+  useIonViewWillEnter(async () => {
+    setLoading(true);
 
-    state.response = Requests.getGames(match.params.system).then(games => {
-      state.games = games;
-      state.loading = false;
+    const games = await Requests.getGames(match.params.system);
 
-      setState({ ...state });
-    });
+    setGames(games);
+    setLoading(false);
   });
 
   return (
@@ -50,8 +37,8 @@ export const GamesPage: React.FC<RouteComponentProps<GamesProps>> = ({ match }) 
       </IonHeader>
 
       <IonContent>
-        <IonLoading isOpen={state.loading} />
-        {state.games.map(game =>
+        <IonLoading isOpen={loading} />
+        {games.map(game =>
           <Link className="game" key={game.name} to={`/games/${match.params.system}/${game.rom}`}>
             <IonCard className="card">
               <img src={game.cover} />

@@ -135,7 +135,7 @@ That said, even after disabling all the above features when building the cores, 
 
 Junie is composed of 3 main components:
 * The **UI**: developed in JSX using React and Ionic, located in the [ui](ui) folder
-* The **API**: developed in C# using .NET Core 6.0, located in the [api](api) folder
+* The **API**: developed in Golang using chi, located in the [api](api) folder
 * The **Emulator**: developed in C using libmatoya, located in the [app](app) folder
 
 To initialize the submodules if you haven't already:
