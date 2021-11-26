@@ -21,6 +21,11 @@ FROM golang as api
 
 WORKDIR /api
 
+ADD ./api/go.mod ./
+ADD ./api/go.sum ./
+
+RUN go mod download
+
 ADD ./api/ ./
 
 RUN go build -o build/junie

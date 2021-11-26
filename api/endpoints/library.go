@@ -22,7 +22,7 @@ func fillGames(system *models.System) {
 	path := path.Join(settings.Resources.Games, system.Name)
 	games, err := ioutil.ReadDir(path)
 	if err != nil {
-		log.Panic(err)
+		return
 	}
 
 	for i := range games {

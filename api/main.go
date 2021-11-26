@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"junie/endpoints"
 	"junie/helpers"
@@ -33,8 +34,13 @@ func main() {
 
 	r.Get("/covers/{system}/{filename}", endpoints.SendCover)
 
-	log.Println("Listening on :3000...")
-	err := http.ListenAndServe(":3000", r)
+	port, found := os.LookupEnv("PORT")
+	if !found {
+		port = "3000"
+	}
+
+	log.Printf("Listening on :%s...\n", port)
+	err := http.ListenAndServe(":"+port, r)
 
 	if err != nil {
 		log.Fatal(err)
