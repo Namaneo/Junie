@@ -4,14 +4,11 @@ games
 bin
 
 app/include
-app/bin
+app/build
 app/**/*.a
 app/**/*.o
 
-api/bin
-api/obj
-api/publish
-api/*.Development.json
+api/build
 
 ui/build
 ui/node_modules

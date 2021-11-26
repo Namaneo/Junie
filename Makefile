@@ -1,20 +1,22 @@
-TARGET := app/bin api/publish ui/build
+TARGET := app/build api/build ui/build
 OUTPUT := bin
 
 all: $(TARGET)
 
 pack: all
 	rm -rf $(OUTPUT)
-	cp -R api/publish bin
-	cp -R app/bin     bin/app
-	cp -R ui/build    bin/ui
-	cp -R assets      bin/assets
+	cp -R api/build bin
+	cp -R app/build bin/app
+	cp -R ui/build  bin/ui
+	cp -R assets    bin/assets
 
-app/bin:
+app/build:
 	( cd app && make )
 
-api/publish:
-	( cd api && dotnet publish -c Release -r linux-x64 --self-contained -o publish )
+api/build:
+	( cd api && env GOOS=linux   GOARCH=amd64 go build -o build/junie     )
+	( cd api && env GOOS=windows GOARCH=amd64 go build -o build/junie.exe )
+	( cd api && env GOOS=darwin  GOARCH=amd64 go build -o build/junie-osx )
 
 ui/build:
 	( cd ui && ionic build )

@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
     JUN_FilesystemInitialize();    
     app = JUN_AppInitialize(app_func, event_func);
 
-    JUN_FilesystemDownload("/settings.json", configure, app);
+    JUN_FilesystemDownload("/assets/settings.json", configure, app);
     JUN_VideoStart(app->video);
     
     JUN_AppDestroy(&app);

@@ -180,7 +180,7 @@ docker run \
     -d --rm \
     --name junie \
     -p 5000:5000 \
-    -v /path/to/settings.json:/junie/app/settings.json \
+    -v /path/to/settings.json:/junie/assets/app/settings.json \
     -v /path/to/system:/system \
     -v /path/to/games:/games \
     junie

@@ -11,7 +11,7 @@ CORES_DIR := cores
 INC_DIR   := include
 
 TMP_DIR  := tmp
-OUT_DIR  := bin
+OUT_DIR  := build
 DIST_DIR := dist
 
 SYSTEM_DIR := system
@@ -51,7 +51,7 @@ CORES := quicknes mgba snes9x genesis melonds
 all: clean $(TARGET)
 
 $(TARGET): $(CORES)
-	@cp index.html settings.json web/* $(OUT_DIR)
+	@cp index.html web/* $(OUT_DIR)
 	@cp $(LIB_DIR)/matoya/src/unix/web/matoya.js $(OUT_DIR)
 
 $(CORES): deps $(OBJ)

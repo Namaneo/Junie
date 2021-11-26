@@ -17,13 +17,13 @@ ADD ./app/ ./
 RUN make
 
 # Build API
-FROM mcr.microsoft.com/dotnet/sdk:6.0 as api
+FROM golang as api
 
 WORKDIR /api
 
 ADD ./api/ ./
 
-RUN dotnet publish -c Release -o publish
+RUN go build -o build/junie
 
 # Build UI
 FROM node:16 as ui
@@ -40,14 +40,14 @@ ADD ./ui/ ./
 RUN yarn ionic build
 
 # Run Junie
-FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS junie
+FROM debian AS junie
 
 WORKDIR /junie
 
-COPY --from=api /api/publish/ ./
-COPY --from=app /app/bin/     ./app/
-COPY --from=ui  /ui/build/    ./ui/
+COPY --from=api /api/build/ ./
+COPY --from=app /app/build/ ./app/
+COPY --from=ui  /ui/build/  ./ui/
 
 ADD ./assets/ ./assets/
 
-ENTRYPOINT [ "dotnet", "Junie.dll" ]
+ENTRYPOINT [ "./junie" ]
