@@ -179,7 +179,7 @@ docker build -t junie .
 docker run \
     -d --rm \
     --name junie \
-    -p 5000:5000 \
+    -p 3000:3000 \
     -v /path/to/settings.json:/junie/assets/app/settings.json \
     -v /path/to/system:/system \
     -v /path/to/games:/games \
