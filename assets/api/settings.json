@@ -1,6 +1,6 @@
 {
     "Binaries": {
-        "UI": "ui",
+        "UI":  "ui",
         "App": "app"
     },
     "Resources": {

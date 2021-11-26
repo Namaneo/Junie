@@ -1,6 +1,6 @@
 {
     "Binaries": {
-        "UI": "../ui/build",
+        "UI":  "../ui/build",
         "App": "../app/build"
     },
     "Resources": {
