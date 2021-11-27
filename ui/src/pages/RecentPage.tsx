@@ -1,4 +1,4 @@
-import { IonButton, IonCard, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonItem, IonItemGroup, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonLoading, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
+import { IonButton, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonIcon, IonLoading, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
 import { trash } from 'ionicons/icons';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -6,7 +6,7 @@ import { Game } from '../interfaces/Game';
 import { System } from '../interfaces/System';
 import Caches from '../services/Caches';
 import Requests from '../services/Requests';
-import './RecentPage.css';
+import './RecentPage.scss';
 
 interface PlayedGame {
   request: Request,

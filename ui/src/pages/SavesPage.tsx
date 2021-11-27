@@ -7,7 +7,7 @@ import { System } from '../interfaces/System';
 import { FixSaveModal } from '../modals/FixSaveModal';
 import Database from '../services/Database';
 import Requests from '../services/Requests';
-import './SavesPage.css';
+import './SavesPage.scss';
 
 export const SavesPage: React.FC = () => {
 
@@ -31,7 +31,7 @@ export const SavesPage: React.FC = () => {
     setLoading(false);
   };
 
-  const [present, dismiss] = useIonModal(FixSaveModal, { 
+  const [present, dismiss] = useIonModal(FixSaveModal, {
     systems: systems,
     dismiss: () => dismiss(),
     apply: async (system: System, game: Game) => {

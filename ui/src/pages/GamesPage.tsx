@@ -5,7 +5,7 @@ import { RouteComponentProps } from "react-router";
 import { Game } from "../interfaces/Game";
 import { System } from "../interfaces/System";
 import Requests from "../services/Requests";
-import './GamesPage.css';
+import './GamesPage.scss';
 
 interface GamesProps {
   system: string;

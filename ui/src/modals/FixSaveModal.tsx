@@ -2,6 +2,7 @@ import { IonButton, IonButtons, IonContent, IonHeader, IonItem, IonLabel, IonLis
 import { useState } from "react";
 import { Game } from "../interfaces/Game";
 import { System } from "../interfaces/System";
+import './FixSaveModal.scss'
 
 type DismissPredicate = () => void;
 type ApplyPredicate = (system: System, game: Game) => void;
@@ -20,7 +21,7 @@ interface FixSaveState
 }
 
 export const FixSaveModal: React.FC<FixSaveProps> = ({ systems, dismiss, apply }) => {
-  
+
   const [state, setState] = useState<FixSaveState>({
     system: null,
     game: null,

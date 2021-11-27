@@ -1,7 +1,7 @@
 import { IonBackButton, IonButtons, IonContent, IonHeader, IonPage, IonTitle, IonToolbar, useIonViewWillEnter, useIonViewWillLeave } from "@ionic/react";
 import { RouteComponentProps } from "react-router";
 import Events from "../services/Events";
-import './EmulatorPage.css';
+import './EmulatorPage.scss';
 
 interface EmulatorProps {
     system: string;

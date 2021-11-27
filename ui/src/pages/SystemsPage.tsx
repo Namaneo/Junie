@@ -2,7 +2,7 @@ import { IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonLoad
 import { useState } from 'react';
 import { System } from '../interfaces/System';
 import Requests from '../services/Requests';
-import './SystemsPage.css';
+import './SystemsPage.scss';
 
 export const SystemsPage: React.FC = () => {
 
