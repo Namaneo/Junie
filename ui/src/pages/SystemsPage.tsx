@@ -29,7 +29,7 @@ export const SystemsPage: React.FC = () => {
 
 			<IonContent className="systems-page">
 				<IonLoading isOpen={loading} />
-				{systems.map(system =>
+				{systems.filter(x => x.games?.length).map(system =>
 					<IonCard className="card" key={system.name} routerLink={`/games/${system.name}`}>
 						<img src={Requests.getSystemCover(system)} />
 						<IonCardHeader>

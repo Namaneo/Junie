@@ -79,7 +79,7 @@ export const GamesPage: React.FC<RouteComponentProps<GamesProps>> = ({ match }) 
 
 			<IonContent className="games-page">
 				<IonLoading isOpen={loading} />
-				{system.games.map(game =>
+				{system.games?.map(game =>
 					<IonCard className="card" onClick={() => install(game)}>
 						<img src={game.cover} />
 						<IonCardHeader className="header">
