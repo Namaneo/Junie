@@ -12,13 +12,13 @@ typedef struct JUN_App JUN_App;
 
 struct JUN_App
 {
-    JUN_Core  *core;
-    JUN_State *state;
-    JUN_Input *input;
-    JUN_Audio *audio;
-    JUN_Video *video;
+	JUN_Core *core;
+	JUN_State *state;
+	JUN_Input *input;
+	JUN_Audio *audio;
+	JUN_Video *video;
 
-    bool quit;
+	bool quit;
 };
 
 JUN_App *JUN_AppInitialize(MTY_AppFunc app_func, MTY_EventFunc event_func);

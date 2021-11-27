@@ -1,5 +1,4 @@
-export interface File 
-{
-  path: string;
-  data: string;
+export interface File {
+	path: string;
+	data: string;
 }

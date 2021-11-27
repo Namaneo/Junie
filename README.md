@@ -1,6 +1,6 @@
 # Junie
 
-Junie is a [Libretro](https://www.libretro.com/index.php/home-2/) frontend that aims to run entirely in your browser, desktop or mobile! 
+Junie is a [Libretro](https://www.libretro.com/index.php/home-2/) frontend that aims to run entirely in your browser, desktop or mobile!
 * No installation on the end-devices.
 * Near-native performances thanks to WebAssembly.
 * Wide range of supported/compatible cores (... soon).
@@ -8,11 +8,11 @@ Junie is a [Libretro](https://www.libretro.com/index.php/home-2/) frontend that 
 
 Junie currently runs on most recent browsers, though your experience will probably be the best on Chrome and Safari (I have issues on Firefox on my side, not sure if it's isolated to my computer).
 
-[Demo](https://junie.herokuapp.com/): here you can play 
-[Indivisible](https://kasumi.itch.io/indivisible), 
+[Demo](https://junie.herokuapp.com/): here you can play
+[Indivisible](https://kasumi.itch.io/indivisible),
 [Celeste Classic](https://github.com/JeffRuLz/Celeste-Classic-GBA),
-[Daedeus](https://izma.itch.io/deadeus) and 
-[GraviBots](https://retrosouls.itch.io/gravibots16bit). 
+[Daedeus](https://izma.itch.io/deadeus) and
+[GraviBots](https://retrosouls.itch.io/gravibots16bit).
 I haven't played those games yet but will do for sure!
 
 ![](assets/showcase.png)
@@ -26,7 +26,7 @@ I haven't played those games yet but will do for sure!
 - [x] Additional core-specific system files.
 - [x] Core-specific configurations override.
 - [x] Multi-touch controller, with D-pad used as a joystick.
-- [x] Re-mappable keyboard to joypad bindings. 
+- [x] Re-mappable keyboard to joypad bindings.
 - [x] Touch inputs, enabled by pressing the top button.
 - [x] Savestate creation and restore.
 - [x] Fast-forward up to 4 times the original speed.
@@ -122,9 +122,9 @@ Those configurations will only be applied to the core they target. Section name 
 
 ## Cores compatibility
 
-Well, when I wrote "wide range of cores", it might be a little exagerated... 
+Well, when I wrote "wide range of cores", it might be a little exagerated...
 
-Junie is using the [wasi-sdk](https://github.com/WebAssembly/wasi-sdk) to build the cores, and it currently lacks features that cores sometimes use extensively. 
+Junie is using the [wasi-sdk](https://github.com/WebAssembly/wasi-sdk) to build the cores, and it currently lacks features that cores sometimes use extensively.
 Right now, the most problematic ones are threading and JIT backend. Also, no OpenGL support at this time (this one is actually doable but probably requires a lot of work).
 
 That said, even after disabling all the above features when building the cores, performance is still far beyond acceptable for most cores. You will however have some trouble with 3D games on Nintendo DS (2D games run quite fine on recent hardware, as far as I've tested). Low-end mobile phones might also have struggle with the SNES.
@@ -208,7 +208,7 @@ docker run \
 - [melonDS](https://github.com/libretro/melonDS) for Nintendo DS emulation.
 - [Genesis Plus GX](https://github.com/libretro/Genesis-Plus-GX) for Mega Drive and Master System emulation.
 - [QuickNES](https://github.com/libretro/QuickNES_Core) for NES emulation.
- 
+
 ## Assets
 
 - Original controller assets come from the [Delta emulator](https://github.com/rileytestut/Delta).

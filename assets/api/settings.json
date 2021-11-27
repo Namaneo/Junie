@@ -1,13 +1,13 @@
 {
     "Binaries": {
-        "UI":  "ui",
+        "UI": "ui",
         "App": "app"
     },
     "Resources": {
-        "UI":     "assets/ui",
-        "API":    "assets/api",
-        "App":    "assets/app",
-        "Games":  "../games",
+        "UI": "assets/ui",
+        "API": "assets/api",
+        "App": "assets/app",
+        "Games": "../games",
         "System": "../system"
     }
 }

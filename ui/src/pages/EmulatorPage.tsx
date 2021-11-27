@@ -4,31 +4,31 @@ import Events from "../services/Events";
 import './EmulatorPage.scss';
 
 interface EmulatorProps {
-    system: string;
-    game: string;
+	system: string;
+	game: string;
 }
 
 export const EmulatorPage: React.FC<RouteComponentProps<EmulatorProps>> = ({ match }) => {
 
-    useIonViewWillEnter(() => Events.next('tabs', false));
-    useIonViewWillLeave(() => Events.next('tabs', true));
+	useIonViewWillEnter(() => Events.next('tabs', false));
+	useIonViewWillLeave(() => Events.next('tabs', true));
 
-    return (
-        <IonPage>
+	return (
+		<IonPage>
 
-            <IonHeader>
-                <IonToolbar>
-                    <IonTitle>{match.params.system}</IonTitle>
-                    <IonButtons slot="start">
-                        <IonBackButton />
-                    </IonButtons>
-                </IonToolbar>
-            </IonHeader>
+			<IonHeader>
+				<IonToolbar>
+					<IonTitle>{match.params.system}</IonTitle>
+					<IonButtons slot="start">
+						<IonBackButton />
+					</IonButtons>
+				</IonToolbar>
+			</IonHeader>
 
-            <IonContent>
-                <iframe className="emulator" src={`app/#/${match.params.system}/${match.params.game}`}></iframe>
-            </IonContent>
+			<IonContent>
+				<iframe className="emulator" src={`app/#/${match.params.system}/${match.params.game}`}></iframe>
+			</IonContent>
 
-        </IonPage>
-    );
+		</IonPage>
+	);
 }

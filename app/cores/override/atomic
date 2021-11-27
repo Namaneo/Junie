@@ -11,10 +11,10 @@ namespace std
 
         bool load(bool _) { return this->value; }
 
-        _Tp exchange(_Tp new_value) 
+        _Tp exchange(_Tp new_value)
         {
             _Tp old_value = this->value;
-            this->value = new_value; 
+            this->value = new_value;
             return old_value;
         }
 

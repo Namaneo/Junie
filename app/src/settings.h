@@ -6,7 +6,8 @@ typedef struct JUN_Settings JUN_Settings;
 
 struct JUN_Settings
 {
-    struct {
+    struct
+    {
         MTY_JSON *root;
         const MTY_JSON *core;
     } json;

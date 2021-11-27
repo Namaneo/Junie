@@ -6,39 +6,39 @@ import './SystemsPage.scss';
 
 export const SystemsPage: React.FC = () => {
 
-  const [loading, setLoading] = useState<boolean>(true);
-  const [systems, setSystems] = useState<System[]>([]);
+	const [loading, setLoading] = useState<boolean>(true);
+	const [systems, setSystems] = useState<System[]>([]);
 
-  useIonViewWillEnter(async () => {
-    setLoading(true);
+	useIonViewWillEnter(async () => {
+		setLoading(true);
 
-    const systems = await Requests.getSystems();
+		const systems = await Requests.getSystems();
 
-    setSystems(systems);
-    setLoading(false);
-  });
+		setSystems(systems);
+		setLoading(false);
+	});
 
-  return (
-    <IonPage>
+	return (
+		<IonPage>
 
-      <IonHeader>
-        <IonToolbar>
-          <IonTitle>Systems</IonTitle>
-        </IonToolbar>
-      </IonHeader>
+			<IonHeader>
+				<IonToolbar>
+					<IonTitle>Systems</IonTitle>
+				</IonToolbar>
+			</IonHeader>
 
-      <IonContent className="systems-page">
-        <IonLoading isOpen={loading} />
-        {systems.map(system =>
-          <IonCard className="card" key={system.name} routerLink={`/games/${system.name}`}>
-            <img src={Requests.getSystemCover(system)} />
-            <IonCardHeader>
-              <IonCardSubtitle>{system.coreName}</IonCardSubtitle>
-            </IonCardHeader>
-          </IonCard>
-        )}
-      </IonContent>
+			<IonContent className="systems-page">
+				<IonLoading isOpen={loading} />
+				{systems.map(system =>
+					<IonCard className="card" key={system.name} routerLink={`/games/${system.name}`}>
+						<img src={Requests.getSystemCover(system)} />
+						<IonCardHeader>
+							<IonCardSubtitle>{system.coreName}</IonCardSubtitle>
+						</IonCardHeader>
+					</IonCard>
+				)}
+			</IonContent>
 
-    </IonPage>
-  );
+		</IonPage>
+	);
 };

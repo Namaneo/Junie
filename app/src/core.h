@@ -10,12 +10,12 @@ typedef struct JUN_CoreCallbacks JUN_CoreCallbacks;
 
 struct JUN_CoreCallbacks
 {
-    retro_environment_t        environment;
-    retro_video_refresh_t      video_refresh;
-    retro_audio_sample_t       audio_sample;
-    retro_audio_sample_batch_t audio_sample_batch;
-    retro_input_poll_t         input_poll;
-    retro_input_state_t        input_state;
+	retro_environment_t environment;
+	retro_video_refresh_t video_refresh;
+	retro_audio_sample_t audio_sample;
+	retro_audio_sample_batch_t audio_sample_batch;
+	retro_input_poll_t input_poll;
+	retro_input_state_t input_state;
 };
 
 JUN_Core *JUN_CoreInitialize(const char *game_path, const char *state_path, const char *sram_path, const char *rtc_path);

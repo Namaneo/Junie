@@ -33,50 +33,50 @@ import './theme/variables.css';
 
 const App: React.FC = () => {
 
-  setupConfig({
-    swipeBackEnabled: false,
-  });
+	setupConfig({
+		swipeBackEnabled: false,
+	});
 
-  const [tabs, setTabs] = useState(true);
+	const [tabs, setTabs] = useState(true);
 
-  Events.subscribe<boolean>('tabs', show => setTabs(show));
+	Events.subscribe<boolean>('tabs', show => setTabs(show));
 
-  return (
-    <IonApp>
-      <IonReactHashRouter>
-        <IonTabs>
+	return (
+		<IonApp>
+			<IonReactHashRouter>
+				<IonTabs>
 
-          <IonRouterOutlet>
-            <Route exact path="/recent" component={RecentPage} />
-            <Route exact path="/games" component={SystemsPage} />
-            <Route exact path="/games/:system" component={GamesPage} />
-            <Route exact path="/games/:system/:game" component={EmulatorPage} />
-            <Route exact path="/saves" component={SavesPage} />
+					<IonRouterOutlet>
+						<Route exact path="/recent" component={RecentPage} />
+						<Route exact path="/games" component={SystemsPage} />
+						<Route exact path="/games/:system" component={GamesPage} />
+						<Route exact path="/games/:system/:game" component={EmulatorPage} />
+						<Route exact path="/saves" component={SavesPage} />
 
-            <Route exact path="/">
-              <Redirect to="/recent" />
-            </Route>
-          </IonRouterOutlet>
+						<Route exact path="/">
+							<Redirect to="/recent" />
+						</Route>
+					</IonRouterOutlet>
 
-          <IonTabBar slot="bottom" hidden={!tabs}>
-            <IonTabButton tab="recent" href="/recent">
-              <IonIcon icon={gameController} />
-              <IonLabel>Games</IonLabel>
-            </IonTabButton>
-            <IonTabButton tab="games" href="/games">
-              <IonIcon icon={cloudDownload} />
-              <IonLabel>Install</IonLabel>
-            </IonTabButton>
-            <IonTabButton tab="saves" href="/saves">
-              <IonIcon icon={save} />
-              <IonLabel>Saves</IonLabel>
-            </IonTabButton>
-          </IonTabBar>
+					<IonTabBar slot="bottom" hidden={!tabs}>
+						<IonTabButton tab="recent" href="/recent">
+							<IonIcon icon={gameController} />
+							<IonLabel>Games</IonLabel>
+						</IonTabButton>
+						<IonTabButton tab="games" href="/games">
+							<IonIcon icon={cloudDownload} />
+							<IonLabel>Install</IonLabel>
+						</IonTabButton>
+						<IonTabButton tab="saves" href="/saves">
+							<IonIcon icon={save} />
+							<IonLabel>Saves</IonLabel>
+						</IonTabButton>
+					</IonTabBar>
 
-        </IonTabs>
-      </IonReactHashRouter>
-    </IonApp>
-  )
+				</IonTabs>
+			</IonReactHashRouter>
+		</IonApp>
+	)
 };
 
 export default App;

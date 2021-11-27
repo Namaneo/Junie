@@ -8,10 +8,10 @@ typedef enum JUN_EnumType JUN_EnumType;
 
 enum JUN_EnumType
 {
-    JUN_ENUM_ENVIRONMENT,
-    JUN_ENUM_LANGUAGE,
-    JUN_ENUM_JOYPAD,
-    JUN_ENUM_KEYBOARD,
+	JUN_ENUM_ENVIRONMENT,
+	JUN_ENUM_LANGUAGE,
+	JUN_ENUM_JOYPAD,
+	JUN_ENUM_KEYBOARD,
 };
 
 void JUN_EnumsInitialize();

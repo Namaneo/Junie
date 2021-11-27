@@ -8,13 +8,13 @@ typedef struct JUN_TextureData JUN_TextureData;
 
 struct JUN_TextureData
 {
-    uint8_t id;
-    float x;
-    float y;
-    float width;
-    float height;
-    float image_width;
-    float image_height;
+	uint8_t id;
+	float x;
+	float y;
+	float width;
+	float height;
+	float image_width;
+	float image_height;
 };
 
 JUN_Texture *JUN_TextureCreateContext(uint32_t view_width, uint32_t view_height, uint8_t offset);

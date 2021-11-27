@@ -9,77 +9,77 @@ import Requests from '../services/Requests';
 import './RecentPage.scss';
 
 interface PlayedGame {
-  request: Request,
-  system: System,
-  game: Game
+	request: Request,
+	system: System,
+	game: Game
 }
 
 export const RecentPage: React.FC = () => {
 
-  const [loading, setLoading] = useState<boolean>(true)
-  const [played, setPlayed] = useState<PlayedGame[]>([])
+	const [loading, setLoading] = useState<boolean>(true)
+	const [played, setPlayed] = useState<PlayedGame[]>([])
 
-  const retrieveGames = async () => {
-    setLoading(true);
+	const retrieveGames = async () => {
+		setLoading(true);
 
-    const systems = await Requests.getSystems();
-    const cachedGames = await Caches.getGames();
+		const systems = await Requests.getSystems();
+		const cachedGames = await Caches.getGames();
 
-    const played = [];
+		const played = [];
 
-    for (const cachedGame of cachedGames) {
-      const system = systems.find(system => system.name == cachedGame.system);
-      if (!system)
-        continue;
+		for (const cachedGame of cachedGames) {
+			const system = systems.find(system => system.name == cachedGame.system);
+			if (!system)
+				continue;
 
-      const game = system.games.find(game => game.rom == cachedGame.game);
-      if (!game)
-        continue;
+			const game = system.games.find(game => game.rom == cachedGame.game);
+			if (!game)
+				continue;
 
-      played.push({ request: cachedGame.request, system, game });
-    }
+			played.push({ request: cachedGame.request, system, game });
+		}
 
-    setPlayed(played);
-    setLoading(false);
-  }
+		setPlayed(played);
+		setLoading(false);
+	}
 
-  const deleteGame = async (event: React.MouseEvent, request: Request) => {
-    event.stopPropagation();
-    event.preventDefault();
+	const deleteGame = async (event: React.MouseEvent, request: Request) => {
+		event.stopPropagation();
+		event.preventDefault();
 
-    await Caches.remove(request);
+		await Caches.remove(request);
 
-    await retrieveGames();
-  }
+		await retrieveGames();
+	}
 
-  useIonViewWillEnter(retrieveGames);
+	useIonViewWillEnter(retrieveGames);
 
-  return (
-    <IonPage>
+	return (
+		<IonPage>
 
-      <IonHeader>
-        <IonToolbar>
-          <IonTitle>Recent</IonTitle>
-        </IonToolbar>
-      </IonHeader>
+			<IonHeader>
+				<IonToolbar>
+					<IonTitle>Recent</IonTitle>
+				</IonToolbar>
+			</IonHeader>
 
-      <IonContent className="recent-page">
-        <IonLoading isOpen={loading} />
-        {played.map(played =>
-          <Link className="game" key={played.game.name} to={`/games/${played.system.name}/${played.game.rom}`}>
-            <IonCard className="card">
-              <img src={played.game.cover} />
-              <IonCardHeader class="header">
-                <IonCardSubtitle>{played.game.name}</IonCardSubtitle>
-              </IonCardHeader>
-              <IonButton fill="clear" color="danger" onClick={e => deleteGame(e, played.request)}>
-                <IonIcon icon={trash} />
-              </IonButton>
-            </IonCard>
-          </Link>
-        )}
-      </IonContent>
+			<IonContent className="recent-page">
+				<IonLoading isOpen={loading} />
+				{played.map(played =>
+					<Link className="game" key={played.game.name} to={`/games/${played.system.name}/${played.game.rom}`}>
+						<IonCard className="card">
+							<img src={played.game.cover} />
+							<IonCardHeader class="header">
+								<IonCardSubtitle>{played.game.name}</IonCardSubtitle>
+							</IonCardHeader>
+							<IonButton fill="clear" color="danger" onClick={e => deleteGame(e, played.request)}>
+								<IonIcon icon={trash} />
+							</IonButton>
+						</IonCard>
+					</Link>
+				)}
+			</IonContent>
 
-    </IonPage>
-  );
+		</IonPage>
+	);
 };
