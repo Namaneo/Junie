@@ -67,5 +67,6 @@ func SendLibrary(w http.ResponseWriter, r *http.Request) {
 		log.Panic(err)
 	}
 
+	w.Header().Add("Content-Type", "application/json")
 	w.Write(library)
 }
