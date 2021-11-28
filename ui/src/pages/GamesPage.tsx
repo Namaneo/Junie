@@ -4,6 +4,7 @@ import { RouteComponentProps } from "react-router";
 import { useToast } from '../hooks/Toast';
 import { Game } from "../interfaces/Game";
 import { System } from "../interfaces/System";
+import Caches from "../services/Caches";
 import Requests from "../services/Requests";
 import './GamesPage.scss';
 
@@ -18,12 +19,16 @@ export const GamesPage: React.FC<RouteComponentProps<GamesProps>> = ({ match }) 
 
 	const [present, dismiss] = useToast('Game successfully installed!');
 
+
 	const install = async (game: Game) => {
 		setLoading(true);
 
 		const path = `/app/games/${system.name}/${game.rom}`;
 		await fetch(path).then(response => response.arrayBuffer());
 
+		system.games = system.games.filter(x => x != game);
+
+		setSystem(system);
 		setLoading(false);
 
 		dismiss();
@@ -34,6 +39,12 @@ export const GamesPage: React.FC<RouteComponentProps<GamesProps>> = ({ match }) 
 		setLoading(true);
 
 		const system = await Requests.getSystem(match.params.system);
+		let installed = await Caches.getGames();
+		installed = installed.filter(x => x.system == system.name);
+
+		system.games = system.games?.filter(game =>
+			!installed.find(x => x.game == game.rom)
+		);
 
 		setSystem(system);
 		setLoading(false);
