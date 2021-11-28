@@ -1,5 +1,5 @@
 import { Redirect, Route } from 'react-router-dom';
-import { IonApp, IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs } from '@ionic/react';
+import { IonApp, IonIcon, IonLabel, IonLoading, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs } from '@ionic/react';
 import { IonReactHashRouter } from '@ionic/react-router';
 import { cloudDownload, gameController, save } from 'ionicons/icons';
 import { setupConfig } from '@ionic/core';
@@ -37,12 +37,17 @@ const App: React.FC = () => {
 		swipeBackEnabled: false,
 	});
 
+	const [loading, setLoading] = useState(false);
 	const [tabs, setTabs] = useState(true);
 
 	Events.subscribe<boolean>('tabs', show => setTabs(show));
 
+	const broadcast = new BroadcastChannel('service-worker');
+	broadcast.onmessage = event => event.data == 'install' && setLoading(true);
+
 	return (
 		<IonApp>
+			<IonLoading isOpen={loading} message="Updating Junie..." />
 			<IonReactHashRouter>
 				<IonTabs>
 

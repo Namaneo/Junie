@@ -10,6 +10,8 @@
 // To learn more about the benefits of this model and instructions on how to
 // opt-in, read https://cra.link/PWA
 
+/* eslint-disable no-restricted-globals */
+
 const isLocalhost = Boolean(
 	window.location.hostname === 'localhost' ||
 	// [::1] is the IPv6 localhost address.
@@ -92,6 +94,8 @@ function registerValidSW(swUrl: string, config?: Config) {
 								config.onSuccess(registration);
 							}
 						}
+
+						location.reload();
 					}
 				};
 			};

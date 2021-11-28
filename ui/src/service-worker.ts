@@ -13,6 +13,9 @@ precacheAndRoute(self.__WB_MANIFEST);
 
 registerRoute(/.*/, new StaleWhileRevalidate());
 
+const broadcast = new BroadcastChannel('service-worker');
+broadcast.postMessage('install');
+
 self.addEventListener('install', event => {
 	event.waitUntil(
 		fetch('cache')
