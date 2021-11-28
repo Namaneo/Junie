@@ -15,7 +15,7 @@ dist_global: all
 	@mkdir -p $(TMP_DIR)/dist $(TMP_DIR)/build $(DIST_DIR)
 
 	@cp -R $(OUT_DIR) $(TMP_DIR)/dist
-	@cp --parents $(ASSETS_DIR)/*.png $(TMP_DIR)/dist
+	@cp -p $(ASSETS_DIR)/*.png $(TMP_DIR)/dist
 
 	@npm install
 	@npx ncc build server.js -o $(TMP_DIR)/build -m
