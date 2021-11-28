@@ -22,13 +22,12 @@ $(UI_OUT):
 	( cd ui && ionic build )
 
 pack: all
-	rm -rf $(OUT)
-	mkdir $(OUT)
-	cp -R $(API_OUT) $(OUT)/$(TARGET)
-	cp -R $(APP_OUT) $(OUT)/$(TARGET)/app
-	cp -R $(UI_OUT)  $(OUT)/$(TARGET)/ui
-	cp -R assets     $(OUT)/$(TARGET)/assets
-	( cd $(OUT) && zip -r $(TARGET)-$(VERSION).zip $(TARGET) )
+	rm -rf $(TARGET)
+	cp -R $(API_OUT) $(TARGET)
+	cp -R $(APP_OUT) $(TARGET)/app
+	cp -R $(UI_OUT)  $(TARGET)/ui
+	cp -R assets     $(TARGET)/assets
+	zip -r $(TARGET)/$(TARGET)-$(VERSION).zip $(TARGET)
 
 clean:
 	rm -rf $(OUT) $(APP_OUT) $(API_OUT) $(UI_OUT)
