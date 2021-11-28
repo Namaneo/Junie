@@ -10,7 +10,7 @@ TARGET_CLEAN := $(TARGET:%=%-clean)
 all: $(TARGET_LIBS)
 
 $(TARGET_LIBS):
-	make -f Makefile.$(@:lib%.a=%) CC="$(CC)" CXX="$(CXX)" AR="$(AR)" RANLIB="$(RANLIB)"
+	make -f Makefile.$(@:lib%.a=%) CC="$(CC)" CXX="$(CXX)" AR="$(AR)" ARFLAGS="" RANLIB="$(RANLIB)"
 
 clean: $(TARGET_CLEAN)
 
