@@ -9,8 +9,8 @@ ENV TERM=vt100
 RUN apt update
 RUN apt install -y curl make clang wget git bsdmainutils
 
-RUN wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-12/wasi-sdk-12.0-linux.tar.gz
-RUN tar xvf wasi-sdk-12.0-linux.tar.gz
+RUN wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-14/wasi-sdk-14.0-linux.tar.gz
+RUN tar xvf wasi-sdk-14.0-linux.tar.gz
 
 ADD ./app/ ./
 
