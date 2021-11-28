@@ -33,6 +33,20 @@ export module Requests {
 		return `assets/covers/${cover}`;
 	}
 
+	export async function installGame(system: System, game: Game) {
+		const path = `/app/games/${system.name}/${game.rom}`;
+
+		try
+		{
+			await fetch(path).then(response => response.arrayBuffer());
+			return true;
+		}
+		catch
+		{
+			return false;
+		}
+	}
+
 }
 
 export default Requests;

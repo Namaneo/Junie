@@ -1,4 +1,4 @@
-import { IonBackButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonLoading, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from "@ionic/react";
+import { IonBackButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonLoading, IonPage, IonTitle, IonToolbar, useIonAlert, useIonViewWillEnter } from "@ionic/react";
 import { useState } from "react";
 import { RouteComponentProps } from "react-router";
 import { useToast } from '../hooks/Toast';
@@ -18,16 +18,27 @@ export const GamesPage: React.FC<RouteComponentProps<GamesProps>> = ({ match }) 
 	const [system, setSystem] = useState<System>({ games: [] });
 
 	const [present, dismiss] = useToast('Game successfully installed!');
+	const [alert] = useIonAlert();
 
 
 	const install = async (game: Game) => {
 		setLoading(true);
 
-		const path = `/app/games/${system.name}/${game.rom}`;
-		await fetch(path).then(response => response.arrayBuffer());
+		const installed = await Requests.installGame(system, game);
+
+		if (!installed) {
+
+			setLoading(false);
+			alert({
+				header: 'Install failed',
+				message: `${game.name} (${system.name})`,
+				buttons: [ 'OK' ],
+			});
+
+			return;
+		}
 
 		system.games = system.games.filter(x => x != game);
-
 		setSystem(system);
 		setLoading(false);
 
