@@ -10,6 +10,18 @@ interface EmulatorProps {
 
 export const EmulatorPage: React.FC<RouteComponentProps<EmulatorProps>> = ({ match }) => {
 
+	window.addEventListener('keydown', ev => {
+		const { key, code } = ev;
+		const frame = window.frames[0];
+		frame.dispatchEvent(new KeyboardEvent('keydown', { key, code }))
+	});
+
+	window.addEventListener('keyup', ev => {
+		const { key, code } = ev;
+		const frame = window.frames[0];
+		frame.dispatchEvent(new KeyboardEvent('keyup', { key, code }))
+	});
+
 	useIonViewWillEnter(() => Events.next('tabs', false));
 	useIonViewWillLeave(() => Events.next('tabs', true));
 
