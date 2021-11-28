@@ -30,6 +30,8 @@ func main() {
 	helpers.UseStaticFiles(r, "/app/games", settings.Resources.Games)
 	helpers.UseStaticFiles(r, "/app/system", settings.Resources.System)
 
+	r.Get("/cache", endpoints.SendCache)
+
 	r.Get("/api/library", endpoints.SendLibrary)
 	r.Get("/api/library/{system}/{filename}", endpoints.SendGame)
 
