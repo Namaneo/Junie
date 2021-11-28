@@ -1,7 +1,7 @@
-import { IonBackButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonLoading, IonPage, IonTitle, IonToolbar, useIonToast, useIonViewWillEnter } from "@ionic/react";
-import { checkmarkSharp } from "ionicons/icons";
+import { IonBackButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonLoading, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from "@ionic/react";
 import { useState } from "react";
 import { RouteComponentProps } from "react-router";
+import { useToast } from '../hooks/Toast';
 import { Game } from "../interfaces/Game";
 import { System } from "../interfaces/System";
 import Requests from "../services/Requests";
@@ -15,30 +15,8 @@ export const GamesPage: React.FC<RouteComponentProps<GamesProps>> = ({ match }) 
 
 	const [loading, setLoading] = useState<boolean>(true)
 	const [system, setSystem] = useState<System>({ games: [] });
-	const [queue, setQueue] = useState<string[]>([]);
 
-	const [present, dismiss] = useIonToast();
-
-	const installed = () => {
-		if (!queue.length)
-			return;
-
-		const game = queue[0];
-
-		setTimeout(() => present({
-			header: 'Game successfully installed!',
-			message: `${game} (${system.name})`,
-			duration: 2000,
-			position: "top",
-			buttons: [{ icon: checkmarkSharp, role: 'cancel' }],
-			onDidDismiss: () => {
-				queue.shift();
-				setQueue(queue);
-
-				installed();
-			}
-		}));
-	}
+	const [present, dismiss] = useToast('Game successfully installed!');
 
 	const install = async (game: Game) => {
 		setLoading(true);
@@ -48,12 +26,8 @@ export const GamesPage: React.FC<RouteComponentProps<GamesProps>> = ({ match }) 
 
 		setLoading(false);
 
-		queue.push(game.name!);
-		setQueue(queue);
-
-		dismiss()
-		if (queue.length == 1)
-			installed();
+		dismiss();
+		present(`${game.name} (${system.name})`);
 	}
 
 	useIonViewWillEnter(async () => {

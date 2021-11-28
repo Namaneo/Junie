@@ -14,7 +14,6 @@ precacheAndRoute(self.__WB_MANIFEST);
 registerRoute(/.*/, new StaleWhileRevalidate());
 
 self.addEventListener('install', (event) => {
-	console.log('installed!')
 	const urls = [
 		'/api/library',
 
