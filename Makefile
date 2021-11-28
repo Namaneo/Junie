@@ -1,4 +1,5 @@
-TARGET := junie
+TARGET  := junie
+VERSION := 0.3.0
 
 APP_OUT := app/build
 API_OUT := api/build
@@ -27,7 +28,7 @@ pack: all
 	cp -R $(APP_OUT) $(OUT)/$(TARGET)/app
 	cp -R $(UI_OUT)  $(OUT)/$(TARGET)/ui
 	cp -R assets     $(OUT)/$(TARGET)/assets
-	( cd $(OUT) && zip -r $(TARGET).zip $(TARGET) )
+	( cd $(OUT) && zip -r $(TARGET)-$(VERSION).zip $(TARGET) )
 
 clean:
 	rm -rf $(OUT) $(APP_OUT) $(API_OUT) $(UI_OUT)
