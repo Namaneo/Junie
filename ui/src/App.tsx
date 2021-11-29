@@ -42,8 +42,9 @@ const App: React.FC = () => {
 
 	Events.subscribe<boolean>('tabs', show => setTabs(show));
 
-	const broadcast = new BroadcastChannel('service-worker');
-	broadcast.onmessage = event => event.data == 'install' && setLoading(true);
+	navigator.serviceWorker.onmessage = event => {
+		event.data == 'install' && setLoading(true);
+	};
 
 	return (
 		<IonApp>

@@ -13,8 +13,13 @@ precacheAndRoute(self.__WB_MANIFEST);
 
 registerRoute(/.*/, new StaleWhileRevalidate());
 
-const broadcast = new BroadcastChannel('service-worker');
-broadcast.postMessage('install');
+self.clients.matchAll({
+	includeUncontrolled: true,
+	type: 'window'
+}).then(clients => {
+	for (let client of clients)
+		client.postMessage('install')
+});
 
 self.addEventListener('install', event => {
 	event.waitUntil(
