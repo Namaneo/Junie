@@ -21,11 +21,7 @@ export module Caches {
 	}
 
 	export async function remove(request: Request) {
-		const cacheName = (await caches.keys()).find(x => x.startsWith('workbox-runtime'));
-		if (!cacheName)
-			return [];
-
-		const cache = await caches.open(cacheName);
+		const cache = await caches.open('games');
 
 		await cache.delete(request);
 	}
