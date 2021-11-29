@@ -20,11 +20,12 @@ self.addEventListener('install', event => {
 	event.waitUntil(
 		fetch('cache')
 			.then<string[]>(response => response.json())
-			.then(urls =>
+			.then(urls => {
+				const info = urls.map(url => new Request(url, { redirect: 'follow' }));
 				caches.open(cacheNames.runtime).then(cache =>
-					cache.addAll(urls)
+					cache.addAll(info)
 				)
-			)
+			})
 	);
 });
 
