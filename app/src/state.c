@@ -17,6 +17,8 @@ struct JUN_State
 	float view_width;
 	float view_height;
 
+	bool exit;
+
 	JUN_TextureData textures[TEXTURE_MAX];
 };
 
@@ -111,6 +113,16 @@ JUN_TextureData *JUN_StateGetMetrics(JUN_State *this, uint8_t id)
 void JUN_StateSetMetrics(JUN_State *this, JUN_TextureData *texture)
 {
 	this->textures[texture->id] = *texture;
+}
+
+void JUN_StateExit(JUN_State *this)
+{
+	this->exit = true;
+}
+
+bool JUN_StateShouldExit(JUN_State *this)
+{
+	return this->exit;
 }
 
 void JUN_StateDestroy(JUN_State **this)

@@ -2,54 +2,54 @@
 <html lang="en-us">
 
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta charset="utf-8">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 </head>
 
 <body>
-    <script type="text/javascript" src="matoya.js"></script>
-    <script type="text/javascript" src="database.js"></script>
-    <script type="text/javascript" src="logging.js"></script>
-    <script type="text/javascript" src="events.js"></script>
-    <script type="text/javascript" src="emulators.js"></script>
+	<button style="position: fixed;top: 0; right: 0; z-index: 1000;">COUCOU</button>
 
-    <script type="text/javascript">
+	<script type="text/javascript" src="matoya.js"></script>
+	<script type="text/javascript" src="database.js"></script>
+	<script type="text/javascript" src="logging.js"></script>
+	<script type="text/javascript" src="events.js"></script>
+	<script type="text/javascript" src="emulators.js"></script>
 
-        //Disable keyboard.getLayoutMap for iframe compatibility
-        if (navigator.keyboard)
-            navigator.keyboard.getLayoutMap = () => new Promise(resolve => resolve({ get: (code) => null }));
+	<script type="text/javascript">
 
-        //Retrieve context parameters
-        const params = decodeURI(window.location.hash).split('/');
-        const system = params[1];
-        const core = systems[system];
-        const game = params[2];
+		//Retrieve context parameters
+		const params = decodeURI(window.location.hash).split('/');
+		const system = params[1];
+		const core   = systems[system];
+		const game   = params[2];
 
-        //Adjust request URL prefixes
-        const _fetch = window.fetch;
-        window.fetch = request => {
-            request = location.pathname + request.replace(location.origin, '');
-            request = request.replace('//', '/');
-            return _fetch(request);
-        }
+		//Adjust request URL prefixes
+		const _fetch = window.fetch;
+		window.fetch = request => {
+			request = location.pathname + request.replace(location.origin, '');
+			request = request.replace('//', '/');
+			return _fetch(request);
+		}
 
-        //Start core execution
-        MTY_Start(`${core.library}.wasm`, {
-            js_get_host:  (value, length) => MTY_StrToC(window.location.hostname, value, length),
-            js_get_port:  ()              => window.location.port ?? 0,
-            js_is_secure: ()              => location.protocol.indexOf('https') != -1,
+		//Start core execution
+		MTY_Start(`${core.library}.wasm`, {
+			js_get_host:  (value, length) => MTY_StrToC(window.location.hostname, value, length),
+			js_get_port:  ()              => window.location.port ?? 0,
+			js_is_secure: ()              => location.protocol.indexOf('https') != -1,
 
-            js_get_system: (value, length) => MTY_StrToC(system, value, length),
-            js_get_core:   (value, length) => MTY_StrToC(core.name, value, length),
-            js_get_game:   (value, length) => MTY_StrToC(game, value, length),
+			js_get_system: (value, length) => MTY_StrToC(system, value, length),
+			js_get_core:   (value, length) => MTY_StrToC(core.name, value, length),
+			js_get_game:   (value, length) => MTY_StrToC(game, value, length),
 
-            js_read_file:  JUN_ReadFile,
-            js_write_file: JUN_WriteFile,
-        });
+			js_read_file:  JUN_ReadFile,
+			js_write_file: JUN_WriteFile,
 
-        //Prevent mobile keyboard
-        MTY.clip.readOnly = true;
-    </script>
+			js_exit: () => history.back(),
+		});
+
+		//Prevent mobile keyboard
+		MTY.clip.readOnly = true;
+	</script>
 </body>
 
 </html>

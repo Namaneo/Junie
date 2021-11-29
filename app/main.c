@@ -4,6 +4,7 @@
 
 #include "enums.h"
 #include "filesystem.h"
+#include "interop.h"
 
 #include "app.h"
 
@@ -50,14 +51,15 @@ static void audio_sample(int16_t left, int16_t right)
 
 static bool start_game()
 {
-	JUN_CoreSetCallbacks(app->core, &(JUN_CoreCallbacks){
-																			environment,
-																			video_refresh,
-																			audio_sample,
-																			audio_sample_batch,
-																			input_poll,
-																			input_state,
-																	});
+	JUN_CoreSetCallbacks(app->core, &(JUN_CoreCallbacks)
+	{
+		environment,
+		video_refresh,
+		audio_sample,
+		audio_sample_batch,
+		input_poll,
+		input_state,
+	});
 
 	if (!JUN_CoreStartGame(app->core))
 		return false;
@@ -107,7 +109,10 @@ static bool app_func(void *opaque)
 
 	JUN_VideoPresent(app->video);
 
-	return !app->quit;
+	if (JUN_StateShouldExit(app->state))
+		JUN_InteropExit();
+
+	return true;
 }
 
 static void event_func(const MTY_Event *event, void *opaque)
@@ -115,7 +120,7 @@ static void event_func(const MTY_Event *event, void *opaque)
 	JUN_InputSetStatus(app->input, event);
 
 	if (event->type == MTY_EVENT_CLOSE)
-		app->quit = true;
+		JUN_StateExit(app->state);
 }
 
 static void log_func(const char *message, void *opaque)

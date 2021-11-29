@@ -9,7 +9,6 @@ import { RecentPage } from './pages/RecentPage';
 import { SavesPage } from './pages/SavesPage';
 import { SystemsPage } from './pages/SystemsPage';
 import { GamesPage } from './pages/GamesPage';
-import { EmulatorPage } from './pages/EmulatorPage';
 import Events from './services/Events';
 
 /* Core CSS required for Ionic components to work properly */
@@ -56,7 +55,6 @@ const App: React.FC = () => {
 						<Route exact path="/recent" component={RecentPage} />
 						<Route exact path="/games" component={SystemsPage} />
 						<Route exact path="/games/:system" component={GamesPage} />
-						<Route exact path="/games/:system/:game" component={EmulatorPage} />
 						<Route exact path="/saves" component={SavesPage} />
 
 						<Route exact path="/">

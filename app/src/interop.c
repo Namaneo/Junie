@@ -15,6 +15,8 @@ void js_get_game(char *value, uint32_t length);
 void *js_read_file(const char *path, size_t *length);
 void js_write_file(const char *path, const void *data, size_t length);
 
+void js_exit();
+
 char *JUN_InteropGetHost()
 {
 	char value[PATH_SIZE];
@@ -61,4 +63,9 @@ void *JUN_InteropReadFile(const char *path, size_t *length)
 void JUN_InteropWriteFile(const char *path, const void *data, size_t length)
 {
 	js_write_file(path, data, length);
+}
+
+void JUN_InteropExit()
+{
+	js_exit();
 }

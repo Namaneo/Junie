@@ -1,18 +1,10 @@
 .recent-page {
 	.game {
-		text-decoration: none;
-
-		.card {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-
-			img {
-				max-width: 25%;
-			}
-			.header {
-				flex: 1;
-			}
+		img {
+			max-width: 20%;
+		}
+		.label {
+			margin-left: 16px;
 		}
 	}
 }

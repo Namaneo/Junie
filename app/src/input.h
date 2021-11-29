@@ -25,7 +25,8 @@ enum JUN_MenuType
 	MENU_SAVE_STATE = 2,
 	MENU_RESTORE_STATE = 3,
 	MENU_FAST_FORWARD = 4,
-	MENU_MAX = 5,
+	MENU_EXIT = 5,
+	MENU_MAX = 6,
 };
 
 JUN_Input *JUN_InputInitialize(JUN_State *state);

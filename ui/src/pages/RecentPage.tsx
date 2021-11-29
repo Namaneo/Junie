@@ -1,7 +1,5 @@
-import { IonButton, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonIcon, IonLoading, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
-import { trash } from 'ionicons/icons';
+import { IonButton, IonContent, IonHeader, IonItem, IonItemGroup, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonLoading, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Game } from '../interfaces/Game';
 import { System } from '../interfaces/System';
 import Caches from '../services/Caches';
@@ -43,10 +41,7 @@ export const RecentPage: React.FC = () => {
 		setLoading(false);
 	}
 
-	const deleteGame = async (event: React.MouseEvent, request: Request) => {
-		event.stopPropagation();
-		event.preventDefault();
-
+	const deleteGame = async (request: Request) => {
 		await Caches.remove(request);
 
 		await retrieveGames();
@@ -65,19 +60,27 @@ export const RecentPage: React.FC = () => {
 
 			<IonContent className="recent-page">
 				<IonLoading isOpen={loading} />
-				{played.map(played =>
-					<Link className="game" key={played.game.name} to={`/games/${played.system.name}/${played.game.rom}`}>
-						<IonCard className="card">
-							<img src={played.game.cover} />
-							<IonCardHeader class="header">
-								<IonCardSubtitle>{played.game.name}</IonCardSubtitle>
-							</IonCardHeader>
-							<IonButton fill="clear" color="danger" onClick={e => deleteGame(e, played.request)}>
-								<IonIcon icon={trash} />
-							</IonButton>
-						</IonCard>
-					</Link>
-				)}
+
+				<IonList>
+					<IonItemGroup>
+						{played.map(played =>
+							<IonItemSliding key={played.game.rom}>
+								<IonItem lines="full" className="game">
+									<img src={played.game.cover} />
+									<IonLabel className="label">
+										<h2>{played.game.name}</h2>
+										<h3>{played.system.name}</h3>
+									</IonLabel>
+									<IonButton href={`app/#/${played.system.name}/${played.game.rom}`}>Play</IonButton>
+								</IonItem>
+								<IonItemOptions side="end">
+									<IonItemOption color="danger" onClick={() => deleteGame(played.request)}>Delete</IonItemOption>
+								</IonItemOptions>
+							</IonItemSliding>
+						)}
+					</IonItemGroup>
+				</IonList>
+
 			</IonContent>
 
 		</IonPage>

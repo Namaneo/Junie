@@ -17,8 +17,6 @@ struct JUN_App
 	JUN_Input *input;
 	JUN_Audio *audio;
 	JUN_Video *video;
-
-	bool quit;
 };
 
 JUN_App *JUN_AppInitialize(MTY_AppFunc app_func, MTY_EventFunc event_func);

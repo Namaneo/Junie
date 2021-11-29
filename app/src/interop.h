@@ -13,3 +13,5 @@ char *JUN_InteropGetGame();
 
 void *JUN_InteropReadFile(const char *path, size_t *length);
 void JUN_InteropWriteFile(const char *path, const void *data, size_t length);
+
+void JUN_InteropExit();
