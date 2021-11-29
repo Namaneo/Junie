@@ -11,6 +11,7 @@ clientsClaim();
 
 precacheAndRoute(self.__WB_MANIFEST);
 
+registerRoute(/\/games\/.*/, new StaleWhileRevalidate({ cacheName: 'games' }));
 registerRoute(/.*/, new StaleWhileRevalidate());
 
 self.clients.matchAll({
@@ -27,8 +28,10 @@ self.addEventListener('install', event => {
 			.then<string[]>(response => response.json())
 			.then(urls => {
 				const info = urls.map(url => new Request(url, { redirect: 'follow' }));
-				caches.open(cacheNames.runtime).then(cache =>
-					cache.addAll(info)
+				caches.delete(cacheNames.runtime).then(() =>
+					caches.open(cacheNames.runtime).then(cache =>
+						cache.addAll(info)
+					)
 				)
 			})
 	);

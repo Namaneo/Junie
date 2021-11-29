@@ -7,11 +7,7 @@ export module Caches {
 	}
 
 	export async function getGames(): Promise<GameRequest[]> {
-		const cacheName = (await caches.keys()).find(x => x.startsWith('workbox-runtime'));
-		if (!cacheName)
-			return [];
-
-		const cache = await caches.open(cacheName);
+		const cache = await caches.open('games');
 		const entries = await cache.keys();
 		const requests = entries.filter(x => new URL(x.url).pathname.startsWith('/app/games/'));
 
