@@ -1,4 +1,4 @@
-import { IonButton, IonContent, IonHeader, IonItem, IonItemGroup, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonLoading, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
+import { IonButton, IonContent, IonHeader, IonImg, IonItem, IonItemGroup, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonLoading, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
 import { useState } from 'react';
 import { Game } from '../interfaces/Game';
 import { System } from '../interfaces/System';
@@ -66,7 +66,7 @@ export const RecentPage: React.FC = () => {
 						{played.map(played =>
 							<IonItemSliding key={played.game.rom}>
 								<IonItem lines="full" className="game">
-									<img src={played.game.cover} />
+									<IonImg class="cover" src={played.game.cover} />
 									<IonLabel className="label">
 										<h2>{played.game.name}</h2>
 										<h3>{played.system.name}</h3>
