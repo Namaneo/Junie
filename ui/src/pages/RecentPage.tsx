@@ -66,7 +66,7 @@ export const RecentPage: React.FC = () => {
 						{played.map(played =>
 							<IonItemSliding key={played.game.rom}>
 								<IonItem lines="full" className="game">
-									<IonImg class="cover" src={played.game.cover} />
+									<IonImg className="cover" src={played.game.cover} />
 									<IonLabel className="label">
 										<h2>{played.game.name}</h2>
 										<h3>{played.system.name}</h3>
