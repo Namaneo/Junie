@@ -41,9 +41,7 @@
 
 			js_read_file:  JUN_ReadFile,
 			js_write_file: JUN_WriteFile,
-
-			js_exit: () => history.back(),
-		});
+		}, () => history.back(), 'webgl');
 
 		//Prevent mobile keyboard
 		MTY.clip.readOnly = true;

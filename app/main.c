@@ -109,13 +109,7 @@ static bool app_func(void *opaque)
 
 	JUN_VideoPresent(app->video);
 
-	if (JUN_StateShouldExit(app->state))
-	{
-		JUN_InteropExit();
-		JUN_StateToggleExit(app->state);
-	}
-
-	return true;
+	return !JUN_StateShouldExit(app->state);
 }
 
 static void event_func(const MTY_Event *event, void *opaque)
@@ -123,7 +117,7 @@ static void event_func(const MTY_Event *event, void *opaque)
 	JUN_InputSetStatus(app->input, event);
 
 	if (event->type == MTY_EVENT_CLOSE)
-		JUN_StateToggleExit(app->state);
+		JUN_StateExit(app->state);
 }
 
 static void log_func(const char *message, void *opaque)

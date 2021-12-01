@@ -115,9 +115,9 @@ void JUN_StateSetMetrics(JUN_State *this, JUN_TextureData *texture)
 	this->textures[texture->id] = *texture;
 }
 
-void JUN_StateToggleExit(JUN_State *this)
+void JUN_StateExit(JUN_State *this)
 {
-	this->exit = !this->exit;
+	this->exit = true;
 }
 
 bool JUN_StateShouldExit(JUN_State *this)
