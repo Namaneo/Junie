@@ -1,5 +1,6 @@
-import { IonButton, IonContent, IonHeader, IonImg, IonItem, IonItemGroup, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonLoading, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
-import { useState } from 'react';
+import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonImg, IonInput, IonItem, IonItemGroup, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonLoading, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
+import { add } from 'ionicons/icons';
+import { useRef, useState } from 'react';
 import { Game } from '../interfaces/Game';
 import { System } from '../interfaces/System';
 import Caches from '../services/Caches';
@@ -30,15 +31,34 @@ export const RecentPage: React.FC = () => {
 			if (!system)
 				continue;
 
-			const game = system.games.find(game => game.rom == cachedGame.game);
-			if (!game)
-				continue;
+			let game = system.games.find(game => game.rom == cachedGame.game);
+			if (!game) {
+				game = {
+					name: cachedGame.game.split('.').slice(0, -1).join('.'),
+					rom: cachedGame.game,
+					cover: 'assets/placeholder.png'
+				}
+			}
 
 			played.push({ request: cachedGame.request, system, game });
 		}
 
 		setPlayed(played);
 		setLoading(false);
+	}
+
+	const addGame = async (files: FileList | null) => {
+		if (!files?.length)
+			return;
+
+		const system = await Requests.getSystemByGame(files[0].name);
+
+		await Caches.add(
+			new Request(`/app/games/${system.name}/${files[0].name}`),
+			new Response(await files[0].arrayBuffer())
+		);
+
+		await retrieveGames();
 	}
 
 	const deleteGame = async (request: Request) => {
@@ -49,12 +69,20 @@ export const RecentPage: React.FC = () => {
 
 	useIonViewWillEnter(retrieveGames);
 
+	const fileInput = useRef<HTMLInputElement>(null);
+
 	return (
 		<IonPage>
 
 			<IonHeader>
 				<IonToolbar>
 					<IonTitle>Recent</IonTitle>
+					<IonButtons slot="end">
+						<IonButton onClick={() => fileInput?.current?.click()}>
+							<input type="file" ref={fileInput} onChange={e => addGame(e.target.files)} hidden />
+							<IonIcon slot="icon-only" icon={add} />
+						</IonButton>
+					</IonButtons>
 				</IonToolbar>
 			</IonHeader>
 

@@ -20,6 +20,12 @@ export module Caches {
 		});
 	}
 
+	export async function add(request: Request, response: Response) {
+		const cache = await caches.open('games');
+
+		await cache.put(request, response);
+	}
+
 	export async function remove(request: Request) {
 		const cache = await caches.open('games');
 

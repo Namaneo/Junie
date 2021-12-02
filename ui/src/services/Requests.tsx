@@ -15,6 +15,18 @@ export module Requests {
 		return await request<System[]>('library');
 	};
 
+	export async function getSystemByGame(gameName: string): Promise<System> {
+		const systems = await request<System[]>('library');
+
+		const extension = gameName.split('.').pop();
+		const system = systems.find(x => x.extension == extension);
+
+		if (!system)
+			throw new Error(`No matching system found for game '${gameName}'`);
+
+		return system;
+	};
+
 	//Retrieve all available games for a given system
 	export async function getSystem(systemName: string): Promise<System> {
 		const systems = await getSystems();
