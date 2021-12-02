@@ -214,6 +214,7 @@ docker run \
 - Original controller assets come from the [Delta emulator](https://github.com/rileytestut/Delta).
 - Menu graphics come from the [Google Material Icons](https://fonts.google.com/icons).
 - Loading screen comes from [Pixel Art Maker](http://pixelartmaker.com/art/8f6c49d5035cd32) (not sure exactly who to credit).
+- Game cover [placeholder](https://pixabay.com/vectors/game-console-icon-video-play-2389215/) reworked from [Memed_Nurrohmad](https://pixabay.com/users/memed_nurrohmad-3307648/?tab=about)'s work.
 
 # License
 

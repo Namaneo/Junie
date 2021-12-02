@@ -46,14 +46,7 @@ func fillGames(system *models.System) {
 
 func SendLibrary(w http.ResponseWriter, r *http.Request) {
 
-	path := path.Join(settings.Resources.API, "library.json")
-	library, err := ioutil.ReadFile(path)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	var systems []models.System
-	err = json.Unmarshal(library, &systems)
+	systems, err := helpers.GetSystems()
 	if err != nil {
 		log.Panic(err)
 	}
@@ -62,7 +55,7 @@ func SendLibrary(w http.ResponseWriter, r *http.Request) {
 		fillGames(&systems[i])
 	}
 
-	library, err = json.Marshal(systems)
+	library, err := json.Marshal(systems)
 	if err != nil {
 		log.Panic(err)
 	}
