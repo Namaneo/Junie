@@ -94,11 +94,11 @@ function registerValidSW(swUrl: string, config?: Config) {
 								config.onSuccess(registration);
 							}
 						}
-
-						location.reload();
 					}
 				};
 			};
+
+			setInterval(() => registration.update(), 60000);
 		})
 		.catch((error) => {
 			console.error('Error during service worker registration:', error);

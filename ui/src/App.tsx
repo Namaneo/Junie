@@ -1,5 +1,5 @@
 import { Redirect, Route } from 'react-router-dom';
-import { IonApp, IonIcon, IonLabel, IonLoading, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs } from '@ionic/react';
+import { IonApp, IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs, useIonAlert } from '@ionic/react';
 import { IonReactHashRouter } from '@ionic/react-router';
 import { cloudDownload, gameController, save } from 'ionicons/icons';
 import { setupConfig } from '@ionic/core';
@@ -36,18 +36,26 @@ const App: React.FC = () => {
 		swipeBackEnabled: false,
 	});
 
-	const [loading, setLoading] = useState(false);
 	const [tabs, setTabs] = useState(true);
+
+	const [alert] = useIonAlert();
 
 	Events.subscribe<boolean>('tabs', show => setTabs(show));
 
 	navigator.serviceWorker.onmessage = event => {
-		event.data == 'install' && setLoading(true);
+		if (event.data == 'install')
+			alert({
+				header: 'Update available',
+				message: 'A new update of Junie is available. Would you like to apply it now?',
+				buttons: [
+					{ text: 'Later', role: 'dismiss' },
+					{ text: 'Apply', handler: () => window.location.reload() },
+				]
+			});
 	};
 
 	return (
 		<IonApp>
-			<IonLoading isOpen={loading} message="Updating Junie..." />
 			<IonReactHashRouter>
 				<IonTabs>
 
