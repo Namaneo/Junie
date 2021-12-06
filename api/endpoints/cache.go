@@ -44,7 +44,6 @@ func SendCache(w http.ResponseWriter, r *http.Request) {
 	urls = append(urls, findFiles(settings.Resources.UI, "/assets", "png")...)
 	urls = append(urls, findFiles(settings.Resources.App, "/app/assets", "png")...)
 	urls = append(urls, findFiles(settings.Resources.App, "/app/assets", "json")...)
-	urls = append(urls, findFiles(settings.Resources.Games, "/covers", "png")...)
 
 	payload, err := json.Marshal(urls)
 	if err != nil {

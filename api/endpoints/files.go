@@ -91,12 +91,5 @@ func SendCover(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	filePath = path.Join(settings.Resources.UI, "placeholder.png")
-	file, err = ioutil.ReadFile(filePath)
-	if err == nil {
-		w.Write(file)
-		return
-	}
-
 	log.Panic(err)
 }
