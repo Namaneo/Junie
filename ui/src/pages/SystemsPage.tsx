@@ -1,5 +1,6 @@
-import { IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonImg, IonLoading, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
+import { IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonLoading, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
 import { useState } from 'react';
+import { JunImg } from '../components/JunImg';
 import { System } from '../interfaces/System';
 import Requests from '../services/Requests';
 import './SystemsPage.scss';
@@ -31,7 +32,7 @@ export const SystemsPage: React.FC = () => {
 				<IonLoading isOpen={loading} />
 				{systems.filter(x => x.games?.length).map(system =>
 					<IonCard className="card" key={system.name} routerLink={`/games/${system.name}`}>
-						<IonImg class="cover" src={Requests.getSystemCover(system)} />
+						<JunImg className="cover" src={Requests.getSystemCover(system)} />
 						<IonCardHeader>
 							<IonCardSubtitle>{system.coreName}</IonCardSubtitle>
 						</IonCardHeader>

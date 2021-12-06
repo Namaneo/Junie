@@ -1,6 +1,7 @@
 import { IonBackButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonImg, IonLoading, IonPage, IonTitle, IonToolbar, useIonAlert, useIonViewWillEnter } from "@ionic/react";
 import { useState } from "react";
 import { RouteComponentProps } from "react-router";
+import { JunImg } from "../components/JunImg";
 import { useToast } from '../hooks/Toast';
 import { Game } from "../interfaces/Game";
 import { System } from "../interfaces/System";
@@ -77,7 +78,7 @@ export const GamesPage: React.FC<RouteComponentProps<GamesProps>> = ({ match }) 
 				<IonLoading isOpen={loading} />
 				{system.games?.map(game =>
 					<IonCard className="card" onClick={() => install(game)}>
-						<IonImg class="cover" src={game.cover} />
+						<JunImg className="cover" src={game.cover} />
 						<IonCardHeader className="header">
 							<IonCardSubtitle>{game.name}</IonCardSubtitle>
 						</IonCardHeader>
