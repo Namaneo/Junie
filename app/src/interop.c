@@ -12,6 +12,8 @@ void js_get_system(char *value, uint32_t length);
 void js_get_core(char *value, uint32_t length);
 void js_get_game(char *value, uint32_t length);
 
+void js_clear_request(uint32_t index);
+
 void *js_read_file(const char *path, size_t *length);
 void js_write_file(const char *path, const void *data, size_t length);
 
@@ -51,6 +53,11 @@ char *JUN_InteropGetGame()
 	char value[PATH_SIZE];
 	js_get_game(value, PATH_SIZE);
 	return MTY_Strdup(value);
+}
+
+void JUN_InteropClearRequest(uint32_t index)
+{
+	js_clear_request(index);
 }
 
 void *JUN_InteropReadFile(const char *path, size_t *length)

@@ -39,6 +39,8 @@
 			js_get_core:   (value, length) => MTY_StrToC(core.name, value, length),
 			js_get_game:   (value, length) => MTY_StrToC(game, value, length),
 
+			js_clear_request: (index) => delete MTY.reqs[index],
+
 			js_read_file:  JUN_ReadFile,
 			js_write_file: JUN_WriteFile,
 		}, () => history.back(), 'webgl');

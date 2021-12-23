@@ -11,5 +11,7 @@ char *JUN_InteropGetSystem();
 char *JUN_InteropGetCore();
 char *JUN_InteropGetGame();
 
+void JUN_InteropClearRequest(uint32_t index);
+
 void *JUN_InteropReadFile(const char *path, size_t *length);
 void JUN_InteropWriteFile(const char *path, const void *data, size_t length);
