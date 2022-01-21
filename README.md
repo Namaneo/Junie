@@ -164,7 +164,7 @@ make pack
 After a successful build, you can run Junie using:
 
 ```bash
-./Junie
+./junie
 ```
 
 ## Docker

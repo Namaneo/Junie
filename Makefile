@@ -7,30 +7,34 @@ UI_OUT  := ui/build
 
 OUT := bin
 
-all: $(OUT)
-
-$(OUT): $(APP_OUT) $(API_OUT) $(UI_OUT)
+all: clean $(APP_OUT) $(API_OUT) $(UI_OUT)
 
 $(APP_OUT):
 	( cd app && make )
 
 $(API_OUT):
-	( cd api && env GOOS=linux   GOARCH=amd64 go build -o build/junie     )
-	( cd api && env GOOS=windows GOARCH=amd64 go build -o build/junie.exe )
+	( cd api && env GOOS=linux   GOARCH=amd64 go build -o build/linux/junie       )
+	( cd api && env GOOS=darwin  GOARCH=amd64 go build -o build/macos/junie       )
+	( cd api && env GOOS=windows GOARCH=amd64 go build -o build/windows/junie.exe )
 
 $(UI_OUT):
 	( cd ui && ionic build )
 
 pack: all
-	rm -rf $(TARGET)
-	cp -R $(API_OUT) $(TARGET)
-	cp -R $(APP_OUT) $(TARGET)/app
-	cp -R $(UI_OUT)  $(TARGET)/ui
-	cp -R assets     $(TARGET)/assets
-	zip -r $(TARGET)/$(TARGET)-$(VERSION).zip $(TARGET)
+	rm -rf $(OUT)
+	mkdir $(OUT)
+	cp -R $(APP_OUT) $(OUT)/app
+	cp -R $(UI_OUT)  $(OUT)/ui
+	cp -R assets     $(OUT)/assets
+	( cd $(OUT) && zip -r $(TARGET)-linux-$(VERSION).zip   app ui assets )
+	( cd $(OUT) && zip -r $(TARGET)-macos-$(VERSION).zip   app ui assets )
+	( cd $(OUT) && zip -r $(TARGET)-windows-$(VERSION).zip app ui assets )
+	zip -rjv $(OUT)/$(TARGET)-linux-$(VERSION).zip   $(API_OUT)/linux/junie
+	zip -rjv $(OUT)/$(TARGET)-macos-$(VERSION).zip   $(API_OUT)/linux/junie
+	zip -rjv $(OUT)/$(TARGET)-windows-$(VERSION).zip $(API_OUT)/windows/junie.exe
 
 clean:
-	rm -rf $(OUT) $(APP_OUT) $(API_OUT) $(UI_OUT)
+	rm -rf $(APP_OUT) $(API_OUT) $(UI_OUT)
 
 clean-all: clean
 	make -C app clean-all
