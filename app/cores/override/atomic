@@ -1,0 +1,28 @@
+namespace std
+{
+    const bool memory_order_relaxed = false;
+
+    template <typename _Tp>
+    struct atomic
+    {
+    public:
+        atomic() {}
+        atomic(_Tp new_value) { this->value = new_value; }
+
+        bool load(bool _) { return this->value; }
+
+        _Tp exchange(_Tp new_value)
+        {
+            _Tp old_value = this->value;
+            this->value = new_value;
+            return old_value;
+        }
+
+        operator _Tp() { return this->value; }
+
+    private:
+        _Tp value;
+    };
+
+    typedef atomic<bool> atomic_bool;
+}

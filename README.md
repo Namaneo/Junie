@@ -1,20 +1,19 @@
 # Junie
 
-Junie is a [Libretro](https://www.libretro.com/index.php/home-2/) frontend that aims to run entirely in your browser, desktop or mobile! 
+Junie is a [Libretro](https://www.libretro.com/index.php/home-2/) frontend that aims to run entirely in your browser, desktop or mobile!
 * No installation on the end-devices.
 * Near-native performances thanks to WebAssembly.
 * Wide range of supported/compatible cores (... soon).
+* Progressive Web Application fully accessible offline.
 
 Junie currently runs on most recent browsers, though your experience will probably be the best on Chrome and Safari (I have issues on Firefox on my side, not sure if it's isolated to my computer).
 
-[Demo](https://junie.herokuapp.com/): here you can play 
-[Indivisible](https://kasumi.itch.io/indivisible), 
+[Demo](https://junie.herokuapp.com/): here you can play
+[Indivisible](https://kasumi.itch.io/indivisible),
 [Celeste Classic](https://github.com/JeffRuLz/Celeste-Classic-GBA),
-[Daedeus](https://izma.itch.io/deadeus) and 
-[GraviBots](https://retrosouls.itch.io/gravibots16bit). 
+[Daedeus](https://izma.itch.io/deadeus) and
+[GraviBots](https://retrosouls.itch.io/gravibots16bit).
 I haven't played those games yet but will do for sure!
-
-If you prefer to play your own games, head to [this page](https://junie.herokuapp.com/play) and select a game with one of the following extensions: `nes`, `smc`, `sms`, `bin`, `gb`, `gbc`, `gba`, `nds`.
 
 ![](assets/showcase.png)
 
@@ -27,10 +26,11 @@ If you prefer to play your own games, head to [this page](https://junie.herokuap
 - [x] Additional core-specific system files.
 - [x] Core-specific configurations override.
 - [x] Multi-touch controller, with D-pad used as a joystick.
-- [x] Re-mappable keyboard to joypad bindings. 
+- [x] Re-mappable keyboard to joypad bindings.
 - [x] Touch inputs, enabled by pressing the top button.
 - [x] Savestate creation and restore.
 - [x] Fast-forward up to 4 times the original speed.
+- [x] Nice platform-specific user interface.
 
 # Folder structure
 
@@ -61,7 +61,7 @@ system
 
 # Configuration
 
-Junie and the underlying cores can be configured using the `settings.json` file, located in the `bin` directory. A typical default configuration looks like that:
+Junie and the underlying cores can be configured using the `settings.json` file. A typical default configuration looks like that:
 
 ```json
 {
@@ -118,7 +118,25 @@ Those configurations will only be applied to the core they target. Section name 
 | dependencies | A list of extra dependencies the emulator might require. Files will be exposed to the core as follows: `/system/<core_name>/<file_name>`. |
 | configurations | A list of custom configurations to apply to the emulator. Details of available configurations for each core are logged in the browser console. |
 
+# Side notes
+
+## Cores compatibility
+
+Well, when I wrote "wide range of cores", it might be a little exagerated...
+
+Junie is using the [wasi-sdk](https://github.com/WebAssembly/wasi-sdk) to build the cores, and it currently lacks features that cores sometimes use extensively.
+Right now, the most problematic ones are threading and JIT backend. Also, no OpenGL support at this time (this one is actually doable but probably requires a lot of work).
+
+That said, even after disabling all the above features when building the cores, performance is still far beyond acceptable for most cores. You will however have some trouble with 3D games on Nintendo DS (2D games run quite fine on recent hardware, as far as I've tested). Low-end mobile phones might also have struggle with the SNES.
+
 # Build & Run
+
+## Prerequisites
+
+Junie is composed of 3 main components:
+* The **UI**: developed in JSX using React and Ionic, located in the [ui](ui) folder
+* The **API**: developed in Golang using chi, located in the [api](api) folder
+* The **Emulator**: developed in C using libmatoya, located in the [app](app) folder
 
 To initialize the submodules if you haven't already:
 
@@ -127,32 +145,31 @@ git submodule sync
 git submodule update --init
 ```
 
-To build a local version of Junie:
+## Build
+
+After being sure all the dependencies are installed on your machine, you can build a local version of Junie just using:
 
 ```bash
 make
 ```
 
-To run the local version:
+If you want to pack everything in the same folder (linux build only for now), here you go:
 
 ```bash
-node server.js 
+make pack
 ```
 
-To package Junie for all the available platforms:
+## Run
+
+After a successful build, you can run Junie using:
 
 ```bash
-make dist
+./junie
 ```
 
-To run the packaged version, go to `dist/<platform>` and run:
+## Docker
 
-```bash
-./server   # UNIX platforms
-server.exe # Windows platform
-```
-
-If you prefer to use Docker, here you go:
+If you prefer to use Docker, no need for any local dependencies:
 
 ```bash
 # Build the image
@@ -162,35 +179,16 @@ docker build -t junie .
 docker run \
     -d --rm \
     --name junie \
-    -p 8000:8000 \
-    -v /path/to/settings.json:/app/bin/settings.json \
-    -v /path/to/system:/app/system \
-    -v /path/to/games:/app/games \
+    -p 3000:3000 \
+    -v /path/to/settings.json:/junie/assets/app/settings.json \
+    -v /path/to/system:/system \
+    -v /path/to/games:/games \
     junie
 ```
 
-# Side notes
-
-## Cores compatibility
-
-Well, when I wrote "wide range of cores", it might be a little exagerated... 
-
-Junie is using the [wasi-sdk](https://github.com/WebAssembly/wasi-sdk) to build the cores, and it currently lacks features that cores sometimes use extensively. 
-Right now, the most problematic ones are threading and JIT backend. Also, no OpenGL support at this time (this one is actually doable but probably requires a lot of work).
-
-That said, even after disabling all the above features when building the cores, performance is still far beyond acceptable for most cores. You will however have some trouble with 3D games on Nintendo DS (2D games run quite fine on recent hardware, as far as I've tested). Low-end mobile phones might also have struggle with the SNES.
-
-## Game sizes
-
-Just a note to warn you about game sizes. There is currently no managed cache mechanism to keep game files data between reloads. For instance, depending on how you browser handles them, you might download 20 to 200MB files each time you start a game.
-
-For those who have a low data plan on their mobile phones: be careful, your browser might still cache them, but might not! Improving this will probably be one of my top priorities.
-
 # Next steps
 
-- [ ] Add a cache mechanism to keep games locally between reloads.
 - [ ] Synchronize save files for cross-browser play.
-- [ ] Develop a better UI (both directory listing and in-game).
 - [ ] Build Junie for `libmatoya`'s supported platforms as well.
 - [ ] Multiplayer support, both locally and through WebRTC.
 
@@ -200,6 +198,7 @@ For those who have a low data plan on their mobile phones: be careful, your brow
 
 - All of this could only be possible thanks to [libmatoya](https://github.com/matoya/libmatoya).
 - The [zlib](https://github.com/madler/zlib) library is required for some cores.
+- Thumbnails are retrieved from [libretro-thumbnails](https://github.com/libretro-thumbnails/libretro-thumbnails)
 - And of course, modules and headers from [libretro-common](https://github.com/libretro/libretro-common).
 
 ## Cores
@@ -210,16 +209,12 @@ For those who have a low data plan on their mobile phones: be careful, your brow
 - [Genesis Plus GX](https://github.com/libretro/Genesis-Plus-GX) for Mega Drive and Master System emulation.
 - [QuickNES](https://github.com/libretro/QuickNES_Core) for NES emulation.
 
-## Tools
-
-- [ncc](https://github.com/vercel/ncc) is used to build the server standalone.
-- [nexe](https://github.com/nexe/nexe) is used to package the server into executables.
- 
 ## Assets
 
 - Original controller assets come from the [Delta emulator](https://github.com/rileytestut/Delta).
 - Menu graphics come from the [Google Material Icons](https://fonts.google.com/icons).
 - Loading screen comes from [Pixel Art Maker](http://pixelartmaker.com/art/8f6c49d5035cd32) (not sure exactly who to credit).
+- Game cover [placeholder](https://pixabay.com/vectors/game-console-icon-video-play-2389215/) reworked from [Memed_Nurrohmad](https://pixabay.com/users/memed_nurrohmad-3307648/?tab=about)'s work.
 
 # License
 

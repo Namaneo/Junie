@@ -1,0 +1,34 @@
+{
+	"language": "ENGLISH",
+	"assets": {
+		"menu": "menu.png",
+		"left": "left.png",
+		"right": "right.png",
+		"loading": "loading.png"
+	},
+	"bindings": {
+		"A": "X",
+		"B": "Z",
+		"X": "S",
+		"Y": "A",
+		"UP": "UP",
+		"DOWN": "DOWN",
+		"LEFT": "LEFT",
+		"RIGHT": "RIGHT",
+		"L": "C",
+		"R": "D",
+		"SELECT": "ENTER",
+		"START": "SPACE"
+	},
+	"melonDS": {
+		"dependencies": [
+			"bios7.bin",
+			"bios9.bin",
+			"firmware.bin"
+		],
+		"configurations": {
+			"melonds_touch_mode": "Touch",
+			"melonds_randomize_mac_address": "enabled"
+		}
+	}
+}

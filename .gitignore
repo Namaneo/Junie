@@ -1,15 +1,14 @@
-# Editor files
 .vscode
-node_modules
-
-# Build files
-*.a
-*.o
-include
-tmp
-bin
-dist
-
-# Core files
 system
 games
+bin
+
+app/include
+app/build
+app/**/*.a
+app/**/*.o
+
+api/build
+
+ui/build
+ui/node_modules

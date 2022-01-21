@@ -1,0 +1,67 @@
+[
+	{
+		"name": "NES",
+		"fullName": "Nintendo - Nintendo Entertainment System",
+		"coreName": "QuickNES",
+		"corePath": "quicknes",
+		"extension": "nes",
+		"cover": "nes.png"
+	},
+	{
+		"name": "SNES",
+		"fullName": "Nintendo - Super Nintendo Entertainment System",
+		"coreName": "Snes9x",
+		"corePath": "snes9x",
+		"extension": "smc",
+		"cover": "snes.png"
+	},
+	{
+		"name": "Master System",
+		"fullName": "Sega - Master System - Mark III",
+		"coreName": "Genesis Plus GX",
+		"corePath": "genesis",
+		"extension": "sms",
+		"cover": "master-system.png"
+	},
+	{
+		"name": "Mega Drive",
+		"fullName": "Sega - Mega Drive - Genesis",
+		"coreName": "Genesis Plus GX",
+		"corePath": "genesis",
+		"extension": "bin",
+		"cover": "mega-drive.png"
+	},
+	{
+		"name": "Game Boy",
+		"fullName": "Nintendo - Game Boy",
+		"coreName": "mGBA",
+		"corePath": "mgba",
+		"extension": "gb",
+		"cover": "game-boy.png"
+	},
+	{
+		"name": "Game Boy Color",
+		"fullName": "Nintendo - Game Boy Color",
+		"coreName": "mGBA",
+		"corePath": "mgba",
+		"extension": "gbc",
+		"cover": "game-boy-color.png"
+	},
+	{
+		"name": "Game Boy Advance",
+		"fullName": "Nintendo - Game Boy Advance",
+		"coreName": "mGBA",
+		"corePath": "mgba",
+		"extension": "gba",
+		"cover": "game-boy-advance.png"
+	},
+	{
+		"name": "Nintendo DS",
+		"fullName": "Nintendo - Nintendo DS",
+		"coreName": "melonDS",
+		"corePath": "melonds",
+		"extension": "nds",
+		"cover": "nintendo-ds.png",
+		"coverDark": "nintendo-ds-dark.png"
+	}
+]

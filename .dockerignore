@@ -1,21 +1,14 @@
-**
+.vscode
+system
+games
+bin
 
-!.git
-!assets/*.png
-!src/*.c
-!src/*.h
-!web/*.js
-!lib/Makefile*
-!cores/Makefile*
-!cores/override
+app/include
+app/bin
 
-!main.c
-!index.html
-!settings.json
-!Makefile*
-!package.json
-!package-lock.json
-!server.js
+api/publish
+api/JunieAPI/bin
+api/JunieAPI/obj
 
-!cores/**
-!lib/**
+ui/build
+ui/node_modules

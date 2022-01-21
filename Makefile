@@ -1,74 +1,40 @@
-TARGET := junie
+TARGET  := junie
+VERSION := 0.3.0
 
-WASI_SDK := $(HOME)/wasi-sdk-12.0
-CC 	     := $(WASI_SDK)/bin/clang   --sysroot=$(WASI_SDK)/share/wasi-sysroot
-CXX	     := $(WASI_SDK)/bin/clang++ --sysroot=$(WASI_SDK)/share/wasi-sysroot
-AR       := $(WASI_SDK)/bin/ar
+APP_OUT := app/build
+API_OUT := api/build
+UI_OUT  := ui/build
 
-SRC_DIR   := src
-LIB_DIR   := lib
-CORES_DIR := cores
-INC_DIR   := include
+OUT := bin
 
-TMP_DIR  := tmp
-OUT_DIR  := bin
-DIST_DIR := dist
+all: clean $(APP_OUT) $(API_OUT) $(UI_OUT)
 
-SYSTEM_DIR := system
-ASSETS_DIR := assets
-GAMES_DIR  := games
+$(APP_OUT):
+	( cd app && make )
 
-SRC := main.c \
-	$(SRC_DIR)/app.c \
-	$(SRC_DIR)/vfs.c \
-	$(SRC_DIR)/wasi.c \
-	$(SRC_DIR)/core.c \
-	$(SRC_DIR)/video.c \
-	$(SRC_DIR)/audio.c \
-	$(SRC_DIR)/input.c \
-	$(SRC_DIR)/enums.c \
-	$(SRC_DIR)/state.c \
-	$(SRC_DIR)/texture.c \
-	$(SRC_DIR)/interop.c \
-	$(SRC_DIR)/toolbox.c \
-	$(SRC_DIR)/settings.c \
-	$(SRC_DIR)/filesystem.c \
-	$(SRC_DIR)/configuration.c
-OBJ := $(SRC:.c=.o)
+$(API_OUT):
+	( cd api && env GOOS=linux   GOARCH=amd64 go build -o build/linux/junie       )
+	( cd api && env GOOS=darwin  GOARCH=amd64 go build -o build/macos/junie       )
+	( cd api && env GOOS=windows GOARCH=amd64 go build -o build/windows/junie.exe )
 
-CFLAGS  := \
-	-I$(SRC_DIR) -I$(INC_DIR) -Wall -O3
-LDFLAGS := \
-	-L$(LIB_DIR) -L$(CORES_DIR) \
-	-lretro -lmatoya -lz \
-	-Wl,--allow-undefined -Wl,--export-table \
-	-O3
+$(UI_OUT):
+	( cd ui && ionic build )
 
-MAKEFLAGS += --no-print-directory
-
-CORES := quicknes mgba snes9x genesis melonds
-
-all: clean $(TARGET)
-
-$(TARGET): $(CORES)
-	@cp index.html settings.json web/* $(OUT_DIR)
-	@cp $(LIB_DIR)/matoya/src/unix/web/matoya.js $(OUT_DIR)
-
-$(CORES): deps $(OBJ)
-	$(CXX) $(LDFLAGS) -l$@ $(OBJ) -o $(OUT_DIR)/$@.wasm
-
-deps:
-	@make -C $(LIB_DIR)
-	@make -C $(CORES_DIR)
-	@mkdir -p $(OUT_DIR) $(INC_DIR)
-	@cp $(LIB_DIR)/matoya/src/matoya.h $(INC_DIR)
-	@cp $(LIB_DIR)/retro/include/libretro.h $(INC_DIR)
+pack: all
+	rm -rf $(OUT)
+	mkdir $(OUT)
+	cp -R $(APP_OUT) $(OUT)/app
+	cp -R $(UI_OUT)  $(OUT)/ui
+	cp -R assets     $(OUT)/assets
+	( cd $(OUT) && zip -r $(TARGET)-linux-$(VERSION).zip   app ui assets )
+	( cd $(OUT) && zip -r $(TARGET)-macos-$(VERSION).zip   app ui assets )
+	( cd $(OUT) && zip -r $(TARGET)-windows-$(VERSION).zip app ui assets )
+	zip -rjv $(OUT)/$(TARGET)-linux-$(VERSION).zip   $(API_OUT)/linux/junie
+	zip -rjv $(OUT)/$(TARGET)-macos-$(VERSION).zip   $(API_OUT)/linux/junie
+	zip -rjv $(OUT)/$(TARGET)-windows-$(VERSION).zip $(API_OUT)/windows/junie.exe
 
 clean:
-	rm -rf $(OBJ) $(INC_DIR) $(OUT_DIR) $(DIST_DIR)
+	rm -rf $(APP_OUT) $(API_OUT) $(UI_OUT)
 
 clean-all: clean
-	-@make -C lib   clean
-	-@make -C cores clean
-
-include Makefile.dist
+	make -C app clean-all

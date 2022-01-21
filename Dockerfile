@@ -1,4 +1,5 @@
-FROM debian AS build
+# Build emulator
+FROM debian AS app
 
 WORKDIR /app
 
@@ -8,25 +9,50 @@ ENV TERM=vt100
 RUN apt update
 RUN apt install -y curl make clang wget git bsdmainutils
 
-RUN wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-12/wasi-sdk-12.0-linux.tar.gz
-RUN tar xvf wasi-sdk-12.0-linux.tar.gz
+RUN wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-14/wasi-sdk-14.0-linux.tar.gz
+RUN tar xvf wasi-sdk-14.0-linux.tar.gz
 
-ADD ./ ./
+ADD ./app/ ./
 
 RUN make
 
-FROM alpine AS runtime
+# Build API
+FROM golang as api
 
-WORKDIR /app
+WORKDIR /api
 
-RUN apk add nodejs npm
+ADD ./api/go.mod ./
+ADD ./api/go.sum ./
 
-COPY --from=build /app/bin/    ./bin/
-COPY --from=build /app/assets/ ./assets/
+RUN go mod download
 
-ADD package.json  ./
-ADD server.js     ./
+ADD ./api/ ./
 
-RUN npm install
+RUN go build -o build/junie
 
-ENTRYPOINT [ "node", "server.js" ]
+# Build UI
+FROM node:16 as ui
+
+WORKDIR /ui
+
+ADD ./ui/package.json ./
+ADD ./ui/yarn.lock    ./
+
+RUN yarn install
+
+ADD ./ui/ ./
+
+RUN yarn ionic build
+
+# Run Junie
+FROM debian AS junie
+
+WORKDIR /junie
+
+COPY --from=api /api/build/ ./
+COPY --from=app /app/build/ ./app/
+COPY --from=ui  /ui/build/  ./ui/
+
+ADD ./assets/ ./assets/
+
+ENTRYPOINT [ "./junie" ]
