@@ -172,10 +172,6 @@ After a successful build, you can run Junie using:
 If you prefer to use Docker, no need for any local dependencies:
 
 ```bash
-# Build the image
-docker build -t junie .
-
-# Run the container
 docker run \
     -d --rm \
     --name junie \
@@ -183,7 +179,7 @@ docker run \
     -v /path/to/settings.json:/junie/assets/app/settings.json \
     -v /path/to/system:/system \
     -v /path/to/games:/games \
-    junie
+    namaneo/junie
 ```
 
 # Next steps
