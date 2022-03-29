@@ -1414,29 +1414,30 @@
     tar "^6.0.1"
     tslib "^2.0.1"
 
-"@ionic/core@5.9.1":
-  version "5.9.1"
-  resolved "https://registry.yarnpkg.com/@ionic/core/-/core-5.9.1.tgz#aac373e02835006bfcf40b066f31d1b6725f8286"
-  integrity sha512-/jVO0N5ESs/iPFcrFZ/JFvW2Uh0ZV1uLFT2vtbtMfCaOMZK8Bmt36ZR1cDDFTuw14vPOLz/1wI2pbQru48JpkQ==
+"@ionic/core@^6.0.12":
+  version "6.0.12"
+  resolved "https://registry.yarnpkg.com/@ionic/core/-/core-6.0.12.tgz#7840d132bef212d61b53e7c87c13b08d78c1bc98"
+  integrity sha512-WpcVzSXBuvdHUZuNg1NTdnF4Ur7AGNCpgc4t4lyjPcEr0j//E855gd6GtUD7imNFERdtrvVC86JTpj5t0L+OMg==
   dependencies:
-    "@stencil/core" "^2.4.0"
-    ionicons "^5.5.3"
+    "@stencil/core" "^2.14.1"
+    ionicons "^6.0.0"
     tslib "^2.1.0"
 
-"@ionic/react-router@^5.9.1":
-  version "5.9.1"
-  resolved "https://registry.yarnpkg.com/@ionic/react-router/-/react-router-5.9.1.tgz#2c6ea6af4081901d93290e8f09acefa23e3c4236"
-  integrity sha512-O2SlglLB1loeNnPvN2kZE4ncpc1zltOMZPWXpkAhgPdB+QgD26lrwT9WjFvuVMqWsXLSPFmqs2SIgM6gKWSZdw==
+"@ionic/react-router@^6.0.12":
+  version "6.0.12"
+  resolved "https://registry.yarnpkg.com/@ionic/react-router/-/react-router-6.0.12.tgz#52080f08f72b58974f30659b59db4e61a7d121a6"
+  integrity sha512-LR1rTEreC9rLzxEGibfBND/hRtnuFOBozKtw/E5AzKyJ3Ord/pGG5n1w8UVlEbmqjXFpjWswTE7VuKsP/uVynw==
   dependencies:
+    "@ionic/react" "^6.0.12"
     tslib "*"
 
-"@ionic/react@^5.9.1":
-  version "5.9.1"
-  resolved "https://registry.yarnpkg.com/@ionic/react/-/react-5.9.1.tgz#02fa9a3089b32e4e8e266d6660696c50b4a66ed4"
-  integrity sha512-gn/PZH61A9RKqMQc1eyYlRMGKSpzU8AQCACuvRAcJJcQEb9l4Ryosvt6hp5IlUPWDzc17nnTQgn4Y9D8PREPQA==
+"@ionic/react@^6.0.12":
+  version "6.0.12"
+  resolved "https://registry.yarnpkg.com/@ionic/react/-/react-6.0.12.tgz#0b0a5dba725dc85293fc0d6efa1ab86a1dc3e953"
+  integrity sha512-u/9Y0iu5+0jxNoyoCLgJHk/Vkh8OQ/LSulTKf7EB3qWglyYrHlXd0j58dJjxM3pK8UO9PS6FAfeizatqqMxq1g==
   dependencies:
-    "@ionic/core" "5.9.1"
-    ionicons "^5.1.2"
+    "@ionic/core" "^6.0.12"
+    ionicons "^6.0.0"
     tslib "*"
 
 "@ionic/utils-array@2.1.5":
@@ -1809,15 +1810,20 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@stencil/core@^2.4.0":
-  version "2.11.0"
-  resolved "https://registry.yarnpkg.com/@stencil/core/-/core-2.11.0.tgz#8accc2791e2c34cce2d2aa8b40864dd40be4e10c"
-  integrity sha512-/IubCWhVXCguyMUp/3zGrg3c882+RJNg/zpiKfyfJL3kRCOwe+/MD8OoAXVGdd+xAohZKIi1Ik+EHFlsptsjLg==
+"@stencil/core@^2.14.1":
+  version "2.14.2"
+  resolved "https://registry.yarnpkg.com/@stencil/core/-/core-2.14.2.tgz#c221d18bbfd9b637d755d43631598695c7526ff2"
+  integrity sha512-NMC5Xi8sPFJxaO4rz6CbMHuD6PteE/RJWtjrbkusmpjKRtMXkfZJPIgOrleZ4xO+vXcNyL535Ru7vUADqEsTiQ==
 
 "@stencil/core@~2.10.0":
   version "2.10.0"
   resolved "https://registry.yarnpkg.com/@stencil/core/-/core-2.10.0.tgz#acf44b9ae6578a20f0d09bf94296e833beadc885"
   integrity sha512-15rWMTPQ/sp0lSV82HVCXkIya3QLN+uBl7pqK4JnTrp4HiLrzLmNbWjbvgCs55gw0lULbCIGbRIEsFz+Pe/Q+A==
+
+"@stencil/core@~2.12.0":
+  version "2.12.1"
+  resolved "https://registry.yarnpkg.com/@stencil/core/-/core-2.12.1.tgz#92364d3e57337b8d36dd9b70cfbed2833929f22d"
+  integrity sha512-u24TZ+FEvjnZt5ZgIkLjLpUNsO6Ml3mUZqwmqk81w6RWWz75hgB5p4RFI5rvuErFeh2xvMIGo+pNdG24XUBz1A==
 
 "@surma/rollup-plugin-off-main-thread@^1.1.1":
   version "1.4.2"
@@ -1943,6 +1949,20 @@
     dom-accessibility-api "^0.5.6"
     lz-string "^1.4.4"
     pretty-format "^26.6.2"
+
+"@testing-library/dom@^8.11.3":
+  version "8.11.3"
+  resolved "https://registry.yarnpkg.com/@testing-library/dom/-/dom-8.11.3.tgz#38fd63cbfe14557021e88982d931e33fb7c1a808"
+  integrity sha512-9LId28I+lx70wUiZjLvi1DB/WT2zGOxUh46glrSNMaWVx849kKAluezVzZrXJfTKKoQTmEOutLes/bHg4Bj3aA==
+  dependencies:
+    "@babel/code-frame" "^7.10.4"
+    "@babel/runtime" "^7.12.5"
+    "@types/aria-query" "^4.2.0"
+    aria-query "^5.0.0"
+    chalk "^4.1.0"
+    dom-accessibility-api "^0.5.9"
+    lz-string "^1.4.4"
+    pretty-format "^27.0.2"
 
 "@testing-library/jest-dom@^5.11.9":
   version "5.15.0"
@@ -2758,6 +2778,11 @@ aria-query@^4.2.2:
   dependencies:
     "@babel/runtime" "^7.10.2"
     "@babel/runtime-corejs3" "^7.10.2"
+
+aria-query@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/aria-query/-/aria-query-5.0.0.tgz#210c21aaf469613ee8c9a62c7f86525e058db52c"
+  integrity sha512-V+SM7AbUwJ+EBnB8+DXs0hPZHO0W6pqBcc0dW90OwtVG02PswOu/teuARoLQjdDOH+t9pJgGnW5/Qmouf3gPJg==
 
 arity-n@^1.0.4:
   version "1.0.4"
@@ -4706,6 +4731,11 @@ dom-accessibility-api@^0.5.6:
   resolved "https://registry.yarnpkg.com/dom-accessibility-api/-/dom-accessibility-api-0.5.10.tgz#caa6d08f60388d0bb4539dd75fe458a9a1d0014c"
   integrity sha512-Xu9mD0UjrJisTmv7lmVSDMagQcU9R5hwAbxsaAE/35XPnPLJobbuREfV/rraiSaEj/UOvgrzQs66zyTWTlyd+g==
 
+dom-accessibility-api@^0.5.9:
+  version "0.5.13"
+  resolved "https://registry.yarnpkg.com/dom-accessibility-api/-/dom-accessibility-api-0.5.13.tgz#102ee5f25eacce09bdf1cfa5a298f86da473be4b"
+  integrity sha512-R305kwb5CcMDIpSHUnLyIAp7SrSPBx6F0VfQFB3M75xVMHhXJJIdePYgbPPh1o57vCHNu5QztokWUPsLjWzFqw==
+
 dom-converter@^0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/dom-converter/-/dom-converter-0.2.0.tgz#6721a9daee2e293682955b6afe416771627bb768"
@@ -6640,12 +6670,19 @@ internal-slot@^1.0.3:
     has "^1.0.3"
     side-channel "^1.0.4"
 
-ionicons@^5.1.2, ionicons@^5.4.0, ionicons@^5.5.3:
+ionicons@^5.4.0:
   version "5.5.4"
   resolved "https://registry.yarnpkg.com/ionicons/-/ionicons-5.5.4.tgz#5fef0c44038a630f5bb5f9a7dc83ec158bab95b1"
   integrity sha512-3ph8X9my3inhabWEZ7N0XRA0MnnNQ1v9a602mLNgWsIXnxE9G5BybIZ/pws/OZZ/hoNlvSjk801N03yL9/FNgQ==
   dependencies:
     "@stencil/core" "~2.10.0"
+
+ionicons@^6.0.0:
+  version "6.0.1"
+  resolved "https://registry.yarnpkg.com/ionicons/-/ionicons-6.0.1.tgz#e7dc8c9d6d6cff33f3c64c095b5df645fbedd917"
+  integrity sha512-xQekOJsxH82O7oB+3F60zeRggCdND9pJ/k0E6IJDVUGGlCj5mlyFqNgxUimytKgstPGv3S+3EmCxjefvtGgWUg==
+  dependencies:
+    "@stencil/core" "~2.12.0"
 
 ip-regex@^2.1.0:
   version "2.1.0"
@@ -10014,6 +10051,15 @@ pretty-format@^27.0.0, pretty-format@^27.3.1:
   integrity sha512-DR/c+pvFc52nLimLROYjnXPtolawm+uWDxr4FjuLDLUn+ktWnSN851KoHwHzzqq6rfCOjkzN8FLgDrSub6UDuA==
   dependencies:
     "@jest/types" "^27.2.5"
+    ansi-regex "^5.0.1"
+    ansi-styles "^5.0.0"
+    react-is "^17.0.1"
+
+pretty-format@^27.0.2:
+  version "27.5.1"
+  resolved "https://registry.yarnpkg.com/pretty-format/-/pretty-format-27.5.1.tgz#2181879fdea51a7a5851fb39d920faa63f01d88e"
+  integrity sha512-Qb1gy5OrP5+zDf2Bvnzdl3jsTf1qXVMazbvCoKhtKqVs4/YK4ozX4gKQJJVyNe+cajNPn0KoC0MC3FUmaHWEmQ==
+  dependencies:
     ansi-regex "^5.0.1"
     ansi-styles "^5.0.0"
     react-is "^17.0.1"

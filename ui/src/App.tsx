@@ -1,8 +1,7 @@
 import { Redirect, Route } from 'react-router-dom';
-import { IonApp, IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs, useIonAlert } from '@ionic/react';
+import { IonApp, IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs, setupIonicReact, useIonAlert } from '@ionic/react';
 import { IonReactHashRouter } from '@ionic/react-router';
 import { cloudDownload, gameController, save } from 'ionicons/icons';
-import { setupConfig } from '@ionic/core';
 import { useState } from 'react';
 
 import { RecentPage } from './pages/RecentPage';
@@ -32,7 +31,7 @@ import './theme/variables.css';
 
 const App: React.FC = () => {
 
-	setupConfig({
+	setupIonicReact({
 		swipeBackEnabled: false,
 	});
 

@@ -1,5 +1,5 @@
 TARGET  := junie
-VERSION := 0.3.0
+VERSION := 0.3.1
 
 APP_OUT := app/build
 API_OUT := api/build
