@@ -37,59 +37,52 @@ void JUN_TextureDraw(JUN_Texture *context, JUN_TextureData *texture)
 	float view_height = context->view_height;
 
 	// Initialize indices
-	uint16_t indices[6] =
-			{
-					0,
-					1,
-					2,
-					0,
-					2,
-					3,
-			};
+	uint16_t indices[6] = { 0, 1, 2, 0, 2, 3 };
 
 	// Initialize vertices
 	MTY_Vtx vertices[4] =
-			{
-					{{x, y}, {0, 0}, 0xFFFFFFFF},
-					{{x + width, y}, {1, 0}, 0xFFFFFFFF},
-					{{x + width, y + height}, {1, 1}, 0xFFFFFFFF},
-					{{x, y + height}, {0, 1}, 0xFFFFFFFF},
-			};
+	{
+		{ {x, y},                  {0, 0}, 0xFFFFFFFF },
+		{ {x + width, y},          {1, 0}, 0xFFFFFFFF },
+		{ {x + width, y + height}, {1, 1}, 0xFFFFFFFF },
+		{ {x, y + height},         {0, 1}, 0xFFFFFFFF },
+	};
 
 	// Initialize texture commands
 	MTY_Cmd commands[2] =
-			{
-					{
-							.texture = id,
-							.elemCount = 3,
-							.idxOffset = 0,
-							.clip = {0, 0, view_width, view_height},
-					},
-					{
-							.texture = id,
-							.elemCount = 3,
-							.idxOffset = 3,
-							.clip = {0, 0, view_width, view_height},
-					},
-			};
+	{
+		{
+			.texture = id,
+			.elemCount = 3,
+			.idxOffset = 0,
+			.clip = {0, 0, view_width, view_height},
+		},
+		{
+			.texture = id,
+			.elemCount = 3,
+			.idxOffset = 3,
+			.clip = {0, 0, view_width, view_height},
+		},
+	};
 
 	// Resize command lists
 	context->length++;
 	context->commands = MTY_Realloc(context->commands, context->length, sizeof(MTY_CmdList));
 
 	// Initialize command list
-	context->commands[context->length - 1] = (MTY_CmdList){
-			.cmd = MTY_Dup(commands, sizeof commands),
-			.cmdLength = 2,
-			.cmdMax = sizeof commands,
+	context->commands[context->length - 1] = (MTY_CmdList)
+	{
+		.cmd = MTY_Dup(commands, sizeof commands),
+		.cmdLength = 2,
+		.cmdMax = sizeof commands,
 
-			.vtx = MTY_Dup(vertices, sizeof vertices),
-			.vtxLength = 4,
-			.vtxMax = sizeof vertices,
+		.vtx = MTY_Dup(vertices, sizeof vertices),
+		.vtxLength = 4,
+		.vtxMax = sizeof vertices,
 
-			.idx = MTY_Dup(indices, sizeof indices),
-			.idxLength = 6,
-			.idxMax = sizeof indices,
+		.idx = MTY_Dup(indices, sizeof indices),
+		.idxLength = 6,
+		.idxMax = sizeof indices,
 	};
 }
 
@@ -100,16 +93,17 @@ MTY_DrawData *JUN_TextureProduce(JUN_Texture *context, size_t length)
 		length = context->length;
 
 	// Fill drawing data
-	*context->draw_data = (MTY_DrawData){
-			.clear = false,
-			.displaySize = {context->view_width, context->view_height},
+	*context->draw_data = (MTY_DrawData)
+	{
+		.clear = false,
+		.displaySize = {context->view_width, context->view_height},
 
-			.cmdList = context->commands,
-			.cmdListLength = length,
-			.cmdListMax = length * sizeof(MTY_CmdList),
+		.cmdList = context->commands,
+		.cmdListLength = length,
+		.cmdListMax = length * sizeof(MTY_CmdList),
 
-			.vtxTotalLength = length * 4,
-			.idxTotalLength = 6,
+		.vtxTotalLength = length * 4,
+		.idxTotalLength = 6,
 	};
 
 	// Return produced drawing

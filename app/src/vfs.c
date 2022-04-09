@@ -136,8 +136,8 @@ void JUN_VfsSaveFile(const char *path, void *buffer, size_t length)
 
 	file->size = length;
 	file->buffer = file->buffer
-										 ? MTY_Realloc(file->buffer, file->size, 1)
-										 : MTY_Alloc(file->size, 1);
+		? MTY_Realloc(file->buffer, file->size, 1)
+		: MTY_Alloc(file->size, 1);
 
 	memcpy(file->buffer, buffer, file->size);
 
@@ -226,8 +226,8 @@ static int64_t seek(JUN_File *stream, int64_t offset, int seek_position)
 static int64_t read(JUN_File *stream, void *s, uint64_t len)
 {
 	uint64_t length = len > stream->size - stream->offset
-												? stream->size - stream->offset
-												: len;
+		? stream->size - stream->offset
+		: len;
 
 	memcpy(s, stream->buffer + stream->offset, length);
 
