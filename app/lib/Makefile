@@ -1,8 +1,3 @@
-WASI_SDK := $(HOME)/wasi-sdk-14.0
-CC       := $(WASI_SDK)/bin/clang --sysroot=$(WASI_SDK)/share/wasi-sysroot
-AR       := $(WASI_SDK)/bin/ar
-RANLIB   := $(WASI_SDK)/bin/ranlib
-
 TARGET       := retro matoya z
 TARGET_LIBS  := $(TARGET:%=lib%.a)
 TARGET_CLEAN := $(TARGET:%=%-clean)
@@ -10,7 +5,7 @@ TARGET_CLEAN := $(TARGET:%=%-clean)
 all: $(TARGET_LIBS)
 
 $(TARGET_LIBS):
-	make -f Makefile.$(@:lib%.a=%) CC="$(CC)" CXX="$(CXX)" AR="$(AR)" RANLIB="$(RANLIB)"
+	make -f Makefile.$(@:lib%.a=%) -j 8
 
 clean: $(TARGET_CLEAN)
 

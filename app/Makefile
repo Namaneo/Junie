@@ -1,9 +1,6 @@
 TARGET := junie
 
-WASI_SDK := $(HOME)/wasi-sdk-14.0
-CC 	     := $(WASI_SDK)/bin/clang   --sysroot=$(WASI_SDK)/share/wasi-sysroot
-CXX	     := $(WASI_SDK)/bin/clang++ --sysroot=$(WASI_SDK)/share/wasi-sysroot
-AR       := $(WASI_SDK)/bin/ar
+include Makefile.common
 
 SRC_DIR   := src
 LIB_DIR   := lib
@@ -48,13 +45,16 @@ MAKEFLAGS += --no-print-directory
 
 CORES := quicknes mgba snes9x genesis melonds
 
-all: clean $(TARGET)
+all:
+	@make -j 8 clean
+	@make -j 8 deps
+	@make -j 8 $(TARGET)
 
 $(TARGET): $(CORES)
 	@cp index.html web/* $(OUT_DIR)
 	@cp $(LIB_DIR)/matoya/src/unix/web/matoya.js $(OUT_DIR)
 
-$(CORES): deps $(OBJ)
+$(CORES): $(OBJ)
 	$(CXX) $(LDFLAGS) -l$@ $(OBJ) -o $(OUT_DIR)/$@.wasm
 
 deps:

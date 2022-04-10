@@ -1,8 +1,3 @@
-WASI_SDK := $(HOME)/wasi-sdk-14.0
-CC       := $(WASI_SDK)/bin/clang   --sysroot=$(WASI_SDK)/share/wasi-sysroot
-CXX      := $(WASI_SDK)/bin/clang++ --sysroot=$(WASI_SDK)/share/wasi-sysroot
-AR       := $(WASI_SDK)/bin/ar
-
 TARGET       := quicknes mgba snes9x genesis melonds
 TARGET_LIB   := $(addprefix lib, $(addsuffix .a, $(TARGET)))
 TARGET_CLEAN := $(TARGET_LIB:%=%-clean)
@@ -10,7 +5,7 @@ TARGET_CLEAN := $(TARGET_LIB:%=%-clean)
 all: $(TARGET_LIB)
 
 $(TARGET_LIB):
-	make -f Makefile.$(@:lib%.a=%) PLATFORM=emscripten CC="$(CC)" CXX="$(CXX)" AR="$(AR)"
+	make -f Makefile.$(@:lib%.a=%) PLATFORM=emscripten
 
 clean: $(TARGET_CLEAN)
 
