@@ -1,4 +1,4 @@
-TARGET       := retro matoya z
+TARGET       := retro matoya freetype rmlui
 TARGET_LIBS  := $(TARGET:%=lib%.a)
 TARGET_CLEAN := $(TARGET:%=%-clean)
 

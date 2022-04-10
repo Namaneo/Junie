@@ -7,37 +7,36 @@ LIB_DIR   := lib
 CORES_DIR := cores
 INC_DIR   := include
 
-TMP_DIR  := tmp
 OUT_DIR  := build
 DIST_DIR := dist
 
-SYSTEM_DIR := system
-ASSETS_DIR := assets
-GAMES_DIR  := games
+OBJ := main.o \
+	$(SRC_DIR)/app.o \
+	$(SRC_DIR)/vfs.o \
+	$(SRC_DIR)/wasi.o \
+	$(SRC_DIR)/core.o \
+	$(SRC_DIR)/video.o \
+	$(SRC_DIR)/audio.o \
+	$(SRC_DIR)/input.o \
+	$(SRC_DIR)/enums.o \
+	$(SRC_DIR)/state.o \
+	$(SRC_DIR)/texture.o \
+	$(SRC_DIR)/interop.o \
+	$(SRC_DIR)/toolbox.o \
+	$(SRC_DIR)/settings.o \
+	$(SRC_DIR)/filesystem.o \
+	$(SRC_DIR)/configuration.o \
+	$(SRC_DIR)/rml/rml.o \
+	$(SRC_DIR)/rml/file.o \
+	$(SRC_DIR)/rml/render.o \
+	$(SRC_DIR)/rml/system.o
 
-SRC := main.c \
-	$(SRC_DIR)/app.c \
-	$(SRC_DIR)/vfs.c \
-	$(SRC_DIR)/wasi.c \
-	$(SRC_DIR)/core.c \
-	$(SRC_DIR)/video.c \
-	$(SRC_DIR)/audio.c \
-	$(SRC_DIR)/input.c \
-	$(SRC_DIR)/enums.c \
-	$(SRC_DIR)/state.c \
-	$(SRC_DIR)/texture.c \
-	$(SRC_DIR)/interop.c \
-	$(SRC_DIR)/toolbox.c \
-	$(SRC_DIR)/settings.c \
-	$(SRC_DIR)/filesystem.c \
-	$(SRC_DIR)/configuration.c
-OBJ := $(SRC:.c=.o)
+CFLAGS   := -Wall -O3 -I$(SRC_DIR) -I$(INC_DIR)
+CXXFLAGS := $(CFLAGS) -I$(LIB_DIR)/rmlui/Include
 
-CFLAGS  := \
-	-I$(SRC_DIR) -I$(INC_DIR) -Wall -O3
 LDFLAGS := \
 	-L$(LIB_DIR) -L$(CORES_DIR) \
-	-lretro -lmatoya -lz \
+	-lretro -lmatoya -lfreetype -lrmlui -lrmldebug \
 	-Wl,--allow-undefined -Wl,--export-table \
 	-O3
 

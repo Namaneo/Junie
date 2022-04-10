@@ -1,0 +1,18 @@
+include ../Makefile.common
+
+TARGET := libfreetype.a
+
+all: $(TARGET)
+
+$(TARGET):
+	@cmake -S freetype -B freetype/build . \
+		-DCMAKE_AR=$(AR) \
+		-DCMAKE_C_COMPILER=$(WASI_CC) \
+		-DCMAKE_SYSROOT=$(WASI_SYSROOT) \
+		-DCMAKE_C_FLAGS="-I../../override -D_WASI_EMULATED_MMAN"
+	@make -C freetype/build -j 8
+	@cp freetype/build/libfreetype.a .
+
+clean:
+	-@make -C freetype/build clean
+	@rm -rf freetype/build libfreetype.a

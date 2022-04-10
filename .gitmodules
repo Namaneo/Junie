@@ -1,9 +1,6 @@
 [submodule "app/lib/matoya"]
 	path = app/lib/matoya
 	url = https://github.com/Namaneo/libmatoya.git
-[submodule "app/lib/zlib"]
-	path = app/lib/zlib
-	url = https://github.com/madler/zlib.git
 [submodule "app/lib/retro"]
 	path = app/lib/retro
 	url = https://github.com/libretro/libretro-common.git
@@ -22,3 +19,9 @@
 [submodule "app/cores/snes9x"]
 	path = app/cores/snes9x
 	url = https://github.com/libretro/snes9x
+[submodule "app/lib/rmlui"]
+	path = app/lib/rmlui
+	url = git@github.com:mikke89/RmlUi.git
+[submodule "app/lib/freetype"]
+	path = app/lib/freetype
+	url = https://gitlab.freedesktop.org/freetype/freetype.git
