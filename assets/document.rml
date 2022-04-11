@@ -1,0 +1,22 @@
+<rml>
+<head>
+    <title>Demo Sample</title>
+    <link type="text/rcss" href="document.rcss" />
+</head>
+
+<body>
+    <div class="container">
+        <input type="text" />
+        <div>Background - A</div>
+        <div>Background - B</div>
+        <div>Background - C</div>
+        <div>Background - A</div>
+        <div>Background - B</div>
+        <div>Background - C</div>
+        <div>Background - A</div>
+        <div>Background - B</div>
+        <div>Background - C</div>
+        <input type="button">Click me!</input>
+    </div>
+</body>
+</rml>

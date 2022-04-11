@@ -1,0 +1,23 @@
+TARGET   = rmlui.lib
+DEBUGGER = rmldebug.lib
+FOLDER   = rmlui
+
+all: $(TARGET)
+
+$(TARGET):
+	@cmake -S $(FOLDER) -B $(FOLDER)\build -G "NMake Makefiles" . \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_CXX_FLAGS="/W4 /MT" \
+		-DCMAKE_CXX_FLAGS_RELEASE="/O2 /Ob2 /EHsc" \
+		-DFREETYPE_LIBRARY=../freetype.lib \
+		-DFREETYPE_INCLUDE_DIRS=../freetype/include \
+		-DBUILD_SHARED_LIBS=OFF \
+		-DNO_THIRDPARTY_CONTAINERS=ON
+	@cmake --build $(FOLDER)\build -j 8
+	@copy $(FOLDER)\build\RmlCore.lib $(TARGET)
+	@copy $(FOLDER)\build\RmlDebugger.lib $(DEBUGGER)
+
+clean:
+	-@del /F /Q $(TARGET) $(DEBUGGER)
+	-@cmake --build $(FOLDER)/build --target clean
+	-@rmdir /Q /S $(FOLDER)\build

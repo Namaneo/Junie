@@ -1,0 +1,14 @@
+TARGET = matoya.lib
+FOLDER = matoya
+
+all: $(TARGET)
+
+$(TARGET):
+	@cd $(FOLDER)
+	@nmake /nologo
+	@copy bin\windows\%Platform%\$(TARGET) ..
+
+clean:
+	-@del /F /Q $(TARGET)
+	@cd $(FOLDER)
+	@nmake /nologo clean

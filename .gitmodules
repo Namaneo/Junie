@@ -1,0 +1,9 @@
+[submodule "lib/matoya"]
+	path = lib/matoya
+	url = https://github.com/chrisd1100/libmatoya.git
+[submodule "lib/freetype"]
+	path = lib/freetype
+	url = https://gitlab.freedesktop.org/freetype/freetype.git
+[submodule "lib/rmlui"]
+	path = lib/rmlui
+	url = git@github.com:mikke89/RmlUi.git

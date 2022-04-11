@@ -1,0 +1,26 @@
+include ../GNUmakefile.common
+
+TARGET := librmlui.a
+
+all: $(TARGET)
+
+$(TARGET):
+	@cmake -S rmlui -B rmlui/build . \
+		-DCMAKE_AR=$(AR) \
+		-DCMAKE_C_COMPILER=$(WASI_CC) \
+		-DCMAKE_CXX_COMPILER=$(WASI_CXX) \
+		-DCMAKE_SYSROOT=$(WASI_SYSROOT) \
+		-DCMAKE_CXX_FLAGS="-I../../override" \
+		-DFREETYPE_LIBRARY=../libfreetype.a \
+		-DFREETYPE_INCLUDE_DIRS=../freetype/include \
+		-DBUILD_SHARED_LIBS=OFF \
+		-DDISABLE_RTTI_AND_EXCEPTIONS=ON \
+		-DCMAKE_COMPILER_IS_GNUCXX=ON \
+		-DNO_THIRDPARTY_CONTAINERS=ON
+	@make -C rmlui/build -j 8
+	@cp rmlui/build/libRmlCore.a librmlui.a
+	@cp rmlui/build/libRmlDebugger.a librmldebug.a
+
+clean:
+	-@make -C rmlui/build clean
+	@rm -rf rmlui/build librmlui.a librmldebug.a

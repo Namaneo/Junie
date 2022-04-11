@@ -1,0 +1,17 @@
+TARGET = freetype.lib
+FOLDER = freetype
+
+all: $(TARGET)
+
+$(TARGET):
+	@cmake -S $(FOLDER) -B $(FOLDER)\build -G "NMake Makefiles" . \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_C_FLAGS="/DWIN32 /D_WINDOWS /W2 /MT" \
+		-DCMAKE_C_FLAGS_RELEASE="/O2 /Ob2 /DNDEBUG"
+	@cmake --build $(FOLDER)\build -j 8
+	@copy $(FOLDER)\build\$(TARGET) .
+
+clean:
+	-@del /F /Q $(TARGET)
+	-@cmake --build $(FOLDER)/build --target clean
+	-@rmdir /Q /S $(FOLDER)\build
