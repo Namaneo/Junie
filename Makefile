@@ -18,7 +18,7 @@ $(API_OUT):
 	( cd api && env GOOS=windows GOARCH=amd64 go build -o build/windows/junie.exe )
 
 $(UI_OUT):
-	( cd ui && ionic build )
+	( cd ui && yarn && ionic build )
 
 pack: all
 	rm -rf $(OUT)
