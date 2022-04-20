@@ -7,7 +7,7 @@ UI_OUT  := ui/build
 
 OUT := bin
 
-all: clean $(APP_OUT) $(API_OUT) $(UI_OUT)
+all: $(APP_OUT) $(API_OUT) $(UI_OUT)
 
 $(APP_OUT):
 	( cd app && make )

@@ -3,4 +3,4 @@ TARGET      := libmgba.a
 BUILD_DIR   := $(TARGET:lib%.a=%)
 BUILD_FLAGS := TARGET=../$(TARGET) HAVE_VFS_FD=0
 
-include Makefile.common
+include Makefile.core

@@ -1,5 +1,7 @@
 TARGET := libmatoya.a
 
+include ../Makefile.common
+
 all: $(TARGET)
 
 $(TARGET):

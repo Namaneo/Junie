@@ -1,5 +1,7 @@
 TARGET := libretro.a
 
+include ../Makefile.common
+
 SRC := \
 	retro/compat/compat_strl.c \
 	retro/compat/fopen_utf8.c \

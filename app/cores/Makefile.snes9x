@@ -3,4 +3,4 @@ TARGET      := libsnes9x.a
 BUILD_DIR   := $(TARGET:lib%.a=%)/libretro
 BUILD_FLAGS := TARGET=../../$(TARGET)
 
-include Makefile.common
+include Makefile.core

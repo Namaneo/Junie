@@ -4,4 +4,4 @@ BUILD_DIR   := $(TARGET:lib%.a=%)
 BUILD_FLAGS := TARGET=../$(TARGET) -f Makefile.libretro
 CFLAGS      := -I../override
 
-include Makefile.common
+include Makefile.core

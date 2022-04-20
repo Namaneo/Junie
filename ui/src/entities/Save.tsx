@@ -18,7 +18,7 @@ export class Save {
 
 	isMapped(systems: System[]) {
 		const system = systems.find(system => system.name == this.system);
-		if (!system)
+		if (!system || !system.games)
 			return false;
 
 		const game = system.games.find(game => game.rom == `${this.game}.${system.extension}`);

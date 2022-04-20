@@ -29,7 +29,7 @@ export const RecentPage: React.FC = () => {
 
 		for (const cachedGame of cachedGames) {
 			const system = systems.find(system => system.name == cachedGame.system);
-			if (!system)
+			if (!system || !system.games)
 				continue;
 
 			let game = system.games.find(game => game.rom == cachedGame.game);
