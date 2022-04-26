@@ -1,6 +1,6 @@
-import { IonButton, IonContent, IonHeader, IonIcon, IonItem, IonItemGroup, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonLoading, IonPage, IonTitle, IonToolbar, useIonModal, useIonViewWillEnter } from '@ionic/react';
-import { checkmarkCircleOutline, closeCircleOutline } from 'ionicons/icons';
-import { useState } from 'react';
+import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonItemGroup, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonLoading, IonPage, IonTitle, IonToolbar, useIonModal, useIonViewWillEnter } from '@ionic/react';
+import { checkmarkCircleOutline, closeCircleOutline, cloudDownload, cloudUpload } from 'ionicons/icons';
+import { useRef, useState } from 'react';
 import { Save } from '../entities/Save';
 import { Game } from '../interfaces/Game';
 import { System } from '../interfaces/System';
@@ -31,6 +31,49 @@ export const SavesPage: React.FC = () => {
 		setLoading(false);
 	};
 
+	const backupSave = async () => {
+		setLoading(true);
+
+		await new Promise<void>(resolve => {
+			const a = document.createElement('a');
+			document.body.appendChild(a);
+			
+			const blob = new Blob([JSON.stringify(saves)], { type: 'octet/stream' })
+
+			a.href = URL.createObjectURL(blob);
+			a.download = 'junie-save.json';
+			a.click();
+
+			URL.revokeObjectURL(a.href);
+			document.body.removeChild(a);
+
+			resolve();
+		});
+
+		setLoading(false);
+	}
+
+	const restoreSaves = async (files: FileList | null) => {
+		if (!files?.length)
+			return;
+
+		setLoading(true);
+
+		const data = await files[0].text();
+		const save_restore = JSON.parse(data) as Save[];
+
+		for (const save of save_restore) {
+			const system = systems.find(x => x.name == save.system);
+			const game = system?.games?.find(x => x.rom?.startsWith(save.game!));
+
+			if (system && game)
+				await Database.updateSave(save, system, game);
+		}
+
+		setSaves(await Database.getSaves());
+		setLoading(false);
+	}
+
 	const [present, dismiss] = useIonModal(FixSaveModal, {
 		systems: systems,
 		dismiss: () => dismiss(),
@@ -57,12 +100,23 @@ export const SavesPage: React.FC = () => {
 		setLoading(false);
 	});
 
+	const fileUpload = useRef<HTMLInputElement>(null);
+
 	return (
 		<IonPage>
 
 			<IonHeader>
 				<IonToolbar>
 					<IonTitle>Saves</IonTitle>
+					<IonButtons slot="end">
+						<IonButton onClick={() => backupSave()}>
+							<IonIcon slot="icon-only" icon={cloudDownload} />
+						</IonButton>
+						<IonButton onClick={() => fileUpload?.current?.click()}>
+							<input type="file" ref={fileUpload} onChange={e => restoreSaves(e.target.files)} hidden />
+							<IonIcon slot="icon-only" icon={cloudUpload} />
+						</IonButton>
+					</IonButtons>
 				</IonToolbar>
 			</IonHeader>
 

@@ -39,7 +39,13 @@ export module Database {
 			const filename = game.rom?.replace(`.${system.extension}`, '');
 			file.path = file.path.replace(save.system!, system.name!).replace(save.game!, filename!);
 
-			await execute(db => db.table('files').update(key, file));
+			await execute(async db => {
+				const record = await db.table('files').get(file.path);
+				if (record)
+					await db.table('files').update(file.path, file);
+				else
+					await db.table('files').add(file, file.path);
+			});
 		}
 
 		return await getSaves();
