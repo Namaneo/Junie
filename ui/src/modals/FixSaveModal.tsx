@@ -64,7 +64,7 @@ export const FixSaveModal: React.FC<FixSaveProps> = ({ systems, dismiss, apply }
 					<IonItem>
 						<IonLabel>Game</IonLabel>
 						<IonSelect interface="action-sheet" value={state.game} disabled={!state.system} onIonChange={e => gameChanged(e.detail.value)}>
-							{state.system?.games.map(game =>
+							{state.system?.games?.map(game =>
 								<IonSelectOption value={game}>{game.name}</IonSelectOption>
 							)}
 						</IonSelect>

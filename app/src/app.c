@@ -25,6 +25,7 @@ struct _JUN_App
 		char *system;
 		char *save;
 		char *games;
+		char *cheats;
 	} directories;
 };
 
@@ -39,8 +40,9 @@ JUN_App *JUN_AppInitialize(MTY_AppFunc app_func, MTY_EventFunc event_func)
 
 	this->directories.assets = MTY_Strdup("/assets");
 	this->directories.system = MTY_SprintfD("/system/%s", this->core_name);
-	this->directories.save = MTY_SprintfD("/save/%s", system_name);
-	this->directories.games = MTY_SprintfD("/games/%s", system_name);
+	this->directories.save   = MTY_SprintfD("/save/%s", system_name);
+	this->directories.games  = MTY_SprintfD("/games/%s", system_name);
+	this->directories.cheats = MTY_SprintfD("/cheats/%s", system_name);
 
 	char *state_name = JUN_ToolboxReplaceExtension(game_name, "state");
 	char *state_path = MTY_SprintfD("%s/%s", this->directories.save, state_name);
@@ -54,9 +56,11 @@ JUN_App *JUN_AppInitialize(MTY_AppFunc app_func, MTY_EventFunc event_func)
 	char *rtc_path = MTY_SprintfD("%s/%s", this->directories.save, rtc_name);
 	MTY_Free(rtc_name);
 
+	char *cheat_path = MTY_SprintfD("%s/%s/", this->directories.cheats, game_name);
+
 	this->game_path = MTY_SprintfD("%s/%s", this->directories.games, game_name);
 
-	this->public.core = JUN_CoreInitialize(this->game_path, state_path, sram_path, rtc_path);
+	this->public.core = JUN_CoreInitialize(this->game_path, state_path, sram_path, rtc_path, cheat_path);
 	this->public.state = JUN_StateInitialize();
 	this->public.input = JUN_InputInitialize(this->public.state);
 	this->public.audio = JUN_AudioInitialize();

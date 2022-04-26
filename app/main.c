@@ -71,6 +71,8 @@ static bool start_game()
 
 	JUN_CoreRestoreMemories(app->core);
 
+	JUN_CoreSetCheats(app->core);
+
 	return true;
 }
 

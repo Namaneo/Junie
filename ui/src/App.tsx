@@ -1,13 +1,14 @@
 import { Redirect, Route } from 'react-router-dom';
 import { IonApp, IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs, setupConfig, useIonAlert } from '@ionic/react';
 import { IonReactHashRouter } from '@ionic/react-router';
-import { cloudDownload, gameController, save } from 'ionicons/icons';
+import { cloudDownload, gameController, keyOutline, save } from 'ionicons/icons';
 import { useState } from 'react';
 
 import { RecentPage } from './pages/RecentPage';
-import { SavesPage } from './pages/SavesPage';
 import { SystemsPage } from './pages/SystemsPage';
 import { GamesPage } from './pages/GamesPage';
+import { SavesPage } from './pages/SavesPage';
+import { CheatsPage } from './pages/CheatsPage';
 import Events from './services/Events';
 
 /* Core CSS required for Ionic components to work properly */
@@ -63,6 +64,7 @@ const App: React.FC = () => {
 						<Route exact path="/games" component={SystemsPage} />
 						<Route exact path="/games/:system" component={GamesPage} />
 						<Route exact path="/saves" component={SavesPage} />
+						<Route exact path="/cheats" component={CheatsPage} />
 
 						<Route exact path="/">
 							<Redirect to="/recent" />
@@ -81,6 +83,10 @@ const App: React.FC = () => {
 						<IonTabButton tab="saves" href="/saves">
 							<IonIcon icon={save} />
 							<IonLabel>Saves</IonLabel>
+						</IonTabButton>
+						<IonTabButton tab="cheats" href="/cheats">
+							<IonIcon icon={keyOutline} />
+							<IonLabel>Cheats</IonLabel>
 						</IonTabButton>
 					</IonTabBar>
 
