@@ -29,6 +29,19 @@ request.onsuccess = event => {
 	}
 };
 
+//Enumerate files in specific path
+function JUN_ReadDir(path, index, file, length) {
+	path = MTY_StrToJS(path);
+
+	const filtered = Object.keys(files).filter(x => x.startsWith(path));
+	if (index >= filtered.length)
+		return false;
+	
+	MTY_StrToC(filtered[index], file, length);
+
+	return true;
+}
+
 //Read a file from memory storage
 function JUN_ReadFile(path, length) {
 	const file = files[MTY_StrToJS(path)];
@@ -39,7 +52,8 @@ function JUN_ReadFile(path, length) {
 	const view = new Uint8Array(mty_mem(), result, file.length);
 	view.set(file);
 
-	MTY_SetUint32(length, file.length);
+	if (length)
+		MTY_SetUint32(length, file.length);
 
 	return result;
 }

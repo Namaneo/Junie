@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "filesystem.h"
+#include "interop.h"
 
 #include "core.h"
 
@@ -13,6 +14,7 @@ struct JUN_Core
 	char *state_path;
 	char *sram_path;
 	char *rtc_path;
+	char *cheats_path;
 
 	MTY_Time last_save;
 
@@ -41,6 +43,9 @@ struct JUN_Core
 	bool (*retro_serialize)(void *data, size_t size);
 	bool (*retro_unserialize)(const void *data, size_t size);
 
+	void (*retro_cheat_reset)(void);
+	void (*retro_cheat_set)(unsigned index, bool enabled, const char *code);
+
 	void (*retro_run)(void);
 	void (*retro_reset)(void);
 	void (*retro_unload_game)(void);
@@ -50,7 +55,7 @@ struct JUN_Core
 #define map_symbol(function) this->function = function
 
 // TODO: ugly parameters here, must be improved
-JUN_Core *JUN_CoreInitialize(const char *game_path, const char *state_path, const char *sram_path, const char *rtc_path)
+JUN_Core *JUN_CoreInitialize(const char *game_path, const char *state_path, const char *sram_path, const char *rtc_path, const char *cheats_path)
 {
 	JUN_Core *this = MTY_Alloc(1, sizeof(JUN_Core));
 
@@ -60,6 +65,7 @@ JUN_Core *JUN_CoreInitialize(const char *game_path, const char *state_path, cons
 	this->state_path = MTY_Strdup(state_path);
 	this->sram_path = MTY_Strdup(sram_path);
 	this->rtc_path = MTY_Strdup(rtc_path);
+	this->cheats_path = MTY_Strdup(cheats_path);
 
 	map_symbol(retro_init);
 	map_symbol(retro_load_game);
@@ -79,6 +85,9 @@ JUN_Core *JUN_CoreInitialize(const char *game_path, const char *state_path, cons
 	map_symbol(retro_serialize_size);
 	map_symbol(retro_serialize);
 	map_symbol(retro_unserialize);
+
+	map_symbol(retro_cheat_reset);
+	map_symbol(retro_cheat_set);
 
 	map_symbol(retro_run);
 	map_symbol(retro_reset);
@@ -193,6 +202,41 @@ void JUN_CoreRestoreMemories(JUN_Core *this)
 	restore_memory(this, RETRO_MEMORY_RTC, this->rtc_path);
 }
 
+void JUN_CoreSetCheats(JUN_Core *this)
+{
+	char *path = NULL;
+	size_t index = 0;
+
+	while (JUN_InteropReadDir(this->cheats_path, index++, &path)) {
+		void *cheat = JUN_InteropReadFile(path, NULL);
+		MTY_JSON *json = MTY_JSONParse(cheat);
+
+		bool enabled = false;
+		MTY_JSONObjGetBool(json, "enabled", &enabled);
+		if (!enabled)
+			continue;
+
+		uint32_t order = 0;
+		MTY_JSONObjGetUInt(json, "order", &order);
+
+		char value[1024] = {0};
+		MTY_JSONObjGetString(json, "value", value, 1024);
+		for (size_t i = 0; i < strlen(value); i++) {
+			if (value[i] == ' ' || value[i] == '\n')
+				value[i] = '+';
+		}
+
+		this->retro_cheat_set(order, enabled, value);
+
+		MTY_JSONDestroy(&json);
+	}
+}
+
+void JUN_CoreResetCheats(JUN_Core *this)
+{
+	this->retro_cheat_reset();
+}
+
 void JUN_CoreSaveState(JUN_Core *this)
 {
 	size_t size = this->retro_serialize_size();
@@ -224,6 +268,7 @@ void JUN_CoreDestroy(JUN_Core **this)
 	MTY_Free((*this)->game_path);
 	MTY_Free((*this)->sram_path);
 	MTY_Free((*this)->rtc_path);
+	MTY_Free((*this)->cheats_path);
 
 	if ((*this)->initialized)
 		(*this)->retro_deinit();

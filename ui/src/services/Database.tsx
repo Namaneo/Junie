@@ -1,4 +1,5 @@
 import { Dexie } from 'dexie';
+import { Cheat } from '../entities/Cheat';
 import { Save } from '../entities/Save';
 import { Game } from '../interfaces/Game';
 import { System } from '../interfaces/System';
@@ -48,6 +49,32 @@ export module Database {
 		await execute(db => db.table('files').bulkDelete(save.files.map(x => x.path)));
 
 		return await getSaves();
+	}
+
+	export async function getCheats() {
+		const rawCheats = await execute(db => db.table('files').where('path').startsWith('/cheats/').toArray());
+
+		return rawCheats.map(file => new Cheat(file));
+	};
+
+	export async function updateCheat(cheat: Cheat) {
+		const file = cheat.file();
+
+		await execute(async db => {
+			const record = await db.table('files').get(file.path);
+			if (record)
+				await db.table('files').update(file.path, file);
+			else
+				await db.table('files').add(file, file.path);
+		});
+
+		return await getCheats();
+	}
+
+	export async function removeCheat(cheat: Cheat) {
+		await execute(db => db.table('files').delete(cheat.file().path));
+
+		return await getCheats();
 	}
 
 }
