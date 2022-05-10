@@ -1,7 +1,7 @@
-.vscode
-system
-games
-bin
+/.vscode
+/system
+/games
+/bin
 
 app/include
 app/build
