@@ -1,13 +1,14 @@
 include ../Makefile.common
 
-include Makefile.symbols
+SYM_FILE := $(shell pwd)/symbols.txt
+TMP_FILE := $(shell pwd)/symbols.tmp
 
 BUILD_FLAGS += \
 	CC="$(CC)" CXX="$(CXX)" AR="$(AR)" \
 	STATIC_LINKING=1 \
 	STATIC_LINKING_LINK=1
 
-DEFINES += $(SYM_DEFINES) -D_WASI_EMULATED_SIGNAL
+DEFINES += -D_WASI_EMULATED_SIGNAL --config $(TMP_FILE)
 
 CFLAGS   += $(DEFINES)
 CXXFLAGS += $(DEFINES)
@@ -17,8 +18,10 @@ PATCHES := GIT_VERSION= WARNINGS_DEFINES=
 all: $(TARGET)
 
 $(TARGET):
+	cat $(SYM_FILE) | sed -e 's/\(.*\)/-D \1=$(NAME)_\1 \\/' > $(TMP_FILE)
 	CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)" \
 		make -C $(BUILD_DIR) -j 8 $(BUILD_FLAGS) platform=$(PLATFORM) $(PATCHES)
+	rm $(TMP_FILE)
 
 clean:
 	make -C $(BUILD_DIR) $(BUILD_FLAGS) platform=$(PLATFORM) clean
