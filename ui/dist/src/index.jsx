@@ -1,5 +1,5 @@
 import { render } from 'react-dom'
-import { Route } from 'react-router'
+import { Redirect, Route } from 'react-router'
 import { IonReactHashRouter } from '@ionic/react-router'
 import { IonApp, IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs, setupIonicReact } from '@ionic/react'
 import { cloudDownload, gameController, keyOutline, save } from 'ionicons/icons'
@@ -52,6 +52,7 @@ function Junie() {
                         <Route path='/games'  component={Games}  />
                         <Route path='/saves'  component={Saves}  />
                         <Route path='/cheats' component={Cheats} />
+                        <Route render={() => <Redirect to='/recent' />} />
                     </IonRouterOutlet>
 
                     <IonTabBar slot='bottom'>

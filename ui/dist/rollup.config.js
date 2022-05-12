@@ -29,7 +29,7 @@ function html(input) {
 export default {
     input: 'src/index.jsx',
     output: {
-        file: 'index.html',
+        file: 'build/index.html',
         format: 'es'
     },
     inlineDynamicImports: true,
@@ -51,6 +51,6 @@ export default {
             presets: [["@babel/preset-react", { runtime: 'automatic' }]],
         }),
         isProduction && terser(),
-        html('res/index.html'),
+        html('index.html'),
     ]
 };
