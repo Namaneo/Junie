@@ -1,5 +1,7 @@
 include Makefile.common
 
+TARGET := junie.wasm
+
 SRC_DIR   := src
 DEPS_DIR  := deps
 LIB_DIR   := lib
@@ -38,15 +40,15 @@ CFLAGS  := \
 	-Wall -O3 -DMINIZ_NO_STDIO \
 	-I$(SRC_DIR) -I$(DEPS_DIR) -I$(INC_DIR)
 LDFLAGS := \
-	-L$(LIB_DIR) -L$(CORES_DIR) $(LIBS:%=-l%) \
-	-Wl,--allow-undefined -Wl,--export-table
+	-L$(LIB_DIR) -L$(CORES_DIR) $(LIBS:%=-l%) $(CORES:%=-l%) \
+	-Wl,--allow-undefined -Wl,--export-table -Wl,-error-limit=0
 
 MAKEFLAGS += --no-print-directory
 
-all: clean $(CORES)
+all: clean $(OUT_DIR)/$(TARGET)
 
-$(CORES): assets $(LIB_FILES) $(CORE_FILES) $(OBJ)
-	$(CXX) $(LDFLAGS) -l$@ $(OBJ) -o $(OUT_DIR)/$@.wasm
+$(OUT_DIR)/$(TARGET): assets $(LIB_FILES) $(CORE_FILES) $(OBJ)
+	$(CXX) $(LDFLAGS) $(OBJ) -o $(OUT_DIR)/$(TARGET)
 
 assets: 
 	@mkdir -p $(OUT_DIR) 

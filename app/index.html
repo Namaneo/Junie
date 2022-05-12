@@ -31,7 +31,7 @@
 		}
 
 		//Start core execution
-		MTY_Start(`${core.library}.wasm`, {
+		MTY_Start('junie.wasm', {
 			js_get_host:  (value, length) => MTY_StrToC(window.location.hostname, value, length),
 			js_get_port:  ()              => window.location.port ?? 0,
 			js_is_secure: ()              => location.protocol.indexOf('https') != -1,

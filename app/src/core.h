@@ -8,6 +8,15 @@ typedef struct JUN_Core JUN_Core;
 
 typedef struct JUN_CoreCallbacks JUN_CoreCallbacks;
 
+typedef enum {
+	JUN_CORE_NONE,
+	JUN_CORE_GENESIS,
+	JUN_CORE_MELONDS,
+	JUN_CORE_MGBA,
+	JUN_CORE_QUICKNES,
+	JUN_CORE_SNES9X,
+} JUN_CoreType;
+
 struct JUN_CoreCallbacks
 {
 	retro_environment_t environment;
@@ -18,7 +27,7 @@ struct JUN_CoreCallbacks
 	retro_input_state_t input_state;
 };
 
-JUN_Core *JUN_CoreInitialize(const char *game_path, const char *state_path, const char *sram_path, const char *rtc_path, const char *cheats_path);
+JUN_Core *JUN_CoreInitialize(JUN_CoreType type, const char *game_path, const char *state_path, const char *sram_path, const char *rtc_path, const char *cheats_path);
 JUN_Configuration *JUN_CoreGetConfiguration(JUN_Core *this);
 void JUN_CoreSetCallbacks(JUN_Core *this, JUN_CoreCallbacks *callbacks);
 bool JUN_CoreHasStarted(JUN_Core *this);

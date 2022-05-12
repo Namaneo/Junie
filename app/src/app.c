@@ -60,7 +60,15 @@ JUN_App *JUN_AppInitialize(MTY_AppFunc app_func, MTY_EventFunc event_func)
 
 	this->game_path = MTY_SprintfD("%s/%s", this->directories.games, game_name);
 
-	this->public.core = JUN_CoreInitialize(this->game_path, state_path, sram_path, rtc_path, cheat_path);
+	JUN_CoreType type =
+		!MTY_Strcasecmp(this->core_name, "Genesis Plus GX") ? JUN_CORE_GENESIS  :
+		!MTY_Strcasecmp(this->core_name, "melonDS")         ? JUN_CORE_MELONDS  :
+		!MTY_Strcasecmp(this->core_name, "mGBA")            ? JUN_CORE_MGBA     :
+		!MTY_Strcasecmp(this->core_name, "QuickNES")        ? JUN_CORE_QUICKNES :
+		!MTY_Strcasecmp(this->core_name, "Snes9x")          ? JUN_CORE_SNES9X   :
+		JUN_CORE_NONE;
+
+	this->public.core = JUN_CoreInitialize(type, this->game_path, state_path, sram_path, rtc_path, cheat_path);
 	this->public.state = JUN_StateInitialize();
 	this->public.input = JUN_InputInitialize(this->public.state);
 	this->public.audio = JUN_AudioInitialize();

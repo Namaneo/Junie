@@ -1,12 +1,13 @@
 include ../Makefile.common
 
+include Makefile.symbols
+
 BUILD_FLAGS += \
 	CC="$(CC)" CXX="$(CXX)" AR="$(AR)" \
 	STATIC_LINKING=1 \
 	STATIC_LINKING_LINK=1
 
-DEFINES  += \
-	-D_WASI_EMULATED_SIGNAL
+DEFINES += $(SYM_DEFINES) -D_WASI_EMULATED_SIGNAL
 
 CFLAGS   += $(DEFINES)
 CXXFLAGS += $(DEFINES)

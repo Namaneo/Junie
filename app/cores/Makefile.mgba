@@ -1,4 +1,5 @@
-TARGET      := libmgba.a
+NAME   := mgba
+TARGET := lib$(NAME).a
 
 BUILD_DIR   := $(TARGET:lib%.a=%)
 BUILD_FLAGS := TARGET=../$(TARGET) HAVE_VFS_FD=0
