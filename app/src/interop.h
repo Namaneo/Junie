@@ -8,7 +8,6 @@ uint16_t JUN_InteropGetPort();
 bool JUN_InteropIsSecure();
 
 char *JUN_InteropGetSystem();
-char *JUN_InteropGetCore();
 char *JUN_InteropGetGame();
 
 void JUN_InteropClearRequest(uint32_t index);

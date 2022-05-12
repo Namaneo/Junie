@@ -9,18 +9,57 @@
 
 <body>
 	<script type="text/javascript" src="matoya.js"></script>
-	<script type="text/javascript" src="database.js"></script>
-	<script type="text/javascript" src="logging.js"></script>
-	<script type="text/javascript" src="events.js"></script>
-	<script type="text/javascript" src="emulators.js"></script>
 
 	<script type="text/javascript">
 
+		//Override logging functions
+		const log = console.log;
+		const error = console.error;
+
+		console.log = (data) => data && data != '\n' && log(data);
+		console.error = (data) => data && data != '\n' && error(data);
+
+		//Unlock audio context
+		const unlock = () => {
+			if (MTY.audio?.ctx?.state == 'suspended')
+				MTY.audio.ctx.resume();
+		};
+
+		window.addEventListener('click', unlock);
+		window.addEventListener('touchend', unlock);
+
+		//Prepare and open database
+		let database, files = {};
+		const request = window.indexedDB.open('Junie', 10);
+
+		//Check if a schema update is required
+		request.onupgradeneeded = event => {
+			const database = event.target.result;
+
+			if (event.oldVersion < 1) {
+				database.createObjectStore('files', { keyPath: 'path', unique: true });
+			}
+		};
+
+		//Print error if anything wrong happens
+		request.onerror = event => console.log(event);
+
+		//Retrieve all files in memory
+		request.onsuccess = event => {
+			database = event.target.result;
+
+			const transaction = database.transaction('files', 'readwrite');
+			const store = transaction.objectStore('files');
+
+			store.getAll().onsuccess = event => {
+				for (const file of event.target.result) {
+					files[file.path] = mty_b64_to_buf(file.data);
+				}
+			}
+		};
+
 		//Retrieve context parameters
 		const params = decodeURI(window.location.hash).split('/');
-		const system = params[1];
-		const core   = systems[system];
-		const game   = params[2];
 
 		//Adjust request URL prefixes
 		const _fetch = window.fetch;
@@ -28,7 +67,7 @@
 			request = location.pathname + request.replace(location.origin, '');
 			request = request.replace('//', '/');
 			return _fetch(request);
-		}
+		};
 
 		//Start core execution
 		MTY_Start('junie.wasm', {
@@ -36,15 +75,50 @@
 			js_get_port:  ()              => window.location.port ?? 0,
 			js_is_secure: ()              => location.protocol.indexOf('https') != -1,
 
-			js_get_system: (value, length) => MTY_StrToC(system, value, length),
-			js_get_core:   (value, length) => MTY_StrToC(core.name, value, length),
-			js_get_game:   (value, length) => MTY_StrToC(game, value, length),
+			js_get_system: (value, length) => MTY_StrToC(params[1], value, length),
+			js_get_game:   (value, length) => MTY_StrToC(params[2], value, length),
 
 			js_clear_request: (index) => delete MTY.reqs[index],
 
-			js_read_dir:   JUN_ReadDir,
-			js_read_file:  JUN_ReadFile,
-			js_write_file: JUN_WriteFile,
+			js_read_dir: (path, index, file, length) => {
+				path = MTY_StrToJS(path);
+
+				const filtered = Object.keys(files).filter(x => x.startsWith(path));
+				if (index >= filtered.length)
+					return false;
+				
+				MTY_StrToC(filtered[index], file, length);
+
+				return true;
+			},
+			js_read_file: (path, length) => {
+				const file = files[MTY_StrToJS(path)];
+				if (!file)
+					return null;
+
+				const result = MTY_Alloc(file.length, 1);
+				const view = new Uint8Array(mty_mem(), result, file.length);
+				view.set(file);
+
+				if (length)
+					MTY_SetUint32(length, file.length);
+
+				return result;
+			},
+			js_write_file: (cpath, cdata, length) => {
+				const transaction = database.transaction('files', 'readwrite');
+				const store = transaction.objectStore('files');
+
+				const buffer = new Uint8Array(length);
+				const data = new Uint8Array(mty_mem(), cdata, length);
+				buffer.set(data);
+
+				const path = MTY_StrToJS(cpath)
+
+				files[path] = data;
+
+				store.put({ path: path, data: mty_buf_to_b64(data) });
+			},
 		}, () => history.back(), 'webgl');
 
 		//Prevent mobile keyboard

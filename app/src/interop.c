@@ -9,7 +9,6 @@ uint16_t js_get_port();
 bool js_is_secure();
 
 void js_get_system(char *value, uint32_t length);
-void js_get_core(char *value, uint32_t length);
 void js_get_game(char *value, uint32_t length);
 
 void js_clear_request(uint32_t index);
@@ -39,13 +38,6 @@ char *JUN_InteropGetSystem()
 {
 	char value[PATH_SIZE] = {0};
 	js_get_system(value, PATH_SIZE);
-	return MTY_Strdup(value);
-}
-
-char *JUN_InteropGetCore()
-{
-	char value[PATH_SIZE] = {0};
-	js_get_core(value, PATH_SIZE);
 	return MTY_Strdup(value);
 }
 

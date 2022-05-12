@@ -14,7 +14,7 @@ struct _JUN_App
 {
 	JUN_App public;
 
-	char *core_name;
+	const char *core_name;
 	char *game_path;
 
 	uint32_t language;
@@ -29,14 +29,52 @@ struct _JUN_App
 	} directories;
 };
 
+MTY_Hash *core_names = NULL;
+static const char *jun_core_get_name(const char *system)
+{
+	if (!core_names) {
+		core_names = MTY_HashCreate(0);
+
+		MTY_HashSet(core_names, "NES",              "QuickNES");
+		MTY_HashSet(core_names, "SNES",             "Snes9x");
+		MTY_HashSet(core_names, "Master System",    "Genesis Plus GX");
+		MTY_HashSet(core_names, "Mega Drive",       "Genesis Plus GX");
+		MTY_HashSet(core_names, "Game Boy",         "mGBA");
+		MTY_HashSet(core_names, "Game Boy Color",   "mGBA");
+		MTY_HashSet(core_names, "Game Boy Advance", "mGBA");
+		MTY_HashSet(core_names, "Nintendo DS",      "melonDS");
+	}
+
+	return MTY_HashGet(core_names, system);
+}
+
+MTY_Hash *core_types = NULL;
+static JUN_CoreType jun_core_get_type(const char *system)
+{
+	if (!core_types) {
+		core_types = MTY_HashCreate(0);
+
+		MTY_HashSet(core_types, "NES",              (void *) JUN_CORE_QUICKNES);
+		MTY_HashSet(core_types, "SNES",             (void *) JUN_CORE_SNES9X);
+		MTY_HashSet(core_types, "Master System",    (void *) JUN_CORE_GENESIS);
+		MTY_HashSet(core_types, "Mega Drive",       (void *) JUN_CORE_GENESIS);
+		MTY_HashSet(core_types, "Game Boy",         (void *) JUN_CORE_MGBA);
+		MTY_HashSet(core_types, "Game Boy Color",   (void *) JUN_CORE_MGBA);
+		MTY_HashSet(core_types, "Game Boy Advance", (void *) JUN_CORE_MGBA);
+		MTY_HashSet(core_types, "Nintendo DS",      (void *) JUN_CORE_MELONDS);
+	}
+
+	return (JUN_CoreType) MTY_HashGet(core_types, system);
+}
+
 JUN_App *JUN_AppInitialize(MTY_AppFunc app_func, MTY_EventFunc event_func)
 {
 	_JUN_App *this = MTY_Alloc(1, sizeof(_JUN_App));
 
-	this->core_name = JUN_InteropGetCore();
-
 	char *system_name = JUN_InteropGetSystem();
 	char *game_name = JUN_InteropGetGame();
+
+	this->core_name = jun_core_get_name(system_name);
 
 	this->directories.assets = MTY_Strdup("/assets");
 	this->directories.system = MTY_SprintfD("/system/%s", this->core_name);
@@ -60,19 +98,20 @@ JUN_App *JUN_AppInitialize(MTY_AppFunc app_func, MTY_EventFunc event_func)
 
 	this->game_path = MTY_SprintfD("%s/%s", this->directories.games, game_name);
 
-	JUN_CoreType type =
-		!MTY_Strcasecmp(this->core_name, "Genesis Plus GX") ? JUN_CORE_GENESIS  :
-		!MTY_Strcasecmp(this->core_name, "melonDS")         ? JUN_CORE_MELONDS  :
-		!MTY_Strcasecmp(this->core_name, "mGBA")            ? JUN_CORE_MGBA     :
-		!MTY_Strcasecmp(this->core_name, "QuickNES")        ? JUN_CORE_QUICKNES :
-		!MTY_Strcasecmp(this->core_name, "Snes9x")          ? JUN_CORE_SNES9X   :
-		JUN_CORE_NONE;
+	JUN_CoreType type = jun_core_get_type(system_name);
 
 	this->public.core = JUN_CoreInitialize(type, this->game_path, state_path, sram_path, rtc_path, cheat_path);
 	this->public.state = JUN_StateInitialize();
 	this->public.input = JUN_InputInitialize(this->public.state);
 	this->public.audio = JUN_AudioInitialize();
 	this->public.video = JUN_VideoInitialize(this->public.state, app_func, event_func);
+
+	MTY_Free(cheat_path);
+	MTY_Free(rtc_path);
+	MTY_Free(sram_path);
+	MTY_Free(state_path);
+	MTY_Free(game_name);
+	MTY_Free(system_name);
 
 	return (JUN_App *)this;
 }
@@ -269,7 +308,6 @@ void JUN_AppDestroy(JUN_App **public)
 {
 	_JUN_App **this = (_JUN_App **)public;
 
-	MTY_Free((*this)->core_name);
 	MTY_Free((*this)->game_path);
 
 	MTY_Free((*this)->directories.assets);

@@ -27,5 +27,5 @@ struct JUN_Settings
     MTY_Hash *bindings;
 };
 
-JUN_Settings *JUN_SettingsInitialize(char *buffer, char *core);
+JUN_Settings *JUN_SettingsInitialize(char *buffer, const char *core_name);
 void JUN_SettingsDestroy(JUN_Settings **context);
