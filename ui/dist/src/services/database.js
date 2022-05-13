@@ -80,10 +80,10 @@ export async function removeCheat(cheat) {
 }
 
 export async function getGames() {
-	const rawCheats = await execute(db => db.table('files').where('path').startsWith('/games/').toArray());
+	const rawGames = await execute(db => db.table('files').where('path').startsWith('/games/').toArray());
 
 	const systems = await Requests.getSystems();
-	return rawCheats.map(file => Game.fromFile(file, systems));
+	return rawGames.map(file => Game.fromFile(file, systems));
 };
 
 export async function updateGame(game) {

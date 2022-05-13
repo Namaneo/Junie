@@ -1,3 +1,5 @@
+import * as Helpers from '../services/helpers'
+
 export class Game {
 	system;
 	game;
@@ -21,7 +23,7 @@ export class Game {
 			this.game = {
 				name: game_rom,
 				rom: game_rom,
-				cover: 'assets/placeholder.png'
+				cover: 'placeholder.png'
 			}
 		}
 

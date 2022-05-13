@@ -34,6 +34,7 @@ export function createObjectUrl(data) {
 
 const placeholder = createObjectUrl(cover_placeholder);
 const covers = {
+    'placeholder.png':      placeholder,
     'game-boy-advance.png': createObjectUrl(cover_game_boy_avance),
     'game-boy-color.png':   createObjectUrl(cover_game_boy_color),
     'game-boy.png':         createObjectUrl(cover_game_boy),

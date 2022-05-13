@@ -50,7 +50,7 @@ export const RecentPage = () => {
 			</IonHeader>
 
 			<IonContent className="recent-page">
-				<IonList>
+				<IonList style={{padding: 0}}>
 					<IonItemGroup>
 						{played.map(played =>
 							<IonItemSliding key={played.game.rom}>

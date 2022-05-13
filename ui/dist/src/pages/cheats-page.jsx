@@ -62,7 +62,7 @@ export const CheatsPage = () => {
 					<EditCheatModal current={current} systems={systems} apply={apply} dismiss={dismiss}  />
 				</IonModal>
 
-				<IonList>
+				<IonList style={{padding: 0}}>
 					<IonItemGroup>
 						{cheats.map(cheat =>
 							<IonItemSliding key={cheat.name}>
