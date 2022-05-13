@@ -41,7 +41,7 @@ export function getSystemCover(system) {
 }
 
 export async function fetchGame(system, game) {
-	const path = `/app/games/${system.name}/${game.rom}`;
+	const path = `/api/library/${system.name}/${game.rom}`;
 
 	try {
 		return await fetch(path).then(response => response.arrayBuffer());

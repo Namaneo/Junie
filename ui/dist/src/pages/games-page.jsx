@@ -32,7 +32,7 @@ export const GamesPage = ({ match }) => {
 		await Database.updateGame(new Game(data, system, game));
 
 		system.games = system.games.filter(x => x.rom != game.rom);
-		setSystem(system);
+		setSystem({ ...system });
 
 		dismiss();
 		present(`${game.name} (${system.name})`);
@@ -41,10 +41,10 @@ export const GamesPage = ({ match }) => {
 	useIonViewWillEnter(async () => {
 		const system = await Requests.getSystem(match.params.system);
 		let installed = await Database.getGames();
-		installed = installed.filter(x => x.system == system.name);
+		installed = installed.filter(x => x.system.name == system.name);
 
-		system.games = system.games?.filter(game =>
-			!installed.find(x => x.game == game.rom)
+		system.games = system.games.filter(game =>
+			!installed.find(x => x.game.rom == game.rom)
 		);
 
 		setSystem(system);
@@ -64,7 +64,7 @@ export const GamesPage = ({ match }) => {
 
 			<IonContent className="games-page">
 				{system.games?.map(game =>
-					<IonCard className="card" onClick={() => install(game)}>
+					<IonCard key={game.rom} className="card" onClick={() => install(game)}>
 						<JunImg className="cover" src={game.cover} />
 						<IonCardHeader className="header">
 							<IonCardSubtitle>{game.name}</IonCardSubtitle>
