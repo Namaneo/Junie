@@ -1,4 +1,5 @@
-import { useRef } from "react";
+import { useRef } from 'react';
+import * as Helpers from '../services/helpers'
 
 export const JunImg = ({ src, className }) => {
 
@@ -10,10 +11,14 @@ export const JunImg = ({ src, className }) => {
 		placeholder.current.hidden = true;
 	}
 
+	const style = {
+		verticalAlign: 'middle',
+	}
+
 	return (
 		<div className={className}>
-				<img hidden src={src} ref={image} onLoad={() => switchImages()} />
-				<img ref={placeholder} src="assets/placeholder.png" />
+			<img hidden src={src} ref={image} onLoad={() => switchImages()} style={style} />
+			<img ref={placeholder} src={Helpers.getPlaceholder()} style={style} />
 		</div>
 	);
 }

@@ -8,6 +8,7 @@ import { SystemsPage } from './pages/systems-page'
 import { GamesPage } from './pages/games-page'
 import { CheatsPage } from './pages/cheats-page'
 import { SavesPage } from './pages/saves-page'
+import * as Helpers from './services/helpers'
 import icon_png from '../res/icon.png'
 import favicon_png from '../res/favicon.png'
 
@@ -71,8 +72,11 @@ function Junie() {
     );
 }
 
-document.querySelector("link[rel='icon']").href = icon_png;
-document.querySelector("link[rel='shortcut icon']").href = favicon_png;
-document.querySelector("link[rel='apple-touch-icon']").href = icon_png;
+const icon_blob = Helpers.createObjectUrl(icon_png);
+const favicon_blob = Helpers.createObjectUrl(favicon_png);
+
+document.querySelector("link[rel='icon']").href = icon_blob;
+document.querySelector("link[rel='shortcut icon']").href = favicon_blob;
+document.querySelector("link[rel='apple-touch-icon']").href = icon_blob;
 
 render(<Junie />, document.getElementById('root'));

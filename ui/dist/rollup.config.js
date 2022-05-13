@@ -48,7 +48,7 @@ export default {
             'process.env.NODE_ENV': JSON.stringify(build)
         }),
         styles(),
-        url({ limit: 32 * 1024 }),
+        url({ limit: 256 * 1024 }),
         commonjs(),
         babel({
             compact: true,

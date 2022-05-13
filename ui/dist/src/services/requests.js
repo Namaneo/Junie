@@ -1,17 +1,17 @@
-//Generic API request sending
-async function request(path) {
-	const response = await fetch(`api/${path}`);
-	const data = await response.json();
-	return data;
-};
+let library = null;
 
 //Retrieve all supported systems data
 export async function getSystems() {
-	return await request('library');
+	if (!library) {
+		const response = await fetch('api/library');
+		library = await response.json();
+	}
+
+	return library;;
 };
 
 export async function getSystemByGame(gameName) {
-	const systems = await request('library');
+	const systems = await getSystems();
 
 	const extension = gameName.split('.').pop();
 	const system = systems.find(x => x.extension == extension);
@@ -32,13 +32,6 @@ export async function getSystem(systemName) {
 
 	return system;
 };
-
-//Retrieve the system cover based on the dark mode preference
-export function getSystemCover(system) {
-	const darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-	const cover = darkMode && system.coverDark ? system.coverDark : system.cover;
-	return `assets/covers/${cover}`;
-}
 
 export async function fetchGame(system, game) {
 	const path = `/api/library/${system.name}/${game.rom}`;

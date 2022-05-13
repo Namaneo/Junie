@@ -55,7 +55,7 @@ export const EditCheatModal = ({ current, systems, dismiss, apply }) => {
 						<IonLabel>System</IonLabel>
 						<IonSelect interface="action-sheet" value={system} onIonChange={e => systemChanged(e.detail.value)}>
 							{systems.map(system =>
-								<IonSelectOption value={system}>{system.name}</IonSelectOption>
+								<IonSelectOption key={system.name} value={system}>{system.name}</IonSelectOption>
 							)}
 						</IonSelect>
 					</IonItem>
@@ -64,7 +64,7 @@ export const EditCheatModal = ({ current, systems, dismiss, apply }) => {
 						<IonLabel>Game</IonLabel>
 						<IonSelect interface="action-sheet" value={game} disabled={!system?.games} onIonChange={e => setGame(e.detail.value)}>
 							{system?.games?.map(game =>
-								<IonSelectOption value={game}>{game.name}</IonSelectOption>
+								<IonSelectOption key={game.name} value={game}>{game.name}</IonSelectOption>
 							)}
 						</IonSelect>
 					</IonItem>
