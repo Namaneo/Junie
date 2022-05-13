@@ -40,16 +40,13 @@ export function getSystemCover(system) {
 	return `assets/covers/${cover}`;
 }
 
-export async function installGame(system, game) {
+export async function fetchGame(system, game) {
 	const path = `/app/games/${system.name}/${game.rom}`;
 
-	try
-	{
-		await fetch(path).then(response => response.arrayBuffer());
-		return true;
-	}
-	catch
-	{
-		return false;
+	try {
+		return await fetch(path).then(response => response.arrayBuffer());
+
+	} catch {
+		return null;
 	}
 }

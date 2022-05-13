@@ -1,6 +1,8 @@
 import { Dexie } from 'dexie';
 import { Save } from '../entities/save';
 import { Cheat } from '../entities/cheat';
+import { Game } from '../entities/game';
+import * as Requests from '../services/requests';
 
 async function execute(command) {
 	const db = new Dexie('Junie');
@@ -75,4 +77,31 @@ export async function removeCheat(cheat) {
 	await execute(db => db.table('files').delete(cheat.file().path));
 
 	return await getCheats();
+}
+
+export async function getGames() {
+	const rawCheats = await execute(db => db.table('files').where('path').startsWith('/games/').toArray());
+
+	const systems = await Requests.getSystems();
+	return rawCheats.map(file => Game.fromFile(file, systems));
+};
+
+export async function updateGame(game) {
+	const file = game.file();
+
+	await execute(async db => {
+		const record = await db.table('files').get(file.path);
+		if (record)
+			await db.table('files').update(file.path, file);
+		else
+			await db.table('files').add(file, file.path);
+	});
+
+	return await getGames();
+}
+
+export async function removeGame(game) {
+	await execute(db => db.table('files').delete(game.file().path));
+
+	return await getGames();
 }

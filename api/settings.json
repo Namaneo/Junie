@@ -7,7 +7,7 @@
 		"UI": "../assets/ui",
 		"API": "../assets/api",
 		"App": "../assets/app",
-		"Games": "../games",
+		"Games": "../demo/games",
 		"System": "../system"
 	}
 }

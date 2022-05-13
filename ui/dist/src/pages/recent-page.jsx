@@ -2,40 +2,14 @@ import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonItem
 import { add } from 'ionicons/icons';
 import { useRef, useState } from 'react';
 import { JunImg } from '../components/jun-img';
-import * as Caches from '../services/caches';
+import { Game } from '../entities/game';
 import * as Requests from '../services/requests';
+import * as Database from '../services/database';
 import './recent-page.css';
 
 export const RecentPage = () => {
 
 	const [played, setPlayed] = useState([])
-
-	const retrieveGames = async () => {
-
-		const systems = await Requests.getSystems();
-		const cachedGames = await Caches.getGames();
-
-		const played = [];
-
-		for (const cachedGame of cachedGames) {
-			const system = systems.find(system => system.name == cachedGame.system);
-			if (!system || !system.games)
-				continue;
-
-			let game = system.games.find(game => game.rom == cachedGame.game);
-			if (!game) {
-				game = {
-					name: cachedGame.game.split('.').slice(0, -1).join('.'),
-					rom: cachedGame.game,
-					cover: 'assets/placeholder.png'
-				}
-			}
-
-			played.push({ request: cachedGame.request, system, game });
-		}
-
-		setPlayed(played);
-	}
 
 	const addGame = async (files) => {
 		if (!files?.length)
@@ -43,21 +17,20 @@ export const RecentPage = () => {
 
 		const system = await Requests.getSystemByGame(files[0].name);
 
-		await Caches.add(
-			new Request(`/app/games/${system.name}/${files[0].name}`),
-			new Response(await files[0].arrayBuffer())
-		);
+		const data = await files[0].arrayBuffer();
+		const game = new Game(data, system, { rom: files[0].name, });
+		const games = await Database.updateGame(game);
 
-		await retrieveGames();
+		setPlayed(games);
 	}
 
-	const deleteGame = async (request) => {
-		await Caches.remove(request);
-
-		await retrieveGames();
+	const deleteGame = async (game) => {
+		setPlayed(await Database.removeGame(game));
 	}
 
-	useIonViewWillEnter(retrieveGames);
+	useIonViewWillEnter(async () => {
+		setPlayed(await Database.getGames());
+	});
 
 	const fileInput = useRef(null);
 
@@ -68,7 +41,7 @@ export const RecentPage = () => {
 				<IonToolbar>
 					<IonTitle>Recent</IonTitle>
 					<IonButtons slot="end">
-						<IonButton onClick={() => fileInput?.current?.click()}>
+						<IonButton onClick={() => fileInput.current.click()}>
 							<input type="file" ref={fileInput} onChange={e => addGame(e.target.files)} hidden />
 							<IonIcon slot="icon-only" icon={add} />
 						</IonButton>
@@ -90,7 +63,7 @@ export const RecentPage = () => {
 									<IonButton href={`app/#/${played.system.name}/${played.game.rom}`}>Play</IonButton>
 								</IonItem>
 								<IonItemOptions side="end">
-									<IonItemOption color="danger" onClick={() => deleteGame(played.request)}>Delete</IonItemOption>
+									<IonItemOption color="danger" onClick={() => deleteGame(played)}>Delete</IonItemOption>
 								</IonItemOptions>
 							</IonItemSliding>
 						)}

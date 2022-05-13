@@ -1,9 +1,10 @@
 import { IonBackButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonPage, IonTitle, IonToolbar, useIonAlert, useIonViewWillEnter } from "@ionic/react";
 import { useState } from "react";
 import { JunImg } from "../components/jun-img";
+import { Game } from "../entities/game";
 import { useToast } from '../hooks/toast';
-import * as Caches from "../services/caches";
 import * as Requests from "../services/requests";
+import * as Database from "../services/database";
 import './games-page.css';
 
 export const GamesPage = ({ match }) => {
@@ -13,12 +14,11 @@ export const GamesPage = ({ match }) => {
 	const [present, dismiss] = useToast('Game successfully installed!');
 	const [alert] = useIonAlert();
 
-
 	const install = async (game) => {
 
-		const installed = await Requests.installGame(system, game);
+		const data = await Requests.fetchGame(system, game);
 
-		if (!installed) {
+		if (!data) {
 
 			alert({
 				header: 'Install failed',
@@ -29,7 +29,9 @@ export const GamesPage = ({ match }) => {
 			return;
 		}
 
-		system.games = system.games.filter(x => x != game);
+		await Database.updateGame(new Game(data, system, game));
+
+		system.games = system.games.filter(x => x.rom != game.rom);
 		setSystem(system);
 
 		dismiss();
@@ -38,7 +40,7 @@ export const GamesPage = ({ match }) => {
 
 	useIonViewWillEnter(async () => {
 		const system = await Requests.getSystem(match.params.system);
-		let installed = await Caches.getGames();
+		let installed = await Database.getGames();
 		installed = installed.filter(x => x.system == system.name);
 
 		system.games = system.games?.filter(game =>
