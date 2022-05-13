@@ -1,0 +1,104 @@
+import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonItemGroup, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
+import { add } from 'ionicons/icons';
+import { useRef, useState } from 'react';
+import { JunImg } from '../components/jun-img';
+import * as Caches from '../services/caches';
+import * as Requests from '../services/requests';
+import './recent-page.css';
+
+export const RecentPage = () => {
+
+	const [played, setPlayed] = useState([])
+
+	const retrieveGames = async () => {
+
+		const systems = await Requests.getSystems();
+		const cachedGames = await Caches.getGames();
+
+		const played = [];
+
+		for (const cachedGame of cachedGames) {
+			const system = systems.find(system => system.name == cachedGame.system);
+			if (!system || !system.games)
+				continue;
+
+			let game = system.games.find(game => game.rom == cachedGame.game);
+			if (!game) {
+				game = {
+					name: cachedGame.game.split('.').slice(0, -1).join('.'),
+					rom: cachedGame.game,
+					cover: 'assets/placeholder.png'
+				}
+			}
+
+			played.push({ request: cachedGame.request, system, game });
+		}
+
+		setPlayed(played);
+	}
+
+	const addGame = async (files) => {
+		if (!files?.length)
+			return;
+
+		const system = await Requests.getSystemByGame(files[0].name);
+
+		await Caches.add(
+			new Request(`/app/games/${system.name}/${files[0].name}`),
+			new Response(await files[0].arrayBuffer())
+		);
+
+		await retrieveGames();
+	}
+
+	const deleteGame = async (request) => {
+		await Caches.remove(request);
+
+		await retrieveGames();
+	}
+
+	useIonViewWillEnter(retrieveGames);
+
+	const fileInput = useRef(null);
+
+	return (
+		<IonPage>
+
+			<IonHeader>
+				<IonToolbar>
+					<IonTitle>Recent</IonTitle>
+					<IonButtons slot="end">
+						<IonButton onClick={() => fileInput?.current?.click()}>
+							<input type="file" ref={fileInput} onChange={e => addGame(e.target.files)} hidden />
+							<IonIcon slot="icon-only" icon={add} />
+						</IonButton>
+					</IonButtons>
+				</IonToolbar>
+			</IonHeader>
+
+			<IonContent className="recent-page">
+				<IonList>
+					<IonItemGroup>
+						{played.map(played =>
+							<IonItemSliding key={played.game.rom}>
+								<IonItem lines="full" className="game">
+									<JunImg className="cover" src={played.game.cover} />
+									<IonLabel className="label">
+										<h2>{played.game.name}</h2>
+										<h3>{played.system.name}</h3>
+									</IonLabel>
+									<IonButton href={`app/#/${played.system.name}/${played.game.rom}`}>Play</IonButton>
+								</IonItem>
+								<IonItemOptions side="end">
+									<IonItemOption color="danger" onClick={() => deleteGame(played.request)}>Delete</IonItemOption>
+								</IonItemOptions>
+							</IonItemSliding>
+						)}
+					</IonItemGroup>
+				</IonList>
+
+			</IonContent>
+
+		</IonPage>
+	);
+};

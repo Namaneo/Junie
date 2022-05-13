@@ -1,4 +1,5 @@
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs'
+import path from 'path'
 
 import nodeResolve from '@rollup/plugin-node-resolve'
 import babel from '@rollup/plugin-babel'
@@ -36,7 +37,8 @@ export default {
     preserveEntrySignatures: false,
     plugins: [
         nodeResolve({
-            extensions: [".js"],
+            rootDir: path.join(process.cwd(), 'src'),
+            extensions: [".js", ".jsx"],
         }),
         replace({
             preventAssignment: true,

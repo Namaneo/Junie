@@ -1,0 +1,14 @@
+.list ion-item ion-label {
+    flex-grow: 1 !important;
+    flex-shrink: 0 !important;
+}
+
+.list ion-item > *:not(ion-icon) {
+    max-width: initial !important;
+    flex-basis: fit-content !important;
+}
+
+.list ion-item > *:not(ion-icon) textarea {
+    height: 200px;
+    font-family: monospace !important;
+}        

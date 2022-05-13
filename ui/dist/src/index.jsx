@@ -3,6 +3,13 @@ import { Redirect, Route } from 'react-router'
 import { IonReactHashRouter } from '@ionic/react-router'
 import { IonApp, IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs, setupIonicReact } from '@ionic/react'
 import { cloudDownload, gameController, keyOutline, save } from 'ionicons/icons'
+import { RecentPage } from './pages/recent-page'
+import { SystemsPage } from './pages/systems-page'
+import { GamesPage } from './pages/games-page'
+import { CheatsPage } from './pages/cheats-page'
+import { SavesPage } from './pages/saves-page'
+import icon_png from '../res/icon.png'
+import favicon_png from '../res/favicon.png'
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -23,22 +30,6 @@ import '@ionic/react/css/display.css';
 /* Theme variables */
 import './index.css';
 
-function Recent() {
-    return <div>Recent</div>;
-}
-
-function Games() {
-    return <div>Games</div>;
-}
-
-function Saves() {
-    return <div>Saves</div>;
-}
-
-function Cheats() {
-    return <div>Cheats</div>;
-}
-
 function Junie() {
 
     setupIonicReact();
@@ -48,21 +39,22 @@ function Junie() {
             <IonReactHashRouter>
                 <IonTabs>
                     <IonRouterOutlet>
-                        <Route path='/recent' component={Recent} />
-                        <Route path='/games'  component={Games}  />
-                        <Route path='/saves'  component={Saves}  />
-                        <Route path='/cheats' component={Cheats} />
+                        <Route exact path='/recent' component={RecentPage} />
+                        <Route exact path="/games" component={SystemsPage} />
+						<Route exact path="/games/:system" component={GamesPage} />
+                        <Route exact path='/saves'  component={SavesPage}  />
+                        <Route exact path='/cheats' component={CheatsPage} />
                         <Route render={() => <Redirect to='/recent' />} />
                     </IonRouterOutlet>
 
                     <IonTabBar slot='bottom'>
                         <IonTabButton tab='recent' href='/recent'>
                             <IonIcon icon={gameController} />
-                            <IonLabel>Recent</IonLabel>
+                            <IonLabel>Games</IonLabel>
                         </IonTabButton>
                         <IonTabButton tab='games' href='/games'>
                             <IonIcon icon={cloudDownload} />
-                            <IonLabel>Games</IonLabel>
+                            <IonLabel>Install</IonLabel>
                         </IonTabButton>
                         <IonTabButton tab='saves' href='/saves'>
                             <IonIcon icon={save} />
@@ -78,9 +70,6 @@ function Junie() {
         </IonApp>
     );
 }
-
-import icon_png from '../res/icon.png'
-import favicon_png from '../res/favicon.png'
 
 document.querySelector("link[rel='icon']").href = icon_png;
 document.querySelector("link[rel='shortcut icon']").href = favicon_png;

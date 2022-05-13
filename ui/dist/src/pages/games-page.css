@@ -1,0 +1,13 @@
+.games-page .card {
+	display: flex;
+	cursor: pointer;
+}
+
+.games-page .card .cover {
+	max-width: 25%;
+}
+
+.games-page .card .header {
+	display: flex;
+	align-items: center;
+}
