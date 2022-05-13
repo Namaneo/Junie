@@ -17,10 +17,13 @@ function html(input) {
       name: 'html',
       writeBundle(options, bundle) {
         let code = bundle[Object.keys(bundle)[0]].code;
-        code = 'data:text/javascript;base64,' + Buffer.from(code).toString('base64');
+        code = Buffer.from(code).toString('base64');
 
         let template = readFileSync(input, 'utf-8');
-        template = template.replace('</body>', '<script src="' + code + '"></script></body>');
+        template = template.replace(
+            'const source = null;',
+            'const source = "' + code + '";'
+        );
 
         writeFileSync(options.file, template);
       }

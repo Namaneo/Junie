@@ -25,6 +25,18 @@
 
 	<div id="root"></div>
 
+	<script id="main">
+		const source = null;
+
+		const blob = new Blob([atob(source)], {type: 'text/javascript'});
+
+		const script = document.createElement('script');
+		script.src = URL.createObjectURL(blob);
+		document.body.appendChild(script);
+
+		document.currentScript.remove();
+	</script>
+
 </body>
 
 </html>
