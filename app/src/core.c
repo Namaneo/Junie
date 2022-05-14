@@ -182,7 +182,7 @@ bool JUN_CoreStartGame(JUN_Core *this)
 
 	this->sym->retro_get_system_info(&this->system);
 
-	JUN_File *game = JUN_FilesystemGet(this->game_path, false);
+	JUN_File *game = JUN_FilesystemGet(this->game_path);
 
 	this->game.path = game->path;
 	this->game.size = game->size;
@@ -238,7 +238,7 @@ static void restore_memory(JUN_Core *this, uint32_t type, const char *path)
 	if (!size)
 		return;
 
-	JUN_File *file = JUN_FilesystemGet(path, false);
+	JUN_File *file = JUN_FilesystemGet(path);
 	if (!file)
 		return;
 

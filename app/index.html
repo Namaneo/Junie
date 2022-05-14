@@ -64,7 +64,15 @@
 		//Adjust request URL prefixes
 		const _fetch = window.fetch;
 		window.fetch = request => {
-			request = location.pathname + request.replace(location.origin, '');
+			request = request.replace(location.origin, '');
+
+			const decoded = decodeURI(request);
+			if (files[decoded]) {
+				const blob = new Blob([files[decoded]]);
+				return _fetch(URL.createObjectURL(blob));
+			}
+
+			request = location.pathname + request;
 			request = request.replace('//', '/');
 			return _fetch(request);
 		};

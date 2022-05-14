@@ -5,14 +5,24 @@
 
 #include "video.h"
 
-struct JUN_Video
-{
+#include "res_menu.h"
+#include "res_loading.h"
+#include "res_controller_left.h"
+#include "res_controller_right.h"
+
+struct jun_video_asset {
+	void *data;
+	uint32_t width;
+	uint32_t height;
+};
+
+struct JUN_Video {
 	MTY_App *app;
 	MTY_Renderer *renderer;
 
 	JUN_State *state;
 
-	char *assets[CONTROLLER_MAX];
+	struct jun_video_asset assets[CONTROLLER_MAX];
 
 	MTY_ColorFormat pixel_format;
 	unsigned bits_per_pixel;
@@ -40,6 +50,20 @@ JUN_Video *JUN_VideoInitialize(JUN_State *state, MTY_AppFunc app_func, MTY_Event
 	description.width = 800;
 	description.height = 600;
 
+	struct jun_video_asset *asset = NULL;
+
+	asset = &this->assets[CONTROLLER_MENU];
+	asset->data = MTY_DecompressImage(res_menu_png, res_menu_png_len, &asset->width, &asset->height);
+
+	asset = &this->assets[CONTROLLER_LEFT];
+	asset->data = MTY_DecompressImage(res_controller_left_png, res_controller_left_png_len, &asset->width, &asset->height);
+
+	asset = &this->assets[CONTROLLER_RIGHT];
+	asset->data = MTY_DecompressImage(res_controller_right_png, res_controller_right_png_len, &asset->width, &asset->height);
+
+	asset = &this->assets[LOADING_SCREEN];
+	asset->data = MTY_DecompressImage(res_loading_png, res_loading_png_len, &asset->width, &asset->height);
+
 	this->app = MTY_AppCreate(app_func, event_func, NULL);
 
 	MTY_WindowCreate(this->app, &description);
@@ -61,12 +85,6 @@ static void refresh_viewport_size(JUN_Video *this, uint32_t *view_width, uint32_
 void JUN_VideoStart(JUN_Video *this)
 {
 	MTY_AppRun(this->app);
-}
-
-void JUN_VideoSetAssets(JUN_Video *this, JUN_TextureType type, const char *base_path, const char *file_name)
-{
-	this->assets[type] = MTY_SprintfD("%s/%s", base_path, file_name);
-	JUN_FilesystemDownload(this->assets[type], NULL, NULL);
 }
 
 bool JUN_VideoSetPixelFormat(JUN_Video *this, enum retro_pixel_format *format)
@@ -104,16 +122,14 @@ static void set_texture_metrics(JUN_Video *this, JUN_TextureType type, uint32_t 
 	float x, y, width, height;
 
 	// Retrieve controller files
-	JUN_File *file = JUN_FilesystemGet(this->assets[type], true);
-	if (!file)
-		return;
+	struct jun_video_asset *asset = &this->assets[type];
 
 	// Create textures on first call
 	if (!MTY_WindowHasUITexture(this->app, 0, type + 1))
-		MTY_WindowSetUITexture(this->app, 0, type + 1, file->buffer, file->width, file->height);
+		MTY_WindowSetUITexture(this->app, 0, type + 1, asset->data, asset->width, asset->height);
 
 	// Compute file aspect ratio
-	float aspect_ratio = (float)file->width / (float)file->height;
+	float aspect_ratio = (float) asset->width / (float) asset->height;
 
 	// Deduce real image width and height
 	width = view_width / 2.0f;
@@ -149,15 +165,15 @@ static void set_texture_metrics(JUN_Video *this, JUN_TextureType type, uint32_t 
 	}
 
 	// Set texture metrics
-	JUN_StateSetMetrics(this->state, &(JUN_TextureData){
-																			 .id = type,
-																			 .x = x,
-																			 .y = y,
-																			 .width = width,
-																			 .height = height,
-																			 .image_width = file->width,
-																			 .image_height = file->height,
-																	 });
+	JUN_StateSetMetrics(this->state, & (JUN_TextureData) {
+		.id = type,
+		.x = x,
+		.y = y,
+		.width = width,
+		.height = height,
+		.image_width = asset->width,
+		.image_height = asset->height,
+	});
 }
 
 static void update_ui_context(JUN_Video *this)
@@ -303,11 +319,21 @@ void JUN_VideoPresent(JUN_Video *this)
 	MTY_WindowPresent(this->app, 0, 1);
 }
 
-void JUN_VideoDestroy(JUN_Video **this)
+void JUN_VideoDestroy(JUN_Video **video)
 {
-	MTY_RendererDestroy(&(*this)->renderer);
-	MTY_AppDestroy(&(*this)->app);
+	if (!video || !*video)
+		return;
 
-	MTY_Free(*this);
-	*this = NULL;
+	JUN_Video *this = *video;
+
+	MTY_RendererDestroy(&this->renderer);
+	MTY_AppDestroy(&this->app);
+
+	MTY_Free(this->assets[CONTROLLER_MENU].data);
+	MTY_Free(this->assets[CONTROLLER_LEFT].data);
+	MTY_Free(this->assets[CONTROLLER_RIGHT].data);
+	MTY_Free(this->assets[LOADING_SCREEN].data);
+
+	MTY_Free(this);
+	*video = NULL;
 }

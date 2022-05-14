@@ -27,33 +27,6 @@ static void set_bindings(JUN_Settings *context)
 	}
 }
 
-static void set_assets(JUN_Settings *context)
-{
-	char value[PATH_SIZE];
-
-	const MTY_JSON *assets = MTY_JSONObjGetItem(context->json.root, "assets");
-
-	if (MTY_JSONObjGetString(assets, "menu", value, PATH_SIZE))
-	{
-		context->assets.menu = MTY_Strdup(value);
-	}
-
-	if (MTY_JSONObjGetString(assets, "left", value, PATH_SIZE))
-	{
-		context->assets.left = MTY_Strdup(value);
-	}
-
-	if (MTY_JSONObjGetString(assets, "right", value, PATH_SIZE))
-	{
-		context->assets.right = MTY_Strdup(value);
-	}
-
-	if (MTY_JSONObjGetString(assets, "loading", value, PATH_SIZE))
-	{
-		context->assets.loading = MTY_Strdup(value);
-	}
-}
-
 static void set_dependencies(JUN_Settings *context)
 {
 	char value[PATH_SIZE];
@@ -97,7 +70,6 @@ JUN_Settings *JUN_SettingsInitialize(char *buffer, const char *core_name)
 	context->bindings = MTY_HashCreate(0);
 
 	set_language(context);
-	set_assets(context);
 	set_bindings(context);
 
 	if (context->json.core)
@@ -121,15 +93,6 @@ void JUN_SettingsDestroy(JUN_Settings **context)
 
 	if (ctx->language)
 		MTY_Free(ctx->language);
-
-	if (ctx->assets.menu)
-		MTY_Free(ctx->assets.menu);
-	if (ctx->assets.left)
-		MTY_Free(ctx->assets.left);
-	if (ctx->assets.right)
-		MTY_Free(ctx->assets.right);
-	if (ctx->assets.loading)
-		MTY_Free(ctx->assets.loading);
 
 	MTY_Free(*context);
 	*context = NULL;

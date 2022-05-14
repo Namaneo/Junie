@@ -152,12 +152,6 @@ void JUN_AppConfigure(JUN_App *public, char *json)
 		JUN_InputSetBinding(this->public.input, key, value);
 	}
 
-	// Set controller assets
-	JUN_VideoSetAssets(this->public.video, CONTROLLER_MENU, this->directories.assets, settings->assets.menu);
-	JUN_VideoSetAssets(this->public.video, CONTROLLER_LEFT, this->directories.assets, settings->assets.left);
-	JUN_VideoSetAssets(this->public.video, CONTROLLER_RIGHT, this->directories.assets, settings->assets.right);
-	JUN_VideoSetAssets(this->public.video, LOADING_SCREEN, this->directories.assets, settings->assets.loading);
-
 	// Download core dependencies
 	MTY_ListNode *dependency = MTY_ListGetFirst(settings->dependencies);
 	while (dependency)

@@ -72,7 +72,7 @@ bool JUN_FilesystemReady()
 	return true;
 }
 
-JUN_File *JUN_FilesystemGet(const char *path, bool image)
+JUN_File *JUN_FilesystemGet(const char *path)
 {
 	JUN_File *file = JUN_VfsGetExistingFile(path);
 
@@ -81,12 +81,6 @@ JUN_File *JUN_FilesystemGet(const char *path, bool image)
 
 	if (file->remote && file->state != MTY_ASYNC_OK)
 		return NULL;
-
-	if (image && !file->decompressed)
-	{
-		file->buffer = MTY_DecompressImage(file->buffer, file->size, &file->width, &file->height);
-		file->decompressed = true;
-	}
 
 	return file;
 }
