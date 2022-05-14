@@ -105,7 +105,7 @@ export const SavesPage = () => {
 							<IonItemSliding key={save.game}>
 								<IonItem lines="full">
 									{
-										save.isMapped(systems) ?
+										save.mapped ?
 											<IonIcon color="success" icon={checkmarkCircleOutline} slot="start"></IonIcon> :
 											<IonIcon color="danger" icon={closeCircleOutline} slot="start"></IonIcon>
 									}
@@ -114,7 +114,7 @@ export const SavesPage = () => {
 										<h3>{save.system}</h3>
 									</IonLabel>
 									{
-										!save.isMapped(systems) && <IonButton onClick={() => showModal(save)}>Fix</IonButton>
+										!save.mapped && <IonButton onClick={() => showModal(save)}>Fix</IonButton>
 									}
 								</IonItem>
 								<IonItemOptions side="end">

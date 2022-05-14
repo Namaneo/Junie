@@ -19,7 +19,8 @@ async function execute(command) {
 export async function getSaves() {
 	const rawSaves = await execute(db => db.table('files').where('path').startsWith('/save/').toArray());
 
-	return rawSaves.map(file => new Save(file)).reduce((acc, newSave) => {
+	const systems = await Requests.getSystems();
+	return rawSaves.map(file => new Save(file, systems)).reduce((acc, newSave) => {
 
 		const save = acc.find(x => x.game == newSave.game);
 		save ? save.files.push(newSave.files[0]) : acc.push(newSave);
