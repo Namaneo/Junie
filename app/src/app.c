@@ -107,7 +107,7 @@ static void jun_app_configure(_JUN_App *this)
 	// Store game data
 	size_t game_size = 0;
 	void *game = JUN_InteropReadFile(this->game_path, &game_size);
-	JUN_VfsSaveFile(this->game_path, game, game_size);
+	JUN_FilesystemSaveFile(this->game_path, game, game_size);
 	MTY_Free(game);
 
 	MTY_Free(json);
@@ -223,8 +223,8 @@ bool JUN_AppEnvironment(JUN_App *public, unsigned cmd, void *data)
 	{
 		struct retro_vfs_interface_info *vfs = data;
 
-		vfs->iface = JUN_VfsGetInterface();
-		vfs->required_interface_version = JUN_VfsGetInterfaceVersion();
+		vfs->iface = JUN_FilesystemGetInterface();
+		vfs->required_interface_version = JUN_FilesystemGetInterfaceVersion();
 
 		return true;
 	}

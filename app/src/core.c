@@ -255,7 +255,7 @@ bool JUN_CoreStartGame(JUN_Core *this)
 
 	this->sym->retro_get_system_info(&this->system);
 
-	JUN_File *game = JUN_FilesystemGet(this->game_path);
+	JUN_File *game = JUN_FilesystemGetExistingFile(this->game_path);
 
 	this->game.path = game->path;
 	this->game.size = game->size;
@@ -287,7 +287,7 @@ void save_memory(JUN_Core *this, uint32_t type, const char *path)
 	if (!size)
 		return;
 
-	JUN_FilesystemSave(path, buffer, size);
+	JUN_FilesystemSaveFile(path, buffer, size);
 }
 
 void JUN_CoreSaveMemories(JUN_Core *this)
@@ -311,7 +311,7 @@ static void restore_memory(JUN_Core *this, uint32_t type, const char *path)
 	if (!size)
 		return;
 
-	JUN_File *file = JUN_FilesystemGet(path);
+	JUN_File *file = JUN_FilesystemGetExistingFile(path);
 	if (!file)
 		return;
 
@@ -367,7 +367,7 @@ void JUN_CoreSaveState(JUN_Core *this)
 
 	this->sym->retro_serialize(data, size);
 
-	JUN_VfsSaveFile(this->state_path, data, size);
+	JUN_FilesystemSaveFile(this->state_path, data, size);
 
 	MTY_Free(data);
 }
@@ -376,7 +376,7 @@ void JUN_CoreRestoreState(JUN_Core *this)
 {
 	size_t size = this->sym->retro_serialize_size();
 
-	JUN_File *file = JUN_VfsGetExistingFile(this->state_path);
+	JUN_File *file = JUN_FilesystemGetExistingFile(this->state_path);
 	if (!file)
 		return;
 

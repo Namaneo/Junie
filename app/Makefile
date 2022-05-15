@@ -20,7 +20,6 @@ CORE_FILES := $(CORES:%=$(CORES_DIR)/lib%.a)
 
 SRC := main.c \
 	$(SRC_DIR)/app.c \
-	$(SRC_DIR)/vfs.c \
 	$(SRC_DIR)/wasi.c \
 	$(SRC_DIR)/core.c \
 	$(SRC_DIR)/video.c \
@@ -33,12 +32,11 @@ SRC := main.c \
 	$(SRC_DIR)/toolbox.c \
 	$(SRC_DIR)/settings.c \
 	$(SRC_DIR)/filesystem.c \
-	$(SRC_DIR)/configuration.c \
-	$(DEPS_DIR)/miniz.c
+	$(SRC_DIR)/configuration.c
 OBJ := $(SRC:.c=.o)
 
 CFLAGS  := \
-	-Wall -O3 -DMINIZ_NO_STDIO \
+	-Wall -O3 \
 	-I$(SRC_DIR) -I$(DEPS_DIR) -I$(INC_DIR)
 LDFLAGS := \
 	-L$(LIB_DIR) -L$(CORES_DIR) $(LIBS:%=-l%) $(CORES:%=-l%) \
