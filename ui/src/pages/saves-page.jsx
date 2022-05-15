@@ -99,7 +99,7 @@ export const SavesPage = () => {
 			</IonHeader>
 
 			<IonContent>
-				<IonList style={{padding: 0}}>
+				<IonList style={{ padding: 0 }}>
 					<IonItemGroup>
 						{saves.map(save =>
 							<IonItemSliding key={save.game}>

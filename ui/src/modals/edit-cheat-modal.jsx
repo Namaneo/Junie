@@ -1,6 +1,5 @@
 import { IonButton, IonButtons, IonCheckbox, IonContent, IonHeader, IonInput, IonItem, IonLabel, IonList, IonSelect, IonSelectOption, IonTextarea, IonTitle, IonToolbar } from "@ionic/react";
 import { useState } from "react";
-import styles from './edit-cheat-modal.module.css'
 
 export const EditCheatModal = ({ current, systems, dismiss, apply }) => {
 
@@ -49,7 +48,7 @@ export const EditCheatModal = ({ current, systems, dismiss, apply }) => {
 			</IonHeader>
 
 			<IonContent>
-				<IonList className={styles.list}>
+				<IonList>
 
 					<IonItem>
 						<IonLabel>System</IonLabel>
@@ -76,17 +75,17 @@ export const EditCheatModal = ({ current, systems, dismiss, apply }) => {
 
 					<IonItem>
 						<IonLabel>Name</IonLabel>
-						<IonInput value={name} onIonChange={e => setName(e.detail.value ?? '')} />
+						<IonInput value={name} onIonChange={e => setName(e.detail.value ?? '')} style={{ textAlign: 'right' }} />
 					</IonItem>
 
 					<IonItem>
 						<IonLabel>Order</IonLabel>
-						<IonInput type="number" value={order} min="0" onIonChange={e => setOrder(Number(e.detail.value ?? 0))} />
+						<IonInput type="number" value={order} min="0" onIonChange={e => setOrder(Number(e.detail.value ?? 0))} style={{ textAlign: 'right' }} />
 					</IonItem>
 
 					<IonItem>
 						<IonLabel>Value</IonLabel>
-						<IonTextarea value={value} onIonChange={e => setValue(e.detail.value ?? '')} />
+						<IonTextarea value={value} onIonChange={e => setValue(e.detail.value ?? '')} autoGrow style={{ fontFamily: 'monospace', textAlign: 'right' }} />
 					</IonItem>
 
 				</IonList>

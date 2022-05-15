@@ -1,11 +1,9 @@
-import { IonBackButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonPage, IonTitle, IonToolbar, useIonAlert, useIonViewWillEnter } from "@ionic/react";
+import { IonBackButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonImg, IonPage, IonTitle, IonToolbar, useIonAlert, useIonViewWillEnter } from "@ionic/react";
 import { useState } from "react";
-import { JunImg } from "../components/jun-img";
 import { Game } from "../entities/game";
 import { useToast } from '../hooks/toast';
 import * as Requests from "../services/requests";
 import * as Database from "../services/database";
-import './games-page.css';
 
 export const GamesPage = ({ match }) => {
 
@@ -62,11 +60,11 @@ export const GamesPage = ({ match }) => {
 				</IonToolbar>
 			</IonHeader>
 
-			<IonContent className="games-page">
+			<IonContent>
 				{system.games?.map(game =>
-					<IonCard key={game.rom} className="card" onClick={() => install(game)}>
-						<JunImg className="cover" src={game.cover} />
-						<IonCardHeader className="header">
+					<IonCard key={game.rom} onClick={() => install(game)} style={{ display: 'flex', cursor: 'pointer' }}>
+						<IonImg src={game.cover} style={{ maxWidth: '25%' }} />
+						<IonCardHeader style={{ display: 'flex', alignItems: 'center' }}>
 							<IonCardSubtitle>{game.name}</IonCardSubtitle>
 						</IonCardHeader>
 					</IonCard>
