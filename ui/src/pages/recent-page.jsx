@@ -1,4 +1,4 @@
-import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonImg, IonItem, IonItemGroup, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
+import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem, IonItemGroup, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
 import { useRef, useState } from 'react';
 import { add } from 'ionicons/icons';
 import { Game } from '../entities/game';
@@ -49,22 +49,24 @@ export const RecentPage = () => {
 			</IonHeader>
 
 			<IonContent>
-				<IonList style={{ padding: 0 }}>
+				<IonList style={{ padding: 0, background: 'transparent' }}>
 					<IonItemGroup>
 						{played.map(played =>
-							<IonItemSliding key={played.game.rom}>
-								<IonItem lines="full">
-									<JunImg src={played.game.cover} style={{ maxWidth: '25%', margin: '4px 0' }} />
-									<IonLabel style={{ marginLeft: '16px' }}>
-										<h2>{played.game.name}</h2>
-										<h3>{played.system.name}</h3>
-									</IonLabel>
-									<IonButton href={`app/#/${played.system.name}/${played.game.rom}`}>Play</IonButton>
-								</IonItem>
-								<IonItemOptions side="end">
-									<IonItemOption color="danger" onClick={() => deleteGame(played)}>Delete</IonItemOption>
-								</IonItemOptions>
-							</IonItemSliding>
+							<IonCard key={played.game.rom}>
+								<IonItemSliding>
+									<IonItem lines="none" style={{ marginLeft: '-16px' }}>
+										<JunImg src={played.game.cover} style={{ maxWidth: '25%' }} />
+										<IonLabel style={{ marginLeft: '16px' }}>
+											<h2>{played.game.name}</h2>
+											<h3>{played.system.name}</h3>
+										</IonLabel>
+										<IonButton href={`app/#/${played.system.name}/${played.game.rom}`}>Play</IonButton>
+									</IonItem>
+									<IonItemOptions side="end">
+										<IonItemOption color="danger" onClick={() => deleteGame(played)}>Delete</IonItemOption>
+									</IonItemOptions>
+								</IonItemSliding>
+							</IonCard>
 						)}
 					</IonItemGroup>
 				</IonList>
