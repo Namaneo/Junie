@@ -58,7 +58,7 @@ static void set_configurations(JUN_Settings *context)
 	}
 }
 
-JUN_Settings *JUN_SettingsInitialize(char *buffer, const char *core_name)
+JUN_Settings *JUN_SettingsInitialize(const char *buffer, const char *core_name)
 {
 	JUN_Settings *context = MTY_Alloc(1, sizeof(JUN_Settings));
 

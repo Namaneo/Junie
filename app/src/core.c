@@ -158,6 +158,8 @@ static bool jun_core_environment(struct jun_core_sym *sym, unsigned cmd, void *d
 		MTY_JSONObjSetItem(item, "options", options);
 
 		MTY_JSONArraySetItem(sym->configuration, i_entry, item);
+
+		MTY_Free(value);
 	}
 
 	return true;
@@ -168,6 +170,20 @@ PROTOTYPES(melonds);
 PROTOTYPES(mgba);
 PROTOTYPES(quicknes);
 PROTOTYPES(snes9x);
+
+static void jun_core_initialize()
+{
+	if (CORES.initialized)
+		return;
+
+	MAPPINGS(genesis);
+	MAPPINGS(melonds);
+	MAPPINGS(mgba);
+	MAPPINGS(quicknes);
+	MAPPINGS(snes9x);
+
+	CORES.initialized = true;
+}
 
 // TODO: ugly parameters here, must be improved
 JUN_Core *JUN_CoreInitialize(JUN_CoreType type, const char *game_path, const char *state_path, const char *sram_path, const char *rtc_path, const char *cheats_path)
@@ -182,15 +198,7 @@ JUN_Core *JUN_CoreInitialize(JUN_CoreType type, const char *game_path, const cha
 	this->rtc_path = MTY_Strdup(rtc_path);
 	this->cheats_path = MTY_Strdup(cheats_path);
 
-	if (!CORES.initialized) {
-		MAPPINGS(genesis);
-		MAPPINGS(melonds);
-		MAPPINGS(mgba);
-		MAPPINGS(quicknes);
-		MAPPINGS(snes9x);
-
-		CORES.initialized = true;
-	}
+	jun_core_initialize();
 
 	this->sym = 
 		type == JUN_CORE_GENESIS  ? &CORES.genesis  :
@@ -201,6 +209,19 @@ JUN_Core *JUN_CoreInitialize(JUN_CoreType type, const char *game_path, const cha
 		NULL;
 
 	return this;
+}
+
+const MTY_JSON *JUN_CoreGetDefaultConfiguration(JUN_CoreType type)
+{
+	jun_core_initialize();
+
+	return
+		type == JUN_CORE_GENESIS  ? CORES.genesis.configuration  :
+		type == JUN_CORE_MELONDS  ? CORES.melonds.configuration  :
+		type == JUN_CORE_MGBA     ? CORES.mgba.configuration     :
+		type == JUN_CORE_QUICKNES ? CORES.quicknes.configuration :
+		type == JUN_CORE_SNES9X   ? CORES.snes9x.configuration   :
+		NULL;
 }
 
 JUN_Configuration *JUN_CoreGetConfiguration(JUN_Core *this)
@@ -216,11 +237,6 @@ void JUN_CoreSetCallbacks(JUN_Core *this, JUN_CoreCallbacks *callbacks)
 	this->sym->retro_set_input_state(callbacks->input_state);
 	this->sym->retro_set_audio_sample(callbacks->audio_sample);
 	this->sym->retro_set_audio_sample_batch(callbacks->audio_sample_batch);
-}
-
-bool JUN_CoreHasStarted(JUN_Core *this)
-{
-	return this->initialized;
 }
 
 double JUN_CoreGetSampleRate(JUN_Core *this)

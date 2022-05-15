@@ -28,58 +28,11 @@ void JUN_FilesystemInitialize()
 	this->secure = JUN_InteropIsSecure();
 }
 
-void JUN_FilesystemDownload(const char *path, JUN_VfsCallback callback, void *opaque)
-{
-	JUN_File *file = JUN_VfsGetNewFile(path);
-
-	file->remote = true;
-	file->state = MTY_ASYNC_CONTINUE;
-	file->callback = callback;
-	file->opaque = opaque;
-
-	MTY_HttpAsyncRequest(&file->index,
-		this->host, this->port, this->secure,
-		"GET", file->path, NULL, NULL, 0, 60000, NULL);
-}
-
-bool JUN_FilesystemReady()
-{
-	JUN_File *files = JUN_VfsGetFiles();
-
-	for (uint32_t i = 0; i < MAX_FILES; ++i)
-	{
-		if (!files[i].remote || files[i].buffer)
-			continue;
-
-		if (files[i].code)
-			return false;
-
-		files[i].state = MTY_HttpAsyncPoll(files[i].index,
-			&files[i].buffer, &files[i].size, &files[i].code);
-
-		if (files[i].state != MTY_ASYNC_OK)
-			return false;
-
-		if (files[i].callback)
-			files[i].callback(&files[i], files[i].opaque);
-	}
-
-	for (uint32_t i = 0; i < MAX_FILES; ++i)
-	{
-		JUN_InteropClearRequest(i);
-	}
-
-	return true;
-}
-
 JUN_File *JUN_FilesystemGet(const char *path)
 {
 	JUN_File *file = JUN_VfsGetExistingFile(path);
 
 	if (!file)
-		return NULL;
-
-	if (file->remote && file->state != MTY_ASYNC_OK)
 		return NULL;
 
 	return file;

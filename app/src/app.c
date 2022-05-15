@@ -67,6 +67,52 @@ static JUN_CoreType jun_core_get_type(const char *system)
 	return (JUN_CoreType) MTY_HashGet(core_types, system);
 }
 
+static void jun_app_configure(_JUN_App *this)
+{
+	char *json = JUN_InteropReadFile("/assets/settings.json", NULL);
+
+	uint64_t iter;
+	const char *key;
+
+	// Initialize settings instance
+	JUN_Settings *settings = JUN_SettingsInitialize(json, this->core_name);
+
+	// Set prefered language
+	char *language = MTY_SprintfD("RETRO_LANGUAGE_%s", settings->language);
+	this->language = JUN_EnumsGetInt(JUN_ENUM_LANGUAGE, language);
+	MTY_Free(language);
+
+	// Set keyboard bindings
+	iter = 0;
+	key = NULL;
+	while (MTY_HashGetNextKey(settings->bindings, &iter, &key))
+	{
+		char *value = MTY_HashGet(settings->bindings, key);
+		JUN_InputSetBinding(this->public.input, key, value);
+	}
+
+	// Set custom configurations
+	iter = 0;
+	key = NULL;
+	JUN_Configuration *configuration = JUN_CoreGetConfiguration(this->public.core);
+	while (MTY_HashGetNextKey(settings->configurations, &iter, &key))
+	{
+		char *value = MTY_HashGet(settings->configurations, key);
+		JUN_ConfigurationOverride(configuration, key, value);
+	}
+
+	// Destroy settings instance
+	JUN_SettingsDestroy(&settings);
+
+	// Store game data
+	size_t game_size = 0;
+	void *game = JUN_InteropReadFile(this->game_path, &game_size);
+	JUN_VfsSaveFile(this->game_path, game, game_size);
+	MTY_Free(game);
+
+	MTY_Free(json);
+}
+
 JUN_App *JUN_AppInitialize(MTY_AppFunc app_func, MTY_EventFunc event_func)
 {
 	_JUN_App *this = MTY_Alloc(1, sizeof(_JUN_App));
@@ -106,6 +152,8 @@ JUN_App *JUN_AppInitialize(MTY_AppFunc app_func, MTY_EventFunc event_func)
 	this->public.audio = JUN_AudioInitialize();
 	this->public.video = JUN_VideoInitialize(this->public.state, app_func, event_func);
 
+	jun_app_configure(this);
+
 	MTY_Free(cheat_path);
 	MTY_Free(rtc_path);
 	MTY_Free(sram_path);
@@ -113,7 +161,7 @@ JUN_App *JUN_AppInitialize(MTY_AppFunc app_func, MTY_EventFunc event_func)
 	MTY_Free(game_name);
 	MTY_Free(system_name);
 
-	return (JUN_App *)this;
+	return (JUN_App *) this;
 }
 
 static void core_log(enum retro_log_level level, const char *fmt, ...)
@@ -126,56 +174,6 @@ static void core_log(enum retro_log_level level, const char *fmt, ...)
 	va_end(args);
 
 	MTY_Log("%s", buffer);
-}
-
-void JUN_AppConfigure(JUN_App *public, char *json)
-{
-	_JUN_App *this = (_JUN_App *)public;
-
-	uint64_t iter;
-	const char *key;
-
-	// Initialize settings instance
-	JUN_Settings *settings = JUN_SettingsInitialize(json, this->core_name);
-
-	// Set prefered language
-	char *language = MTY_SprintfD("RETRO_LANGUAGE_%s", settings->language);
-	this->language = JUN_EnumsGetInt(JUN_ENUM_LANGUAGE, language);
-	MTY_Free(language);
-
-	// Set keyboard bindings
-	iter = 0;
-	key = NULL;
-	while (MTY_HashGetNextKey(settings->bindings, &iter, &key))
-	{
-		char *value = MTY_HashGet(settings->bindings, key);
-		JUN_InputSetBinding(this->public.input, key, value);
-	}
-
-	// Download core dependencies
-	MTY_ListNode *dependency = MTY_ListGetFirst(settings->dependencies);
-	while (dependency)
-	{
-		char *value = MTY_SprintfD("%s/%s", this->directories.system, (char *)dependency->value);
-		JUN_FilesystemDownload(value, NULL, NULL);
-		dependency = dependency->next;
-	}
-
-	// Set custom configurations
-	iter = 0;
-	key = NULL;
-	JUN_Configuration *configuration = JUN_CoreGetConfiguration(this->public.core);
-	while (MTY_HashGetNextKey(settings->configurations, &iter, &key))
-	{
-		char *value = MTY_HashGet(settings->configurations, key);
-		JUN_ConfigurationOverride(configuration, key, value);
-	}
-
-	// Destroy settings instance
-	JUN_SettingsDestroy(&settings);
-
-	// Download the game
-	JUN_FilesystemDownload(this->game_path, NULL, NULL);
 }
 
 bool JUN_AppEnvironment(JUN_App *public, unsigned cmd, void *data)

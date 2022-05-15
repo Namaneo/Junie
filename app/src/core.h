@@ -28,9 +28,9 @@ struct JUN_CoreCallbacks
 };
 
 JUN_Core *JUN_CoreInitialize(JUN_CoreType type, const char *game_path, const char *state_path, const char *sram_path, const char *rtc_path, const char *cheats_path);
+const MTY_JSON *JUN_CoreGetDefaultConfiguration(JUN_CoreType type);
 JUN_Configuration *JUN_CoreGetConfiguration(JUN_Core *this);
 void JUN_CoreSetCallbacks(JUN_Core *this, JUN_CoreCallbacks *callbacks);
-bool JUN_CoreHasStarted(JUN_Core *this);
 double JUN_CoreGetSampleRate(JUN_Core *this);
 double JUN_CoreGetFramesPerSecond(JUN_Core *this);
 bool JUN_CoreStartGame(JUN_Core *this);

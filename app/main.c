@@ -78,35 +78,24 @@ static bool start_game()
 
 static bool app_func(void *opaque)
 {
-	if (!JUN_CoreHasStarted(app->core))
-	{
-		JUN_VideoDrawLoadingScreen(app->video);
+	// TODO useless for now
+	// JUN_VideoDrawLoadingScreen(app->video);
 
-		if (JUN_FilesystemReady() && !start_game())
-			return false;
-	}
-	else
-	{
-		for (int i = 0; i < JUN_StateGetFastForward(app->state); ++i)
-		{
-			JUN_CoreRun(app->core);
-		}
-
+	for (int i = 0; i < JUN_StateGetFastForward(app->state); ++i)
 		JUN_CoreRun(app->core);
 
-		JUN_CoreSaveMemories(app->core);
+	JUN_CoreRun(app->core);
 
-		if (JUN_StateShouldSaveState(app->state))
-		{
-			JUN_CoreSaveState(app->core);
-			JUN_StateToggleSaveState(app->state);
-		}
+	JUN_CoreSaveMemories(app->core);
 
-		if (JUN_StateShouldRestoreState(app->state))
-		{
-			JUN_CoreRestoreState(app->core);
-			JUN_StateToggleRestoreState(app->state);
-		}
+	if (JUN_StateShouldSaveState(app->state)) {
+		JUN_CoreSaveState(app->core);
+		JUN_StateToggleSaveState(app->state);
+	}
+
+	if (JUN_StateShouldRestoreState(app->state)) {
+		JUN_CoreRestoreState(app->core);
+		JUN_StateToggleRestoreState(app->state);
 	}
 
 	JUN_VideoPresent(app->video);
@@ -130,11 +119,6 @@ static void log_func(const char *message, void *opaque)
 		printf("%s", message);
 }
 
-static void configure(JUN_File *file, void *opaque)
-{
-	JUN_AppConfigure((JUN_App *)opaque, (char *)file->buffer);
-}
-
 int main(int argc, char *argv[])
 {
 	MTY_SetLogFunc(log_func, NULL);
@@ -143,7 +127,7 @@ int main(int argc, char *argv[])
 	JUN_FilesystemInitialize();
 	app = JUN_AppInitialize(app_func, event_func);
 
-	JUN_FilesystemDownload("/assets/settings.json", configure, app);
+	start_game();
 	JUN_VideoStart(app->video);
 
 	JUN_AppDestroy(&app);

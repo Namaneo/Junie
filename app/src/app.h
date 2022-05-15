@@ -20,6 +20,5 @@ struct JUN_App
 };
 
 JUN_App *JUN_AppInitialize(MTY_AppFunc app_func, MTY_EventFunc event_func);
-void JUN_AppConfigure(JUN_App *app, char *json);
 bool JUN_AppEnvironment(JUN_App *app, unsigned cmd, void *data);
 void JUN_AppDestroy(JUN_App **app);

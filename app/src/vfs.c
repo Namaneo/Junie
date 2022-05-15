@@ -127,7 +127,7 @@ JUN_File *JUN_VfsGetExistingFile(const char *path)
 	return NULL;
 }
 
-void JUN_VfsSaveFile(const char *path, void *buffer, size_t length)
+void JUN_VfsSaveFile(const char *path, const void *buffer, size_t length)
 {
 	JUN_File *file = JUN_VfsGetExistingFile(path);
 

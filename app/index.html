@@ -12,6 +12,30 @@
 
 	<script type="text/javascript">
 
+		//Initialize settings
+		//TODO send to native through file?
+		const settings = {
+			"language": "ENGLISH",
+			"bindings": {
+				"A": "X",
+				"B": "Z",
+				"X": "S",
+				"Y": "A",
+				"UP": "UP",
+				"DOWN": "DOWN",
+				"LEFT": "LEFT",
+				"RIGHT": "RIGHT",
+				"L": "C",
+				"R": "D",
+				"SELECT": "ENTER",
+				"START": "SPACE"
+			},
+			"melonDS": {
+				"melonds_touch_mode": "Touch",
+				"melonds_randomize_mac_address": "enabled"
+			}
+		};
+
 		//Override logging functions
 		const log = console.log;
 		const error = console.error;
@@ -85,8 +109,6 @@
 
 			js_get_system: (value, length) => MTY_StrToC(params[1], value, length),
 			js_get_game:   (value, length) => MTY_StrToC(params[2], value, length),
-
-			js_clear_request: (index) => delete MTY.reqs[index],
 
 			js_read_dir: (path, index, file, length) => {
 				path = MTY_StrToJS(path);
