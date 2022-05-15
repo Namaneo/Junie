@@ -14,10 +14,9 @@ import (
 	"junie/models"
 )
 
-var re = regexp.MustCompile(` \(.*\)`)
-var settings = helpers.GetSettings()
-
 func fillGames(system *models.System) {
+	var regex = regexp.MustCompile(` \(.*\)`)
+	var settings = helpers.GetSettings()
 
 	path := path.Join(settings.Resources.Games, system.Name)
 	games, err := ioutil.ReadDir(path)
@@ -35,7 +34,7 @@ func fillGames(system *models.System) {
 		name = strings.TrimSuffix(name, filepath.Ext(name))
 
 		system.Games = append(system.Games, models.Game{
-			Name:  re.ReplaceAllString(name, ""),
+			Name:  regex.ReplaceAllString(name, ""),
 			Rom:   name + "." + system.Extension,
 			Cover: "covers/" + system.Name + "/" + name + ".png",
 		})

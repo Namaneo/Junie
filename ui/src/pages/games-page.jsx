@@ -1,18 +1,21 @@
-import { IonBackButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonImg, IonPage, IonTitle, IonToolbar, useIonAlert, useIonViewWillEnter } from "@ionic/react";
+import { IonBackButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonImg, IonLoading, IonPage, IonTitle, IonToolbar, useIonAlert, useIonViewWillEnter } from "@ionic/react";
 import { useState } from "react";
-import { Game } from "../entities/game";
 import { useToast } from '../hooks/toast';
+import { Game } from "../entities/game";
+import { JunImg } from "../components/jun-img";
 import * as Requests from "../services/requests";
 import * as Database from "../services/database";
 
 export const GamesPage = ({ match }) => {
 
+	const [loading, setLoading] = useState(false);
 	const [system, setSystem] = useState({ games: [] });
 
 	const [present, dismiss] = useToast('Game successfully installed!');
 	const [alert] = useIonAlert();
 
 	const install = async (game) => {
+		setLoading(true);
 
 		const data = await Requests.fetchGame(system, game);
 
@@ -34,6 +37,8 @@ export const GamesPage = ({ match }) => {
 
 		dismiss();
 		present(`${game.name} (${system.name})`);
+
+		setLoading(false);
 	}
 
 	useIonViewWillEnter(async () => {
@@ -61,9 +66,10 @@ export const GamesPage = ({ match }) => {
 			</IonHeader>
 
 			<IonContent>
+				<IonLoading isOpen={loading} message="Installing..." spinner={null} />
 				{system.games?.map(game =>
 					<IonCard key={game.rom} onClick={() => install(game)} style={{ display: 'flex', cursor: 'pointer' }}>
-						<IonImg src={game.cover} style={{ maxWidth: '25%' }} /> {/* TODO placeholder */}
+						<JunImg src={game.cover} style={{ maxWidth: '25%' }} />
 						<IonCardHeader style={{ display: 'flex', alignItems: 'center' }}>
 							<IonCardSubtitle>{game.name}</IonCardSubtitle>
 						</IonCardHeader>

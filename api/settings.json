@@ -4,10 +4,7 @@
 		"App": "../app/build"
 	},
 	"Resources": {
-		"UI": "../assets/ui",
 		"API": "../assets/api",
-		"App": "../assets/app",
-		"Games": "../demo/games",
-		"System": "../system"
+		"Games": "../demo/games"
 	}
 }

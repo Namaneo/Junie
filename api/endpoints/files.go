@@ -59,7 +59,7 @@ func request(system string, filename string) ([]byte, error) {
 }
 
 func SendGame(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "application/octet-stream")
+	settings := helpers.GetSettings()
 
 	system, filename := getParameters(r)
 
@@ -69,10 +69,13 @@ func SendGame(w http.ResponseWriter, r *http.Request) {
 		log.Panic(err)
 	}
 
+	w.Header().Add("Content-Type", "application/octet-stream")
 	w.Write(file)
 }
 
 func SendCover(w http.ResponseWriter, r *http.Request) {
+	settings := helpers.GetSettings()
+
 	w.Header().Add("Content-Type", "image/png")
 
 	system, filename := getParameters(r)

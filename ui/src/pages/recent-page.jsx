@@ -1,7 +1,8 @@
 import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonImg, IonItem, IonItemGroup, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
-import { add } from 'ionicons/icons';
 import { useRef, useState } from 'react';
+import { add } from 'ionicons/icons';
 import { Game } from '../entities/game';
+import { JunImg } from '../components/jun-img';
 import * as Requests from '../services/requests';
 import * as Database from '../services/database';
 
@@ -53,7 +54,7 @@ export const RecentPage = () => {
 						{played.map(played =>
 							<IonItemSliding key={played.game.rom}>
 								<IonItem lines="full">
-									<IonImg src={played.game.cover} style={{ maxWidth: '25%', margin: '4px 0' }} /> {/* TODO placeholder */}
+									<JunImg src={played.game.cover} style={{ maxWidth: '25%', margin: '4px 0' }} />
 									<IonLabel style={{ marginLeft: '16px' }}>
 										<h2>{played.game.name}</h2>
 										<h3>{played.system.name}</h3>

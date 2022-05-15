@@ -24,17 +24,10 @@ func main() {
 	r.Use(middleware.NoCache)
 
 	helpers.UseStaticFiles(r, "", settings.Binaries.UI)
-	helpers.UseStaticFiles(r, "/assets", settings.Resources.UI)
 	helpers.UseStaticFiles(r, "/app", settings.Binaries.App)
-	helpers.UseStaticFiles(r, "/app/assets", settings.Resources.App)
-	helpers.UseStaticFiles(r, "/app/games", settings.Resources.Games)
-	helpers.UseStaticFiles(r, "/app/system", settings.Resources.System)
-
-	r.Get("/cache", endpoints.SendCache)
 
 	r.Get("/api/library", endpoints.SendLibrary)
 	r.Get("/api/library/{system}/{filename}", endpoints.SendGame)
-
 	r.Get("/covers/{system}/{filename}", endpoints.SendCover)
 
 	port, found := os.LookupEnv("PORT")

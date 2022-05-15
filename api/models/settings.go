@@ -6,10 +6,7 @@ type Settings struct {
 		App string
 	}
 	Resources struct {
-		UI     string
-		API    string
-		App    string
-		Games  string
-		System string
+		API   string
+		Games string
 	}
 }
