@@ -3,19 +3,16 @@ import { useState } from "react";
 
 export const FixSaveModal = ({ systems, dismiss, apply }) => {
 
-	const [state, setState] = useState({ system: null, game: null });
+	const [system, setSystem] = useState(null);
+	const [game, setGame] = useState(null);
 
 	const systemChanged = (system) => {
-		state.system = system;
-		state.game = null;
-
-		setState({ ...state });
+		setSystem(system);
+		setGame(null);
 	};
 
 	const gameChanged = (game) => {
-		state.game = game;
-
-		setState({ ...state });
+		setGame(game);
 	};
 
 	return (
@@ -30,7 +27,7 @@ export const FixSaveModal = ({ systems, dismiss, apply }) => {
 			</IonHeader>
 
 			<IonContent>
-				<IonList>
+				<IonList style={{ padding: 0 }}>
 
 					<IonItem>
 						<IonLabel>System</IonLabel>
@@ -43,18 +40,18 @@ export const FixSaveModal = ({ systems, dismiss, apply }) => {
 
 					<IonItem>
 						<IonLabel>Game</IonLabel>
-						<IonSelect interface="action-sheet" value={state.game} disabled={!state.system} onIonChange={e => gameChanged(e.detail.value)}>
-							{state.system?.games?.map(game =>
+						<IonSelect interface="action-sheet" value={game} disabled={!system} onIonChange={e => gameChanged(e.detail.value)}>
+							{system?.games?.map(game =>
 								<IonSelectOption key={game.name} value={game}>{game.name}</IonSelectOption>
 							)}
 						</IonSelect>
 					</IonItem>
 
-				</IonList>
+					<IonButton expand="block" disabled={!system || !game} onClick={() => apply(system, game)}>
+						Apply fix
+					</IonButton>
 
-				<IonButton expand="block" disabled={!state.system || !state.game} onClick={() => apply(state.system, state.game)}>
-					Apply fix
-				</IonButton>
+				</IonList>
 
 			</IonContent>
 		</>

@@ -48,7 +48,7 @@ export const EditCheatModal = ({ current, systems, dismiss, apply }) => {
 			</IonHeader>
 
 			<IonContent>
-				<IonList>
+				<IonList style={{ padding: 0 }}>
 
 					<IonItem>
 						<IonLabel style={{ minWidth: '60px' }}>System</IonLabel>
@@ -88,11 +88,11 @@ export const EditCheatModal = ({ current, systems, dismiss, apply }) => {
 						<IonTextarea value={value} onIonChange={e => setValue(e.detail.value ?? '')} autoGrow style={{ fontFamily: 'monospace', textAlign: 'right' }} />
 					</IonItem>
 
-				</IonList>
+					<IonButton expand="block" disabled={isValid()} onClick={() => validate()}>
+						Apply
+					</IonButton>
 
-				<IonButton expand="block" disabled={isValid()} onClick={() => validate()}>
-					Apply
-				</IonButton>
+				</IonList>
 
 			</IonContent>
 		</>

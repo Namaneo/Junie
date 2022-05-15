@@ -54,10 +54,10 @@ export const RecentPage = () => {
 						{played.map(played =>
 							<IonCard key={played.game.rom}>
 								<IonItemSliding>
-									<IonItem lines="none" style={{ marginLeft: '-16px' }}>
+									<IonItem style={{ marginLeft: '-16px' }}>
 										<JunImg src={played.game.cover} style={{ maxWidth: '25%' }} />
 										<IonLabel style={{ marginLeft: '16px' }}>
-											<h2>{played.game.name}</h2>
+											<h2>{played.game.name.replaceAll(/ \(.*\).*/g, '')}</h2>
 											<h3>{played.system.name}</h3>
 										</IonLabel>
 										<IonButton href={`app/#/${played.system.name}/${played.game.rom}`}>Play</IonButton>

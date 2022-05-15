@@ -1,4 +1,4 @@
-import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonItemGroup, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonModal, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
+import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem, IonItemGroup, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonModal, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
 import { add, checkmarkCircleOutline, closeCircleOutline } from 'ionicons/icons';
 import { useState } from 'react';
 import { Cheat } from '../entities/cheat';
@@ -9,7 +9,7 @@ import * as Requests from '../services/requests';
 export const CheatsPage = () => {
 
 	const [modal, setModal] = useState(false);
-	const [current, setCurrent] = useState(new Cheat());
+	const [current, setCurrent] = useState(null);
 	const [cheats, setCheats] = useState([]);
 	const [systems, setSystems] = useState([]);
 
@@ -62,27 +62,29 @@ export const CheatsPage = () => {
 					<EditCheatModal current={current} systems={systems} apply={apply} dismiss={dismiss}  />
 				</IonModal>
 
-				<IonList style={{ padding: 0 }}>
+				<IonList style={{ padding: 0, background: 'transparent' }}>
 					<IonItemGroup>
 						{cheats.map(cheat =>
-							<IonItemSliding key={cheat.name}>
-								<IonItem lines="full">
-									{
-										cheat.enabled ?
-											<IonIcon color="success" icon={checkmarkCircleOutline} slot="start"></IonIcon> :
-											<IonIcon color="danger" icon={closeCircleOutline} slot="start"></IonIcon>
-									}
-									<IonLabel>
-										<h2>{cheat.name}</h2>
-										<h3>{cheat.game?.replaceAll(/ \(.*\)|\.[a-z]+/g, '')}</h3>
-										<h3>{cheat.system}</h3>
-									</IonLabel>
-									<IonButton onClick={() => showModal(cheat)}>Edit</IonButton>
-								</IonItem>
-								<IonItemOptions side="end">
-									<IonItemOption color="danger" onClick={() => deleteCheat(cheat)}>Delete</IonItemOption>
-								</IonItemOptions>
-							</IonItemSliding>
+							<IonCard key={cheat.name}>
+								<IonItemSliding>
+									<IonItem>
+										{
+											cheat.enabled ?
+												<IonIcon color="success" icon={checkmarkCircleOutline} slot="start"></IonIcon> :
+												<IonIcon color="danger" icon={closeCircleOutline} slot="start"></IonIcon>
+										}
+										<IonLabel>
+											<h2>{cheat.name}</h2>
+											<h3>{cheat.game?.replaceAll(/ \(.*\)|\.[a-z]+/g, '')}</h3>
+											<h3>{cheat.system}</h3>
+										</IonLabel>
+										<IonButton onClick={() => showModal(cheat)}>Edit</IonButton>
+									</IonItem>
+									<IonItemOptions side="end">
+										<IonItemOption color="danger" onClick={() => deleteCheat(cheat)}>Delete</IonItemOption>
+									</IonItemOptions>
+								</IonItemSliding>
+							</IonCard>
 						)}
 					</IonItemGroup>
 				</IonList>

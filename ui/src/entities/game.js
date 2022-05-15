@@ -17,13 +17,13 @@ export class Game {
 
 		const data = file.data;
 		const system = systems.find(system => system.name == system_name);
-		const game = system.games.find(game => game.rom == game_rom);
+		let game = system.games.find(game => game.rom == game_rom);
 
 		if (!game) {
-			this.game = {
+			game = {
 				name: game_rom,
 				rom: game_rom,
-				cover: 'placeholder.png'
+				cover: Helpers.getPlaceholder()
 			}
 		}
 
