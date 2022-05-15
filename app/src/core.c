@@ -5,61 +5,66 @@
 
 #include "core.h"
 
-#define PROTOTYPES(name) \
-	void   name ## _retro_init(void); \
-	bool   name ## _retro_load_game(const struct retro_game_info *game); \
-	void   name ## _retro_get_system_info(struct retro_system_info *info); \
-	void   name ## _retro_get_system_av_info(struct retro_system_av_info *info); \
-	void   name ## _retro_set_environment(retro_environment_t); \
-	void   name ## _retro_set_video_refresh(retro_video_refresh_t); \
-	void   name ## _retro_set_input_poll(retro_input_poll_t); \
-	void   name ## _retro_set_input_state(retro_input_state_t); \
-	void   name ## _retro_set_audio_sample(retro_audio_sample_t); \
-	void   name ## _retro_set_audio_sample_batch(retro_audio_sample_batch_t); \
-	size_t name ## _retro_get_memory_size(unsigned type); \
-	void * name ## _retro_get_memory_data(unsigned type); \
-	size_t name ## _retro_serialize_size(void); \
-	bool   name ## _retro_serialize(void *data, size_t size); \
-	bool   name ## _retro_unserialize(const void *data, size_t size); \
-	void   name ## _retro_cheat_reset(void); \
-	void   name ## _retro_cheat_set(unsigned index, bool enabled, const char *code); \
-	void   name ## _retro_run(void); \
-	void   name ## _retro_reset(void); \
-	void   name ## _retro_unload_game(void); \
-	void   name ## _retro_deinit(void);
+#define PROTOTYPES(core) \
+	void   core ## _retro_init(void); \
+	bool   core ## _retro_load_game(const struct retro_game_info *game); \
+	void   core ## _retro_get_system_info(struct retro_system_info *info); \
+	void   core ## _retro_get_system_av_info(struct retro_system_av_info *info); \
+	void   core ## _retro_set_environment(retro_environment_t); \
+	void   core ## _retro_set_video_refresh(retro_video_refresh_t); \
+	void   core ## _retro_set_input_poll(retro_input_poll_t); \
+	void   core ## _retro_set_input_state(retro_input_state_t); \
+	void   core ## _retro_set_audio_sample(retro_audio_sample_t); \
+	void   core ## _retro_set_audio_sample_batch(retro_audio_sample_batch_t); \
+	size_t core ## _retro_get_memory_size(unsigned type); \
+	void * core ## _retro_get_memory_data(unsigned type); \
+	size_t core ## _retro_serialize_size(void); \
+	bool   core ## _retro_serialize(void *data, size_t size); \
+	bool   core ## _retro_unserialize(const void *data, size_t size); \
+	void   core ## _retro_cheat_reset(void); \
+	void   core ## _retro_cheat_set(unsigned index, bool enabled, const char *code); \
+	void   core ## _retro_run(void); \
+	void   core ## _retro_reset(void); \
+	void   core ## _retro_unload_game(void); \
+	void   core ## _retro_deinit(void); \
+	\
+	static bool jun_core_environment_ ## core(unsigned cmd, void *data) \
+	{ \
+		return jun_core_environment(&CORES.core, cmd, data); \
+	}
 
-#define MAPPINGS(name) \
-	MAP_SYMBOL(name, retro_init); \
-	MAP_SYMBOL(name, retro_load_game); \
-	MAP_SYMBOL(name, retro_get_system_info); \
-	MAP_SYMBOL(name, retro_get_system_av_info); \
-	MAP_SYMBOL(name, retro_set_environment); \
-	MAP_SYMBOL(name, retro_set_video_refresh); \
-	MAP_SYMBOL(name, retro_set_input_poll); \
-	MAP_SYMBOL(name, retro_set_input_state); \
-	MAP_SYMBOL(name, retro_set_audio_sample); \
-	MAP_SYMBOL(name, retro_set_audio_sample_batch); \
-	MAP_SYMBOL(name, retro_get_memory_size); \
-	MAP_SYMBOL(name, retro_get_memory_data); \
-	MAP_SYMBOL(name, retro_serialize_size); \
-	MAP_SYMBOL(name, retro_serialize); \
-	MAP_SYMBOL(name, retro_unserialize); \
-	MAP_SYMBOL(name, retro_cheat_reset); \
-	MAP_SYMBOL(name, retro_cheat_set); \
-	MAP_SYMBOL(name, retro_run); \
-	MAP_SYMBOL(name, retro_reset); \
-	MAP_SYMBOL(name, retro_unload_game); \
-	MAP_SYMBOL(name, retro_deinit);
+#define MAP_SYMBOL(core, function) CORES.core.function = core ## _ ## function;
 
-#define MAP_SYMBOL(core, function) SYM.core.function = core ## _ ## function
-
-PROTOTYPES(genesis);
-PROTOTYPES(melonds);
-PROTOTYPES(mgba);
-PROTOTYPES(quicknes);
-PROTOTYPES(snes9x);
+#define MAPPINGS(core) \
+	MAP_SYMBOL(core, retro_init); \
+	MAP_SYMBOL(core, retro_load_game); \
+	MAP_SYMBOL(core, retro_get_system_info); \
+	MAP_SYMBOL(core, retro_get_system_av_info); \
+	MAP_SYMBOL(core, retro_set_environment); \
+	MAP_SYMBOL(core, retro_set_video_refresh); \
+	MAP_SYMBOL(core, retro_set_input_poll); \
+	MAP_SYMBOL(core, retro_set_input_state); \
+	MAP_SYMBOL(core, retro_set_audio_sample); \
+	MAP_SYMBOL(core, retro_set_audio_sample_batch); \
+	MAP_SYMBOL(core, retro_get_memory_size); \
+	MAP_SYMBOL(core, retro_get_memory_data); \
+	MAP_SYMBOL(core, retro_serialize_size); \
+	MAP_SYMBOL(core, retro_serialize); \
+	MAP_SYMBOL(core, retro_unserialize); \
+	MAP_SYMBOL(core, retro_cheat_reset); \
+	MAP_SYMBOL(core, retro_cheat_set); \
+	MAP_SYMBOL(core, retro_run); \
+	MAP_SYMBOL(core, retro_reset); \
+	MAP_SYMBOL(core, retro_unload_game); \
+	MAP_SYMBOL(core, retro_deinit); \
+	\
+	CORES.core.retro_set_environment(jun_core_environment_ ## core); \
+	CORES.core.retro_init(); \
+	CORES.core.retro_deinit();
 
 struct jun_core_sym {
+	MTY_JSON *configuration;
+
 	void (*retro_init)(void);
 	bool (*retro_load_game)(const struct retro_game_info *game);
 	void (*retro_get_system_info)(struct retro_system_info *info);
@@ -85,12 +90,13 @@ struct jun_core_sym {
 
 struct {
 	bool initialized;
+
 	struct jun_core_sym genesis;
 	struct jun_core_sym melonds;
 	struct jun_core_sym mgba;
 	struct jun_core_sym quicknes;
 	struct jun_core_sym snes9x;
-} SYM;
+} CORES;
 
 struct JUN_Core {
 	void *handle;
@@ -113,6 +119,56 @@ struct JUN_Core {
 	struct jun_core_sym *sym;
 };
 
+static bool jun_core_environment(struct jun_core_sym *sym, unsigned cmd, void *data)
+{
+	unsigned command = cmd & ~RETRO_ENVIRONMENT_EXPERIMENTAL;
+	if (command != RETRO_ENVIRONMENT_SET_VARIABLES)
+		return false;
+
+	sym->configuration = MTY_JSONArrayCreate();
+
+	const struct retro_variable *variables = data;
+
+	for (size_t i_entry = 0; i_entry < SIZE_MAX; i_entry++) {
+		const struct retro_variable *variable = &variables[i_entry];
+
+		if (!variable->key || !variable->value)
+			break;
+
+		MTY_JSON *item = MTY_JSONObjCreate();
+		MTY_JSONObjSetString(item, "key", variable->key);
+
+		char *ptr = NULL;
+		char *value = MTY_Strdup(variable->value);
+
+		char *name = MTY_Strtok(value, ";", &ptr);
+		MTY_JSONObjSetString(item, "name", name);
+
+		ptr += 1;
+		char *element = MTY_Strtok(NULL, "|", &ptr);
+		MTY_JSONObjSetString(item, "default", element);
+
+		uint32_t i_option = 0;
+		MTY_JSON *options = MTY_JSONArrayCreate();
+		while (element) {
+			MTY_JSONArraySetString(options, i_option, element);
+			element = MTY_Strtok(NULL, "|", &ptr);
+			i_option++;
+		}
+		MTY_JSONObjSetItem(item, "options", options);
+
+		MTY_JSONArraySetItem(sym->configuration, i_entry, item);
+	}
+
+	return true;
+}
+
+PROTOTYPES(genesis);
+PROTOTYPES(melonds);
+PROTOTYPES(mgba);
+PROTOTYPES(quicknes);
+PROTOTYPES(snes9x);
+
 // TODO: ugly parameters here, must be improved
 JUN_Core *JUN_CoreInitialize(JUN_CoreType type, const char *game_path, const char *state_path, const char *sram_path, const char *rtc_path, const char *cheats_path)
 {
@@ -126,21 +182,22 @@ JUN_Core *JUN_CoreInitialize(JUN_CoreType type, const char *game_path, const cha
 	this->rtc_path = MTY_Strdup(rtc_path);
 	this->cheats_path = MTY_Strdup(cheats_path);
 
-	if (!SYM.initialized) {
+	if (!CORES.initialized) {
 		MAPPINGS(genesis);
 		MAPPINGS(melonds);
 		MAPPINGS(mgba);
 		MAPPINGS(quicknes);
 		MAPPINGS(snes9x);
-		SYM.initialized = true;
+
+		CORES.initialized = true;
 	}
 
 	this->sym = 
-		type == JUN_CORE_GENESIS  ? &SYM.genesis  :
-		type == JUN_CORE_MELONDS  ? &SYM.melonds  :
-		type == JUN_CORE_MGBA     ? &SYM.mgba     :
-		type == JUN_CORE_QUICKNES ? &SYM.quicknes :
-		type == JUN_CORE_SNES9X   ? &SYM.snes9x   :
+		type == JUN_CORE_GENESIS  ? &CORES.genesis  :
+		type == JUN_CORE_MELONDS  ? &CORES.melonds  :
+		type == JUN_CORE_MGBA     ? &CORES.mgba     :
+		type == JUN_CORE_QUICKNES ? &CORES.quicknes :
+		type == JUN_CORE_SNES9X   ? &CORES.snes9x   :
 		NULL;
 
 	return this;
