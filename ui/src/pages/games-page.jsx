@@ -63,7 +63,7 @@ export const GamesPage = ({ match }) => {
 			<IonContent>
 				{system.games?.map(game =>
 					<IonCard key={game.rom} onClick={() => install(game)} style={{ display: 'flex', cursor: 'pointer' }}>
-						<IonImg src={game.cover} style={{ maxWidth: '25%' }} />
+						<IonImg src={game.cover} style={{ maxWidth: '25%' }} /> {/* TODO placeholder */}
 						<IonCardHeader style={{ display: 'flex', alignItems: 'center' }}>
 							<IonCardSubtitle>{game.name}</IonCardSubtitle>
 						</IonCardHeader>

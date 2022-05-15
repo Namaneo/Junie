@@ -53,7 +53,7 @@ export const RecentPage = () => {
 						{played.map(played =>
 							<IonItemSliding key={played.game.rom}>
 								<IonItem lines="full">
-									<IonImg src={played.game.cover} style={{ maxWidth: '25%', margin: '4px 0' }} />
+									<IonImg src={played.game.cover} style={{ maxWidth: '25%', margin: '4px 0' }} /> {/* TODO placeholder */}
 									<IonLabel style={{ marginLeft: '16px' }}>
 										<h2>{played.game.name}</h2>
 										<h3>{played.system.name}</h3>
