@@ -12,7 +12,7 @@ export class Cheat {
 		this.order = 0;
 
 		if (file) {
-			const data = JSON.parse(atob(file.data));
+			const data = JSON.parse(new TextDecoder('ascii').decode(file.data));
 			this.enabled = data.enabled;
 			this.order = data.order;
 			this.value = data.value;
@@ -36,7 +36,7 @@ export class Cheat {
 
 		return { 
 			path: this.path(),
-			data: btoa(JSON.stringify(data)),
+			data: new TextEncoder('ascii').encode((JSON.stringify(data))),
 		}
 	}
 

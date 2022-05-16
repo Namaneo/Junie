@@ -48,15 +48,15 @@ export const RecentPage = () => {
 				</IonToolbar>
 			</IonHeader>
 
-			<IonContent>
-				<IonList style={{ padding: 0, background: 'transparent' }}>
+			<IonContent class="recent">
+				<IonList>
 					<IonItemGroup>
 						{played.map(played =>
 							<IonCard key={played.game.rom}>
 								<IonItemSliding>
-									<IonItem style={{ marginLeft: '-16px' }}>
-										<JunImg src={played.game.cover} style={{ maxWidth: '25%' }} />
-										<IonLabel style={{ marginLeft: '16px' }}>
+									<IonItem>
+										<JunImg src={played.game.cover} />
+										<IonLabel>
 											<h2>{played.game.name.replaceAll(/ \(.*\).*/g, '')}</h2>
 											<h3>{played.system.name}</h3>
 										</IonLabel>

@@ -26,8 +26,8 @@ export const FixSaveModal = ({ systems, dismiss, apply }) => {
 				</IonToolbar>
 			</IonHeader>
 
-			<IonContent>
-				<IonList style={{ padding: 0 }}>
+			<IonContent class="modal">
+				<IonList>
 
 					<IonItem>
 						<IonLabel>System</IonLabel>

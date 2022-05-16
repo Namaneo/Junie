@@ -47,12 +47,12 @@ export const EditCheatModal = ({ current, systems, dismiss, apply }) => {
 				</IonToolbar>
 			</IonHeader>
 
-			<IonContent>
-				<IonList style={{ padding: 0 }}>
+			<IonContent class="modal">
+				<IonList>
 
 					<IonItem>
-						<IonLabel style={{ minWidth: '60px' }}>System</IonLabel>
-						<IonSelect style={{ maxWidth: 'unset' }} interface="action-sheet" value={system} onIonChange={e => systemChanged(e.detail.value)}>
+						<IonLabel>System</IonLabel>
+						<IonSelect interface="action-sheet" value={system} onIonChange={e => systemChanged(e.detail.value)}>
 							{systems.map(system =>
 								<IonSelectOption key={system.name} value={system}>{system.name}</IonSelectOption>
 							)}
@@ -60,8 +60,8 @@ export const EditCheatModal = ({ current, systems, dismiss, apply }) => {
 					</IonItem>
 
 					<IonItem>
-						<IonLabel style={{ minWidth: '60px' }}>Game</IonLabel>
-						<IonSelect style={{ maxWidth: 'unset' }} interface="action-sheet" value={game} disabled={!system?.games} onIonChange={e => setGame(e.detail.value)}>
+						<IonLabel>Game</IonLabel>
+						<IonSelect interface="action-sheet" value={game} disabled={!system?.games} onIonChange={e => setGame(e.detail.value)}>
 							{system?.games?.map(game =>
 								<IonSelectOption key={game.name} value={game}>{game.name}</IonSelectOption>
 							)}
@@ -75,17 +75,17 @@ export const EditCheatModal = ({ current, systems, dismiss, apply }) => {
 
 					<IonItem>
 						<IonLabel>Name</IonLabel>
-						<IonInput value={name} onIonChange={e => setName(e.detail.value ?? '')} style={{ textAlign: 'right' }} />
+						<IonInput value={name} onIonChange={e => setName(e.detail.value ?? '')} />
 					</IonItem>
 
 					<IonItem>
 						<IonLabel>Order</IonLabel>
-						<IonInput type="number" value={order} min="0" onIonChange={e => setOrder(Number(e.detail.value ?? 0))} style={{ textAlign: 'right' }} />
+						<IonInput type="number" value={order} min="0" onIonChange={e => setOrder(Number(e.detail.value ?? 0))} />
 					</IonItem>
 
 					<IonItem>
 						<IonLabel>Value</IonLabel>
-						<IonTextarea value={value} onIonChange={e => setValue(e.detail.value ?? '')} autoGrow style={{ fontFamily: 'monospace', textAlign: 'right' }} />
+						<IonTextarea value={value} onIonChange={e => setValue(e.detail.value ?? '')} autoGrow />
 					</IonItem>
 
 					<IonButton expand="block" disabled={isValid()} onClick={() => validate()}>

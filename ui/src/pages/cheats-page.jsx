@@ -57,12 +57,12 @@ export const CheatsPage = () => {
 				</IonToolbar>
 			</IonHeader>
 
-			<IonContent>
+			<IonContent class="cheats">
 				<IonModal isOpen={modal}>
 					<EditCheatModal current={current} systems={systems} apply={apply} dismiss={dismiss}  />
 				</IonModal>
 
-				<IonList style={{ padding: 0, background: 'transparent' }}>
+				<IonList>
 					<IonItemGroup>
 						{cheats.map(cheat =>
 							<IonCard key={cheat.name}>

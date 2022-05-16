@@ -22,10 +22,10 @@ export const SystemsPage = () => {
 				</IonToolbar>
 			</IonHeader>
 
-			<IonContent>
+			<IonContent class="systems">
 				{systems.filter(x => x.games && x.games.length).map(system =>
-					<IonCard key={system.name} routerLink={`/games/${system.name}`} style={{ textAlign: 'center' }}>
-						<IonImg src={Helpers.getSystemCover(system)} style={{ display: 'inline-block', maxWidth: '100vh', margin: '36px 8px 8px 8px' }} />
+					<IonCard key={system.name} routerLink={`/games/${system.name}`}>
+						<IonImg src={Helpers.getSystemCover(system)} />
 						<IonCardHeader>
 							<IonCardSubtitle>{system.coreName}</IonCardSubtitle>
 						</IonCardHeader>

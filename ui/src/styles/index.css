@@ -1,0 +1,94 @@
+/*
+ * Recent
+ */
+#root .recent ion-list {
+    padding: 0; 
+    background: transparent;
+}
+
+#root .recent ion-item {
+    margin-left: -16px;
+}
+
+#root .recent ion-img {
+    max-width: 25%;
+}
+
+#root .recent ion-label {
+    margin-left: 16px;
+}
+
+
+/*
+ * Systems
+ */
+#root .systems ion-card {
+    text-align: center;
+}
+
+#root .systems ion-img {
+    display: inline-block;
+    max-width: 100vh;
+    margin: 36px 8px 8px 8px;
+}
+
+
+/*
+ * Games
+ */
+#root .games ion-card {
+    display: flex;
+    cursor: pointer
+}
+
+#root .games ion-img {
+    max-width: 25%;
+}
+
+#root .games ion-card-header {
+    display: 'flex';
+    align-items: 'center';
+}
+
+
+/*
+ * Saves
+ */
+#root .saves ion-list {
+    padding: 0;
+    background: transparent;
+}
+
+
+/*
+ * Cheats
+ */
+#root .cheats ion-list {
+    padding: 0;
+    background: transparent;
+}
+
+
+/*
+ * Modals
+ */
+#root .modal ion-list {
+    padding: 0;
+}
+
+#root .modal ion-label {
+    min-width: 60px;
+}
+
+#root .modal ion-select {
+    max-width: unset;
+}
+
+#root .modal ion-input {
+    text-align: right;
+}
+
+#root .modal ion-textarea {
+    font-family: monospace;
+    text-align: right;
+}

@@ -99,12 +99,12 @@ export const SavesPage = () => {
 				</IonToolbar>
 			</IonHeader>
 
-			<IonContent>
+			<IonContent class="saves">
 				<IonModal isOpen={modal}>
 					<FixSaveModal systems={systems} apply={apply} dismiss={dismiss}  />
 				</IonModal>
 
-				<IonList style={{ padding: 0, background: 'transparent' }}>
+				<IonList>
 					<IonItemGroup>
 						{saves.map(save =>
 							<IonCard key={save.game}>

@@ -65,12 +65,12 @@ export const GamesPage = ({ match }) => {
 				</IonToolbar>
 			</IonHeader>
 
-			<IonContent>
+			<IonContent class="games">
 				<IonLoading isOpen={loading} message="Installing..." spinner={null} />
 				{system.games?.map(game =>
-					<IonCard key={game.rom} onClick={() => install(game)} style={{ display: 'flex', cursor: 'pointer' }}>
-						<JunImg src={game.cover} style={{ maxWidth: '25%' }} />
-						<IonCardHeader style={{ display: 'flex', alignItems: 'center' }}>
+					<IonCard key={game.rom} onClick={() => install(game)}>
+						<JunImg src={game.cover} />
+						<IonCardHeader>
 							<IonCardSubtitle>{game.name}</IonCardSubtitle>
 						</IonCardHeader>
 					</IonCard>
