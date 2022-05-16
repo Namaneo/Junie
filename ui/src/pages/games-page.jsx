@@ -30,7 +30,7 @@ export const GamesPage = ({ match }) => {
 			return;
 		}
 
-		await Database.updateGame(new Game(data, system, game));
+		await Database.addGame(new Game(system, game), data);
 
 		system.games = system.games.filter(x => x.rom != game.rom);
 		setSystem({ ...system });

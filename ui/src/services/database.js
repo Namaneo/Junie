@@ -87,22 +87,18 @@ export async function getGames() {
 	return rawGames.map(file => Game.fromFile(file, systems));
 };
 
-export async function updateGame(game) {
-	const file = game.file();
+export async function addGame(game, data) {
+	const file = { path: game.path(), data: new Uint8Array(data) };
 
-	await execute(async db => {
-		const record = await db.table('files').get(file.path);
-		if (record)
-			await db.table('files').update(file.path, file);
-		else
-			await db.table('files').add(file, file.path);
-	});
+	await execute(async db => await db.table('files').add(file, file.path));
+
+	delete file.data;
 
 	return await getGames();
 }
 
 export async function removeGame(game) {
-	await execute(db => db.table('files').delete(game.file().path));
+	await execute(db => db.table('files').delete(game.path()));
 
 	return await getGames();
 }

@@ -17,8 +17,8 @@ export const RecentPage = () => {
 		const system = await Requests.getSystemByGame(files[0].name);
 
 		const data = await files[0].arrayBuffer();
-		const game = new Game(data, system, { rom: files[0].name, });
-		const games = await Database.updateGame(game);
+		const game = new Game(system, { rom: files[0].name, });
+		const games = await Database.addGame(game, data);
 
 		setPlayed(games);
 	}

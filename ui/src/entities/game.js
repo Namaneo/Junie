@@ -3,10 +3,8 @@ import * as Helpers from '../services/helpers'
 export class Game {
 	system;
 	game;
-	data;
 
-	constructor(data, system, game) {
-		this.data = data;
+	constructor(system, game) {
 		this.system = system;
 		this.game = game;
 	}
@@ -15,7 +13,6 @@ export class Game {
 		const system_name = Game.match(file.path, 1);
 		const game_rom = Game.match(file.path, 2);
 
-		const data = file.data;
 		const system = systems.find(system => system.name == system_name);
 		let game = system.games.find(game => game.rom == game_rom);
 
@@ -27,18 +24,11 @@ export class Game {
 			}
 		}
 
-		return new Game(data, system, game);
+		return new Game(system, game);
 	}
 
 	path() {
 		return `/games/${this.system.name}/${this.game.rom}`;
-	}
-
-	file() {
-		return { 
-			path: this.path(),
-			data: new Uint8Array(this.data),
-		}
 	}
 
     static match(path, index) {
