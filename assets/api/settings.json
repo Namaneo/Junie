@@ -4,10 +4,7 @@
 		"App": "app"
 	},
 	"Resources": {
-		"UI": "assets/ui",
 		"API": "assets/api",
-		"App": "assets/app",
 		"Games": "../games",
-		"System": "../system"
 	}
 }
