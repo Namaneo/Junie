@@ -104,12 +104,6 @@ static void jun_app_configure(_JUN_App *this)
 	// Destroy settings instance
 	JUN_SettingsDestroy(&settings);
 
-	// Store game data
-	size_t game_size = 0;
-	void *game = JUN_InteropReadFile(this->game_path, &game_size);
-	JUN_FilesystemSaveFile(this->game_path, game, game_size);
-	MTY_Free(game);
-
 	MTY_Free(json);
 }
 

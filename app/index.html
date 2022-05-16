@@ -12,147 +12,151 @@
 
 	<script type="text/javascript">
 
-		//Initialize settings
-		//TODO send to native through file?
-		const settings = {
-			"language": "ENGLISH",
-			"bindings": {
-				"A": "X",
-				"B": "Z",
-				"X": "S",
-				"Y": "A",
-				"UP": "UP",
-				"DOWN": "DOWN",
-				"LEFT": "LEFT",
-				"RIGHT": "RIGHT",
-				"L": "C",
-				"R": "D",
-				"SELECT": "ENTER",
-				"START": "SPACE"
-			},
-			"melonDS": {
-				"melonds_touch_mode": "Touch",
-				"melonds_randomize_mac_address": "enabled"
-			}
-		};
-
-		//Override logging functions
-		const log = console.log;
-		const error = console.error;
-
-		console.log = (data) => data && data != '\n' && log(data);
-		console.error = (data) => data && data != '\n' && error(data);
-
-		//Unlock audio context
-		const unlock = () => {
-			if (MTY.audio?.ctx?.state == 'suspended')
-				MTY.audio.ctx.resume();
-		};
-
-		window.addEventListener('click', unlock);
-		window.addEventListener('touchend', unlock);
-
-		//Prepare and open database
 		let database, files = {};
-		const request = window.indexedDB.open('Junie', 10);
 
-		//Check if a schema update is required
-		request.onupgradeneeded = event => {
-			const database = event.target.result;
+		const initialize_database = () => new Promise((resolve, reject) => {
+			//Prepare and open database
+			const request = window.indexedDB.open('Junie', 10);
 
-			if (event.oldVersion < 1) {
-				database.createObjectStore('files', { keyPath: 'path', unique: true });
-			}
-		};
+			//Check if a schema update is required
+			request.onupgradeneeded = event => {
+				const database = event.target.result;
 
-		//Print error if anything wrong happens
-		request.onerror = event => console.log(event);
-
-		//Retrieve all files in memory
-		request.onsuccess = event => {
-			database = event.target.result;
-
-			const transaction = database.transaction('files', 'readwrite');
-			const store = transaction.objectStore('files');
-
-			store.getAll().onsuccess = event => {
-				for (const file of event.target.result) {
-					files[file.path] = mty_b64_to_buf(file.data);
+				if (event.oldVersion < 1) {
+					database.createObjectStore('files', { keyPath: 'path', unique: true });
 				}
-			}
-		};
+			};
 
-		//Retrieve context parameters
-		const params = decodeURI(window.location.hash).split('/');
-
-		//Adjust request URL prefixes
-		const _fetch = window.fetch;
-		window.fetch = request => {
-			request = request.replace(location.origin, '');
-
-			const decoded = decodeURI(request);
-			if (files[decoded]) {
-				const blob = new Blob([files[decoded]]);
-				return _fetch(URL.createObjectURL(blob));
+			//Print error if anything wrong happens
+			request.onerror = event => {
+				console.log(event);
+				reject();
 			}
 
-			request = location.pathname + request;
-			request = request.replace('//', '/');
-			return _fetch(request);
-		};
+			//Retrieve all files in memory
+			request.onsuccess = event => {
+				database = event.target.result;
 
-		//Start core execution
-		MTY_Start('junie.wasm', {
-			js_get_host:  (value, length) => MTY_StrToC(window.location.hostname, value, length),
-			js_get_port:  ()              => window.location.port ?? 0,
-			js_is_secure: ()              => location.protocol.indexOf('https') != -1,
-
-			js_get_system: (value, length) => MTY_StrToC(params[1], value, length),
-			js_get_game:   (value, length) => MTY_StrToC(params[2], value, length),
-
-			js_read_dir: (path, index, file, length) => {
-				path = MTY_StrToJS(path);
-
-				const filtered = Object.keys(files).filter(x => x.startsWith(path));
-				if (index >= filtered.length)
-					return false;
-				
-				MTY_StrToC(filtered[index], file, length);
-
-				return true;
-			},
-			js_read_file: (path, length) => {
-				const file = files[MTY_StrToJS(path)];
-				if (!file)
-					return null;
-
-				const result = MTY_Alloc(file.length, 1);
-				const view = new Uint8Array(mty_mem(), result, file.length);
-				view.set(file);
-
-				if (length)
-					MTY_SetUint32(length, file.length);
-
-				return result;
-			},
-			js_write_file: (cpath, cdata, length) => {
 				const transaction = database.transaction('files', 'readwrite');
 				const store = transaction.objectStore('files');
 
-				const buffer = new Uint8Array(length);
-				const data = new Uint8Array(mty_mem(), cdata, length);
-				buffer.set(data);
+				store.getAll().onsuccess = event => {
+					for (const file of event.target.result) {
+						if (!file.data.byteLength) {
+							file.data = new Uint8Array(mty_b64_to_buf(file.data));
+							store.put(file);
+						}
+						files[file.path] = file.data;
+					}
+					resolve();
+				}
+			};
+		});
 
-				const path = MTY_StrToJS(cpath)
+		const start = async () => {
 
-				files[path] = data;
+			//Initialize settings
+			//TODO send to native through file?
+			const settings = {
+				"language": "ENGLISH",
+				"bindings": {
+					"A": "X",
+					"B": "Z",
+					"X": "S",
+					"Y": "A",
+					"UP": "UP",
+					"DOWN": "DOWN",
+					"LEFT": "LEFT",
+					"RIGHT": "RIGHT",
+					"L": "C",
+					"R": "D",
+					"SELECT": "ENTER",
+					"START": "SPACE"
+				},
+				"melonDS": {
+					"melonds_touch_mode": "Touch",
+					"melonds_randomize_mac_address": "enabled"
+				}
+			};
 
-				store.put({ path: path, data: mty_buf_to_b64(data) });
-			},
-		}, () => history.back(), 'webgl');
+			//Override logging functions
+			const log = console.log;
+			const error = console.error;
 
-		//Prevent mobile keyboard
-		MTY.clip.readOnly = true;
+			console.log = (data) => data && data != '\n' && log(data);
+			console.error = (data) => data && data != '\n' && error(data);
+
+			//Unlock audio context
+			const unlock = () => {
+				if (MTY.audio?.ctx?.state == 'suspended')
+					MTY.audio.ctx.resume();
+			};
+
+			window.addEventListener('click', unlock);
+			window.addEventListener('touchend', unlock);
+
+			await initialize_database();
+
+			//Retrieve context parameters
+			const params = decodeURI(window.location.hash).split('/');
+
+			//Start core execution
+			await MTY_Start('junie.wasm', {
+				js_get_host:  (value, length) => MTY_StrToC(window.location.hostname, value, length),
+				js_get_port:  ()              => window.location.port ?? 0,
+				js_is_secure: ()              => location.protocol.indexOf('https') != -1,
+
+				js_get_system: (value, length) => MTY_StrToC(params[1], value, length),
+				js_get_game:   (value, length) => MTY_StrToC(params[2], value, length),
+
+				js_read_dir: (path, index, file, length) => {
+					path = MTY_StrToJS(path);
+
+					const filtered = Object.keys(files).filter(x => x.startsWith(path));
+					if (index >= filtered.length)
+						return false;
+					
+					MTY_StrToC(filtered[index], file, length);
+
+					return true;
+				},
+				js_read_file: (path, length) => {
+					const file = files[MTY_StrToJS(path)];
+					if (!file)
+						return null;
+
+					const result = MTY_Alloc(file.length, 1);
+					const view = new Uint8Array(mty_mem(), result, file.length);
+					view.set(file);
+
+					if (length)
+						MTY_SetUint32(length, file.length);
+
+					return result;
+				},
+				js_write_file: (cpath, cdata, length) => {
+					const transaction = database.transaction('files', 'readwrite');
+					const store = transaction.objectStore('files');
+
+					const buffer = new Uint8Array(length);
+					const data = new Uint8Array(mty_mem(), cdata, length);
+					buffer.set(data);
+
+					const path = MTY_StrToJS(cpath)
+
+					files[path] = data;
+
+					store.put({ path: path, data: new Uint8Array(data) });
+				},
+			}, () => history.back(), 'webgl');
+
+			//Prevent mobile keyboard
+			MTY.clip.readOnly = true;
+
+		}
+
+		start();
+
 	</script>
 </body>
 
