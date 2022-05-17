@@ -2,98 +2,75 @@
 
 #define PATH_SIZE 256
 
-static void set_language(JUN_Settings *context)
+static void set_language(JUN_Settings *this)
 {
 	char value[PATH_SIZE];
-	if (MTY_JSONObjGetString(context->json.root, "language", value, PATH_SIZE))
-	{
-		context->language = MTY_Strdup(value);
-	}
+	if (MTY_JSONObjGetString(this->json, "language", value, PATH_SIZE))
+		this->language = MTY_Strdup(value);
 }
 
-static void set_bindings(JUN_Settings *context)
+static void set_bindings(JUN_Settings *this)
 {
 	char value[PATH_SIZE];
 
-	const MTY_JSON *bindings = MTY_JSONObjGetItem(context->json.root, "bindings");
+	const MTY_JSON *bindings = MTY_JSONObjGetItem(this->json, "bindings");
 
 	size_t lenght = MTY_JSONGetLength(bindings);
-	for (size_t i = 0; i < lenght; ++i)
-	{
+	for (size_t i = 0; i < lenght; ++i) {
 		const char *key = MTY_JSONObjGetKey(bindings, i);
 		MTY_JSONObjGetString(bindings, key, value, PATH_SIZE);
-
-		MTY_HashSet(context->bindings, key, MTY_Strdup(value));
+		MTY_HashSet(this->bindings, key, MTY_Strdup(value));
 	}
 }
 
-static void set_dependencies(JUN_Settings *context)
+static void set_configurations(JUN_Settings *this)
 {
 	char value[PATH_SIZE];
 
-	const MTY_JSON *dependencies = MTY_JSONObjGetItem(context->json.core, "dependencies");
-
-	size_t lenght = MTY_JSONGetLength(dependencies);
-	for (size_t i = 0; i < lenght; ++i)
-	{
-		MTY_JSONArrayGetString(dependencies, i, value, PATH_SIZE);
-
-		MTY_ListAppend(context->dependencies, MTY_Strdup(value));
-	}
-}
-
-static void set_configurations(JUN_Settings *context)
-{
-	char value[PATH_SIZE];
-
-	const MTY_JSON *configurations = MTY_JSONObjGetItem(context->json.core, "configurations");
+	const MTY_JSON *configurations = MTY_JSONObjGetItem(this->json, this->core_name);
+	if (!configurations)
+		return;
 
 	size_t lenght = MTY_JSONGetLength(configurations);
-	for (size_t i = 0; i < lenght; ++i)
-	{
+	for (size_t i = 0; i < lenght; ++i) {
 		const char *key = MTY_JSONObjGetKey(configurations, i);
 		MTY_JSONObjGetString(configurations, key, value, PATH_SIZE);
-
-		MTY_HashSet(context->configurations, key, MTY_Strdup(value));
+		MTY_HashSet(this->configurations, key, MTY_Strdup(value));
 	}
 }
 
-JUN_Settings *JUN_SettingsInitialize(const char *buffer, const char *core_name)
+JUN_Settings *JUN_SettingsCreate(const char *core_name, const MTY_JSON *json)
 {
-	JUN_Settings *context = MTY_Alloc(1, sizeof(JUN_Settings));
+	JUN_Settings *this = MTY_Alloc(1, sizeof(JUN_Settings));
 
-	context->json.root = MTY_JSONParse(buffer);
-	context->json.core = MTY_JSONObjGetItem(context->json.root, core_name);
+	this->core_name = core_name;
+	this->json = json;
 
-	context->dependencies = MTY_ListCreate();
-	context->configurations = MTY_HashCreate(0);
-	context->bindings = MTY_HashCreate(0);
+	this->dependencies = MTY_ListCreate();
+	this->configurations = MTY_HashCreate(0);
+	this->bindings = MTY_HashCreate(0);
 
-	set_language(context);
-	set_bindings(context);
+	set_language(this);
+	set_bindings(this);
+	set_configurations(this);
 
-	if (context->json.core)
-	{
-		set_dependencies(context);
-		set_configurations(context);
-	}
-
-	return context;
+	return this;
 }
 
-void JUN_SettingsDestroy(JUN_Settings **context)
+void JUN_SettingsDestroy(JUN_Settings **settings)
 {
-	JUN_Settings *ctx = *context;
+	if (!settings || !*settings)
+		return;
 
-	MTY_JSONDestroy(&ctx->json.root);
+	JUN_Settings *this = *settings;
 
-	MTY_ListDestroy(&ctx->dependencies, MTY_Free);
-	MTY_HashDestroy(&ctx->configurations, MTY_Free);
-	MTY_HashDestroy(&ctx->bindings, MTY_Free);
+	MTY_ListDestroy(&this->dependencies, MTY_Free);
+	MTY_HashDestroy(&this->configurations, MTY_Free);
+	MTY_HashDestroy(&this->bindings, MTY_Free);
 
-	if (ctx->language)
-		MTY_Free(ctx->language);
+	if (this->language)
+		MTY_Free(this->language);
 
-	MTY_Free(*context);
-	*context = NULL;
+	MTY_Free(this);
+	*settings = NULL;
 }

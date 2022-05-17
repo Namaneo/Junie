@@ -55,30 +55,6 @@
 
 		const start = async () => {
 
-			//Initialize settings
-			//TODO send to native through file?
-			const settings = {
-				"language": "ENGLISH",
-				"bindings": {
-					"A": "X",
-					"B": "Z",
-					"X": "S",
-					"Y": "A",
-					"UP": "UP",
-					"DOWN": "DOWN",
-					"LEFT": "LEFT",
-					"RIGHT": "RIGHT",
-					"L": "C",
-					"R": "D",
-					"SELECT": "ENTER",
-					"START": "SPACE"
-				},
-				"melonDS": {
-					"melonds_touch_mode": "Touch",
-					"melonds_randomize_mac_address": "enabled"
-				}
-			};
-
 			//Override logging functions
 			const log = console.log;
 			const error = console.error;
@@ -148,7 +124,7 @@
 
 					store.put({ path: path, data: new Uint8Array(data) });
 				},
-			}, () => history.back(), 'webgl');
+			}, () => location.reload(), 'webgl');
 
 			//Prevent mobile keyboard
 			MTY.clip.readOnly = true;

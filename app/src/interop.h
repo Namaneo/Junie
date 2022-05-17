@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define PATH_SIZE 256
+
 char *JUN_InteropGetSystem();
 char *JUN_InteropGetGame();
 

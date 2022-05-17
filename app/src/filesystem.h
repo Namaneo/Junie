@@ -29,7 +29,7 @@ struct retro_vfs_file_handle
 	uint32_t height;
 };
 
-void JUN_FilesystemInitialize();
+void JUN_FilesystemCreate();
 JUN_Files *JUN_FilesystemGetInterface();
 uint32_t JUN_FilesystemGetInterfaceVersion();
 JUN_File *JUN_FilesystemGetFiles();

@@ -6,6 +6,29 @@ import { JunImg } from '../components/jun-img';
 import * as Requests from '../services/requests';
 import * as Database from '../services/database';
 
+// TODO Should be generated from a settings page
+const settings = {
+	"language": "ENGLISH",
+	"bindings": {
+		"A": "X",
+		"B": "Z",
+		"X": "S",
+		"Y": "A",
+		"UP": "UP",
+		"DOWN": "DOWN",
+		"LEFT": "LEFT",
+		"RIGHT": "RIGHT",
+		"L": "C",
+		"R": "D",
+		"SELECT": "ENTER",
+		"START": "SPACE"
+	},
+	"melonDS": {
+		"melonds_touch_mode": "Touch",
+		"melonds_randomize_mac_address": "enabled"
+	}
+};
+
 export const RecentPage = () => {
 
 	const [played, setPlayed] = useState([])
@@ -25,6 +48,16 @@ export const RecentPage = () => {
 
 	const deleteGame = async (game) => {
 		setPlayed(await Database.removeGame(game));
+	}
+
+	const start_game = async (played) => {
+		await junie_start_game({
+			system: played.system.name,
+			rom: played.game.rom,
+			settings: settings,
+		});
+
+		window.frameElement.style.display = 'none';
 	}
 
 	useIonViewWillEnter(async () => {
@@ -60,7 +93,7 @@ export const RecentPage = () => {
 											<h2>{played.game.name.replaceAll(/ \(.*\).*/g, '')}</h2>
 											<h3>{played.system.name}</h3>
 										</IonLabel>
-										<IonButton href={`app/#/${played.system.name}/${played.game.rom}`}>Play</IonButton>
+										<IonButton onClick={() => start_game(played)}>Play</IonButton>
 									</IonItem>
 									<IonItemOptions side="end">
 										<IonItemOption color="danger" onClick={() => deleteGame(played)}>Delete</IonItemOption>

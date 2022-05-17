@@ -15,7 +15,7 @@ struct JUN_ConfigurationElement
 	MTY_List *values;
 };
 
-JUN_Configuration *JUN_ConfigurationInitialize()
+JUN_Configuration *JUN_ConfigurationCreate()
 {
 	JUN_Configuration *this = MTY_Alloc(1, sizeof(JUN_Configuration));
 
@@ -33,7 +33,7 @@ char *JUN_ConfigurationGet(JUN_Configuration *this, const char *key)
 	if (value)
 		return value;
 
-	return (char *)MTY_ListGetFirst(element->values)->value;
+	return (char *) MTY_ListGetFirst(element->values)->value;
 }
 
 void JUN_ConfigurationSet(JUN_Configuration *this, const char *key, const char *value)
@@ -52,8 +52,7 @@ void JUN_ConfigurationSet(JUN_Configuration *this, const char *key, const char *
 	saveptr = NULL;
 
 	char *config = MTY_Strtok(options, "|", &saveptr);
-	while (config)
-	{
+	while (config) {
 		MTY_ListAppend(element->values, MTY_Strdup(config));
 
 		config = MTY_Strtok(NULL, "|", &saveptr);
@@ -69,11 +68,16 @@ void JUN_ConfigurationOverride(JUN_Configuration *this, const char *key, const c
 	MTY_HashSet(this->overrides, MTY_Strdup(key), MTY_Strdup(value));
 }
 
-void JUN_ConfigurationDestroy(JUN_Configuration **this)
+void JUN_ConfigurationDestroy(JUN_Configuration **configuration)
 {
-	MTY_HashDestroy(&(*this)->values, MTY_Free);
-	MTY_HashDestroy(&(*this)->overrides, MTY_Free);
+	if (!configuration || !*configuration)
+		return;
 
-	MTY_Free(*this);
-	*this = NULL;
+	JUN_Configuration *this = *configuration;
+
+	MTY_HashDestroy(&this->values, MTY_Free);
+	MTY_HashDestroy(&this->overrides, MTY_Free);
+
+	MTY_Free(this);
+	*configuration = NULL;
 }

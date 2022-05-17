@@ -49,10 +49,21 @@ static void audio_sample(int16_t left, int16_t right)
 	audio_sample_batch(buf, 1);
 }
 
-static bool start_game()
+static void start_game(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, void *opaque)
 {
-	JUN_CoreSetCallbacks(app->core, &(JUN_CoreCallbacks)
-	{
+	char system[PATH_SIZE] = {0};
+	MTY_JSONObjGetString(json, "system", system, PATH_SIZE);
+
+	char rom[PATH_SIZE] = {0};
+	MTY_JSONObjGetString(json, "rom", rom, PATH_SIZE);
+
+	const MTY_JSON *settings = MTY_JSONObjGetItem(json, "settings");
+
+	JUN_AppLoadCore(app, system, rom, settings);
+
+	// return; // TODO Well...
+
+	JUN_CoreSetCallbacks(app->core, & (JUN_CoreCallbacks) {
 		environment,
 		video_refresh,
 		audio_sample,
@@ -61,8 +72,10 @@ static bool start_game()
 		input_state,
 	});
 
-	if (!JUN_CoreStartGame(app->core))
-		return false;
+	if (!JUN_CoreStartGame(app->core)) {
+		MTY_WebviewInteropReturn(ctx, serial, false, NULL);
+		return;
+	}
 
 	double sample_rate = JUN_CoreGetSampleRate(app->core);
 	double frames_per_second = JUN_CoreGetFramesPerSecond(app->core);
@@ -73,13 +86,16 @@ static bool start_game()
 
 	JUN_CoreSetCheats(app->core);
 
-	return true;
+	MTY_WebviewInteropReturn(ctx, serial, true, NULL);
 }
 
 static bool app_func(void *opaque)
 {
 	// TODO useless for now
 	// JUN_VideoDrawLoadingScreen(app->video);
+
+	if (!JUN_CoreHasStarted(app->core))
+		return !JUN_StateShouldExit(app->state);
 
 	for (int i = 0; i < JUN_StateGetFastForward(app->state); ++i)
 		JUN_CoreRun(app->core);
@@ -107,6 +123,8 @@ static void event_func(const MTY_Event *event, void *opaque)
 {
 	JUN_InputSetStatus(app->input, event);
 
+	MTY_PrintEvent(event);
+
 	if (event->type == MTY_EVENT_CLOSE)
 		JUN_StateExit(app->state);
 }
@@ -119,15 +137,21 @@ static void log_func(const char *message, void *opaque)
 		printf("%s", message);
 }
 
+static void on_ui_created(MTY_Webview *webview, void *opaque)
+{
+	MTY_WebviewInteropBind(webview, "junie_start_game", start_game, NULL);
+}
+
 int main(int argc, char *argv[])
 {
 	MTY_SetLogFunc(log_func, NULL);
 
-	JUN_EnumsInitialize();
-	JUN_FilesystemInitialize();
-	app = JUN_AppInitialize(app_func, event_func);
+	JUN_EnumsCreate();
+	JUN_FilesystemCreate();
+	app = JUN_AppCreate(app_func, event_func);
 
-	start_game();
+	JUN_VideoCreateUI(app->video, on_ui_created, NULL);
+
 	JUN_VideoStart(app->video);
 
 	JUN_AppDestroy(&app);

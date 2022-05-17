@@ -4,19 +4,14 @@
 
 #include "toolbox.h"
 
-char *JUN_ToolboxReplaceExtension(const char *str, const char *ext)
+char *JUN_ToolboxRemoveExtension(const char *str)
 {
-	if (!str || !ext)
+	if (!str)
 		return NULL;
 
-	char *name = MTY_Strdup(str);
-	*strrchr(name, '.') = '\0';
-
-	char *result = strlen(ext) 
-		? MTY_SprintfD("%s.%s", name, ext)
-		: MTY_SprintfD("%s", name);
-
-	MTY_Free(name);
+	size_t length = (uint64_t) strrchr(str, '.') - (uint64_t) str;
+	char *result = MTY_Alloc(length + 1, 1);
+	memcpy(result, str, length);
 
 	return result;
 }

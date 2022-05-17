@@ -2,8 +2,7 @@
 
 #include "libretro.h"
 
-struct JUN_Enums
-{
+struct JUN_Enums {
 	MTY_Hash *environments;
 	MTY_Hash *languages;
 	MTY_Hash *joypad;
@@ -12,10 +11,10 @@ struct JUN_Enums
 
 static JUN_Enums *this;
 
-#define register_environment(this, env) MTY_HashSet(this->environments, #env, (void *)env)
+#define register_environment(this, env)   MTY_HashSet(this->environments, #env, (void *)env)
 #define register_language(this, language) MTY_HashSet(this->languages, #language, (void *)language)
-#define register_joypad_key(this, key) MTY_HashSet(this->joypad, #key, (void *)key)
-#define register_keyboard_key(this, key) MTY_HashSet(this->keyboard, #key, (void *)key)
+#define register_joypad_key(this, key)    MTY_HashSet(this->joypad, #key, (void *)key)
+#define register_keyboard_key(this, key)  MTY_HashSet(this->keyboard, #key, (void *)key)
 
 static void register_environments()
 {
@@ -275,7 +274,7 @@ static void register_keyboard()
 	register_keyboard_key(this, MTY_KEY_MAX);
 }
 
-void JUN_EnumsInitialize()
+void JUN_EnumsCreate()
 {
 	this = MTY_Alloc(1, sizeof(JUN_Enums));
 
@@ -287,16 +286,15 @@ void JUN_EnumsInitialize()
 
 static MTY_Hash *get_hash(JUN_EnumType type)
 {
-	switch (type)
-	{
-	case JUN_ENUM_ENVIRONMENT:
-		return this->environments;
-	case JUN_ENUM_LANGUAGE:
-		return this->languages;
-	case JUN_ENUM_JOYPAD:
-		return this->joypad;
-	case JUN_ENUM_KEYBOARD:
-		return this->keyboard;
+	switch (type) {
+		case JUN_ENUM_ENVIRONMENT:
+			return this->environments;
+		case JUN_ENUM_LANGUAGE:
+			return this->languages;
+		case JUN_ENUM_JOYPAD:
+			return this->joypad;
+		case JUN_ENUM_KEYBOARD:
+			return this->keyboard;
 	}
 }
 
@@ -304,7 +302,7 @@ uint32_t JUN_EnumsGetInt(JUN_EnumType type, const char *key)
 {
 	MTY_Hash *hash = get_hash(type);
 
-	return (uint32_t)MTY_HashGet(hash, key);
+	return (uint32_t) MTY_HashGet(hash, key);
 }
 
 const char *JUN_EnumsGetString(JUN_EnumType type, uint32_t value)
@@ -315,9 +313,8 @@ const char *JUN_EnumsGetString(JUN_EnumType type, uint32_t value)
 	const char *key = NULL;
 	uint32_t current = 0;
 
-	while (MTY_HashGetNextKey(hash, &iter, &key))
-	{
-		current = (uint32_t)MTY_HashGet(hash, key);
+	while (MTY_HashGetNextKey(hash, &iter, &key)) {
+		current = (uint32_t) MTY_HashGet(hash, key);
 
 		if (current == value)
 			break;

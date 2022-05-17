@@ -56,6 +56,7 @@ assets:
 	@mkdir -p $(INC_DIR)
 	@cp $(LIB_DIR)/matoya/src/matoya.h $(INC_DIR)
 	@cp $(LIB_DIR)/retro/include/libretro.h $(INC_DIR)
+	@xxd -i ../ui/build/index.html > $(INC_DIR)/ui_index.h
 	@xxd -i $(RES_DIR)/menu.png > $(INC_DIR)/res_menu.h
 	@xxd -i $(RES_DIR)/loading.png > $(INC_DIR)/res_loading.h
 	@xxd -i $(RES_DIR)/controller_left.png > $(INC_DIR)/res_controller_left.h

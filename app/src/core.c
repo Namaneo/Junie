@@ -1,5 +1,6 @@
 #include <string.h>
 
+#include "enums.h"
 #include "filesystem.h"
 #include "interop.h"
 
@@ -102,11 +103,7 @@ struct JUN_Core {
 	void *handle;
 	bool initialized;
 
-	char *game_path;
-	char *state_path;
-	char *sram_path;
-	char *rtc_path;
-	char *cheats_path;
+	MTY_Hash *paths;
 
 	MTY_Time last_save;
 
@@ -171,7 +168,7 @@ PROTOTYPES(mgba);
 PROTOTYPES(quicknes);
 PROTOTYPES(snes9x);
 
-static void jun_core_initialize()
+static void jun_core_Create()
 {
 	if (CORES.initialized)
 		return;
@@ -186,19 +183,15 @@ static void jun_core_initialize()
 }
 
 // TODO: ugly parameters here, must be improved
-JUN_Core *JUN_CoreInitialize(JUN_CoreType type, const char *game_path, const char *state_path, const char *sram_path, const char *rtc_path, const char *cheats_path)
+JUN_Core *JUN_CoreCreate(JUN_CoreType type, MTY_Hash *paths)
 {
 	JUN_Core *this = MTY_Alloc(1, sizeof(JUN_Core));
 
-	this->configuration = JUN_ConfigurationInitialize();
+	this->configuration = JUN_ConfigurationCreate();
 
-	this->game_path = MTY_Strdup(game_path);
-	this->state_path = MTY_Strdup(state_path);
-	this->sram_path = MTY_Strdup(sram_path);
-	this->rtc_path = MTY_Strdup(rtc_path);
-	this->cheats_path = MTY_Strdup(cheats_path);
+	this->paths = paths;
 
-	jun_core_initialize();
+	jun_core_Create();
 
 	this->sym = 
 		type == JUN_CORE_GENESIS  ? &CORES.genesis  :
@@ -213,7 +206,7 @@ JUN_Core *JUN_CoreInitialize(JUN_CoreType type, const char *game_path, const cha
 
 const MTY_JSON *JUN_CoreGetDefaultConfiguration(JUN_CoreType type)
 {
-	jun_core_initialize();
+	jun_core_Create();
 
 	return
 		type == JUN_CORE_GENESIS  ? CORES.genesis.configuration  :
@@ -255,7 +248,8 @@ bool JUN_CoreStartGame(JUN_Core *this)
 
 	this->sym->retro_get_system_info(&this->system);
 
-	JUN_File *game = JUN_FilesystemGetExistingFile(this->game_path);
+	const char *game_path = MTY_HashGetInt(this->paths, JUN_FILE_GAME);
+	JUN_File *game = JUN_FilesystemGetExistingFile(game_path);
 
 	this->game.path = game->path;
 	this->game.size = game->size;
@@ -270,6 +264,11 @@ bool JUN_CoreStartGame(JUN_Core *this)
 	this->sym->retro_get_system_av_info(&this->av);
 
 	return this->initialized;
+}
+
+bool JUN_CoreHasStarted(JUN_Core *this)
+{
+	return this && this->initialized;
 }
 
 void JUN_CoreRun(JUN_Core *this)
@@ -297,8 +296,11 @@ void JUN_CoreSaveMemories(JUN_Core *this)
 
 	this->last_save = MTY_GetTime();
 
-	save_memory(this, RETRO_MEMORY_SAVE_RAM, this->sram_path);
-	save_memory(this, RETRO_MEMORY_RTC, this->rtc_path);
+	const char *sram_path = MTY_HashGetInt(this->paths, JUN_FILE_SRAM);
+	const char *rtc_path = MTY_HashGetInt(this->paths, JUN_FILE_RTC);
+
+	save_memory(this, RETRO_MEMORY_SAVE_RAM, sram_path);
+	save_memory(this, RETRO_MEMORY_RTC, rtc_path);
 }
 
 static void restore_memory(JUN_Core *this, uint32_t type, const char *path)
@@ -320,8 +322,11 @@ static void restore_memory(JUN_Core *this, uint32_t type, const char *path)
 
 void JUN_CoreRestoreMemories(JUN_Core *this)
 {
-	restore_memory(this, RETRO_MEMORY_SAVE_RAM, this->sram_path);
-	restore_memory(this, RETRO_MEMORY_RTC, this->rtc_path);
+	const char *sram_path = MTY_HashGetInt(this->paths, JUN_FILE_SRAM);
+	const char *rtc_path = MTY_HashGetInt(this->paths, JUN_FILE_RTC);
+
+	restore_memory(this, RETRO_MEMORY_SAVE_RAM, sram_path);
+	restore_memory(this, RETRO_MEMORY_RTC, rtc_path);
 }
 
 void JUN_CoreSetCheats(JUN_Core *this)
@@ -329,7 +334,9 @@ void JUN_CoreSetCheats(JUN_Core *this)
 	char *path = NULL;
 	size_t index = 0;
 
-	while (JUN_InteropReadDir(this->cheats_path, index++, &path)) {
+	const char *cheats_path = MTY_HashGetInt(this->paths, JUN_FOLDER_CHEATS);
+
+	while (JUN_InteropReadDir(cheats_path, index++, &path)) {
 		void *cheat = JUN_InteropReadFile(path, NULL);
 		MTY_JSON *json = MTY_JSONParse(cheat);
 
@@ -367,7 +374,8 @@ void JUN_CoreSaveState(JUN_Core *this)
 
 	this->sym->retro_serialize(data, size);
 
-	JUN_FilesystemSaveFile(this->state_path, data, size);
+	const char *state_path = MTY_HashGetInt(this->paths, JUN_FILE_STATE);
+	JUN_FilesystemSaveFile(state_path, data, size);
 
 	MTY_Free(data);
 }
@@ -376,7 +384,8 @@ void JUN_CoreRestoreState(JUN_Core *this)
 {
 	size_t size = this->sym->retro_serialize_size();
 
-	JUN_File *file = JUN_FilesystemGetExistingFile(this->state_path);
+	const char *state_path = MTY_HashGetInt(this->paths, JUN_FILE_STATE);
+	JUN_File *file = JUN_FilesystemGetExistingFile(state_path);
 	if (!file)
 		return;
 
@@ -391,11 +400,6 @@ void JUN_CoreDestroy(JUN_Core **core)
 	JUN_Core *this = *core;
 
 	JUN_ConfigurationDestroy(&this->configuration);
-
-	MTY_Free(this->game_path);
-	MTY_Free(this->sram_path);
-	MTY_Free(this->rtc_path);
-	MTY_Free(this->cheats_path);
 
 	if (this->initialized)
 		this->sym->retro_deinit();

@@ -7,7 +7,7 @@ struct JUN_Audio
 
 #define TARGET_FPS 60.0
 
-JUN_Audio *JUN_AudioInitialize()
+JUN_Audio *JUN_AudioCreate()
 {
 	JUN_Audio *this = MTY_Alloc(1, sizeof(JUN_Audio));
 
@@ -27,10 +27,15 @@ void JUN_AudioQueue(JUN_Audio *this, const int16_t *data, size_t frames)
 	MTY_AudioQueue(this->instance, data, frames);
 }
 
-void JUN_AudioDestroy(JUN_Audio **this)
+void JUN_AudioDestroy(JUN_Audio **audio)
 {
-	MTY_AudioDestroy(&(*this)->instance);
+	if (!audio || !*audio)
+		return;
 
-	MTY_Free(*this);
-	*this = NULL;
+	JUN_Audio *this = *audio;
+
+	MTY_AudioDestroy(&this->instance);
+
+	MTY_Free(this);
+	*audio = NULL;
 }

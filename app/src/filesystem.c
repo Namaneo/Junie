@@ -41,7 +41,7 @@ static int closedir(JUN_Directory *dirstream);
 
 /* Public */
 
-void JUN_FilesystemInitialize()
+void JUN_FilesystemCreate()
 {
 	files = MTY_Alloc(MAX_FILES, sizeof(JUN_File));
 
@@ -90,10 +90,8 @@ JUN_File *JUN_FilesystemGetFiles()
 
 JUN_File *JUN_FilesystemGetNewFile(const char *path)
 {
-	for (int i = 0; i < MAX_FILES; ++i)
-	{
-		if (!files[i].exists)
-		{
+	for (int i = 0; i < MAX_FILES; ++i) {
+		if (!files[i].exists) {
 			files[i].exists = true;
 			files[i].path = MTY_Strdup(path);
 
@@ -106,16 +104,13 @@ JUN_File *JUN_FilesystemGetNewFile(const char *path)
 JUN_File *JUN_FilesystemGetExistingFile(const char *path)
 {
 	for (int i = 0; i < MAX_FILES; ++i)
-	{
 		if (files[i].exists && strcmp(files[i].path, path) == 0)
 			return &files[i];
-	}
 
 	size_t size;
 	void *buffer = JUN_InteropReadFile(path, &size);
 
-	if (buffer)
-	{
+	if (buffer) {
 		JUN_File *file = JUN_FilesystemGetNewFile(path);
 
 		file->buffer = buffer;
@@ -146,8 +141,7 @@ void JUN_FilesystemSaveFile(const char *path, const void *buffer, size_t length)
 
 void JUN_FilesystemDestroy()
 {
-	for (int i = 0; i < MAX_FILES; ++i)
-	{
+	for (int i = 0; i < MAX_FILES; ++i) {
 		if (files[i].path)
 			MTY_Free(files[i].path);
 
@@ -239,8 +233,7 @@ static int64_t read(JUN_File *stream, void *s, uint64_t len)
 static int64_t write(JUN_File *stream, const void *s, uint64_t len)
 {
 	uint64_t total_size = stream->offset + len;
-	if (total_size > stream->size)
-	{
+	if (total_size > stream->size) {
 		stream->size = total_size;
 		stream->buffer = MTY_Realloc(stream->buffer, total_size, 1);
 	}

@@ -22,7 +22,7 @@ struct JUN_State
 	JUN_TextureData textures[TEXTURE_MAX];
 };
 
-JUN_State *JUN_StateInitialize()
+JUN_State *JUN_StateCreate()
 {
 	JUN_State *this = MTY_Alloc(1, sizeof(JUN_State));
 

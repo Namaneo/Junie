@@ -10,7 +10,7 @@ typedef struct JUN_State JUN_State;
 
 typedef void (*JUN_StateCallback)(JUN_State *this);
 
-JUN_State *JUN_StateInitialize();
+JUN_State *JUN_StateCreate();
 bool JUN_StateHasGamepad(JUN_State *this);
 void JUN_StateToggleGamepad(JUN_State *this);
 bool JUN_StateHasAudio(JUN_State *this);

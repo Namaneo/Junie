@@ -13,28 +13,28 @@ struct JUN_Texture
 
 JUN_Texture *JUN_TextureCreateContext(uint32_t view_width, uint32_t view_height, uint8_t offset)
 {
-	JUN_Texture *context = MTY_Alloc(1, sizeof(JUN_Texture));
+	JUN_Texture *this = MTY_Alloc(1, sizeof(JUN_Texture));
 
-	context->offset = offset;
-	context->view_width = view_width;
-	context->view_height = view_height;
+	this->offset = offset;
+	this->view_width = view_width;
+	this->view_height = view_height;
 
-	context->draw_data = MTY_Alloc(1, sizeof(MTY_DrawData));
-	context->commands = MTY_Alloc(1, sizeof(MTY_CmdList));
+	this->draw_data = MTY_Alloc(1, sizeof(MTY_DrawData));
+	this->commands = MTY_Alloc(1, sizeof(MTY_CmdList));
 
-	return context;
+	return this;
 }
 
-void JUN_TextureDraw(JUN_Texture *context, JUN_TextureData *texture)
+void JUN_TextureDraw(JUN_Texture *this, JUN_TextureData *texture)
 {
 	// Set texture dimensions
-	uint8_t id = texture->id + context->offset;
+	uint8_t id = texture->id + this->offset;
 	float x = texture->x;
 	float y = texture->y;
 	float width = texture->width;
 	float height = texture->height;
-	float view_width = context->view_width;
-	float view_height = context->view_height;
+	float view_width = this->view_width;
+	float view_height = this->view_height;
 
 	// Initialize indices
 	uint16_t indices[6] = { 0, 1, 2, 0, 2, 3 };
@@ -66,12 +66,11 @@ void JUN_TextureDraw(JUN_Texture *context, JUN_TextureData *texture)
 	};
 
 	// Resize command lists
-	context->length++;
-	context->commands = MTY_Realloc(context->commands, context->length, sizeof(MTY_CmdList));
+	this->length++;
+	this->commands = MTY_Realloc(this->commands, this->length, sizeof(MTY_CmdList));
 
 	// Initialize command list
-	context->commands[context->length - 1] = (MTY_CmdList)
-	{
+	this->commands[this->length - 1] = (MTY_CmdList) {
 		.cmd = MTY_Dup(commands, sizeof commands),
 		.cmdLength = 2,
 		.cmdMax = sizeof commands,
@@ -86,19 +85,18 @@ void JUN_TextureDraw(JUN_Texture *context, JUN_TextureData *texture)
 	};
 }
 
-MTY_DrawData *JUN_TextureProduce(JUN_Texture *context, size_t length)
+MTY_DrawData *JUN_TextureProduce(JUN_Texture *this, size_t length)
 {
 	// Set number of commands to produce
 	if (length == 0)
-		length = context->length;
+		length = this->length;
 
 	// Fill drawing data
-	*context->draw_data = (MTY_DrawData)
-	{
+	*this->draw_data = (MTY_DrawData) {
 		.clear = false,
-		.displaySize = {context->view_width, context->view_height},
+		.displaySize = {this->view_width, this->view_height},
 
-		.cmdList = context->commands,
+		.cmdList = this->commands,
 		.cmdListLength = length,
 		.cmdListMax = length * sizeof(MTY_CmdList),
 
@@ -107,23 +105,27 @@ MTY_DrawData *JUN_TextureProduce(JUN_Texture *context, size_t length)
 	};
 
 	// Return produced drawing
-	return context->draw_data;
+	return this->draw_data;
 }
 
-void JUN_TextureDestroy(JUN_Texture **context)
+void JUN_TextureDestroy(JUN_Texture **texture)
 {
-	for (size_t i = 0; i < (*context)->length; ++i)
-	{
-		MTY_CmdList *command_list = &(*context)->commands[i];
+	if (!texture || !*texture)
+		return;
+
+	JUN_Texture *this = *texture;
+
+	for (size_t i = 0; i < this->length; ++i) {
+		MTY_CmdList *command_list = &this->commands[i];
 
 		MTY_Free(command_list->cmd);
 		MTY_Free(command_list->vtx);
 		MTY_Free(command_list->idx);
 	}
 
-	MTY_Free((*context)->commands);
-	MTY_Free((*context)->draw_data);
+	MTY_Free(this->commands);
+	MTY_Free(this->draw_data);
 
-	MTY_Free(*context);
-	*context = NULL;
+	MTY_Free(this);
+	*texture = NULL;
 }

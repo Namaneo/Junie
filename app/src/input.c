@@ -57,7 +57,7 @@ struct JUN_Input
 	JUN_InputPointer pointers[MAX_POINTERS];
 };
 
-JUN_Input *JUN_InputInitialize(JUN_State *state)
+JUN_Input *JUN_InputCreate(JUN_State *state)
 {
 	JUN_Input *this = MTY_Alloc(1, sizeof(JUN_Input));
 
@@ -95,15 +95,14 @@ JUN_Input *JUN_InputInitialize(JUN_State *state)
 	this->menus[MENU_EXIT].radius = 80;
 	this->menus[MENU_EXIT].callback = JUN_StateExit;
 
-	JUN_InputStatus *menu_inputs[MENU_MAX] =
-			{
-					&this->menus[MENU_TOGGLE_AUDIO],
-					&this->menus[MENU_TOGGLE_GAMEPAD],
-					&this->menus[MENU_SAVE_STATE],
-					&this->menus[MENU_RESTORE_STATE],
-					&this->menus[MENU_FAST_FORWARD],
-					&this->menus[MENU_EXIT],
-			};
+	JUN_InputStatus *menu_inputs[MENU_MAX] = {
+		&this->menus[MENU_TOGGLE_AUDIO],
+		&this->menus[MENU_TOGGLE_GAMEPAD],
+		&this->menus[MENU_SAVE_STATE],
+		&this->menus[MENU_RESTORE_STATE],
+		&this->menus[MENU_FAST_FORWARD],
+		&this->menus[MENU_EXIT],
+	};
 
 	this->controllers[CONTROLLER_MENU].id = CONTROLLER_MENU;
 	this->controllers[CONTROLLER_MENU].inputs_size = MENU_MAX;
@@ -147,15 +146,14 @@ JUN_Input *JUN_InputInitialize(JUN_State *state)
 	this->inputs[RETRO_DEVICE_ID_JOYPAD_SELECT].radius = 80;
 	this->inputs[RETRO_DEVICE_ID_JOYPAD_SELECT].button = 6;
 
-	JUN_InputStatus *left_inputs[INPUT_LEFT_TOTAL] =
-			{
-					&this->inputs[RETRO_DEVICE_ID_JOYPAD_UP],
-					&this->inputs[RETRO_DEVICE_ID_JOYPAD_DOWN],
-					&this->inputs[RETRO_DEVICE_ID_JOYPAD_LEFT],
-					&this->inputs[RETRO_DEVICE_ID_JOYPAD_RIGHT],
-					&this->inputs[RETRO_DEVICE_ID_JOYPAD_L],
-					&this->inputs[RETRO_DEVICE_ID_JOYPAD_SELECT],
-			};
+	JUN_InputStatus *left_inputs[INPUT_LEFT_TOTAL] = {
+		&this->inputs[RETRO_DEVICE_ID_JOYPAD_UP],
+		&this->inputs[RETRO_DEVICE_ID_JOYPAD_DOWN],
+		&this->inputs[RETRO_DEVICE_ID_JOYPAD_LEFT],
+		&this->inputs[RETRO_DEVICE_ID_JOYPAD_RIGHT],
+		&this->inputs[RETRO_DEVICE_ID_JOYPAD_L],
+		&this->inputs[RETRO_DEVICE_ID_JOYPAD_SELECT],
+	};
 
 	this->controllers[CONTROLLER_LEFT].id = CONTROLLER_LEFT;
 	this->controllers[CONTROLLER_LEFT].inputs_size = INPUT_LEFT_TOTAL;
@@ -193,15 +191,14 @@ JUN_Input *JUN_InputInitialize(JUN_State *state)
 	this->inputs[RETRO_DEVICE_ID_JOYPAD_START].radius = 80;
 	this->inputs[RETRO_DEVICE_ID_JOYPAD_START].button = 7;
 
-	JUN_InputStatus *right_inputs[INPUT_RIGHT_TOTAL] =
-			{
-					&this->inputs[RETRO_DEVICE_ID_JOYPAD_A],
-					&this->inputs[RETRO_DEVICE_ID_JOYPAD_B],
-					&this->inputs[RETRO_DEVICE_ID_JOYPAD_X],
-					&this->inputs[RETRO_DEVICE_ID_JOYPAD_Y],
-					&this->inputs[RETRO_DEVICE_ID_JOYPAD_R],
-					&this->inputs[RETRO_DEVICE_ID_JOYPAD_START],
-			};
+	JUN_InputStatus *right_inputs[INPUT_RIGHT_TOTAL] = {
+		&this->inputs[RETRO_DEVICE_ID_JOYPAD_A],
+		&this->inputs[RETRO_DEVICE_ID_JOYPAD_B],
+		&this->inputs[RETRO_DEVICE_ID_JOYPAD_X],
+		&this->inputs[RETRO_DEVICE_ID_JOYPAD_Y],
+		&this->inputs[RETRO_DEVICE_ID_JOYPAD_R],
+		&this->inputs[RETRO_DEVICE_ID_JOYPAD_START],
+	};
 
 	this->controllers[CONTROLLER_RIGHT].id = CONTROLLER_RIGHT;
 	this->controllers[CONTROLLER_RIGHT].inputs_size = INPUT_RIGHT_TOTAL;
@@ -226,10 +223,8 @@ void JUN_InputSetBinding(JUN_Input *this, const char *joypad, char *keyboard)
 
 static void set_key(JUN_Input *this, const MTY_Key key, bool pressed)
 {
-	for (uint8_t i = 0; i < INPUT_TOTAL; ++i)
-	{
-		if (this->inputs[i].key == key)
-		{
+	for (uint8_t i = 0; i < INPUT_TOTAL; ++i) {
+		if (this->inputs[i].key == key) {
 			this->inputs[i].pressed = pressed;
 			break;
 		}
@@ -238,19 +233,16 @@ static void set_key(JUN_Input *this, const MTY_Key key, bool pressed)
 
 static void set_button(JUN_Input *this, const MTY_ControllerEvent *event)
 {
-	for (uint8_t i = 0; i < INPUT_TOTAL; ++i)
-	{
+	for (uint8_t i = 0; i < INPUT_TOTAL; ++i) {
 		JUN_InputStatus *input = &this->inputs[i];
 
-		if (input->axis)
-		{
+		if (input->axis) {
 			const MTY_Axis *axis = &event->axes[input->button];
 			input->pressed = input->negative ?
 				axis->value < axis->min / 4 :
 				axis->value > axis->max / 4;
-		}
-		else
-		{
+		
+		} else {
 			input->pressed = event->buttons[input->button];
 		}
 	}
@@ -260,8 +252,7 @@ static void set_mouse(JUN_Input *this, JUN_InputController *controller, JUN_Inpu
 {
 	JUN_TextureData *texture = JUN_StateGetMetrics(this->state, controller->id);
 
-	for (size_t i = 0; i < controller->inputs_size; ++i)
-	{
+	for (size_t i = 0; i < controller->inputs_size; ++i) {
 		JUN_InputStatus *input = controller->inputs[i];
 
 		float center_x = input->center.x * (texture->width / texture->image_width);
@@ -273,13 +264,11 @@ static void set_mouse(JUN_Input *this, JUN_InputController *controller, JUN_Inpu
 
 		bool insideCircle = distance_x + distance_y < powf(radius, 2);
 
-		if (insideCircle)
-		{
+		if (insideCircle) {
 			input->pressed = pointer->pressed;
 			input->locked_by = pointer;
-		}
-		else if (input->locked_by == pointer)
-		{
+		
+		} else if (input->locked_by == pointer) {
 			input->pressed = false;
 		}
 
@@ -301,15 +290,13 @@ static void set_touch(JUN_Input *this, JUN_InputPointer *pointer)
 	float correction_x = 0;
 	float correction_y = 0;
 
-	if (height > view_height)
-	{
+	if (height > view_height) {
 		height = view_height;
 		width = height * aspect_ratio;
 		correction_x = (view_width - width) / 2.0f;
 	}
 
-	if (width == view_width)
-	{
+	if (width == view_width) {
 		correction_y = view_width * 0.1f;
 	}
 
@@ -329,15 +316,11 @@ static void set_touch(JUN_Input *this, JUN_InputPointer *pointer)
 static JUN_InputPointer *get_pointer(JUN_Input *this, int32_t id)
 {
 	for (size_t i = 0; i < MAX_POINTERS; ++i)
-	{
 		if (this->pointers[i].id == id)
 			return &this->pointers[i];
-	}
 
-	for (size_t i = 0; i < MAX_POINTERS; ++i)
-	{
-		if (!this->pointers[i].pressed)
-		{
+	for (size_t i = 0; i < MAX_POINTERS; ++i) {
+		if (!this->pointers[i].pressed) {
 			this->pointers[i].id = id;
 			return &this->pointers[i];
 		}
@@ -348,22 +331,19 @@ static JUN_InputPointer *get_pointer(JUN_Input *this, int32_t id)
 
 void JUN_InputSetStatus(JUN_Input *this, const MTY_Event *event)
 {
-	if (event->type == MTY_EVENT_KEY)
-	{
+	if (event->type == MTY_EVENT_KEY) {
 		set_key(this, event->key.key, event->key.pressed);
 		return;
 	}
 
-	if (event->type == MTY_EVENT_CONTROLLER)
-	{
+	if (event->type == MTY_EVENT_CONTROLLER) {
 		set_button(this, &event->controller);
 		return;
 	}
 
 	JUN_InputPointer *pointer = NULL;
 
-	if (event->type == MTY_EVENT_BUTTON)
-	{
+	if (event->type == MTY_EVENT_BUTTON) {
 		pointer = get_pointer(this, event->button.id);
 
 		if (!pointer)
@@ -376,8 +356,7 @@ void JUN_InputSetStatus(JUN_Input *this, const MTY_Event *event)
 		set_mouse(this, &this->controllers[CONTROLLER_MENU], pointer);
 	}
 
-	if (event->type == MTY_EVENT_MOTION)
-	{
+	if (event->type == MTY_EVENT_MOTION) {
 		pointer = get_pointer(this, event->motion.id);
 
 		if (!pointer)
@@ -390,51 +369,51 @@ void JUN_InputSetStatus(JUN_Input *this, const MTY_Event *event)
 	if (!pointer)
 		return;
 
-	if (JUN_StateHasGamepad(this->state))
-	{
+	if (JUN_StateHasGamepad(this->state)) {
 		set_mouse(this, &this->controllers[CONTROLLER_LEFT], pointer);
 		set_mouse(this, &this->controllers[CONTROLLER_RIGHT], pointer);
-	}
-	else
-	{
+	
+	} else {
 		set_touch(this, pointer);
 	}
 }
 
 int16_t JUN_InputGetStatus(JUN_Input *this, uint32_t device, uint32_t retro_key)
 {
-	if (device == RETRO_DEVICE_JOYPAD)
-	{
+	if (device == RETRO_DEVICE_JOYPAD) {
 		if (retro_key >= INPUT_TOTAL)
 			return false;
 
 		return this->inputs[retro_key].pressed;
 	}
 
-	if (device == RETRO_DEVICE_POINTER && !JUN_StateHasGamepad(this->state))
-	{
-		switch (retro_key)
-		{
-		case RETRO_DEVICE_ID_POINTER_COUNT:
-			return 1;
-		case RETRO_DEVICE_ID_POINTER_PRESSED:
-			return this->pointers[0].pressed;
-		case RETRO_DEVICE_ID_POINTER_X:
-			return this->pointers[0].x;
-		case RETRO_DEVICE_ID_POINTER_Y:
-			return this->pointers[0].y;
+	if (device == RETRO_DEVICE_POINTER && !JUN_StateHasGamepad(this->state)) {
+		switch (retro_key) {
+			case RETRO_DEVICE_ID_POINTER_COUNT:
+				return 1;
+			case RETRO_DEVICE_ID_POINTER_PRESSED:
+				return this->pointers[0].pressed;
+			case RETRO_DEVICE_ID_POINTER_X:
+				return this->pointers[0].x;
+			case RETRO_DEVICE_ID_POINTER_Y:
+				return this->pointers[0].y;
 		}
 	}
 
 	return false;
 }
 
-void JUN_InputDestroy(JUN_Input **this)
+void JUN_InputDestroy(JUN_Input **input)
 {
-	MTY_Free((*this)->controllers[CONTROLLER_MENU].inputs);
-	MTY_Free((*this)->controllers[CONTROLLER_LEFT].inputs);
-	MTY_Free((*this)->controllers[CONTROLLER_RIGHT].inputs);
+	if (!input || !*input)
+		return;
 
-	MTY_Free(*this);
-	*this = NULL;
+	JUN_Input *this = *input;
+
+	MTY_Free(this->controllers[CONTROLLER_MENU].inputs);
+	MTY_Free(this->controllers[CONTROLLER_LEFT].inputs);
+	MTY_Free(this->controllers[CONTROLLER_RIGHT].inputs);
+
+	MTY_Free(this);
+	*input = NULL;
 }

@@ -5,6 +5,7 @@
 
 #include "video.h"
 
+#include "ui_index.h"
 #include "res_menu.h"
 #include "res_loading.h"
 #include "res_controller_left.h"
@@ -22,6 +23,9 @@ struct JUN_Video {
 
 	JUN_State *state;
 
+	JUN_VideoCallback callback;
+	void *opaque;
+
 	struct jun_video_asset assets[CONTROLLER_MAX];
 
 	MTY_ColorFormat pixel_format;
@@ -38,7 +42,7 @@ struct JUN_Video {
 	JUN_Texture *ui;
 };
 
-JUN_Video *JUN_VideoInitialize(JUN_State *state, MTY_AppFunc app_func, MTY_EventFunc event_func)
+JUN_Video *JUN_VideoCreate(JUN_State *state, MTY_AppFunc app_func, MTY_EventFunc event_func)
 {
 	JUN_Video *this = MTY_Alloc(1, sizeof(JUN_Video));
 
@@ -64,16 +68,39 @@ JUN_Video *JUN_VideoInitialize(JUN_State *state, MTY_AppFunc app_func, MTY_Event
 	asset = &this->assets[LOADING_SCREEN];
 	asset->data = MTY_DecompressImage(res_loading_png, res_loading_png_len, &asset->width, &asset->height);
 
-	this->app = MTY_AppCreate(app_func, event_func, NULL);
+	this->app = MTY_AppCreate(app_func, event_func, this);
 
 	MTY_WindowCreate(this->app, &description);
 	MTY_WindowMakeCurrent(this->app, 0, true);
-
 	MTY_WindowSetGFX(this->app, 0, MTY_GFX_GL, false);
 
 	this->renderer = MTY_RendererCreate();
 
 	return this;
+}
+
+static void jun_video_on_webview_created(MTY_Webview *ctx, void *opaque)
+{
+	JUN_Video *this = opaque;
+
+	this->callback(ctx, this->opaque);
+
+	char *index = MTY_Alloc(___ui_build_index_html_len + 1, 1);
+	memcpy(index, ___ui_build_index_html, ___ui_build_index_html_len);
+
+	MTY_WebviewNavigateHTML(ctx, index);
+
+	MTY_Free(index);
+}
+
+void JUN_VideoCreateUI(JUN_Video *this, JUN_VideoCallback callback, void *opaque)
+{
+	this->callback = callback;
+	this->opaque = opaque;
+
+	MTY_Webview *webview = MTY_WindowCreateWebview(this->app, 0);
+	MTY_WebviewAutomaticSize(webview, true);
+	MTY_WebviewShow(webview, jun_video_on_webview_created);
 }
 
 static void refresh_viewport_size(JUN_Video *this, uint32_t *view_width, uint32_t *view_height)
@@ -89,37 +116,28 @@ void JUN_VideoStart(JUN_Video *this)
 
 bool JUN_VideoSetPixelFormat(JUN_Video *this, enum retro_pixel_format *format)
 {
-	if (*format == RETRO_PIXEL_FORMAT_0RGB1555)
-	{
-		this->pixel_format = MTY_COLOR_FORMAT_BGRA5551;
-		this->bits_per_pixel = sizeof(uint16_t);
-
-		return true;
+	switch (*format) {
+		case RETRO_PIXEL_FORMAT_0RGB1555:
+			this->pixel_format = MTY_COLOR_FORMAT_BGRA5551;
+			this->bits_per_pixel = sizeof(uint16_t);
+			return true;
+		case RETRO_PIXEL_FORMAT_XRGB8888:
+			this->pixel_format = MTY_COLOR_FORMAT_RGBA;
+			this->bits_per_pixel = sizeof(uint32_t);
+			return true;
+		case RETRO_PIXEL_FORMAT_RGB565:
+			this->pixel_format = MTY_COLOR_FORMAT_BGR565;
+			this->bits_per_pixel = sizeof(uint16_t);
+			return true;
+		default:
+			return false;
 	}
-
-	if (*format == RETRO_PIXEL_FORMAT_XRGB8888)
-	{
-		this->pixel_format = MTY_COLOR_FORMAT_RGBA;
-		this->bits_per_pixel = sizeof(uint32_t);
-
-		return true;
-	}
-
-	if (*format == RETRO_PIXEL_FORMAT_RGB565)
-	{
-		this->pixel_format = MTY_COLOR_FORMAT_BGR565;
-		this->bits_per_pixel = sizeof(uint16_t);
-
-		return true;
-	}
-
-	return false;
 }
 
 static void set_texture_metrics(JUN_Video *this, JUN_TextureType type, uint32_t view_width, uint32_t view_height)
 {
 	// Declare variables
-	float x, y, width, height;
+	float x = 0, y = 0, width = 0, height = 0;
 
 	// Retrieve controller files
 	struct jun_video_asset *asset = &this->assets[type];
@@ -136,32 +154,31 @@ static void set_texture_metrics(JUN_Video *this, JUN_TextureType type, uint32_t 
 	height = width / aspect_ratio;
 
 	// Scale the other way if the image height is too big
-	if (height > view_height)
-	{
+	if (height > view_height) {
 		height = view_height;
 		width = height * aspect_ratio;
 	}
 
 	// Position the final image
-	if (type == CONTROLLER_MENU)
-	{
-		x = view_width / 2 - width / 2;
-		y = 0;
-	}
-	if (type == CONTROLLER_LEFT)
-	{
-		x = 0;
-		y = view_height - height;
-	}
-	if (type == CONTROLLER_RIGHT)
-	{
-		x = view_width - width;
-		y = view_height - height;
-	}
-	if (type == LOADING_SCREEN)
-	{
-		x = view_width / 2 - width / 2;
-		y = view_height / 2 - height / 2;
+	switch (type) {
+		case CONTROLLER_MENU:
+			x = view_width / 2 - width / 2;
+			y = 0;
+			break;
+		case CONTROLLER_LEFT:
+			x = 0;
+			y = view_height - height;
+			break;
+		case CONTROLLER_RIGHT:
+			x = view_width - width;
+			y = view_height - height;
+			break;
+		case LOADING_SCREEN:
+			x = view_width / 2 - width / 2;
+			y = view_height / 2 - height / 2;
+			break;
+		default:
+			break;
 	}
 
 	// Set texture metrics
@@ -203,9 +220,7 @@ void JUN_VideoUpdateContext(JUN_Video *this, unsigned width, unsigned height, si
 		MTY_Log("%u x %u (%zu)", width, height, pitch);
 
 		if (this->buffer)
-		{
 			MTY_Free(this->buffer);
-		}
 
 		this->width = width;
 		this->height = height;
@@ -218,8 +233,7 @@ void JUN_VideoUpdateContext(JUN_Video *this, unsigned width, unsigned height, si
 	uint32_t view_width, view_height;
 	refresh_viewport_size(this, &view_width, &view_height);
 
-	if (this->view_width != view_width || this->view_height != view_height)
-	{
+	if (this->view_width != view_width || this->view_height != view_height) {
 		this->view_width = view_width;
 		this->view_height = view_height;
 
@@ -234,16 +248,13 @@ void JUN_VideoDrawFrame(JUN_Video *this, const void *data)
 
 	// Crop the image to its real size
 	for (int y = 0; y < this->height; ++y)
-	{
 		memcpy(this->buffer + y * real_pitch, data + y * this->pitch, real_pitch);
-	}
 
 	// In case of RGBA color format, manually swap R and B
-	if (this->pixel_format == MTY_COLOR_FORMAT_RGBA)
-	{
+	if (this->pixel_format == MTY_COLOR_FORMAT_RGBA) {
 		char *byte_array = this->buffer;
-		for (int i = 0; i < real_pitch * this->height; i += this->bits_per_pixel)
-		{
+
+		for (int i = 0; i < real_pitch * this->height; i += this->bits_per_pixel) {
 			char bak = byte_array[i + 0];
 			byte_array[i + 0] = byte_array[i + 2];
 			byte_array[i + 2] = bak;
@@ -273,11 +284,12 @@ void JUN_VideoDrawFrame(JUN_Video *this, const void *data)
 	// Draw the frame to the screen
 	MTY_WindowGetSize(this->app, 0, &description.viewWidth, &description.viewHeight);
 	MTY_RendererDrawQuad(this->renderer,
-											 MTY_WindowGetGFX(this->app, 0),
-											 MTY_WindowGetDevice(this->app, 0),
-											 MTY_WindowGetContext(this->app, 0),
-											 this->buffer, &description,
-											 MTY_WindowGetSurface(this->app, 0));
+		MTY_WindowGetGFX(this->app, 0),
+		MTY_WindowGetDevice(this->app, 0),
+		MTY_WindowGetContext(this->app, 0),
+		this->buffer, &description,
+		MTY_WindowGetSurface(this->app, 0)
+	);
 }
 
 void JUN_VideoDrawUI(JUN_Video *this, bool has_gamepad)

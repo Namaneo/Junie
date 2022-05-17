@@ -14,22 +14,11 @@ struct _JUN_App
 {
 	JUN_App public;
 
-	const char *core_name;
-	char *game_path;
-
 	uint32_t language;
-
-	struct
-	{
-		char *assets;
-		char *system;
-		char *save;
-		char *games;
-		char *cheats;
-	} directories;
+	MTY_Hash *paths;
 };
 
-MTY_Hash *core_names = NULL;
+static MTY_Hash *core_names = NULL;
 static const char *jun_core_get_name(const char *system)
 {
 	if (!core_names) {
@@ -48,7 +37,7 @@ static const char *jun_core_get_name(const char *system)
 	return MTY_HashGet(core_names, system);
 }
 
-MTY_Hash *core_types = NULL;
+static MTY_Hash *core_types = NULL;
 static JUN_CoreType jun_core_get_type(const char *system)
 {
 	if (!core_types) {
@@ -67,15 +56,26 @@ static JUN_CoreType jun_core_get_type(const char *system)
 	return (JUN_CoreType) MTY_HashGet(core_types, system);
 }
 
-static void jun_app_configure(_JUN_App *this)
+JUN_App *JUN_AppCreate(MTY_AppFunc app_func, MTY_EventFunc event_func)
 {
-	char *json = JUN_InteropReadFile("/assets/settings.json", NULL);
+	_JUN_App *this = MTY_Alloc(1, sizeof(_JUN_App));
 
+	this->public.state = JUN_StateCreate();
+	this->public.input = JUN_InputCreate(this->public.state);
+	this->public.audio = JUN_AudioCreate();
+	this->public.video = JUN_VideoCreate(this->public.state, app_func, event_func);
+
+	return (JUN_App *) this;
+}
+
+static void jun_app_configure(_JUN_App *this, const char *system, const MTY_JSON *json)
+{
 	uint64_t iter;
 	const char *key;
 
 	// Initialize settings instance
-	JUN_Settings *settings = JUN_SettingsInitialize(json, this->core_name);
+	const char *core_name = jun_core_get_name(system);
+	JUN_Settings *settings = JUN_SettingsCreate(core_name, json);
 
 	// Set prefered language
 	char *language = MTY_SprintfD("RETRO_LANGUAGE_%s", settings->language);
@@ -85,8 +85,7 @@ static void jun_app_configure(_JUN_App *this)
 	// Set keyboard bindings
 	iter = 0;
 	key = NULL;
-	while (MTY_HashGetNextKey(settings->bindings, &iter, &key))
-	{
+	while (MTY_HashGetNextKey(settings->bindings, &iter, &key)) {
 		char *value = MTY_HashGet(settings->bindings, key);
 		JUN_InputSetBinding(this->public.input, key, value);
 	}
@@ -95,67 +94,46 @@ static void jun_app_configure(_JUN_App *this)
 	iter = 0;
 	key = NULL;
 	JUN_Configuration *configuration = JUN_CoreGetConfiguration(this->public.core);
-	while (MTY_HashGetNextKey(settings->configurations, &iter, &key))
-	{
+	while (MTY_HashGetNextKey(settings->configurations, &iter, &key)) {
 		char *value = MTY_HashGet(settings->configurations, key);
 		JUN_ConfigurationOverride(configuration, key, value);
 	}
 
 	// Destroy settings instance
 	JUN_SettingsDestroy(&settings);
-
-	MTY_Free(json);
 }
 
-JUN_App *JUN_AppInitialize(MTY_AppFunc app_func, MTY_EventFunc event_func)
+void JUN_AppLoadCore(JUN_App *public, const char *system, const char *rom, const MTY_JSON *settings)
 {
-	_JUN_App *this = MTY_Alloc(1, sizeof(_JUN_App));
+	_JUN_App *this = (_JUN_App *) public;
 
-	char *system_name = JUN_InteropGetSystem();
-	char *game_name = JUN_InteropGetGame();
+	char *game = JUN_ToolboxRemoveExtension(rom);
 
-	this->core_name = jun_core_get_name(system_name);
+	this->paths = MTY_HashCreate(0);
 
-	this->directories.assets = MTY_Strdup("/assets");
-	this->directories.system = MTY_SprintfD("/system/%s", this->core_name);
-	this->directories.save   = MTY_SprintfD("/save/%s", system_name);
-	this->directories.games  = MTY_SprintfD("/games/%s", system_name);
-	this->directories.cheats = MTY_SprintfD("/cheats/%s", system_name);
+	MTY_HashSetInt(this->paths, JUN_FILE_GAME,  MTY_SprintfD("/games/%s/%s", system, rom));
+	MTY_HashSetInt(this->paths, JUN_FILE_STATE, MTY_SprintfD("/saves/%s/%s.state", system, game));
+	MTY_HashSetInt(this->paths, JUN_FILE_SRAM,  MTY_SprintfD("/saves/%s/%s.sram", system, game));
+	MTY_HashSetInt(this->paths, JUN_FILE_RTC,   MTY_SprintfD("/saves/%s/%s.rtc", system, game));
 
-	char *state_name = JUN_ToolboxReplaceExtension(game_name, "state");
-	char *state_path = MTY_SprintfD("%s/%s", this->directories.save, state_name);
-	MTY_Free(state_name);
+	MTY_HashSetInt(this->paths, JUN_FOLDER_SAVES,  MTY_SprintfD("/saves/%s/", system));
+	MTY_HashSetInt(this->paths, JUN_FOLDER_SYSTEM, MTY_SprintfD("/systems/%s/", system));
+	MTY_HashSetInt(this->paths, JUN_FOLDER_CHEATS, MTY_SprintfD("/cheats/%s/%s/", system, rom));
 
-	char *sram_name = JUN_ToolboxReplaceExtension(game_name, "srm");
-	char *sram_path = MTY_SprintfD("%s/%s", this->directories.save, sram_name);
-	MTY_Free(sram_name);
+	JUN_CoreType type = jun_core_get_type(system);
+	this->public.core = JUN_CoreCreate(type, this->paths);
 
-	char *rtc_name = JUN_ToolboxReplaceExtension(game_name, "rtc");
-	char *rtc_path = MTY_SprintfD("%s/%s", this->directories.save, rtc_name);
-	MTY_Free(rtc_name);
+	jun_app_configure(this, system, settings);
+}
 
-	char *cheat_path = MTY_SprintfD("%s/%s/", this->directories.cheats, game_name);
+void JUN_AppUnloadCore(JUN_App *public)
+{
+	_JUN_App *this = (_JUN_App *) public;
 
-	this->game_path = MTY_SprintfD("%s/%s", this->directories.games, game_name);
+	if (!this->public.core)
+		return;
 
-	JUN_CoreType type = jun_core_get_type(system_name);
-
-	this->public.core = JUN_CoreInitialize(type, this->game_path, state_path, sram_path, rtc_path, cheat_path);
-	this->public.state = JUN_StateInitialize();
-	this->public.input = JUN_InputInitialize(this->public.state);
-	this->public.audio = JUN_AudioInitialize();
-	this->public.video = JUN_VideoInitialize(this->public.state, app_func, event_func);
-
-	jun_app_configure(this);
-
-	MTY_Free(cheat_path);
-	MTY_Free(rtc_path);
-	MTY_Free(sram_path);
-	MTY_Free(state_path);
-	MTY_Free(game_name);
-	MTY_Free(system_name);
-
-	return (JUN_App *) this;
+	JUN_CoreDestroy(&this->public.core);
 }
 
 static void core_log(enum retro_log_level level, const char *fmt, ...)
@@ -172,141 +150,136 @@ static void core_log(enum retro_log_level level, const char *fmt, ...)
 
 bool JUN_AppEnvironment(JUN_App *public, unsigned cmd, void *data)
 {
-	_JUN_App *this = (_JUN_App *)public;
+	_JUN_App *this = (_JUN_App *) public;
 
 	unsigned command = cmd & ~RETRO_ENVIRONMENT_EXPERIMENTAL;
-	switch (command)
-	{
-	case RETRO_ENVIRONMENT_SET_PIXEL_FORMAT:
-	{
-		return JUN_VideoSetPixelFormat(this->public.video, data);
-	}
-	case RETRO_ENVIRONMENT_GET_LOG_INTERFACE:
-	{
-		struct retro_log_callback *callback = data;
-
-		callback->log = core_log;
-
-		return true;
-	}
-	case RETRO_ENVIRONMENT_GET_LANGUAGE:
-	{
-		unsigned *language = data;
-
-		*language = this->language;
-
-		return true;
-	}
-	case RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY:
-	{
-		char **system_directory = data;
-
-		*system_directory = this->directories.system;
-
-		return true;
-	}
-	case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY:
-	{
-		char **save_directory = data;
-
-		*save_directory = this->directories.save;
-
-		return true;
-	}
-	case RETRO_ENVIRONMENT_GET_VFS_INTERFACE & ~RETRO_ENVIRONMENT_EXPERIMENTAL:
-	{
-		struct retro_vfs_interface_info *vfs = data;
-
-		vfs->iface = JUN_FilesystemGetInterface();
-		vfs->required_interface_version = JUN_FilesystemGetInterfaceVersion();
-
-		return true;
-	}
-	case RETRO_ENVIRONMENT_SET_MESSAGE:
-	{
-		struct retro_message *message = data;
-
-		MTY_Log("%s", message->msg);
-
-		return true;
-	}
-	case RETRO_ENVIRONMENT_SET_VARIABLES:
-	{
-		const struct retro_variable *variables = data;
-
-		JUN_Configuration *configuration = JUN_CoreGetConfiguration(this->public.core);
-
-		for (uint32_t x = 0; x < UINT32_MAX; x++)
-		{
-			const struct retro_variable *variable = &variables[x];
-
-			if (!variable->key || !variable->value)
-				break;
-
-			JUN_ConfigurationSet(configuration, variable->key, variable->value);
-
-			MTY_Log("SET -> %s: %s", variable->key, variable->value);
+	switch (command) {
+		case RETRO_ENVIRONMENT_SET_PIXEL_FORMAT: {
+			return JUN_VideoSetPixelFormat(this->public.video, data);
 		}
+		case RETRO_ENVIRONMENT_GET_LOG_INTERFACE: {
+			struct retro_log_callback *callback = data;
 
-		return true;
-	}
-	case RETRO_ENVIRONMENT_GET_VARIABLE:
-	{
-		struct retro_variable *variable = data;
+			callback->log = core_log;
 
-		JUN_Configuration *configuration = JUN_CoreGetConfiguration(this->public.core);
-		variable->value = JUN_ConfigurationGet(configuration, variable->key);
+			return true;
+		}
+		case RETRO_ENVIRONMENT_GET_LANGUAGE: {
+			unsigned *language = data;
 
-		MTY_Log("GET -> %s: %s", variable->key, variable->value);
+			*language = this->language;
 
-		return variable->value != NULL;
-	}
-	case RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE:
-	{
-		bool *update = data;
+			return true;
+		}
+		case RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY: {
+			char **system_directory = data;
 
-		*update = false;
+			*system_directory = MTY_HashGetInt(this->paths, JUN_FOLDER_SYSTEM);
 
-		return true;
-	}
-	case RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE & ~RETRO_ENVIRONMENT_EXPERIMENTAL:
-	{
-		int *status = data;
+			return true;
+		}
+		case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY: {
+			char **save_directory = data;
 
-		*status = 0;		 // Reset
-		*status |= 0b01; // Enable video
-		*status |= 0b10; // Enable audio
+			*save_directory = MTY_HashGetInt(this->paths, JUN_FOLDER_SAVES);
 
-		return true;
-	}
-	default:
-	{
-		const char *name = JUN_EnumsGetString(JUN_ENUM_ENVIRONMENT, cmd);
+			return true;
+		}
+		case RETRO_ENVIRONMENT_GET_VFS_INTERFACE & ~RETRO_ENVIRONMENT_EXPERIMENTAL: {
+			struct retro_vfs_interface_info *vfs = data;
 
-		MTY_Log("Unhandled command: %s (%d)", name, command);
+			vfs->iface = JUN_FilesystemGetInterface();
+			vfs->required_interface_version = JUN_FilesystemGetInterfaceVersion();
 
-		return false;
-	}
+			return true;
+		}
+		case RETRO_ENVIRONMENT_SET_MESSAGE: {
+			struct retro_message *message = data;
+
+			MTY_Log("%s", message->msg);
+
+			return true;
+		}
+		case RETRO_ENVIRONMENT_SET_VARIABLES: {
+			const struct retro_variable *variables = data;
+
+			JUN_Configuration *configuration = JUN_CoreGetConfiguration(this->public.core);
+
+			for (uint32_t x = 0; x < UINT32_MAX; x++)
+			{
+				const struct retro_variable *variable = &variables[x];
+
+				if (!variable->key || !variable->value)
+					break;
+
+				JUN_ConfigurationSet(configuration, variable->key, variable->value);
+
+				MTY_Log("SET -> %s: %s", variable->key, variable->value);
+			}
+
+			return true;
+		}
+		case RETRO_ENVIRONMENT_GET_VARIABLE: {
+			struct retro_variable *variable = data;
+
+			JUN_Configuration *configuration = JUN_CoreGetConfiguration(this->public.core);
+			variable->value = JUN_ConfigurationGet(configuration, variable->key);
+
+			MTY_Log("GET -> %s: %s", variable->key, variable->value);
+
+			return variable->value != NULL;
+		}
+		case RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE: {
+			bool *update = data;
+
+			*update = false;
+
+			return true;
+		}
+		case RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE & ~RETRO_ENVIRONMENT_EXPERIMENTAL: {
+			int *status = data;
+
+			*status = 0;     // Reset
+			*status |= 0b01; // Enable video
+			*status |= 0b10; // Enable audio
+
+			return true;
+		}
+		default: {
+			const char *name = JUN_EnumsGetString(JUN_ENUM_ENVIRONMENT, cmd);
+
+			MTY_Log("Unhandled command: %s (%d)", name, command);
+
+			return false;
+		}
 	}
 }
 
 void JUN_AppDestroy(JUN_App **public)
 {
-	_JUN_App **this = (_JUN_App **)public;
+	if (!public || !*public)
+		return;
 
-	MTY_Free((*this)->game_path);
+	_JUN_App *this = * (_JUN_App **) public;
 
-	MTY_Free((*this)->directories.assets);
-	MTY_Free((*this)->directories.system);
-	MTY_Free((*this)->directories.save);
-	MTY_Free((*this)->directories.games);
+	if (this->public.core)
+		JUN_CoreDestroy(&this->public.core);
 
-	JUN_CoreDestroy(&(*this)->public.core);
-	JUN_StateDestroy(&(*this)->public.state);
-	JUN_InputDestroy(&(*this)->public.input);
-	JUN_AudioDestroy(&(*this)->public.audio);
-	JUN_VideoDestroy(&(*this)->public.video);
+	if (this->public.video)
+		JUN_VideoDestroy(&this->public.video);
 
-	MTY_Free(*this);
-	*this = NULL;
+	if (this->public.audio)
+		JUN_AudioDestroy(&this->public.audio);
+
+	if (this->public.input)
+		JUN_InputDestroy(&this->public.input);
+
+	if (this->public.state)
+		JUN_StateDestroy(&this->public.state);
+
+	if (this->paths)
+		MTY_HashDestroy(&this->paths, MTY_Free);
+
+	MTY_Free(this);
+	*public = NULL;
 }

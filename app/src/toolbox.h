@@ -1,3 +1,3 @@
 #pragma once
 
-char *JUN_ToolboxReplaceExtension(const char *str, const char *ext);
+char *JUN_ToolboxRemoveExtension(const char *str);

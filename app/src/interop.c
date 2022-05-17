@@ -2,8 +2,6 @@
 
 #include "interop.h"
 
-#define PATH_SIZE 256
-
 void js_get_system(char *value, uint32_t length);
 void js_get_game(char *value, uint32_t length);
 

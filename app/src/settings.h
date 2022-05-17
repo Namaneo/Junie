@@ -6,11 +6,8 @@ typedef struct JUN_Settings JUN_Settings;
 
 struct JUN_Settings
 {
-    struct
-    {
-        MTY_JSON *root;
-        const MTY_JSON *core;
-    } json;
+    const char *core_name;
+    const MTY_JSON *json;
 
     char *language;
 
@@ -27,5 +24,5 @@ struct JUN_Settings
     MTY_Hash *bindings;
 };
 
-JUN_Settings *JUN_SettingsInitialize(const char *buffer, const char *core_name);
-void JUN_SettingsDestroy(JUN_Settings **context);
+JUN_Settings *JUN_SettingsCreate(const char *core_name, const MTY_JSON *json);
+void JUN_SettingsDestroy(JUN_Settings **settings);
