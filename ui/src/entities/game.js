@@ -1,5 +1,3 @@
-import * as Helpers from '../services/helpers'
-
 export class Game {
 	system;
 	game;
@@ -20,7 +18,6 @@ export class Game {
 			game = {
 				name: game_rom,
 				rom: game_rom,
-				cover: Helpers.getPlaceholder()
 			}
 		}
 

@@ -12,7 +12,7 @@ export const JunImg = ({ src }) => {
 
 	return (
 		<>
-			<IonImg src={src} ref={image} onIonImgDidLoad={onLoad} onIonError={onError}  />
+			{src && <IonImg src={location.origin + '/' + src} ref={image} onIonImgDidLoad={onLoad} onIonError={onError} />}
 			<IonImg ref={placeholder} src={Helpers.getPlaceholder()} />
 		</>
 	);

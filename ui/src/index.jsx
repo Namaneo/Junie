@@ -1,6 +1,7 @@
+import { createMemoryHistory } from 'history'
 import { render } from 'react-dom'
 import { Redirect, Route } from 'react-router'
-import { IonReactHashRouter } from '@ionic/react-router'
+import { IonReactMemoryRouter } from '@ionic/react-router'
 import { IonApp, IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs, setupIonicReact } from '@ionic/react'
 import { cloudDownload, gameController, keyOutline, save } from 'ionicons/icons'
 import { RecentPage } from './pages/recent-page'
@@ -38,7 +39,7 @@ function Junie() {
 
     return (
         <IonApp>
-            <IonReactHashRouter>
+            <IonReactMemoryRouter history={createMemoryHistory()}>
                 <IonTabs>
                     <IonRouterOutlet>
                         <Route exact path="/recent" component={RecentPage} />
@@ -46,7 +47,7 @@ function Junie() {
 						<Route exact path="/games/:system" component={GamesPage} />
                         <Route exact path="/saves"  component={SavesPage}  />
                         <Route exact path="/cheats" component={CheatsPage} />
-                        <Route render={() => <Redirect to="/recent" />} />
+                        <Route exact path="/" render={() => <Redirect to="/recent" />} />
                     </IonRouterOutlet>
 
                     <IonTabBar slot="bottom">
@@ -68,7 +69,7 @@ function Junie() {
                         </IonTabButton>
                     </IonTabBar>
                 </IonTabs>
-            </IonReactHashRouter>
+            </IonReactMemoryRouter>
         </IonApp>
     );
 }

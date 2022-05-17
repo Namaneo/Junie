@@ -2,7 +2,7 @@ let library = null;
 
 export async function getSystems() {
 	if (!library) {
-		const response = await fetch('api/library');
+		const response = await fetch(`${location.origin}/api/library`);
 		library = await response.json();
 	}
 
@@ -32,7 +32,7 @@ export async function getSystem(systemName) {
 };
 
 export async function fetchGame(system, game) {
-	const path = `/api/library/${system.name}/${game.rom}`;
+	const path = `${location.origin}/api/library/${system.name}/${game.rom}`;
 
 	try {
 		return await fetch(path).then(response => response.arrayBuffer());
