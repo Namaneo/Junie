@@ -23,8 +23,7 @@ func main() {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.NoCache)
 
-	helpers.UseStaticFiles(r, "", settings.Binaries.UI)
-	helpers.UseStaticFiles(r, "/app", settings.Binaries.App)
+	helpers.UseStaticFiles(r, "", settings.Binaries)
 
 	r.Get("/api/library", endpoints.SendLibrary)
 	r.Get("/api/library/{system}/{filename}", endpoints.SendGame)

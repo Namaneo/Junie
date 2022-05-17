@@ -1,8 +1,5 @@
 {
-	"Binaries": {
-		"UI": "../ui/build",
-		"App": "../app/build"
-	},
+	"Binaries": "../app/build",
 	"Resources": {
 		"API": "../assets/api",
 		"Games": "../demo/games"
