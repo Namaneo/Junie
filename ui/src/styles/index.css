@@ -10,7 +10,7 @@
     margin-left: -16px;
 }
 
-#root .recent ion-img {
+#root .recent img {
     max-width: 25%;
 }
 
@@ -41,7 +41,7 @@
     cursor: pointer
 }
 
-#root .games ion-img {
+#root .games img {
     max-width: 25%;
 }
 

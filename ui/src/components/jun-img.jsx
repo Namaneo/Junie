@@ -1,4 +1,3 @@
-import { IonImg } from '@ionic/react';
 import { useRef } from 'react';
 import * as Helpers from '../services/helpers'
 
@@ -12,8 +11,8 @@ export const JunImg = ({ src }) => {
 
 	return (
 		<>
-			{src && <IonImg src={location.origin + '/' + src} ref={image} onIonImgDidLoad={onLoad} onIonError={onError} />}
-			<IonImg ref={placeholder} src={Helpers.getPlaceholder()} />
+			{src && <img src={location.origin + '/' + src} ref={image} onLoad={onLoad} onError={onError} />}
+			<img ref={placeholder} src={Helpers.getPlaceholder()} />
 		</>
 	);
 }
