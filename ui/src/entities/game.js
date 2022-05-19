@@ -7,9 +7,9 @@ export class Game {
 		this.game = game;
 	}
 
-	static fromFile(file, systems) {
-		const system_name = Game.match(file.path, 1);
-		const game_rom = Game.match(file.path, 2);
+	static fromPath(path, systems) {
+		const system_name = Game.match(path, 1);
+		const game_rom = Game.match(path, 2);
 
 		const system = systems.find(system => system.name == system_name);
 		let game = system.games.find(game => game.rom == game_rom);

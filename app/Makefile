@@ -8,6 +8,7 @@ LIB_DIR   := lib
 CORES_DIR := cores
 INC_DIR   := include
 RES_DIR   := res
+WEB_DIR   := web
 
 OUT_DIR  := build
 DIST_DIR := dist
@@ -52,6 +53,9 @@ $(OUT_DIR)/$(TARGET): assets $(LIB_FILES) $(CORE_FILES) $(OBJ)
 assets: 
 	@mkdir -p $(OUT_DIR) 
 	@cp index.html $(OUT_DIR)
+	@cp $(WEB_DIR)/icon.png $(OUT_DIR)
+	@cp $(WEB_DIR)/manifest.json $(OUT_DIR)
+	@cp $(WEB_DIR)/pwacompat.js $(OUT_DIR)
 	@cp $(LIB_DIR)/matoya/src/unix/web/matoya.js $(OUT_DIR)
 	@mkdir -p $(INC_DIR)
 	@cp $(LIB_DIR)/matoya/src/matoya.h $(INC_DIR)

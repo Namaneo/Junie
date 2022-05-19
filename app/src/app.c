@@ -116,9 +116,9 @@ void JUN_AppLoadCore(JUN_App *public, const char *system, const char *rom, const
 	MTY_HashSetInt(this->paths, JUN_FILE_SRAM,  MTY_SprintfD("/saves/%s/%s.sram", system, game));
 	MTY_HashSetInt(this->paths, JUN_FILE_RTC,   MTY_SprintfD("/saves/%s/%s.rtc", system, game));
 
-	MTY_HashSetInt(this->paths, JUN_FOLDER_SAVES,  MTY_SprintfD("/saves/%s/", system));
-	MTY_HashSetInt(this->paths, JUN_FOLDER_SYSTEM, MTY_SprintfD("/systems/%s/", system));
-	MTY_HashSetInt(this->paths, JUN_FOLDER_CHEATS, MTY_SprintfD("/cheats/%s/%s/", system, rom));
+	MTY_HashSetInt(this->paths, JUN_FOLDER_SAVES,  MTY_SprintfD("/saves/%s", system));
+	MTY_HashSetInt(this->paths, JUN_FOLDER_SYSTEM, MTY_SprintfD("/systems/%s", system));
+	MTY_HashSetInt(this->paths, JUN_FOLDER_CHEATS, MTY_SprintfD("/cheats/%s/%s", system, rom));
 
 	JUN_CoreType type = jun_core_get_type(system);
 	this->public.core = JUN_CoreCreate(type, this->paths);

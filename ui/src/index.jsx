@@ -10,8 +10,6 @@ import { GamesPage } from './pages/games-page'
 import { SavesPage } from './pages/saves-page'
 import { CheatsPage } from './pages/cheats-page'
 import * as Helpers from './services/helpers'
-import icon_png from '../res/icon.png'
-import favicon_png from '../res/favicon.png'
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -73,12 +71,5 @@ function Junie() {
         </IonApp>
     );
 }
-
-const icon_blob = Helpers.createObjectUrl(icon_png);
-const favicon_blob = Helpers.createObjectUrl(favicon_png);
-
-document.querySelector("link[rel='icon']").href = icon_blob;
-document.querySelector("link[rel='shortcut icon']").href = favicon_blob;
-document.querySelector("link[rel='apple-touch-icon']").href = icon_blob;
 
 render(<Junie />, document.getElementById('root'));
