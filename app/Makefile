@@ -52,15 +52,12 @@ $(OUT_DIR)/$(TARGET): assets $(LIB_FILES) $(CORE_FILES) $(OBJ)
 
 assets: 
 	@mkdir -p $(OUT_DIR) 
-	@cp index.html $(OUT_DIR)
-	@cp $(WEB_DIR)/icon.png $(OUT_DIR)
-	@cp $(WEB_DIR)/manifest.json $(OUT_DIR)
-	@cp $(WEB_DIR)/pwacompat.js $(OUT_DIR)
+	@cp ../ui/build/index.html $(OUT_DIR)
+	@cp $(WEB_DIR)/* $(OUT_DIR)
 	@cp $(LIB_DIR)/matoya/src/unix/web/matoya.js $(OUT_DIR)
 	@mkdir -p $(INC_DIR)
 	@cp $(LIB_DIR)/matoya/src/matoya.h $(INC_DIR)
 	@cp $(LIB_DIR)/retro/include/libretro.h $(INC_DIR)
-	@xxd -i ../ui/build/index.html > $(INC_DIR)/ui_index.h
 	@xxd -i $(RES_DIR)/menu.png > $(INC_DIR)/res_menu.h
 	@xxd -i $(RES_DIR)/loading.png > $(INC_DIR)/res_loading.h
 	@xxd -i $(RES_DIR)/controller_left.png > $(INC_DIR)/res_controller_left.h

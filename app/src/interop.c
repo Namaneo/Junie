@@ -2,12 +2,21 @@
 
 #include "interop.h"
 
+void js_get_ui(char **value);
+
 void js_get_system(char *value, uint32_t length);
 void js_get_game(char *value, uint32_t length);
 
 bool js_read_dir(const char *path, size_t index, char *file, size_t length);
 void *js_read_file(const char *path, size_t *length);
 void js_write_file(const char *path, const void *data, size_t length);
+
+char *JUN_InteropGetUI()
+{
+	char *value = NULL;
+	js_get_ui(&value);
+	return value;
+}
 
 char *JUN_InteropGetSystem()
 {

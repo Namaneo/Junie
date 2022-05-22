@@ -2,10 +2,10 @@
 
 #include "filesystem.h"
 #include "texture.h"
+#include "interop.h"
 
 #include "video.h"
 
-#include "ui_index.h"
 #include "res_menu.h"
 #include "res_loading.h"
 #include "res_controller_left.h"
@@ -85,8 +85,7 @@ static void jun_video_on_webview_created(MTY_Webview *ctx, void *opaque)
 
 	this->callback(ctx, this->opaque);
 
-	char *index = MTY_Alloc(___ui_build_index_html_len + 1, 1);
-	memcpy(index, ___ui_build_index_html, ___ui_build_index_html_len);
+	char *index = JUN_InteropGetUI();
 
 	MTY_WebviewNavigateHTML(ctx, index);
 

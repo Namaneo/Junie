@@ -5,6 +5,8 @@
 
 #define PATH_SIZE 256
 
+char *JUN_InteropGetUI();
+
 char *JUN_InteropGetSystem();
 char *JUN_InteropGetGame();
 

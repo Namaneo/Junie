@@ -1,23 +1,177 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en-us">
 
 <head>
+	<title>Junie</title>
+
 	<meta charset="utf-8" />
+	<meta name="color-scheme" content="light dark" />
+	<meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+	<link rel="manifest" href="manifest.json" />
+
+	<script src="pwacompat.js"></script>
+
+	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
 </head>
 
 <body>
-	<div id="root"></div>
+	<script src="matoya.js"></script>
 
-	<script id="main">
+	<script>
 		const source = null;
+		const source_url = URL.createObjectURL(new Blob([atob(source)]));
 
-		const blob = new Blob([atob(source)], {type: 'text/javascript'});
+		function e() {
+			const element = document.createElement(arguments[0]);
 
-		const script = document.createElement('script');
-		script.src = URL.createObjectURL(blob);
-		document.body.appendChild(script);
+			for (let key of Object.keys(arguments[1]))
+				element.setAttribute(key, arguments[1][key]);
+
+			for (let i = 2; i < arguments.length; i++)
+				element.appendChild(arguments[i]);
+
+			return element;
+		}
+
+		const ui = e('html', { },
+			e('head', { },
+				e('meta', { charset: 'utf-8' }),
+			),
+			e('body', { }, 
+				e('div', { id: 'root' }),
+				e('script', { src: source_url })
+			)
+		);
 
 		document.currentScript.remove();
+	</script>
+
+	<script>
+		let database, files = {};
+
+		const initialize_database = () => new Promise((resolve, reject) => {
+			//Prepare and open database
+			const request = window.indexedDB.open('Junie', 10);
+
+			//Check if a schema update is required
+			request.onupgradeneeded = event => {
+				const database = event.target.result;
+
+				if (event.oldVersion < 1) {
+					database.createObjectStore('files', { keyPath: 'path', unique: true });
+				}
+			};
+
+			//Print error if anything wrong happens
+			request.onerror = event => {
+				console.log(event);
+				reject();
+			}
+
+			//Retrieve all files in memory
+			request.onsuccess = event => {
+				database = event.target.result;
+
+				const transaction = database.transaction('files', 'readwrite');
+				const store = transaction.objectStore('files');
+
+				store.getAll().onsuccess = event => {
+					for (const file of event.target.result) {
+						if (!file.data.byteLength) {
+							file.data = new Uint8Array(mty_b64_to_buf(file.data));
+							store.put(file);
+						}
+						files[file.path] = file.data;
+					}
+					resolve();
+				}
+			};
+		});
+
+		const start = async () => {
+
+			//Override logging functions
+			const log = console.log;
+			const error = console.error;
+
+			console.log = (data) => data && data != '\n' && log(data);
+			console.error = (data) => data && data != '\n' && error(data);
+
+			//Unlock audio context
+			const unlock = () => {
+				if (MTY.audio?.ctx?.state == 'suspended')
+					MTY.audio.ctx.resume();
+			};
+
+			window.addEventListener('click', unlock);
+			window.addEventListener('touchend', unlock);
+
+			await initialize_database();
+
+			//Retrieve context parameters
+			const params = decodeURI(window.location.hash).split('/');
+
+			//Start core execution
+			await MTY_Start('junie.wasm', {
+				js_get_host:  (value, length) => MTY_StrToC(window.location.hostname, value, length),
+				js_get_port:  ()              => window.location.port ?? 0,
+				js_is_secure: ()              => location.protocol.indexOf('https') != -1,
+
+				js_get_system: (value, length) => MTY_StrToC(params[1], value, length),
+				js_get_game:   (value, length) => MTY_StrToC(params[2], value, length),
+				js_get_ui:     (value) => {
+					const cui = MTY_Alloc(ui.outerHTML.length + 1, 1);
+					MTY_StrToC(ui.outerHTML, cui, ui.outerHTML.length);
+					MTY_SetUint64(value, cui);
+				},
+
+				js_read_dir: (path, index, file, length) => {
+					path = MTY_StrToJS(path);
+
+					const filtered = Object.keys(files).filter(x => x.startsWith(path));
+					if (index >= filtered.length)
+						return false;
+					
+					MTY_StrToC(filtered[index], file, length);
+
+					return true;
+				},
+				js_read_file: (path, length) => {
+					const file = files[MTY_StrToJS(path)];
+					if (!file)
+						return null;
+
+					const result = MTY_Alloc(file.length, 1);
+					const view = new Uint8Array(mty_mem(), result, file.length);
+					view.set(file);
+
+					if (length)
+						MTY_SetUint32(length, file.length);
+
+					return result;
+				},
+				js_write_file: (cpath, cdata, length) => {
+					const transaction = database.transaction('files', 'readwrite');
+					const store = transaction.objectStore('files');
+
+					const buffer = new Uint8Array(length);
+					const data = new Uint8Array(mty_mem(), cdata, length);
+					buffer.set(data);
+
+					const path = MTY_StrToJS(cpath)
+
+					files[path] = data;
+
+					store.put({ path: path, data: new Uint8Array(data) });
+				},
+			}, () => location.reload(), 'webgl');
+
+			//Prevent mobile keyboard
+			MTY.clip.readOnly = true;
+		}
+
+		start();
 	</script>
 </body>
 
