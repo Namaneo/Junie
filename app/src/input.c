@@ -93,7 +93,7 @@ JUN_Input *JUN_InputCreate(JUN_State *state)
 	this->menus[MENU_EXIT].center.x = 820;
 	this->menus[MENU_EXIT].center.y = 60;
 	this->menus[MENU_EXIT].radius = 80;
-	this->menus[MENU_EXIT].callback = JUN_StateExit;
+	this->menus[MENU_EXIT].callback = JUN_StateToggleExit;
 
 	JUN_InputStatus *menu_inputs[MENU_MAX] = {
 		&this->menus[MENU_TOGGLE_AUDIO],

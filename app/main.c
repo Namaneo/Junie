@@ -9,6 +9,8 @@
 #include "app.h"
 
 JUN_App *app;
+MTY_Webview *current_webview;
+uint32_t current_serial;
 
 static bool environment(unsigned cmd, void *data)
 {
@@ -61,8 +63,6 @@ static void start_game(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, 
 
 	JUN_AppLoadCore(app, system, rom, settings);
 
-	// return; // TODO Well...
-
 	JUN_CoreSetCallbacks(app->core, & (JUN_CoreCallbacks) {
 		environment,
 		video_refresh,
@@ -86,13 +86,14 @@ static void start_game(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, 
 
 	JUN_CoreSetCheats(app->core);
 
-	MTY_WebviewInteropReturn(ctx, serial, true, NULL);
+	current_webview = ctx;
+	current_serial = serial;
 }
 
 static bool app_func(void *opaque)
 {
 	if (!JUN_CoreHasStarted(app->core))
-		return !JUN_StateShouldExit(app->state);
+		return true;
 
 	for (int i = 0; i < JUN_StateGetFastForward(app->state); ++i)
 		JUN_CoreRun(app->core);
@@ -113,7 +114,13 @@ static bool app_func(void *opaque)
 
 	JUN_VideoPresent(app->video);
 
-	return !JUN_StateShouldExit(app->state);
+	if (JUN_StateShouldExit(app->state)) {
+		JUN_StateToggleExit(app->state);
+		JUN_AppUnloadCore(app);
+		MTY_WebviewInteropReturn(current_webview, current_serial, true, NULL);
+	}
+
+	return true;
 }
 
 static void event_func(const MTY_Event *event, void *opaque)
@@ -123,7 +130,7 @@ static void event_func(const MTY_Event *event, void *opaque)
 	MTY_PrintEvent(event);
 
 	if (event->type == MTY_EVENT_CLOSE)
-		JUN_StateExit(app->state);
+		JUN_StateToggleExit(app->state);
 }
 
 static void log_func(const char *message, void *opaque)

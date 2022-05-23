@@ -112,18 +112,20 @@ void JUN_AppLoadCore(JUN_App *public, const char *system, const char *rom, const
 	this->paths = MTY_HashCreate(0);
 
 	MTY_HashSetInt(this->paths, JUN_FILE_GAME,  MTY_SprintfD("/games/%s/%s", system, rom));
-	MTY_HashSetInt(this->paths, JUN_FILE_STATE, MTY_SprintfD("/saves/%s/%s.state", system, game));
-	MTY_HashSetInt(this->paths, JUN_FILE_SRAM,  MTY_SprintfD("/saves/%s/%s.sram", system, game));
-	MTY_HashSetInt(this->paths, JUN_FILE_RTC,   MTY_SprintfD("/saves/%s/%s.rtc", system, game));
+	MTY_HashSetInt(this->paths, JUN_FILE_STATE, MTY_SprintfD("/save/%s/%s.state", system, game));
+	MTY_HashSetInt(this->paths, JUN_FILE_SRAM,  MTY_SprintfD("/save/%s/%s.sram", system, game));
+	MTY_HashSetInt(this->paths, JUN_FILE_RTC,   MTY_SprintfD("/save/%s/%s.rtc", system, game));
 
-	MTY_HashSetInt(this->paths, JUN_FOLDER_SAVES,  MTY_SprintfD("/saves/%s", system));
-	MTY_HashSetInt(this->paths, JUN_FOLDER_SYSTEM, MTY_SprintfD("/systems/%s", system));
+	MTY_HashSetInt(this->paths, JUN_FOLDER_SAVES,  MTY_SprintfD("/save/%s", system));
+	MTY_HashSetInt(this->paths, JUN_FOLDER_SYSTEM, MTY_SprintfD("/system/%s", system));
 	MTY_HashSetInt(this->paths, JUN_FOLDER_CHEATS, MTY_SprintfD("/cheats/%s/%s", system, rom));
 
 	JUN_CoreType type = jun_core_get_type(system);
 	this->public.core = JUN_CoreCreate(type, this->paths);
 
 	jun_app_configure(this, system, settings);
+
+	MTY_Free(game);
 }
 
 void JUN_AppUnloadCore(JUN_App *public)
@@ -134,6 +136,7 @@ void JUN_AppUnloadCore(JUN_App *public)
 		return;
 
 	JUN_CoreDestroy(&this->public.core);
+	MTY_HashDestroy(&this->paths, MTY_Free);
 }
 
 static void core_log(enum retro_log_level level, const char *fmt, ...)

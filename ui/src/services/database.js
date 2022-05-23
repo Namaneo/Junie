@@ -6,13 +6,9 @@ import * as Requests from '../services/requests';
 
 async function execute(command) {
 	const db = new Dexie('Junie');
-
-	db.version(1).stores({ files: 'path, data' });
-
+	db.version(2).stores({ files: 'path, data' });
 	const result = await command(db);
-
 	db.close();
-
 	return result;
 }
 
@@ -36,13 +32,7 @@ export async function updateSave(save, system, game) {
 		const filename = game.rom?.replace(`.${system.extension}`, '');
 		file.path = file.path.replace(save.system, system.name).replace(save.game, filename);
 
-		await execute(async db => {
-			const record = await db.table('files').get(file.path);
-			if (record)
-				await db.table('files').update(file.path, file);
-			else
-				await db.table('files').add(file, file.path);
-		});
+		await execute(async db => db.table('files').put(file, key));
 	}
 
 	return await getSaves();
@@ -63,13 +53,7 @@ export async function getCheats() {
 export async function updateCheat(cheat) {
 	const file = cheat.file();
 
-	await execute(async db => {
-		const record = await db.table('files').get(file.path);
-		if (record)
-			await db.table('files').update(file.path, file);
-		else
-			await db.table('files').add(file, file.path);
-	});
+	await execute(db => db.table('files').put(file));
 
 	return await getCheats();
 }
@@ -90,9 +74,7 @@ export async function getGames() {
 export async function addGame(game, data) {
 	const file = { path: game.path(), data: new Uint8Array(data) };
 
-	await execute(async db => await db.table('files').add(file, file.path));
-
-	delete file.data;
+	await execute(db => db.table('files').put(file));
 
 	return await getGames();
 }
