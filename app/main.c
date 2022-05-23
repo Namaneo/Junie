@@ -91,9 +91,6 @@ static void start_game(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, 
 
 static bool app_func(void *opaque)
 {
-	// TODO useless for now
-	// JUN_VideoDrawLoadingScreen(app->video);
-
 	if (!JUN_CoreHasStarted(app->core))
 		return !JUN_StateShouldExit(app->state);
 

@@ -12,8 +12,7 @@ enum JUN_TextureType
 	CONTROLLER_MENU = 0,
 	CONTROLLER_LEFT = 1,
 	CONTROLLER_RIGHT = 2,
-	LOADING_SCREEN = 3,
-	CONTROLLER_MAX = 4,
+	CONTROLLER_MAX = 3,
 };
 
 typedef enum JUN_MenuType JUN_MenuType;

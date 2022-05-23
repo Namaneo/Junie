@@ -6,8 +6,8 @@
 
 #include "video.h"
 
+#include "res_index.h"
 #include "res_menu.h"
-#include "res_loading.h"
 #include "res_controller_left.h"
 #include "res_controller_right.h"
 
@@ -57,16 +57,13 @@ JUN_Video *JUN_VideoCreate(JUN_State *state, MTY_AppFunc app_func, MTY_EventFunc
 	struct jun_video_asset *asset = NULL;
 
 	asset = &this->assets[CONTROLLER_MENU];
-	asset->data = MTY_DecompressImage(res_menu_png, res_menu_png_len, &asset->width, &asset->height);
+	asset->data = MTY_DecompressImage(menu_png, menu_png_len, &asset->width, &asset->height);
 
 	asset = &this->assets[CONTROLLER_LEFT];
-	asset->data = MTY_DecompressImage(res_controller_left_png, res_controller_left_png_len, &asset->width, &asset->height);
+	asset->data = MTY_DecompressImage(controller_left_png, controller_left_png_len, &asset->width, &asset->height);
 
 	asset = &this->assets[CONTROLLER_RIGHT];
-	asset->data = MTY_DecompressImage(res_controller_right_png, res_controller_right_png_len, &asset->width, &asset->height);
-
-	asset = &this->assets[LOADING_SCREEN];
-	asset->data = MTY_DecompressImage(res_loading_png, res_loading_png_len, &asset->width, &asset->height);
+	asset->data = MTY_DecompressImage(controller_right_png, controller_right_png_len, &asset->width, &asset->height);
 
 	this->app = MTY_AppCreate(app_func, event_func, this);
 
@@ -85,7 +82,8 @@ static void jun_video_on_webview_created(MTY_Webview *ctx, void *opaque)
 
 	this->callback(ctx, this->opaque);
 
-	char *index = JUN_InteropGetUI();
+	char *index = MTY_Alloc(index_html_len + 1, 1);
+	memcpy(index, index_html, index_html_len);
 
 	MTY_WebviewNavigateHTML(ctx, index);
 
@@ -171,10 +169,6 @@ static void set_texture_metrics(JUN_Video *this, JUN_TextureType type, uint32_t 
 		case CONTROLLER_RIGHT:
 			x = view_width - width;
 			y = view_height - height;
-			break;
-		case LOADING_SCREEN:
-			x = view_width / 2 - width / 2;
-			y = view_height / 2 - height / 2;
 			break;
 		default:
 			break;
@@ -300,31 +294,6 @@ void JUN_VideoDrawUI(JUN_Video *this, bool has_gamepad)
 	MTY_WindowDrawUI(this->app, 0, draw_data);
 }
 
-void JUN_VideoDrawLoadingScreen(JUN_Video *this)
-{
-	// Get window metrics
-	uint32_t view_width, view_height;
-	refresh_viewport_size(this, &view_width, &view_height);
-
-	// Create texture context
-	JUN_Texture *textures = JUN_TextureCreateContext(view_width, view_height, 1);
-
-	// Set loading screen metrics
-	set_texture_metrics(this, LOADING_SCREEN, view_width, view_height);
-
-	// Draw the menu
-	JUN_TextureDraw(textures, JUN_StateGetMetrics(this->state, LOADING_SCREEN));
-
-	// Produce drawing data
-	MTY_DrawData *draw_data = JUN_TextureProduce(textures, 0);
-
-	// Draw the controller
-	MTY_WindowDrawUI(this->app, 0, draw_data);
-
-	// Release texture resources
-	JUN_TextureDestroy(&textures);
-}
-
 void JUN_VideoPresent(JUN_Video *this)
 {
 	MTY_WindowPresent(this->app, 0, 1);
@@ -343,7 +312,6 @@ void JUN_VideoDestroy(JUN_Video **video)
 	MTY_Free(this->assets[CONTROLLER_MENU].data);
 	MTY_Free(this->assets[CONTROLLER_LEFT].data);
 	MTY_Free(this->assets[CONTROLLER_RIGHT].data);
-	MTY_Free(this->assets[LOADING_SCREEN].data);
 
 	MTY_Free(this);
 	*video = NULL;

@@ -58,10 +58,10 @@ assets:
 	@mkdir -p $(INC_DIR)
 	@cp $(LIB_DIR)/matoya/src/matoya.h $(INC_DIR)
 	@cp $(LIB_DIR)/retro/include/libretro.h $(INC_DIR)
-	@xxd -i $(RES_DIR)/menu.png > $(INC_DIR)/res_menu.h
-	@xxd -i $(RES_DIR)/loading.png > $(INC_DIR)/res_loading.h
-	@xxd -i $(RES_DIR)/controller_left.png > $(INC_DIR)/res_controller_left.h
-	@xxd -i $(RES_DIR)/controller_right.png > $(INC_DIR)/res_controller_right.h
+	@(cd ../ui/build && xxd -i index.html) > $(INC_DIR)/res_index.h
+	@(cd $(RES_DIR) && xxd -i menu.png) > $(INC_DIR)/res_menu.h
+	@(cd $(RES_DIR) && xxd -i controller_left.png) > $(INC_DIR)/res_controller_left.h
+	@(cd $(RES_DIR) && xxd -i controller_right.png) > $(INC_DIR)/res_controller_right.h
 
 $(LIB_DIR)/lib%.a:
 	@make -C $(LIB_DIR) -f Makefile.$*
