@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync } from 'fs'
 import path from 'path'
+import glob from "glob";
 
 import nodeResolve from '@rollup/plugin-node-resolve'
 import babel from '@rollup/plugin-babel'
@@ -12,10 +13,23 @@ import { terser } from 'rollup-plugin-terser'
 const build = process.env.BUILD || 'development';
 const isProduction = build == 'production';
 
+function watcher(globs) {
+    return {
+        buildStart() {
+            for (const item of globs) {
+                const files = glob.sync(path.resolve(__dirname, item));
+
+                for (let file of files)
+                    this.addWatchFile(file)
+            }
+        },
+    }
+};
+
 function html(input) {
     return {
-      name: 'html',
-      writeBundle(options, bundle) {
+        name: 'html',
+        writeBundle(options, bundle) {
         let code = bundle[Object.keys(bundle)[0]].code;
         code = Buffer.from(code).toString('base64');
 
@@ -26,9 +40,9 @@ function html(input) {
         );
 
         writeFileSync(options.file, template);
-      }
+        }
     };
-  }
+}
 
 export default {
     input: 'src/index.jsx',
@@ -39,6 +53,7 @@ export default {
     inlineDynamicImports: true,
     preserveEntrySignatures: false,
     plugins: [
+        watcher(['index.html', 'src/**', 'res/**']),
         nodeResolve({
             rootDir: path.join(process.cwd(), 'src'),
             extensions: [".js", ".jsx"],
