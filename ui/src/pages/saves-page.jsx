@@ -3,8 +3,8 @@ import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem
 import { checkmarkCircleOutline, closeCircleOutline, cloudDownload, cloudUpload } from 'ionicons/icons';
 import { useRef, useState } from 'react';
 import { FixSaveModal } from '../modals/fix-save-modal';
-import * as Database from '../services/database';
 import * as Requests from '../services/requests';
+import { Save } from "../entities/save";
 
 export const SavesPage = () => {
 
@@ -19,7 +19,7 @@ export const SavesPage = () => {
 	}
 
 	const deleteSave = async (save) => {
-		const saves = await Database.removeSave(save);
+		const saves = await Requests.removeSave(save);
 
 		setSaves(saves);
 	};
@@ -50,20 +50,15 @@ export const SavesPage = () => {
 		const save_restore = decode(data);
 
 		fileUpload.current.value = '';
-		
-		for (const save of save_restore) {
-			const system = systems.find(x => x.name == save.system);
-			const game = system?.games?.find(x => x.rom?.startsWith(save.game));
 
-			if (system && game)
-				await Database.updateSave(save, system, game);
-		}
+		for (const save of save_restore)
+			await Requests.updateSave(save);
 
-		setSaves(await Database.getSaves());
+		setSaves(await Requests.getSaves());
 	}
 
 	const apply = async (system, game) => {
-		const saves = await Database.updateSave(current, system, game);
+		const saves = await Requests.fixSave(current, system, game);
 		setModal(false);
 
 		setSaves(saves);
@@ -74,11 +69,8 @@ export const SavesPage = () => {
 	}
 
 	useIonViewWillEnter(async () => {
-		const saves = await Database.getSaves();
-		const systems = await Requests.getSystems();
-
-		setSaves(saves);
-		setSystems(systems);
+		setSaves(await Requests.getSaves());
+		setSystems(await Requests.getFilteredSystems());
 	});
 
 	const fileUpload = useRef(null);

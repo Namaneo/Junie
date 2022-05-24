@@ -25,6 +25,8 @@ export const EditCheatModal = ({ current, systems, dismiss, apply }) => {
 	const validate = () => {
 		if (!system || !game)
 			return;
+
+		const key = current.path();
 		
 		current.system = system.name;
 		current.game = game.rom;
@@ -33,7 +35,7 @@ export const EditCheatModal = ({ current, systems, dismiss, apply }) => {
 		current.order = order;
 		current.value = value;
 
-		apply(current);
+		apply(current, key);
 	}
 
 	return (

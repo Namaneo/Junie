@@ -3,7 +3,6 @@ import { add, checkmarkCircleOutline, closeCircleOutline } from 'ionicons/icons'
 import { useState } from 'react';
 import { Cheat } from '../entities/cheat';
 import { EditCheatModal } from '../modals/edit-cheat-modal';
-import * as Database from '../services/database';
 import * as Requests from '../services/requests';
 
 export const CheatsPage = () => {
@@ -19,13 +18,13 @@ export const CheatsPage = () => {
 	}
 
 	const deleteCheat = async (cheat) => {
-		const cheats = await Database.removeCheat(cheat);
+		const cheats = await Requests.removeCheat(cheat);
 
 		setCheats(cheats);
 	};
 
-	const apply = async (cheat) => {
-		const cheats = await Database.updateCheat(cheat);
+	const apply = async (cheat, key) => {
+		const cheats = await Requests.updateCheat(cheat, key);
 		setModal(false);
 
 		setCheats(cheats);
@@ -36,11 +35,8 @@ export const CheatsPage = () => {
 	}
 
 	useIonViewWillEnter(async () => {
-		const cheats = await Database.getCheats();
-		const systems = await Requests.getSystems();
-
-		setCheats(cheats);
-		setSystems(systems);
+		setCheats(await Requests.getCheats());
+		setSystems(await Requests.getFilteredSystems());
 	});
 
 	return (

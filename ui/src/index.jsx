@@ -9,7 +9,6 @@ import { SystemsPage } from './pages/systems-page'
 import { GamesPage } from './pages/games-page'
 import { SavesPage } from './pages/saves-page'
 import { CheatsPage } from './pages/cheats-page'
-import * as Helpers from './services/helpers'
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';

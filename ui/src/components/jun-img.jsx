@@ -1,5 +1,8 @@
 import { useRef } from 'react';
 import * as Helpers from '../services/helpers'
+import cover_placeholder from '../../res/placeholder.png'
+
+const placeholder_url = Helpers.createObjectUrl(cover_placeholder);
 
 export const JunImg = ({ src }) => {
 
@@ -17,7 +20,7 @@ export const JunImg = ({ src }) => {
 	return (
 		<>
 			{src && <img src={src} ref={image} hidden onLoad={onLoad} />}
-			<img ref={placeholder} src={Helpers.getPlaceholder()} />
+			<img ref={placeholder} src={placeholder_url} />
 		</>
 	);
 }

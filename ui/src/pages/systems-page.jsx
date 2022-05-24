@@ -1,14 +1,13 @@
 import { IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
 import { useState } from 'react';
 import * as Requests from '../services/requests';
-import * as Helpers from '../services/helpers';
 
 export const SystemsPage = () => {
 
 	const [systems, setSystems] = useState([]);
 
 	useIonViewWillEnter(async () => {
-		const systems = await Requests.getSystems();
+		const systems = await Requests.getFilteredSystems();
 
 		setSystems(systems);
 	});
@@ -23,11 +22,11 @@ export const SystemsPage = () => {
 			</IonHeader>
 
 			<IonContent class="systems">
-				{systems.filter(x => x.games && x.games.length).map(system =>
+				{systems.map(system =>
 					<IonCard key={system.name} routerLink={`/games/${system.name}`}>
-						<img src={Helpers.getSystemCover(system)} />
+						<img src={Requests.getSystemCover(system)} />
 						<IonCardHeader>
-							<IonCardSubtitle>{system.coreName}</IonCardSubtitle>
+							<IonCardSubtitle>{system.core_name}</IonCardSubtitle>
 						</IonCardHeader>
 					</IonCard>
 				)}

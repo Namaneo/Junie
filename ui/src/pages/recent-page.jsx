@@ -4,31 +4,7 @@ import { add } from 'ionicons/icons';
 import { Game } from '../entities/game';
 import { JunImg } from '../components/jun-img';
 import * as Requests from '../services/requests';
-import * as Database from '../services/database';
-import * as Helpers from '../services/helpers';
-
-// TODO Should be generated from a settings page
-const settings = {
-	"language": "ENGLISH",
-	"bindings": {
-		"A": "X",
-		"B": "Z",
-		"X": "S",
-		"Y": "A",
-		"UP": "UP",
-		"DOWN": "DOWN",
-		"LEFT": "LEFT",
-		"RIGHT": "RIGHT",
-		"L": "C",
-		"R": "D",
-		"SELECT": "ENTER",
-		"START": "SPACE"
-	},
-	"melonDS": {
-		"melonds_touch_mode": "Touch",
-		"melonds_randomize_mac_address": "enabled"
-	}
-};
+import settings from '../config/settings.js';
 
 export const RecentPage = () => {
 
@@ -42,13 +18,13 @@ export const RecentPage = () => {
 
 		const data = await files[0].arrayBuffer();
 		const game = new Game(system, { rom: files[0].name, });
-		const games = await Database.addGame(game, data);
+		const games = await Requests.addGame(game, data);
 
 		setPlayed(games);
 	}
 
 	const deleteGame = async (game) => {
-		setPlayed(await Database.removeGame(game));
+		setPlayed(await Requests.removeGame(game));
 	}
 
 	const start_game = async (played) => {
@@ -64,7 +40,7 @@ export const RecentPage = () => {
 	}
 
 	useIonViewWillEnter(async () => {
-		setPlayed(await Database.getGames());
+		setPlayed(await Requests.getGames());
 	});
 
 	const fileInput = useRef(null);
@@ -91,7 +67,7 @@ export const RecentPage = () => {
 							<IonCard key={played.game.rom}>
 								<IonItemSliding>
 									<IonItem>
-										<JunImg src={Helpers.getGameCover(played.system, played.game)} />
+										<JunImg src={Requests.getGameCover(played.system, played.game)} />
 										<IonLabel>
 											<h2>{played.game.name.replaceAll(/ \(.*\).*/g, '')}</h2>
 											<h3>{played.system.name}</h3>
