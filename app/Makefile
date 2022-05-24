@@ -23,6 +23,7 @@ SRC := main.c \
 	$(SRC_DIR)/app.c \
 	$(SRC_DIR)/wasi.c \
 	$(SRC_DIR)/core.c \
+	$(SRC_DIR)/alloc.c \
 	$(SRC_DIR)/video.c \
 	$(SRC_DIR)/audio.c \
 	$(SRC_DIR)/input.c \
@@ -41,7 +42,9 @@ CFLAGS  := \
 	-I$(SRC_DIR) -I$(DEPS_DIR) -I$(INC_DIR)
 LDFLAGS := \
 	-L$(LIB_DIR) -L$(CORES_DIR) $(LIBS:%=-l%) $(CORES:%=-l%) \
-	-Wl,--allow-undefined -Wl,--export-table -Wl,-error-limit=0
+	-Wl,--allow-undefined -Wl,--export-table -Wl,-error-limit=0 \
+	-Wl,--wrap=malloc -Wl,--wrap=calloc -Wl,--wrap=realloc -Wl,--wrap=free \
+	-Wl,--wrap=MTY_Alloc -Wl,--wrap=MTY_Realloc -Wl,--wrap=MTY_Free
 
 MAKEFLAGS += --no-print-directory
 
