@@ -14,12 +14,8 @@ export class Game {
 		const system = systems.find(system => system.name == system_name);
 		let game = system.games.find(game => game.rom == game_rom);
 
-		if (!game) {
-			game = {
-				name: game_rom,
-				rom: game_rom,
-			}
-		}
+		if (!game)
+			game = { name: game_rom, rom: game_rom }
 
 		return new Game(system, game);
 	}

@@ -27,7 +27,7 @@ export const RecentPage = () => {
 		setPlayed(await Requests.removeGame(game));
 	}
 
-	const start_game = async (played) => {
+	const startGame = async (played) => {
 		window.frameElement.style.display = 'none';
 
 		await junie_start_game({
@@ -72,7 +72,7 @@ export const RecentPage = () => {
 											<h2>{played.game.name.replaceAll(/ \(.*\).*/g, '')}</h2>
 											<h3>{played.system.name}</h3>
 										</IonLabel>
-										<IonButton onClick={() => start_game(played)}>Play</IonButton>
+										<IonButton onClick={() => startGame(played)}>Play</IonButton>
 									</IonItem>
 									<IonItemOptions side="end">
 										<IonItemOption color="danger" onClick={() => deleteGame(played)}>Delete</IonItemOption>
