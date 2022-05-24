@@ -67,7 +67,7 @@ export const RecentPage = () => {
 							<IonCard key={played.game.rom}>
 								<IonItemSliding>
 									<IonItem>
-										<JunImg src={Requests.getGameCover(played.system, played.game)} />
+										<JunImg local={played.game.cover} remote={Requests.getGameCover(played.system, played.game)} />
 										<IonLabel>
 											<h2>{played.game.name.replaceAll(/ \(.*\).*/g, '')}</h2>
 											<h3>{played.system.name}</h3>

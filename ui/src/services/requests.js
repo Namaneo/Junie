@@ -9,16 +9,19 @@ import library from '../config/library'
 let initialized = false;
 
 async function fetchGames(system) {
-	const folder = await fetch(`${location.origin}/games/${system.name}/`);
+	const path = `${location.origin}/games/${system.name}/`;
+	const folder = await fetch(path);
 
 	const html = document.createElement('html');
 	html.innerHTML = await folder.text();
 
 	const elements = Array.from(html.querySelectorAll('a'));
-	system.games = elements.map(a => new Object({ 
-		name: a.innerText.substring(0, a.innerText.lastIndexOf('.')),
-		rom: a.innerText,
-	})).filter(game => !game.rom.endsWith('.png'));
+	const games = elements.map(a => {
+		const name = a.innerText.substring(0, a.innerText.lastIndexOf('.'));
+		return { name: name, rom: a.innerText, cover: `${path}${name}.png` };
+	});
+
+	system.games = games.filter(game => !game.rom.endsWith('.png'));
 }
 
 export async function initialize() {
