@@ -1,7 +1,0 @@
-{
-	"Binaries": "app",
-	"Resources": {
-		"API": "assets/api",
-		"Games": "../games"
-	}
-}
