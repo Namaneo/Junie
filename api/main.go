@@ -23,7 +23,11 @@ func main() {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.NoCache)
 
-	helpers.UseStaticFiles(r, "", settings.Binaries)
+	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+		dir := http.Dir(settings.Binaries)
+		fs := http.FileServer(dir)
+		fs.ServeHTTP(w, r)
+	})
 
 	r.Get("/api/library", endpoints.SendLibrary)
 	r.Get("/api/library/{system}/{filename}", endpoints.SendGame)
