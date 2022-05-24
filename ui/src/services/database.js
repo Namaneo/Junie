@@ -6,7 +6,7 @@ import * as Requests from '../services/requests';
 
 async function execute(command) {
 	const db = new Dexie('Junie');
-	db.version(2).stores({ files: 'path, data' });
+	db.version(2).stores({ files: 'path' });
 	const result = await command(db);
 	db.close();
 	return result;
@@ -74,7 +74,7 @@ export async function getGames() {
 export async function addGame(game, data) {
 	const file = { path: game.path(), data: new Uint8Array(data) };
 
-	await execute(db => db.table('files').put(file));
+	await execute(db => db.table('files').put(file, file.path));
 
 	return await getGames();
 }

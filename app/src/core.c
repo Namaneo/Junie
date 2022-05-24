@@ -168,7 +168,7 @@ PROTOTYPES(mgba);
 PROTOTYPES(quicknes);
 PROTOTYPES(snes9x);
 
-static void jun_core_Create()
+static void jun_core_initialize()
 {
 	if (CORES.initialized)
 		return;
@@ -182,7 +182,6 @@ static void jun_core_Create()
 	CORES.initialized = true;
 }
 
-// TODO: ugly parameters here, must be improved
 JUN_Core *JUN_CoreCreate(JUN_CoreType type, MTY_Hash *paths)
 {
 	JUN_Core *this = MTY_Alloc(1, sizeof(JUN_Core));
@@ -191,7 +190,7 @@ JUN_Core *JUN_CoreCreate(JUN_CoreType type, MTY_Hash *paths)
 
 	this->paths = paths;
 
-	jun_core_Create();
+	jun_core_initialize();
 
 	this->sym = 
 		type == JUN_CORE_GENESIS  ? &CORES.genesis  :
@@ -206,7 +205,7 @@ JUN_Core *JUN_CoreCreate(JUN_CoreType type, MTY_Hash *paths)
 
 const MTY_JSON *JUN_CoreGetDefaultConfiguration(JUN_CoreType type)
 {
-	jun_core_Create();
+	jun_core_initialize();
 
 	return
 		type == JUN_CORE_GENESIS  ? CORES.genesis.configuration  :
@@ -253,10 +252,9 @@ bool JUN_CoreStartGame(JUN_Core *this)
 
 	this->game.path = game->path;
 	this->game.size = game->size;
-	if (!this->system.need_fullpath)
-	{
+	if (!this->system.need_fullpath) {
 		this->game.data = MTY_Alloc(this->game.size, 1);
-		memcpy((void *)this->game.data, game->buffer, this->game.size);
+		memcpy((void *) this->game.data, game->buffer, this->game.size);
 	}
 
 	this->initialized = this->sym->retro_load_game(&this->game);
@@ -401,8 +399,8 @@ void JUN_CoreDestroy(JUN_Core **core)
 
 	JUN_ConfigurationDestroy(&this->configuration);
 
-	if (this->initialized)
-		this->sym->retro_deinit();
+	this->sym->retro_unload_game();
+	this->sym->retro_deinit();
 
 	if (this->game.data)
 		MTY_Free((void *) this->game.data);

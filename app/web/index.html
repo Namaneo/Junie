@@ -22,7 +22,7 @@
 
 	<script>
 		const database = new Dexie('Junie');
-		database.version(2).stores({ files: 'path, data' });
+		database.version(2).stores({ files: 'path' });
 
 		const select = async (path) => {
 			return await database.table('files').where('path').startsWith(path).toArray();
@@ -32,12 +32,20 @@
 		const retrieve_files = async () => {
 			const games = await select('/games/');
 			const saves = await select('/save/');
+			const systems = await select('/system/');
 			const cheats = await select('/cheats/');
 
-			files = [ ...games, ...saves, ...cheats ].reduce((prev, curr) => { 
-				prev[curr.path] = curr.data; 
-				return prev; 
-			}, {});
+			let files_tmp = [];
+			for (let file of [ ...games, ...saves, ...systems, ...cheats ]) {
+				if (file.path.indexOf('firmware.bin') != -1) {
+					await database.table('files').delete(path);
+					continue;
+				}
+
+				files_tmp[file.path] = file.data;
+			}
+
+			files = files_tmp;
 
 			setTimeout(() => retrieve_files(), 1000);
 		} 
@@ -90,11 +98,14 @@
 					return result;
 				},
 				js_write_file: (cpath, cdata, length) => {
+					const path = MTY_StrToJS(cpath);
+
+					if (path.indexOf('firmware.bin') != -1)
+						return;
+
 					const buffer = new Uint8Array(length);
 					const data = new Uint8Array(mty_mem(), cdata, length);
 					buffer.set(data);
-
-					const path = MTY_StrToJS(cpath)
 
 					files[path] = data;
 
