@@ -136,6 +136,7 @@ void JUN_AppUnloadCore(JUN_App *public)
 		return;
 
 	JUN_CoreDestroy(&this->public.core);
+	JUN_FilesystemClearFile(MTY_HashGetInt(this->paths, JUN_FILE_GAME));
 	MTY_HashDestroy(&this->paths, MTY_Free);
 }
 

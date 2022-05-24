@@ -139,6 +139,21 @@ void JUN_FilesystemSaveFile(const char *path, const void *buffer, size_t length)
 	JUN_InteropWriteFile(file->path, file->buffer, file->size);
 }
 
+void JUN_FilesystemClearFile(const char *path)
+{
+	JUN_File *file = JUN_FilesystemGetExistingFile(path);
+
+	if (!file)
+		return;
+
+	if (file->path)
+		MTY_Free(file->path);
+	if (file->buffer)
+		MTY_Free(file->buffer);
+
+	*file = (JUN_File) {0};
+}
+
 void JUN_FilesystemDestroy()
 {
 	for (int i = 0; i < MAX_FILES; ++i) {

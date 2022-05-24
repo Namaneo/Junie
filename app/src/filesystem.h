@@ -36,4 +36,5 @@ JUN_File *JUN_FilesystemGetFiles();
 JUN_File *JUN_FilesystemGetNewFile(const char *path);
 JUN_File *JUN_FilesystemGetExistingFile(const char *path);
 void JUN_FilesystemSaveFile(const char *path, const void *buffer, size_t length);
+void JUN_FilesystemClearFile(const char *path);
 void JUN_FilesystemDestroy();

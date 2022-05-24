@@ -54,7 +54,7 @@ static void audio_sample(int16_t left, int16_t right)
 
 static void start_game(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, void *opaque)
 {
-	JUN_PrintMemory();
+	JUN_DumpMemory();
 
 	char system[PATH_SIZE] = {0};
 	MTY_JSONObjGetString(json, "system", system, PATH_SIZE);
@@ -120,7 +120,7 @@ static bool app_func(void *opaque)
 	if (JUN_StateShouldExit(app->state)) {
 		JUN_StateToggleExit(app->state);
 		JUN_AppUnloadCore(app);
-		JUN_PrintMemory();
+		JUN_DumpMemory();
 		MTY_WebviewInteropReturn(current_webview, current_serial, true, NULL);
 	}
 

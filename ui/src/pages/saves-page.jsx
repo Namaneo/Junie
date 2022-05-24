@@ -1,7 +1,7 @@
+import { encode, decode } from "@msgpack/msgpack/dist";
 import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem, IonItemGroup, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonModal, IonPage, IonTitle, IonToolbar, useIonModal, useIonViewWillEnter } from '@ionic/react';
 import { checkmarkCircleOutline, closeCircleOutline, cloudDownload, cloudUpload } from 'ionicons/icons';
 import { useRef, useState } from 'react';
-import { Save } from '../entities/save';
 import { FixSaveModal } from '../modals/fix-save-modal';
 import * as Database from '../services/database';
 import * as Requests from '../services/requests';
@@ -28,11 +28,11 @@ export const SavesPage = () => {
 		await new Promise(resolve => {
 			const a = document.createElement('a');
 			document.body.appendChild(a);
-			
-			const blob = new Blob([JSON.stringify(saves)], { type: 'octet/stream' })
+
+			const blob = new Blob([encode(saves)], { type: 'octet/stream' })
 
 			a.href = URL.createObjectURL(blob);
-			a.download = 'junie-save.json';
+			a.download = `junie-${Date.now()}.sav`;
 			a.click();
 
 			URL.revokeObjectURL(a.href);
@@ -46,9 +46,11 @@ export const SavesPage = () => {
 		if (!files?.length)
 			return;
 
-		const data = await files[0].text();
-		const save_restore = JSON.parse(data);
+		const data = await files[0].arrayBuffer();
+		const save_restore = decode(data);
 
+		fileUpload.current.value = '';
+		
 		for (const save of save_restore) {
 			const system = systems.find(x => x.name == save.system);
 			const game = system?.games?.find(x => x.rom?.startsWith(save.game));

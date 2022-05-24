@@ -1,3 +1,3 @@
 #pragma once
 
-void JUN_PrintMemory();
+void JUN_DumpMemory();

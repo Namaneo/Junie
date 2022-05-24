@@ -9,6 +9,21 @@ import cover_nintendo_ds_dark from '../../res/covers/nintendo-ds-dark.png'
 import cover_nintendo_ds      from '../../res/covers/nintendo-ds.png'
 import cover_snes             from '../../res/covers/snes.png'
 
+export function toBase64(buffer) {
+    var binary = '';
+    for (var i = 0; i < buffer.byteLength; i++)
+        binary += String.fromCharCode(buffer[i]);
+    return window.btoa(binary);
+}
+
+export function fromBase64(base64) {
+    var binary = window.atob(base64);
+    var buffer = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++)
+        buffer[i] = binary.charCodeAt(i);
+    return buffer;
+}
+
 export function createObjectUrl(data) {
     const sliceSize = 512;
     const regex = /^data:(.+);base64,(.*)$/;
