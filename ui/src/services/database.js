@@ -35,11 +35,15 @@ export async function updateSave(save, system, game) {
 		await execute(async db => db.table('files').put(file, key));
 	}
 
+	junie_refresh_files();
+
 	return await getSaves();
 }
 
 export async function removeSave(save) {
 	await execute(db => db.table('files').bulkDelete(save.files.map(x => x.path)));
+
+	junie_refresh_files();
 
 	return await getSaves();
 }
@@ -55,11 +59,15 @@ export async function updateCheat(cheat) {
 
 	await execute(db => db.table('files').put(file));
 
+	junie_refresh_files();
+
 	return await getCheats();
 }
 
 export async function removeCheat(cheat) {
 	await execute(db => db.table('files').delete(cheat.file().path));
+
+	junie_refresh_files();
 
 	return await getCheats();
 }
@@ -76,11 +84,15 @@ export async function addGame(game, data) {
 
 	await execute(db => db.table('files').put(file, file.path));
 
+	junie_refresh_files();
+
 	return await getGames();
 }
 
 export async function removeGame(game) {
 	await execute(db => db.table('files').delete(game.path()));
+
+	junie_refresh_files();
 
 	return await getGames();
 }

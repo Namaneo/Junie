@@ -93,6 +93,11 @@ static void start_game(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, 
 	current_serial = serial;
 }
 
+static void refresh_files(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, void *opaque)
+{
+	JUN_InteropRefreshFiles();
+}
+
 static bool app_func(void *opaque)
 {
 	if (!JUN_CoreHasStarted(app->core))
@@ -148,6 +153,7 @@ static void log_func(const char *message, void *opaque)
 static void on_ui_created(MTY_Webview *webview, void *opaque)
 {
 	MTY_WebviewInteropBind(webview, "junie_start_game", start_game, NULL);
+	MTY_WebviewInteropBind(webview, "junie_refresh_files", refresh_files, NULL);
 }
 
 int main(int argc, char *argv[])

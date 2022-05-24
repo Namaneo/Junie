@@ -25,31 +25,11 @@
 		const database = new Dexie('Junie');
 		database.version(2).stores({ files: 'path' });
 
-		const select = async (path) => {
-			return await database.table('files').where('path').startsWith(path).toArray();
-		}
-
 		let files = [];
-		const retrieve_files = async () => {
-			const games = await select('/games/');
-			const saves = await select('/save/');
-			const systems = await select('/system/');
-			const cheats = await select('/cheats/');
-
-			let files_tmp = [];
-			for (let file of [ ...games, ...saves, ...systems, ...cheats ]) {
-				if (file.path.indexOf('firmware.bin') != -1) {
-					await database.table('files').delete(file.path);
-					continue;
-				}
-
-				files_tmp[file.path] = file.data;
-			}
-
-			files = files_tmp;
-
-			setTimeout(() => retrieve_files(), 1000);
-		} 
+		const refresh_files = async () => {
+			files = await database.table('files').toArray();
+			console.log(files);
+		}
 
 		const start = async () => {
 
@@ -69,15 +49,16 @@
 			window.addEventListener('click', unlock);
 			window.addEventListener('touchend', unlock);
 
-			await retrieve_files();
+			await refresh_files();
 
 			//Start core execution
 			await MTY_Start('junie.wasm', {
 				js_trace: () => console.trace(),
-				js_read_dir: (path, index, file, length) => {
-					path = MTY_StrToJS(path);
+				js_refresh_files: () => refresh_files(),
+				js_read_dir: (cpath, index, file, length) => {
+					path = MTY_StrToJS(cpath);
 
-					const filtered = Object.keys(files).filter(x => x.startsWith(path));
+					const filtered = files.filter(file => file.path.startsWith(path));
 					if (index >= filtered.length)
 						return false;
 					
@@ -85,33 +66,36 @@
 
 					return true;
 				},
-				js_read_file: (path, length) => {
-					const file = files[MTY_StrToJS(path)];
+				js_read_file: (cpath, clength) => {
+					const path = MTY_StrToJS(cpath);
+					const file = files.find(file => file.path == path);
 					if (!file)
 						return null;
 
-					const result = MTY_Alloc(file.length, 1);
-					const view = new Uint8Array(mty_mem(), result, file.length);
-					view.set(file);
+					const result = MTY_Alloc(file.data.length, 1);
+					const view = new Uint8Array(mty_mem(), result, file.data.length);
+					view.set(file.data);
 
-					if (length)
-						MTY_SetUint32(length, file.length);
+					if (clength)
+						MTY_SetUint32(clength, file.data.length);
 
 					return result;
 				},
 				js_write_file: (cpath, cdata, length) => {
 					const path = MTY_StrToJS(cpath);
 
-					if (path.indexOf('firmware.bin') != -1)
-						return;
-
 					const buffer = new Uint8Array(length);
 					const data = new Uint8Array(mty_mem(), cdata, length);
 					buffer.set(data);
 
-					files[path] = data;
+					const new_file = { path: path, data: new Uint8Array(data) };
+					const file = files.find(file => file.path == path);
+					if (file)
+						file.data = data;
+					else
+						files.push(new_file)
 
-					database.table('files').put({ path: path, data: new Uint8Array(data) });
+					database.table('files').put(new_file);
 				},
 			});
 

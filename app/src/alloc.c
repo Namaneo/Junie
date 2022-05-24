@@ -171,11 +171,6 @@ void __wrap_free(void *__ptr)
 		struct memory_entry *prev_entry = MTY_HashGetInt(pointers, (int64_t) __ptr);
 
         if (prev_entry) {
-			if (prev_entry->size > 100000000) {
-				MTY_Log("[FREE] size: %zu, local: %d", prev_entry->size, is_local);
-				JUN_InteropTrace();
-			}
-
             MTY_HashSetInt(pointers, (int64_t) prev_entry->pointer, NULL);
 			MTY_Free(prev_entry);
         }

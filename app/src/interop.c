@@ -3,6 +3,7 @@
 #include "interop.h"
 
 void js_trace();
+void js_refresh_files();
 bool js_read_dir(const char *path, size_t index, char *file, size_t length);
 void *js_read_file(const char *path, size_t *length);
 void js_write_file(const char *path, const void *data, size_t length);
@@ -10,6 +11,11 @@ void js_write_file(const char *path, const void *data, size_t length);
 void JUN_InteropTrace()
 {
 	js_trace();
+}
+
+void JUN_InteropRefreshFiles()
+{
+	js_refresh_files();
 }
 
 bool JUN_InteropReadDir(const char *path, size_t index, char **file)
