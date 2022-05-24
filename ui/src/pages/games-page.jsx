@@ -5,6 +5,7 @@ import { Game } from "../entities/game";
 import { JunImg } from "../components/jun-img";
 import * as Requests from "../services/requests";
 import * as Database from "../services/database";
+import * as Helpers from "../services/helpers";
 
 export const GamesPage = ({ match }) => {
 
@@ -69,7 +70,7 @@ export const GamesPage = ({ match }) => {
 				<IonLoading isOpen={loading} message="Installing..." spinner={null} />
 				{system.games?.map(game =>
 					<IonCard key={game.rom} onClick={() => install(game)}>
-						<JunImg src={game.cover} />
+						<JunImg src={Helpers.getGameCover(system, game)} />
 						<IonCardHeader>
 							<IonCardSubtitle>{game.name}</IonCardSubtitle>
 						</IonCardHeader>

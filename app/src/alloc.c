@@ -25,7 +25,7 @@ bool is_local = false;
 bool entered_pointers = false;
 MTY_Hash *pointers = NULL;
 
-void JUN_DumpMemory() 
+void JUN_DumpMemory()
 {
     entered_pointers = true;
 
@@ -71,15 +71,17 @@ static void ensure_initialized()
 void *__wrap_MTY_Alloc(size_t len, size_t size)
 {
     is_local = true;
-    return __real_MTY_Alloc(len, size);
+    void *ptr = __real_MTY_Alloc(len, size);
     is_local = false;
+	return ptr;
 }
 
 void *__wrap_MTY_Realloc(void *mem, size_t len, size_t size)
 {
     is_local = true;
-    return __real_MTY_Realloc(mem, len, size);
+    void *ptr = __real_MTY_Realloc(mem, len, size);
     is_local = false;
+	return ptr;
 }
 
 void __wrap_MTY_Free(void *mem)
@@ -147,11 +149,10 @@ void *__wrap_realloc(void *__ptr, size_t __size)
 		entry->size = __size;
 		entry->local = is_local;
 
-		struct memory_entry *prev_entry = MTY_HashGetInt(pointers, (int64_t) __ptr);
-
-		MTY_HashSetInt(pointers, (int64_t) prev_entry->pointer, NULL);
-		MTY_HashSetInt(pointers, (int64_t) entry->pointer, entry);
+		struct memory_entry *prev_entry = MTY_HashPopInt(pointers, (int64_t) __ptr);
 		MTY_Free(prev_entry);
+
+		MTY_HashSetInt(pointers, (int64_t) entry->pointer, entry);
 
 		entered_pointers = false;
 	}
@@ -168,12 +169,10 @@ void __wrap_free(void *__ptr)
 	if (!entered_pointers) {
 		entered_pointers = true;
 
-		struct memory_entry *prev_entry = MTY_HashGetInt(pointers, (int64_t) __ptr);
+		struct memory_entry *prev_entry = MTY_HashPopInt(pointers, (int64_t) __ptr);
 
-        if (prev_entry) {
-            MTY_HashSetInt(pointers, (int64_t) prev_entry->pointer, NULL);
+        if (prev_entry)
 			MTY_Free(prev_entry);
-        }
 
 		entered_pointers = false;
 	}

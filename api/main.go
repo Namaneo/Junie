@@ -31,7 +31,6 @@ func main() {
 
 	r.Get("/api/library", endpoints.SendLibrary)
 	r.Get("/api/library/{system}/{filename}", endpoints.SendGame)
-	r.Get("/covers/{system}/{filename}", endpoints.SendCover)
 
 	port, found := os.LookupEnv("PORT")
 	if !found {

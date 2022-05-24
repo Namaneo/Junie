@@ -5,6 +5,7 @@ import { Game } from '../entities/game';
 import { JunImg } from '../components/jun-img';
 import * as Requests from '../services/requests';
 import * as Database from '../services/database';
+import * as Helpers from '../services/helpers';
 
 // TODO Should be generated from a settings page
 const settings = {
@@ -90,7 +91,7 @@ export const RecentPage = () => {
 							<IonCard key={played.game.rom}>
 								<IonItemSliding>
 									<IonItem>
-										<JunImg src={played.game.cover} />
+										<JunImg src={Helpers.getGameCover(played.system, played.game)} />
 										<IonLabel>
 											<h2>{played.game.name.replaceAll(/ \(.*\).*/g, '')}</h2>
 											<h3>{played.system.name}</h3>

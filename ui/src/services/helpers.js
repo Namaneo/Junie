@@ -70,3 +70,11 @@ export function getSystemCover(system) {
 	const cover = dark_mode && system.coverDark ? system.coverDark : system.cover;
 	return covers[cover];
 }
+
+export function getGameCover(system, game) {
+    const system_name = system.fullName.replaceAll(' ', '_');
+    const cover_name = game.rom.substring(0, game.rom.lastIndexOf('.')) + '.png';
+    const host = 'https://raw.githubusercontent.com';
+    const path = `/libretro-thumbnails/${system_name}/master/Named_Boxarts/${cover_name}`;
+    return host + path;
+}
