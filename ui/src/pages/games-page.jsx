@@ -5,6 +5,7 @@ import { Game } from "../entities/game";
 import { JunImg } from "../components/jun-img";
 import * as Requests from "../services/requests";
 import * as Database from "../services/database";
+import * as Helpers from "../services/helpers";
 
 export const GamesPage = ({ match }) => {
 
@@ -19,15 +20,22 @@ export const GamesPage = ({ match }) => {
 
 		const data = await Requests.fetchGame(system, game);
 
-		if (!data || !data.byteLength) {
-
+		if (!data) {
+			setLoading(false);
 			alert({
 				header: 'Install failed',
 				message: `${game.name} (${system.name})`,
 				buttons: [ 'OK' ],
 			});
-
 			return;
+		}
+
+		if (game.cover) {
+			const response = await fetch(game.cover);
+			const buffer = await response.arrayBuffer();
+			const cover = Helpers.From.ArrayBuffer(buffer);
+			const contentType = response.headers.get("Content-Type");
+			game.cover = Helpers.To.DataURL(cover, contentType);
 		}
 
 		await Database.addGame(new Game(system, game), data);

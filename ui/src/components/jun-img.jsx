@@ -15,8 +15,6 @@ export const JunImg = ({ system, game }) => {
 	const image = useRef(null);
 	const placeholder = useRef(null);
 
-	game.cover = source;
-
     const onLoad = () => {
 		game.cover = source;
 		placeholder.current.hidden = true;
@@ -27,11 +25,23 @@ export const JunImg = ({ system, game }) => {
 		setSource(source != remote ? remote : null);
 	}
 
-	const src = source && !source.startsWith('http') ? location.origin + '/' + source : source;
+	game.cover = source;
+	if (game.cover) {
+		const isHttp  = source.startsWith('http:');
+		const isHttps = source.startsWith('https:');
+		const isBlob  = source.startsWith('blob:');
+		const isData  = source.startsWith('data:');
+
+		if (!isHttp && !isHttps && !isBlob && !isData)
+			game.cover = location.origin + '/' + game.cover;
+
+		if (isData)
+			game.cover = Helpers.createObjectUrl(game.cover);
+	}
 
 	return (
 		<>
-			{local && <img src={src} ref={image} hidden onLoad={onLoad} onError={onError} />}
+			{local && <img src={game.cover} ref={image} hidden onLoad={onLoad} onError={onError} />}
 			<img ref={placeholder} src={placeholder_url} />
 		</>
 	);
