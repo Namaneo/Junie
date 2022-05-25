@@ -86,7 +86,7 @@ export async function fetchGame(system, game) {
 
 async function execute(command) {
 	const db = new Dexie('Junie');
-	db.version(2).stores({ files: 'path' });
+	db.version(2).stores({ files: 'path', games: 'path' });
 	const result = await command(db);
 	db.close();
 	return result;
@@ -164,16 +164,19 @@ export async function removeCheat(cheat) {
 }
 
 export async function getGames() {
-	const rawGames = await execute(db => db.table('files').where('path').startsWith('/games/').primaryKeys());
+	const games = await execute(db => db.table('games').where('path').startsWith('/games/').toArray());
 
-	const systems = await getSystems();
-	return rawGames.map(path => Game.fromPath(path, systems));
+	return games.map(game => new Game(game.system, game.game));
 };
 
 export async function addGame(game, data) {
+	const copy = { path: game.path(), ...JSON.parse(JSON.stringify(game)) };
 	const file = { path: game.path(), data: new Uint8Array(data) };
 
-	await execute(db => db.table('files').put(file, file.path));
+	delete copy.system.games;
+
+	await execute(db => db.table('games').put(copy));
+	await execute(db => db.table('files').put(file));
 
 	junie_refresh_files();
 
@@ -181,6 +184,7 @@ export async function addGame(game, data) {
 }
 
 export async function removeGame(game) {
+	await execute(db => db.table('games').delete(game.path()));
 	await execute(db => db.table('files').delete(game.path()));
 
 	junie_refresh_files();

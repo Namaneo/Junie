@@ -60,7 +60,7 @@ export const GamesPage = ({ match }) => {
 				<IonLoading isOpen={loading} message="Installing..." spinner={null} />
 				{system.games?.map(game =>
 					<IonCard key={game.rom} onClick={() => install(game)}>
-						<JunImg local={game.cover} remote={Requests.getGameCover(system, game)} />
+						<JunImg system={system} game={game} />
 						<IonCardHeader>
 							<IonCardSubtitle>{game.name}</IonCardSubtitle>
 						</IonCardHeader>

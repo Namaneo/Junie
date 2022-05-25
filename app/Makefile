@@ -55,9 +55,8 @@ $(OUT_DIR)/$(TARGET): assets $(LIB_FILES) $(CORE_FILES) $(OBJ)
 
 assets: 
 	@mkdir -p $(OUT_DIR) 
-	@cp ../ui/build/index.html $(OUT_DIR)
-	@cp $(WEB_DIR)/* $(OUT_DIR)
-	@cp $(LIB_DIR)/matoya/src/unix/web/matoya.js $(OUT_DIR)
+	@cp -R $(WEB_DIR)/* $(OUT_DIR)
+	@cp $(LIB_DIR)/matoya/src/unix/web/matoya.js $(OUT_DIR)/deps
 	@(cd $(OUT_DIR) && ln -s ../../demo/games games)
 	@mkdir -p $(INC_DIR)
 	@cp $(LIB_DIR)/matoya/src/matoya.h $(INC_DIR)
