@@ -4,7 +4,7 @@ import { checkmarkCircleOutline, closeCircleOutline, cloudDownload, cloudUpload 
 import { useRef, useState } from 'react';
 import { FixSaveModal } from '../modals/fix-save-modal';
 import * as Requests from '../services/requests';
-import { Save } from "../entities/save";
+import * as Database from "../services/database";
 
 export const SavesPage = () => {
 
@@ -13,13 +13,16 @@ export const SavesPage = () => {
 	const [saves, setSaves] = useState([]);
 	const [systems, setSystems] = useState([]);
 
+	for (let save of saves)
+		save.mapped = save.isMapped(systems);
+
 	const showModal = (save) => {
 		setCurrent(save);
 		setModal(true);
 	}
 
 	const deleteSave = async (save) => {
-		const saves = await Requests.removeSave(save);
+		const saves = await Database.removeSave(save);
 
 		setSaves(saves);
 	};
@@ -52,13 +55,13 @@ export const SavesPage = () => {
 		fileUpload.current.value = '';
 
 		for (const save of save_restore)
-			await Requests.updateSave(save);
+			await Database.updateSave(save);
 
-		setSaves(await Requests.getSaves());
+		setSaves(await Database.getSaves());
 	}
 
 	const apply = async (system, game) => {
-		const saves = await Requests.fixSave(current, system, game);
+		const saves = await Database.fixSave(current, system, game);
 		setModal(false);
 
 		setSaves(saves);
@@ -69,8 +72,8 @@ export const SavesPage = () => {
 	}
 
 	useIonViewWillEnter(async () => {
-		setSaves(await Requests.getSaves());
-		setSystems(await Requests.getFilteredSystems());
+		setSaves(await Database.getSaves());
+		setSystems(await Requests.getSystems());
 	});
 
 	const fileUpload = useRef(null);

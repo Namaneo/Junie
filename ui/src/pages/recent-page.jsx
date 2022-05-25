@@ -4,6 +4,7 @@ import { add } from 'ionicons/icons';
 import { Game } from '../entities/game';
 import { JunImg } from '../components/jun-img';
 import * as Requests from '../services/requests';
+import * as Database from "../services/database";
 import settings from '../config/settings.js';
 
 export const RecentPage = () => {
@@ -14,17 +15,21 @@ export const RecentPage = () => {
 		if (!files?.length)
 			return;
 
-		const system = await Requests.getSystemByGame(files[0].name);
+		const file = files[0];
+		const system = await Requests.getSystemByGame(file.name);
 
-		const data = await files[0].arrayBuffer();
-		const game = new Game(system, { rom: files[0].name, });
-		const games = await Requests.addGame(game, data);
+		const data = await file.arrayBuffer();
+		const game = new Game(system, { 
+			name: file.name.substring(0, file.name.lastIndexOf('.')),
+			rom: file.name 
+		});
+		const games = await Database.addGame(game, data);
 
 		setPlayed(games);
 	}
 
 	const deleteGame = async (game) => {
-		setPlayed(await Requests.removeGame(game));
+		setPlayed(await Database.removeGame(game));
 	}
 
 	const startGame = async (played) => {
@@ -40,7 +45,7 @@ export const RecentPage = () => {
 	}
 
 	useIonViewWillEnter(async () => {
-		setPlayed(await Requests.getGames());
+		setPlayed(await Database.getGames());
 	});
 
 	const fileInput = useRef(null);

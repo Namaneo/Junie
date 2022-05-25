@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Cheat } from '../entities/cheat';
 import { EditCheatModal } from '../modals/edit-cheat-modal';
 import * as Requests from '../services/requests';
+import * as Database from "../services/database";
 
 export const CheatsPage = () => {
 
@@ -18,13 +19,13 @@ export const CheatsPage = () => {
 	}
 
 	const deleteCheat = async (cheat) => {
-		const cheats = await Requests.removeCheat(cheat);
+		const cheats = await Database.removeCheat(cheat);
 
 		setCheats(cheats);
 	};
 
 	const apply = async (cheat, key) => {
-		const cheats = await Requests.updateCheat(cheat, key);
+		const cheats = await Database.updateCheat(cheat, key);
 		setModal(false);
 
 		setCheats(cheats);
@@ -35,8 +36,8 @@ export const CheatsPage = () => {
 	}
 
 	useIonViewWillEnter(async () => {
-		setCheats(await Requests.getCheats());
-		setSystems(await Requests.getFilteredSystems());
+		setCheats(await Database.getCheats());
+		setSystems(await Requests.getSystems());
 	});
 
 	return (

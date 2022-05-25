@@ -4,15 +4,13 @@ export class Save {
 	system;
 	game;
 	extension;
-	mapped;
 
-	constructor(file, systems) {
+	constructor(file) {
 		this.files.push(file);
 
 		this.system = this.match(1);
 		this.game = this.match(2);
 		this.extension = this.match(3);
-		this.mapped = this.isMapped(systems);
 	}
 
 	isMapped(systems) {

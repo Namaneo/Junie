@@ -32,7 +32,7 @@ export const FixSaveModal = ({ systems, dismiss, apply }) => {
 					<IonItem>
 						<IonLabel>System</IonLabel>
 						<IonSelect interface="action-sheet" onIonChange={e => systemChanged(e.detail.value)}>
-							{systems.map(system =>
+							{systems.filter(system => system.games.length).map(system =>
 								<IonSelectOption key={system.name} value={system}>{system.name}</IonSelectOption>
 							)}
 						</IonSelect>
@@ -41,7 +41,7 @@ export const FixSaveModal = ({ systems, dismiss, apply }) => {
 					<IonItem>
 						<IonLabel>Game</IonLabel>
 						<IonSelect interface="action-sheet" value={game} disabled={!system} onIonChange={e => gameChanged(e.detail.value)}>
-							{system?.games?.map(game =>
+							{system.games.map(game =>
 								<IonSelectOption key={game.name} value={game}>{game.name}</IonSelectOption>
 							)}
 						</IonSelect>
