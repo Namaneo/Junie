@@ -30,31 +30,28 @@ export async function initialize(force = true) {
 	initialized = true;
 }
 
-export async function getSystems() {
-	await initialize(false);
+export async function getSystems(remote) {
+	if (remote)
+		await initialize(false);
 
 	const systems = JSON.parse(JSON.stringify(library));
 
 	const installed = await Database.getGames();
 
 	for (let system of systems) {
+		if (!system.games)
+			system.games = [];
+
 		const games = installed.filter(x => x.system.name == system.name);
+		const local = games.filter(x => !system.games.find(y => x.game.rom == y.rom));
+
+		system.games = [ ...local.map(x => x.game), ...system.games ];
 
 		for (let game of system.games)
 			game.installed = !!games.find(x => x.game.rom == game.rom);
 	}
 
 	return systems;
-};
-
-export async function getSystemByGame(gameName) {
-	const systems = await getSystems();
-	return systems.find(x => x.extension == gameName.split('.').pop());
-};
-
-export async function getSystem(systemName) {
-	const systems = await getSystems();
-	return systems.find(x => x.name == systemName);
 };
 
 export function getSystemCover(system) {

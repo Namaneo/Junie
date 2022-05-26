@@ -12,7 +12,7 @@ export const SystemsPage = () => {
 	}
 
 	useIonViewWillEnter(async () => {
-		const systems = await Requests.getSystems();
+		const systems = await Requests.getSystems(true);
 
 		setSystems(systems);
 	});

@@ -16,7 +16,8 @@ export const RecentPage = () => {
 			return;
 
 		const file = files[0];
-		const system = await Requests.getSystemByGame(file.name);
+		const systems = await Requests.getSystems(false);
+		const system = systems.find(x => x.extension == gameName.split('.').pop());;
 
 		const data = await file.arrayBuffer();
 		const game = new Game(system, { 
