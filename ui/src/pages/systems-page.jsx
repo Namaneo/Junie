@@ -11,11 +11,19 @@ export const SystemsPage = () => {
 		return system.games.length && !system.games.find(game => game.installed);
 	}
 
-	useIonViewWillEnter(async () => {
-		const systems = await Requests.getSystems(true);
+	const getSystems = async () => {
+		const systems = await Requests.getSystems();
 
 		setSystems(systems);
-	});
+	}
+
+	const refreshLibrary = async () => {
+		await Requests.refreshLibrary();
+
+		await getSystems();
+	}
+
+	useIonViewWillEnter(getSystems);
 
 	return (
 		<IonPage>
@@ -24,7 +32,7 @@ export const SystemsPage = () => {
 				<IonToolbar>
 					<IonTitle>Systems</IonTitle>
 					<IonButtons slot="end">
-						<IonButton onClick={() => Requests.initialize()}>
+						<IonButton onClick={refreshLibrary}>
 							<IonIcon slot="icon-only" icon={refreshOutline} />
 						</IonButton>
 					</IonButtons>

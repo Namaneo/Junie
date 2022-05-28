@@ -37,7 +37,7 @@ export const CheatsPage = () => {
 
 	useIonViewWillEnter(async () => {
 		setCheats(await Database.getCheats());
-		setSystems(await Requests.getSystems(false));
+		setSystems(await Requests.getSystems());
 	});
 
 	return (

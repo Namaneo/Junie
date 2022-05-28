@@ -2,6 +2,7 @@ import { Dexie } from 'dexie';
 import { Save } from '../entities/save';
 import { Cheat } from '../entities/cheat';
 import { Game } from '../entities/game';
+import library from '../config/library'
 
 async function execute(command) {
 	const db = new Dexie('Junie');
@@ -10,6 +11,25 @@ async function execute(command) {
 	db.close();
 	return result;
 }
+
+export async function getLibrary(force) {
+	if (!force) {
+		const file = await execute(db => db.table('files').get('/library.json'));
+		if (file)
+			return JSON.parse(JSON.stringify(file.data));
+	}
+
+	const systems = JSON.parse(JSON.stringify(library));
+
+	return updateLibrary(systems);
+};
+
+export async function updateLibrary(library) {
+	await execute(db => db.table('files').put({ path: '/library.json', data: library}));
+
+	return await getLibrary();
+}
+
 
 export async function getSaves() {
 	const rawSaves = await execute(db => db.table('files').where('path').startsWith('/save/').toArray());

@@ -50,7 +50,7 @@ export const GamesPage = ({ match }) => {
 	}
 
 	useIonViewWillEnter(async () => {
-		const systems = await Requests.getSystems(true);
+		const systems = await Requests.getSystems();
 		setSystem(systems.find(x => x.name == match.params.system));
 	});
 

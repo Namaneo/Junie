@@ -1,9 +1,6 @@
-import library from '../config/library'
 import * as Database from './database'
 
 // Requests
-
-let initialized = false;
 
 async function fetchGames(system) {
 	const path = `${location.origin}/games/${system.name}/`;
@@ -18,24 +15,19 @@ async function fetchGames(system) {
 		return { name: name, rom: a.innerText, cover: `${path}${name}.png` };
 	});
 
-	system.games = games.filter(game => !game.rom.endsWith('.png'));
+	system.games = games.filter(game => game.rom.endsWith(`.${system.extension}`));
 }
 
-export async function initialize(force = true) {
-	if (!force && initialized)
-		return;
+export async function refreshLibrary() {
+	const library = await Database.getLibrary(true);
 
 	await Promise.all(library.map(fetchGames));
 
-	initialized = true;
+	await Database.updateLibrary(library);
 }
 
-export async function getSystems(remote) {
-	if (remote)
-		await initialize(false);
-
-	const systems = JSON.parse(JSON.stringify(library));
-
+export async function getSystems() {
+	const systems = await Database.getLibrary(false);
 	const installed = await Database.getGames();
 
 	for (let system of systems) {
