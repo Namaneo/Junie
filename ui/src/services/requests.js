@@ -60,7 +60,11 @@ export function getGameCover(system, game) {
 }
 
 export async function fetchGame(system, game) {
-	const path = `${location.origin}/games/${system.name}/${game.rom}`;
-	const response = await fetch(path);
-	return response.status == 200 ? await response.arrayBuffer() : null;
+	try {
+		const path = `${location.origin}/games/${system.name}/${game.rom}`;
+		const response = await fetch(path);
+		return response.status == 200 ? await response.arrayBuffer() : null;
+	} catch (e) {
+		return null;
+	}
 }
