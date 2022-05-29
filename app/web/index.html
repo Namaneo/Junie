@@ -21,20 +21,21 @@
 	<img id="loading" src="res/loading.png" style="position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: contain; z-index: -1;" />
 	<script src="deps/matoya.js"></script>
 
-	<!-- <script>
+	<script>
 		const registerServiceWorker = async () => {
 			if (!navigator.serviceWorker)
 				return;
 
 			try {
 				const registration = await navigator.serviceWorker.register('/sw.js');
+				registration.update();
 			} catch (error) {
 				console.error(`Registration failed with ${error}`);
 			}
 		};
 
 		registerServiceWorker();
-	</script> -->
+	</script>
 
 	<script>
 		const database = new Dexie('Junie');
