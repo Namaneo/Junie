@@ -8,7 +8,7 @@ export const SystemsPage = () => {
 	const [systems, setSystems] = useState([]);
 
 	const filterSystem = (system) => {
-		return system.games.length && !system.games.find(game => game.installed);
+		return system.games.length && system.games.find(game => !game.installed);
 	}
 
 	const getSystems = async () => {
