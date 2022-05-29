@@ -72,8 +72,8 @@ export const SavesPage = () => {
 	}
 
 	useIonViewWillEnter(async () => {
-		setSaves(await Database.getSaves());
 		setSystems(await Requests.getSystems());
+		setSaves(await Database.getSaves());
 	});
 
 	const fileUpload = useRef(null);
