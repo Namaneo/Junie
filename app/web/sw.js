@@ -3,6 +3,11 @@ const cacheResource = async (resources) => {
     await cache.addAll(resources);
 };
 
+const fetchResource = async (request) => {
+    const resource = await caches.match(request);
+    return resource ?? await fetch(request);
+}
+
 self.addEventListener('install', (event) => {
     console.log('Service worker installed!');
     event.waitUntil(cacheResource([
@@ -26,5 +31,5 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-    event.respondWith(caches.match(event.request));
+    event.respondWith(fetchResource(event.request));
 });
