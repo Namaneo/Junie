@@ -1,15 +1,13 @@
 /.vscode
 /system
 /games
-/bin
+/build
 
 app/include
 app/build
 app/**/*.a
 app/**/*.o
 app/**/*.tmp
-
-api/build
 
 ui/build
 ui/node_modules

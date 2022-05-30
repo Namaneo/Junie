@@ -1,5 +1,9 @@
 # Junie
 
+* python3 -m http.server -d app/build 8000
+* docker build -t junie .
+* docker run --name junie -e PORT=8000 -v `pwd`/demo/games:/junie/games -it --rm junie
+
 Junie is a [Libretro](https://www.libretro.com/index.php/home-2/) frontend that aims to run entirely in your browser, desktop or mobile!
 * No installation on the end-devices.
 * Near-native performances thanks to WebAssembly.

@@ -1,5 +1,5 @@
-# Build emulator
-FROM debian AS app
+# Build
+FROM node AS build
 
 WORKDIR /app
 
@@ -7,52 +7,22 @@ ENV HOME=/app
 ENV TERM=vt100
 
 RUN apt update
-RUN apt install -y curl make clang wget git bsdmainutils
+RUN apt install -y curl make clang wget git bsdmainutils xxd
 
 RUN wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-14/wasi-sdk-14.0-linux.tar.gz
 RUN tar xvf wasi-sdk-14.0-linux.tar.gz
 
-ADD ./app/ ./
+ADD Makefile .
+ADD ./ui ./ui
+ADD ./app ./app
 
-RUN make
+RUN make OUT_DIR=/build
 
-# Build API
-FROM golang as api
-
-WORKDIR /api
-
-ADD ./api/go.mod ./
-ADD ./api/go.sum ./
-
-RUN go mod download
-
-ADD ./api/ ./
-
-RUN go build -o build/junie
-
-# Build UI
-FROM node:16 as ui
-
-WORKDIR /ui
-
-ADD ./ui/package.json ./
-ADD ./ui/yarn.lock    ./
-
-RUN yarn install
-
-ADD ./ui/ ./
-
-RUN yarn ionic build
-
-# Run Junie
-FROM debian AS junie
+# Run
+FROM python AS junie
 
 WORKDIR /junie
 
-COPY --from=api /api/build/ ./
-COPY --from=app /app/build/ ./app/
-COPY --from=ui  /ui/build/  ./ui/
+COPY --from=build /build .
 
-ADD ./assets/ ./assets/
-
-ENTRYPOINT [ "./junie" ]
+ENTRYPOINT python3 -m http.server -d /build ${PORT:-8000}

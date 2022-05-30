@@ -1,40 +1,20 @@
 TARGET  := junie
-VERSION := 0.4.2
+VERSION := 0.5.0
 
-APP_OUT := app/build
-API_OUT := api/build
-UI_OUT  := ui/build
+UI_DIR  := ui
+APP_DIR := app
+OUT_DIR := build
 
-OUT := bin
-
-all: $(APP_OUT) $(API_OUT) $(UI_OUT)
-
-$(APP_OUT):
-	( cd app && make )
-
-$(API_OUT):
-	( cd api && env GOOS=linux   GOARCH=amd64 go build -o build/linux/junie       )
-	( cd api && env GOOS=darwin  GOARCH=amd64 go build -o build/macos/junie       )
-	( cd api && env GOOS=windows GOARCH=amd64 go build -o build/windows/junie.exe )
-
-$(UI_OUT):
-	( cd ui && yarn && ionic build )
+all: clean
+	@mkdir $(OUT_DIR)
+	@( cd $(UI_DIR)  && yarn && yarn rollup -c --environment BUILD:production )
+	@( cd $(APP_DIR) && make )
 
 pack: all
-	rm -rf $(OUT)
-	mkdir $(OUT)
-	cp -R $(APP_OUT) $(OUT)/app
-	cp -R $(UI_OUT)  $(OUT)/ui
-	cp -R assets     $(OUT)/assets
-	( cd $(OUT) && zip -r $(TARGET)-linux-$(VERSION).zip   app ui assets )
-	( cd $(OUT) && zip -r $(TARGET)-macos-$(VERSION).zip   app ui assets )
-	( cd $(OUT) && zip -r $(TARGET)-windows-$(VERSION).zip app ui assets )
-	zip -rjv $(OUT)/$(TARGET)-linux-$(VERSION).zip   $(API_OUT)/linux/junie
-	zip -rjv $(OUT)/$(TARGET)-macos-$(VERSION).zip   $(API_OUT)/linux/junie
-	zip -rjv $(OUT)/$(TARGET)-windows-$(VERSION).zip $(API_OUT)/windows/junie.exe
+	@( cd $(APP_DIR)/$(OUT_DIR) && zip -r ../../$(OUT_DIR)/$(TARGET)-$(VERSION).zip `ls -I games` )
 
 clean:
-	rm -rf $(APP_OUT) $(API_OUT) $(UI_OUT)
+	@rm -rf $(OUT_DIR) $(APP_DIR)/$(OUT_DIR) $(UI_DIR)/$(OUT_DIR)
 
 clean-all: clean
-	make -C app clean-all
+	@make -C app clean-all

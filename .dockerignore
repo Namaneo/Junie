@@ -1,14 +1,9 @@
 .vscode
-system
 games
-bin
+build
 
 app/include
-app/bin
+app/build
 
-api/publish
-api/JunieAPI/bin
-api/JunieAPI/obj
-
-ui/build
 ui/node_modules
+ui/build

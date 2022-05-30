@@ -81,9 +81,6 @@
 					const cheat = file.path.startsWith('/cheats/');
 					const type = typeof file.data == 'string';
 
-					console.log(file.path);
-					console.log(`save: ${save}, cheat: ${cheat}, type: ${type}`);
-
 					if ((save || cheat) && type) {
 						file.data = convertFile(file.data);
 						await database.table('files').put(file);
