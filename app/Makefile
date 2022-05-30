@@ -58,7 +58,7 @@ assets:
 	@cp -R $(WEB_DIR)/* $(OUT_DIR)
 	@cp $(LIB_DIR)/matoya/src/unix/web/matoya.js $(OUT_DIR)/deps
 	@(cd $(OUT_DIR) && ln -s ../../demo/games games)
-	@echo // `date +%s` >> $(OUT_DIR)/sw.js
+	@echo // `date +%s` >> $(OUT_DIR)/service-worker.js
 	@mkdir -p $(INC_DIR)
 	@cp $(LIB_DIR)/matoya/src/matoya.h $(INC_DIR)
 	@cp $(LIB_DIR)/retro/include/libretro.h $(INC_DIR)

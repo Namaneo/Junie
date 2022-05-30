@@ -27,7 +27,7 @@
 				return;
 
 			try {
-				const registration = await navigator.serviceWorker.register('/sw.js');
+				const registration = await navigator.serviceWorker.register('/service-worker.js');
 				registration.update();
 			} catch (error) {
 				console.error(`Registration failed with ${error}`);
@@ -65,6 +65,31 @@
 			window.addEventListener('touchend', unlock);
 
 			await refresh_files();
+
+			// TODO compatibility with previous version of Junie
+			{
+				const convertFile = (base64) => {
+					var binary = window.atob(base64);
+					var bytes = new Uint8Array(binary.length);
+					for (var i = 0; i < binary.length; i++)
+						bytes[i] = binary.charCodeAt(i);
+					return bytes;
+				}
+
+				for (let file of files) {
+					const save = file.path.startsWith('/save/');
+					const cheat = file.path.startsWith('/cheats/');
+					const type = typeof file.data == 'string';
+
+					console.log(file.path);
+					console.log(`save: ${save}, cheat: ${cheat}, type: ${type}`);
+
+					if ((save || cheat) && type) {
+						file.data = convertFile(file.data);
+						await database.table('files').put(file);
+					}
+				}
+			}
 
 			//Start core execution
 			await MTY_Start('junie.wasm', {
