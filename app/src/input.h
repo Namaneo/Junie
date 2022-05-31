@@ -32,4 +32,5 @@ JUN_Input *JUN_InputCreate(JUN_State *state);
 void JUN_InputSetBinding(JUN_Input *this, const char *joypad_key, char *keyboard_key);
 void JUN_InputSetStatus(JUN_Input *this, const MTY_Event *event);
 int16_t JUN_InputGetStatus(JUN_Input *this, uint32_t device, uint32_t retro_key);
+void JUN_InputReset(JUN_Input *this);
 void JUN_InputDestroy(JUN_Input **input);

@@ -77,8 +77,11 @@ static bool app_func(void *opaque)
 	JUN_VideoPresent(app->video);
 
 	if (JUN_StateShouldExit(app->state)) {
-		JUN_StateToggleExit(app->state);
 		JUN_AppUnloadCore(app);
+		JUN_InputReset(app->input);
+		if (JUN_StateHasAudio(app->state))
+			JUN_StateToggleAudio(app->state);
+		JUN_StateToggleExit(app->state);
 		JUN_MemoryDump();
 		MTY_WebviewInteropReturn(current_webview, current_serial, true, NULL);
 	}

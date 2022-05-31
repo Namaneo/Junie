@@ -404,6 +404,12 @@ int16_t JUN_InputGetStatus(JUN_Input *this, uint32_t device, uint32_t retro_key)
 	return false;
 }
 
+void JUN_InputReset(JUN_Input *this)
+{
+	for (size_t i = 0; i < MAX_POINTERS; ++i)
+		this->pointers[i] = (JUN_InputPointer) {0};
+}
+
 void JUN_InputDestroy(JUN_Input **input)
 {
 	if (!input || !*input)
