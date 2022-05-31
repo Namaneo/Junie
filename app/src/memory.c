@@ -2,7 +2,7 @@
 
 #include "interop.h"
 
-#include "alloc.h"
+#include "memory.h"
 
 #define TOP_ENTRIES 20
 
@@ -25,7 +25,7 @@ bool is_local = false;
 bool entered_pointers = false;
 MTY_Hash *pointers = NULL;
 
-void JUN_DumpMemory()
+void JUN_MemoryDump()
 {
     entered_pointers = true;
 
