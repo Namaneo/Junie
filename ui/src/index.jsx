@@ -3,12 +3,13 @@ import { render } from 'react-dom'
 import { Redirect, Route } from 'react-router'
 import { IonReactMemoryRouter } from '@ionic/react-router'
 import { IonApp, IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs, setupIonicReact } from '@ionic/react'
-import { cloudDownload, gameController, keyOutline, save } from 'ionicons/icons'
+import { cloudDownload, gameController, keyOutline, save, settingsOutline } from 'ionicons/icons'
 import { RecentPage } from './pages/recent-page'
 import { SystemsPage } from './pages/systems-page'
 import { GamesPage } from './pages/games-page'
 import { SavesPage } from './pages/saves-page'
 import { CheatsPage } from './pages/cheats-page'
+import { SettingsPage } from './pages/settings-page'
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -44,6 +45,7 @@ function Junie() {
 						<Route exact path="/games/:system" component={GamesPage} />
                         <Route exact path="/saves"  component={SavesPage}  />
                         <Route exact path="/cheats" component={CheatsPage} />
+                        <Route exact path="/settings" component={SettingsPage} />
                         <Route exact path="/" render={() => <Redirect to="/recent" />} />
                     </IonRouterOutlet>
 
@@ -63,6 +65,10 @@ function Junie() {
                         <IonTabButton tab="cheats" href="/cheats">
                             <IonIcon icon={keyOutline} />
                             <IonLabel>Cheats</IonLabel>
+                        </IonTabButton>
+                        <IonTabButton tab="settings" href="/settings">
+                            <IonIcon icon={settingsOutline} />
+                            <IonLabel>Settings</IonLabel>
                         </IonTabButton>
                     </IonTabBar>
                 </IonTabs>

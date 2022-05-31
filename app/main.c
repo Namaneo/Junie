@@ -52,6 +52,40 @@ static void audio_sample(int16_t left, int16_t right)
 	audio_sample_batch(buf, 1);
 }
 
+static bool app_func(void *opaque)
+{
+	if (!JUN_CoreHasStarted(app->core))
+		return true;
+
+	for (int i = 0; i < JUN_StateGetFastForward(app->state); ++i)
+		JUN_CoreRun(app->core);
+
+	JUN_CoreRun(app->core);
+
+	JUN_CoreSaveMemories(app->core);
+
+	if (JUN_StateShouldSaveState(app->state)) {
+		JUN_CoreSaveState(app->core);
+		JUN_StateToggleSaveState(app->state);
+	}
+
+	if (JUN_StateShouldRestoreState(app->state)) {
+		JUN_CoreRestoreState(app->core);
+		JUN_StateToggleRestoreState(app->state);
+	}
+
+	JUN_VideoPresent(app->video);
+
+	if (JUN_StateShouldExit(app->state)) {
+		JUN_StateToggleExit(app->state);
+		JUN_AppUnloadCore(app);
+		JUN_DumpMemory();
+		MTY_WebviewInteropReturn(current_webview, current_serial, true, NULL);
+	}
+
+	return true;
+}
+
 static void start_game(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, void *opaque)
 {
 	JUN_DumpMemory();
@@ -98,38 +132,9 @@ static void refresh_files(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *jso
 	JUN_InteropRefreshFiles();
 }
 
-static bool app_func(void *opaque)
+static void get_settings(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, void *opaque)
 {
-	if (!JUN_CoreHasStarted(app->core))
-		return true;
-
-	for (int i = 0; i < JUN_StateGetFastForward(app->state); ++i)
-		JUN_CoreRun(app->core);
-
-	JUN_CoreRun(app->core);
-
-	JUN_CoreSaveMemories(app->core);
-
-	if (JUN_StateShouldSaveState(app->state)) {
-		JUN_CoreSaveState(app->core);
-		JUN_StateToggleSaveState(app->state);
-	}
-
-	if (JUN_StateShouldRestoreState(app->state)) {
-		JUN_CoreRestoreState(app->core);
-		JUN_StateToggleRestoreState(app->state);
-	}
-
-	JUN_VideoPresent(app->video);
-
-	if (JUN_StateShouldExit(app->state)) {
-		JUN_StateToggleExit(app->state);
-		JUN_AppUnloadCore(app);
-		JUN_DumpMemory();
-		MTY_WebviewInteropReturn(current_webview, current_serial, true, NULL);
-	}
-
-	return true;
+	MTY_WebviewInteropReturn(ctx, serial, true, JUN_CoreGetDefaultConfiguration());
 }
 
 static void event_func(const MTY_Event *event, void *opaque)
@@ -154,6 +159,7 @@ static void on_ui_created(MTY_Webview *webview, void *opaque)
 {
 	MTY_WebviewInteropBind(webview, "junie_start_game", start_game, NULL);
 	MTY_WebviewInteropBind(webview, "junie_refresh_files", refresh_files, NULL);
+	MTY_WebviewInteropBind(webview, "junie_get_settings", get_settings, NULL);
 }
 
 int main(int argc, char *argv[])

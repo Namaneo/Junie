@@ -168,6 +168,7 @@ PROTOTYPES(mgba);
 PROTOTYPES(quicknes);
 PROTOTYPES(snes9x);
 
+MTY_JSON *configurations = NULL;
 static void jun_core_initialize()
 {
 	if (CORES.initialized)
@@ -178,6 +179,13 @@ static void jun_core_initialize()
 	MAPPINGS(mgba);
 	MAPPINGS(quicknes);
 	MAPPINGS(snes9x);
+
+	configurations = MTY_JSONObjCreate();
+	MTY_JSONObjSetItem(configurations, "Genesis Plus GX", CORES.genesis.configuration);
+	MTY_JSONObjSetItem(configurations, "melonDS", CORES.melonds.configuration);
+	MTY_JSONObjSetItem(configurations, "mGBA", CORES.mgba.configuration);
+	MTY_JSONObjSetItem(configurations, "QuickNES", CORES.quicknes.configuration);
+	MTY_JSONObjSetItem(configurations, "Snes9x", CORES.snes9x.configuration);
 
 	CORES.initialized = true;
 }
@@ -203,17 +211,11 @@ JUN_Core *JUN_CoreCreate(JUN_CoreType type, MTY_Hash *paths)
 	return this;
 }
 
-const MTY_JSON *JUN_CoreGetDefaultConfiguration(JUN_CoreType type)
+const MTY_JSON *JUN_CoreGetDefaultConfiguration()
 {
 	jun_core_initialize();
 
-	return
-		type == JUN_CORE_GENESIS  ? CORES.genesis.configuration  :
-		type == JUN_CORE_MELONDS  ? CORES.melonds.configuration  :
-		type == JUN_CORE_MGBA     ? CORES.mgba.configuration     :
-		type == JUN_CORE_QUICKNES ? CORES.quicknes.configuration :
-		type == JUN_CORE_SNES9X   ? CORES.snes9x.configuration   :
-		NULL;
+	return configurations;
 }
 
 JUN_Configuration *JUN_CoreGetConfiguration(JUN_Core *this)

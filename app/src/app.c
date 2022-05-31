@@ -18,25 +18,6 @@ struct _JUN_App
 	MTY_Hash *paths;
 };
 
-static MTY_Hash *core_names = NULL;
-static const char *jun_core_get_name(const char *system)
-{
-	if (!core_names) {
-		core_names = MTY_HashCreate(0);
-
-		MTY_HashSet(core_names, "NES",              "QuickNES");
-		MTY_HashSet(core_names, "SNES",             "Snes9x");
-		MTY_HashSet(core_names, "Master System",    "Genesis Plus GX");
-		MTY_HashSet(core_names, "Mega Drive",       "Genesis Plus GX");
-		MTY_HashSet(core_names, "Game Boy",         "mGBA");
-		MTY_HashSet(core_names, "Game Boy Color",   "mGBA");
-		MTY_HashSet(core_names, "Game Boy Advance", "mGBA");
-		MTY_HashSet(core_names, "Nintendo DS",      "melonDS");
-	}
-
-	return MTY_HashGet(core_names, system);
-}
-
 static MTY_Hash *core_types = NULL;
 static JUN_CoreType jun_core_get_type(const char *system)
 {
@@ -74,8 +55,7 @@ static void jun_app_configure(_JUN_App *this, const char *system, const MTY_JSON
 	const char *key;
 
 	// Initialize settings instance
-	const char *core_name = jun_core_get_name(system);
-	JUN_Settings *settings = JUN_SettingsCreate(core_name, json);
+	JUN_Settings *settings = JUN_SettingsCreate(json);
 
 	// Set prefered language
 	char *language = MTY_SprintfD("RETRO_LANGUAGE_%s", settings->language);

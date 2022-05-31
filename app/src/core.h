@@ -25,7 +25,7 @@ typedef struct {
 } JUN_CoreCallbacks;
 
 JUN_Core *JUN_CoreCreate(JUN_CoreType type, MTY_Hash *paths);
-const MTY_JSON *JUN_CoreGetDefaultConfiguration(JUN_CoreType type);
+const MTY_JSON *JUN_CoreGetDefaultConfiguration();
 JUN_Configuration *JUN_CoreGetConfiguration(JUN_Core *this);
 void JUN_CoreSetCallbacks(JUN_Core *this, JUN_CoreCallbacks *callbacks);
 double JUN_CoreGetSampleRate(JUN_Core *this);

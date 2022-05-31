@@ -13,9 +13,5 @@ export default settings = {
 		R: "D",
 		SELECT: "ENTER",
 		START: "SPACE"
-	},
-	melonDS: {
-		melonds_touch_mode: "Touch",
-		melonds_randomize_mac_address: "enabled"
 	}
 }

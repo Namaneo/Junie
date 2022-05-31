@@ -27,7 +27,7 @@ static void set_configurations(JUN_Settings *this)
 {
 	char value[PATH_SIZE];
 
-	const MTY_JSON *configurations = MTY_JSONObjGetItem(this->json, this->core_name);
+	const MTY_JSON *configurations = MTY_JSONObjGetItem(this->json, "configurations");
 	if (!configurations)
 		return;
 
@@ -39,11 +39,10 @@ static void set_configurations(JUN_Settings *this)
 	}
 }
 
-JUN_Settings *JUN_SettingsCreate(const char *core_name, const MTY_JSON *json)
+JUN_Settings *JUN_SettingsCreate(const MTY_JSON *json)
 {
 	JUN_Settings *this = MTY_Alloc(1, sizeof(JUN_Settings));
 
-	this->core_name = core_name;
 	this->json = json;
 
 	this->dependencies = MTY_ListCreate();

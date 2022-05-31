@@ -39,7 +39,10 @@ export const RecentPage = () => {
 		await junie_start_game({
 			system: played.system.name,
 			rom: played.game.rom,
-			settings: settings,
+			settings: {
+				...settings,
+				configurations: await Database.getSettings(),
+			}
 		});
 
 		window.frameElement.style.display = 'block';

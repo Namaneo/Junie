@@ -30,6 +30,19 @@ export async function updateLibrary(library) {
 	return await getLibrary();
 }
 
+export async function getSettings() {
+	const file = await execute(db => db.table('files').get('/settings.json'));
+
+	return JSON.parse(JSON.stringify(file ? file.data : { }));
+};
+
+export async function updateSettings(settings) {
+	await execute(db => db.table('files').put({ path: '/settings.json', data: settings}));
+
+	junie_refresh_files();
+
+	return await getSettings();
+}
 
 export async function getSaves() {
 	const rawSaves = await execute(db => db.table('files').where('path').startsWith('/save/').toArray());

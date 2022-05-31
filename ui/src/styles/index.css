@@ -70,6 +70,19 @@
 
 
 /*
+ * Settings
+ */
+#root .settings ion-list {
+    padding: 0;
+    background: transparent;
+}
+
+#root .settings ion-select {
+    max-width: unset;
+}
+
+
+/*
  * Modals
  */
 #root .modal ion-list {
