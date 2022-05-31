@@ -29,7 +29,7 @@ struct JUN_InputStatus
 {
 	unsigned key;
 	unsigned button; //
-	bool axis;       // TODO: Crappy configuration, must be designed better
+	bool axis;       // TODO Crappy configuration, must be designed better
 	bool negative;   //
 	MTY_Point center;
 	float radius;
@@ -279,7 +279,7 @@ static void set_mouse(JUN_Input *this, JUN_InputController *controller, JUN_Inpu
 
 static void set_touch(JUN_Input *this, JUN_InputPointer *pointer)
 {
-	float view_width, view_height, frame_width, frame_height;
+	float view_width = 0, view_height = 0, frame_width = 0, frame_height = 0;
 	JUN_StateGetWindowMetrics(this->state, &view_width, &view_height);
 	JUN_StateGetFrameMetrics(this->state, &frame_width, &frame_height);
 
@@ -315,9 +315,10 @@ static void set_touch(JUN_Input *this, JUN_InputPointer *pointer)
 
 static JUN_InputPointer *get_pointer(JUN_Input *this, int32_t id)
 {
-	for (size_t i = 0; i < MAX_POINTERS; ++i)
+	for (size_t i = 0; i < MAX_POINTERS; ++i) {
 		if (this->pointers[i].id == id)
 			return &this->pointers[i];
+	}
 
 	for (size_t i = 0; i < MAX_POINTERS; ++i) {
 		if (!this->pointers[i].pressed) {

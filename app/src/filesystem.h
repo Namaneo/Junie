@@ -11,7 +11,7 @@ typedef struct retro_vfs_dir_handle JUN_Directory;
 
 typedef void (*JUN_FilesystemCallback)(JUN_File *, void *opaque);
 
-// TODO: this is ugly exposing all of this publicly
+// TODO Ugly to expose all of this publicly
 struct retro_vfs_file_handle
 {
 	bool exists;

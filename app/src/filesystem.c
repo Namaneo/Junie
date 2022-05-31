@@ -182,6 +182,10 @@ static JUN_File *open(const char *path, unsigned mode, unsigned hints)
 {
 	MTY_Log("%s (mode: %d)", path, mode);
 
+	// XXX Skip melonDS firmware file to avoid conflicts between runs
+	if (strstr(path, "firmware.bin"))
+		return NULL;
+
 	JUN_File *file = JUN_FilesystemGetExistingFile(path);
 	if (file)
 		return file;
