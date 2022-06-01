@@ -81,6 +81,14 @@
     max-width: unset;
 }
 
+#root .settings ion-accordion ion-list ion-label {
+    margin-left: 16px;
+}
+
+#root .settings ion-accordion ion-list ion-select {
+    padding-left: 16px;
+}
+
 
 /*
  * Modals
