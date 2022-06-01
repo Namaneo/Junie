@@ -58,9 +58,7 @@ static void jun_app_configure(_JUN_App *this, const char *system, const MTY_JSON
 	JUN_Settings *settings = JUN_SettingsCreate(json);
 
 	// Set prefered language
-	char *language = MTY_SprintfD("RETRO_LANGUAGE_%s", settings->language);
-	this->language = JUN_EnumsGetInt(JUN_ENUM_LANGUAGE, language);
-	MTY_Free(language);
+	this->language = JUN_EnumsGetInt(JUN_ENUM_LANGUAGE, settings->language);
 
 	// Set keyboard bindings
 	iter = 0;

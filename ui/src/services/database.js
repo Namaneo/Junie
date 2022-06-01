@@ -33,7 +33,12 @@ export async function updateLibrary(library) {
 export async function getSettings() {
 	const file = await execute(db => db.table('files').get('/settings.json'));
 
-	return JSON.parse(JSON.stringify(file ? file.data : { }));
+	const defaults = { 
+		language: 'RETRO_LANGUAGE_ENGLISH', 
+		configurations: { } 
+	};
+
+	return JSON.parse(JSON.stringify(file ? file.data : defaults));
 };
 
 export async function updateSettings(settings) {

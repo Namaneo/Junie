@@ -118,6 +118,12 @@ static void register_languages()
 	register_language(this, RETRO_LANGUAGE_HEBREW);
 	register_language(this, RETRO_LANGUAGE_ASTURIAN);
 	register_language(this, RETRO_LANGUAGE_FINNISH);
+	register_language(this, RETRO_LANGUAGE_INDONESIAN);
+	register_language(this, RETRO_LANGUAGE_SWEDISH);
+	register_language(this, RETRO_LANGUAGE_UKRAINIAN);
+	register_language(this, RETRO_LANGUAGE_CZECH);
+	register_language(this, RETRO_LANGUAGE_CATALAN_VALENCIA);
+	register_language(this, RETRO_LANGUAGE_CATALAN);
 }
 
 static void register_joypad()
@@ -296,6 +302,38 @@ static MTY_Hash *get_hash(JUN_EnumType type)
 		case JUN_ENUM_KEYBOARD:
 			return this->keyboard;
 	}
+}
+
+MTY_JSON *JUN_EnumsGetAllInt(JUN_EnumType type)
+{
+	MTY_Hash *hash = get_hash(type);
+
+	MTY_JSON *json = MTY_JSONArrayCreate();
+
+	uint64_t iter = 0;
+	const char *key = NULL;
+
+	size_t index = 0;
+	while (MTY_HashGetNextKey(hash, &iter, &key))
+		MTY_JSONArraySetUInt(json, index++, (uint32_t) MTY_HashGet(hash, key));
+
+	return json;
+}
+
+MTY_JSON *JUN_EnumsGetAllString(JUN_EnumType type)
+{
+	MTY_Hash *hash = get_hash(type);
+
+	MTY_JSON *json = MTY_JSONArrayCreate();
+
+	uint64_t iter = 0;
+	const char *key = NULL;
+
+	size_t index = 0;
+	while (MTY_HashGetNextKey(hash, &iter, &key))
+		MTY_JSONArraySetString(json, index++, key);
+
+	return json;
 }
 
 uint32_t JUN_EnumsGetInt(JUN_EnumType type, const char *key)

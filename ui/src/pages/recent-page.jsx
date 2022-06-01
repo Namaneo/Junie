@@ -41,7 +41,7 @@ export const RecentPage = () => {
 			rom: played.game.rom,
 			settings: {
 				...settings,
-				configurations: await Database.getSettings(),
+				...await Database.getSettings(),
 			}
 		});
 

@@ -1,5 +1,4 @@
 export default settings = {
-	language: "ENGLISH",
 	bindings: {
 		A: "X",
 		B: "Z",
