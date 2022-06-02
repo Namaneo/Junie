@@ -34,7 +34,8 @@
 			}
 		};
 
-		registerServiceWorker();
+		if (location.hostname != 'localhost')
+			registerServiceWorker();
 	</script>
 
 	<script>
