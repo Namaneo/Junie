@@ -14,22 +14,18 @@ export const SystemsPage = () => {
 		return system.games.length && system.games.find(game => !game.installed);
 	}
 
-	const getSystems = async () => {
-		const systems = await Requests.getSystems();
-
-		setSystems(systems);
-	}
-
 	const refreshLibrary = async () => {
 		setLoading(true);
 
 		await Requests.refreshLibrary();
-		await getSystems();
+		setSystems(await Requests.getSystems());
 
 		setLoading(false);
 	}
 
-	useIonViewWillEnter(getSystems);
+	useIonViewWillEnter(async () => {
+		setSystems(await Requests.getSystems());
+	});
 
 	return (
 		<IonPage>

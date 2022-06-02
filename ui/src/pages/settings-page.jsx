@@ -29,27 +29,25 @@ export const SettingsPage = () => {
 
         settings.language = lang;
 
-        const updated = await Database.updateSettings(settings);
+        setSettings({ ...settings });
 
-        setSettings(updated);
+        await Database.updateSettings(settings);
     };
 
     const override = async (item, value) => {
         settings.configurations[item.key] = value;
+        if (!value)
+            delete settings.configurations[item.key];
 
-        const updated = await Database.updateSettings(settings);
+        setSettings({ ...settings });
 
-        setSettings(updated);
+        await Database.updateSettings(settings);
     }
 
 	useIonViewWillEnter(async () => {
-        const settings = await Database.getSettings();
-		const languages = await junie_get_languages();
-		const options = await junie_get_settings();
-
-		setSettings(settings);
-		setLanguages(languages);
-		setOptions(options);
+		setSettings(await Database.getSettings());
+		setLanguages(await junie_get_languages());
+		setOptions(await junie_get_settings());
 	});
 
 	return (
@@ -85,6 +83,7 @@ export const SettingsPage = () => {
                                         <IonItem key={item.name}>
                                             <IonLabel>{item.name}</IonLabel>
                                             <IonSelect interface="action-sheet" value={settings.configurations[item.key]} onIonChange={e => override(item, e.detail.value)}>
+                                                <IonSelectOption value={null}>(clear)</IonSelectOption>
                                                 {item.options.map(option =>
                                                     <IonSelectOption key={option} value={option}>{option}</IonSelectOption>
                                                 )}

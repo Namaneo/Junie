@@ -24,13 +24,16 @@ export const RecentPage = () => {
 			name: file.name.substring(0, file.name.lastIndexOf('.')),
 			rom: file.name 
 		});
-		const games = await Database.addGame(game, data);
 
-		setPlayed(games);
+		await Database.addGame(game, data);
+
+		setPlayed(await Database.getGames());
 	}
 
 	const deleteGame = async (game) => {
-		setPlayed(await Database.removeGame(game));
+		await Database.removeGame(game);
+
+		setPlayed(await Database.getGames());
 	}
 
 	const startGame = async (played) => {

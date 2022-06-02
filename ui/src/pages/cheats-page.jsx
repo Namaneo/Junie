@@ -19,16 +19,16 @@ export const CheatsPage = () => {
 	}
 
 	const deleteCheat = async (cheat) => {
-		const cheats = await Database.removeCheat(cheat);
+		await Database.removeCheat(cheat);
 
-		setCheats(cheats);
+		setCheats(await Database.getCheats());
 	};
 
 	const apply = async (cheat, key) => {
-		const cheats = await Database.updateCheat(cheat, key);
-		setModal(false);
+		await Database.updateCheat(cheat, key);
 
-		setCheats(cheats);
+		setCheats(await Database.getCheats());
+		setModal(false);
 	};
 
 	const dismiss = () => {

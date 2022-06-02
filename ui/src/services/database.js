@@ -19,15 +19,11 @@ export async function getLibrary(force) {
 			return JSON.parse(JSON.stringify(file.data));
 	}
 
-	const systems = JSON.parse(JSON.stringify(library));
-
-	return updateLibrary(systems);
+	return JSON.parse(JSON.stringify(library));
 };
 
 export async function updateLibrary(library) {
 	await execute(db => db.table('files').put({ path: '/library.json', data: library}));
-
-	return await getLibrary();
 }
 
 export async function getSettings() {
@@ -45,8 +41,6 @@ export async function updateSettings(settings) {
 	await execute(db => db.table('files').put({ path: '/settings.json', data: settings}));
 
 	junie_refresh_files();
-
-	return await getSettings();
 }
 
 export async function getSaves() {
@@ -66,8 +60,6 @@ export async function updateSave(save) {
 		await execute(db => db.table('files').put(file));
 
 	junie_refresh_files();
-
-	return await getSaves();
 }
 
 export async function fixSave(save, system, game) {
@@ -82,16 +74,12 @@ export async function fixSave(save, system, game) {
 	}
 
 	junie_refresh_files();
-
-	return await getSaves();
 }
 
 export async function removeSave(save) {
 	await execute(db => db.table('files').bulkDelete(save.files.map(x => x.path)));
 
 	junie_refresh_files();
-
-	return await getSaves();
 }
 
 export async function getCheats() {
@@ -107,16 +95,12 @@ export async function updateCheat(cheat, key) {
 	await execute(db => db.table('files').put(file));
 
 	junie_refresh_files();
-
-	return await getCheats();
 }
 
 export async function removeCheat(cheat) {
 	await execute(db => db.table('files').delete(cheat.file().path));
 
 	junie_refresh_files();
-
-	return await getCheats();
 }
 
 export async function getGames() {
@@ -135,8 +119,6 @@ export async function addGame(game, data) {
 	await execute(db => db.table('files').put(file));
 
 	junie_refresh_files();
-
-	return await getGames();
 }
 
 export async function removeGame(game) {
@@ -144,6 +126,4 @@ export async function removeGame(game) {
 	await execute(db => db.table('files').delete(game.path()));
 
 	junie_refresh_files();
-
-	return await getGames();
 }

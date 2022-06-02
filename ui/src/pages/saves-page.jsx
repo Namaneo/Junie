@@ -22,9 +22,9 @@ export const SavesPage = () => {
 	}
 
 	const deleteSave = async (save) => {
-		const saves = await Database.removeSave(save);
+		await Database.removeSave(save);
 
-		setSaves(saves);
+		setSaves(await Database.getSaves());
 	};
 
 	const backupSave = async () => {
@@ -61,10 +61,10 @@ export const SavesPage = () => {
 	}
 
 	const apply = async (system, game) => {
-		const saves = await Database.fixSave(current, system, game);
-		setModal(false);
+		await Database.fixSave(current, system, game);
 
-		setSaves(saves);
+		setSaves(await Database.getSaves());
+		setModal(false);
 	};
 
 	const dismiss = () => {
