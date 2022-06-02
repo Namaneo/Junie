@@ -1,4 +1,4 @@
-import { IonAccordion, IonAccordionGroup, IonCard, IonCardContent, IonContent, IonHeader, IonItem, IonLabel, IonList, IonPage, IonSelect, IonSelectOption, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
+import { IonAccordion, IonAccordionGroup, IonContent, IonHeader, IonItem, IonLabel, IonList, IonPage, IonSelect, IonSelectOption, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
 import { useState } from 'react';
 import * as Database from '../services/database';
 
@@ -63,47 +63,40 @@ export const SettingsPage = () => {
 
 			<IonContent class="settings">
 
-                <IonCard>
-                    <IonCardContent>
-                        <IonList lines="none">
-                            <IonItem key="languages">
-                                <IonLabel>Language</IonLabel>
-                                <IonSelect interface="action-sheet" value={settings.language} onIonChange={e => language(e.detail.value)}>
-                                    {languages.sort().map(name =>
-                                        <IonSelectOption key={name} value={name}>{prettify(name)}</IonSelectOption>
-                                    )}
-                                </IonSelect>
-                            </IonItem>
-                        </IonList>
-                    </IonCardContent>
-                </IonCard>
-
-                <IonCard>
-                    <IonCardContent>
-                        <IonAccordionGroup>
-                            {Object.keys(options).map(name =>
-                                <IonAccordion key={name}>
-                                    <IonItem slot="header">
-                                        <IonLabel>{name}</IonLabel>
-                                    </IonItem>
-                            
-                                    <IonList slot="content" lines="none">
-                                        {options[name].map(item => 
-                                            <IonItem key={item.name}>
-                                                <IonLabel position="floating">{item.name}</IonLabel>
-                                                <IonSelect interface="action-sheet" value={settings.configurations[item.key]} onIonChange={e => override(item, e.detail.value)}>
-                                                    {item.options.map(option =>
-                                                        <IonSelectOption key={option} value={option}>{option}</IonSelectOption>
-                                                    )}
-                                                </IonSelect>
-                                            </IonItem>
-                                        )}
-                                    </IonList>
-                                </IonAccordion>
+                <IonList lines="none">
+                    <IonItem key="languages">
+                        <IonLabel>Language</IonLabel>
+                        <IonSelect interface="action-sheet" value={settings.language} onIonChange={e => language(e.detail.value)}>
+                            {languages.sort().map(name =>
+                                <IonSelectOption key={name} value={name}>{prettify(name)}</IonSelectOption>
                             )}
-                        </IonAccordionGroup>
-                    </IonCardContent>
-                </IonCard>
+                        </IonSelect>
+                    </IonItem>
+
+                    <IonAccordionGroup animated={false}>
+                        {Object.keys(options).map(name =>
+                            <IonAccordion key={name}>
+                                <IonItem slot="header">
+                                    <IonLabel>{name}</IonLabel>
+                                </IonItem>
+                        
+                                <IonList slot="content" lines="none">
+                                    {options[name].map(item => 
+                                        <IonItem key={item.name}>
+                                            <IonLabel>{item.name}</IonLabel>
+                                            <IonSelect interface="action-sheet" value={settings.configurations[item.key]} onIonChange={e => override(item, e.detail.value)}>
+                                                {item.options.map(option =>
+                                                    <IonSelectOption key={option} value={option}>{option}</IonSelectOption>
+                                                )}
+                                            </IonSelect>
+                                        </IonItem>
+                                    )}
+                                </IonList>
+                            </IonAccordion>
+                        )}
+                    </IonAccordionGroup>
+
+                </IonList>
 			</IonContent>
 
 		</IonPage>
