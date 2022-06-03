@@ -209,16 +209,10 @@ JUN_Input *JUN_InputCreate(JUN_State *state)
 
 void JUN_InputSetBinding(JUN_Input *this, const char *joypad, char *keyboard)
 {
-	char *joypad_key = MTY_SprintfD("RETRO_DEVICE_ID_JOYPAD_%s", joypad);
-	char *keyboard_key = MTY_SprintfD("MTY_KEY_%s", keyboard);
-
-	uint32_t joypad_value = JUN_EnumsGetInt(JUN_ENUM_JOYPAD, joypad_key);
-	uint32_t keyboard_value = JUN_EnumsGetInt(JUN_ENUM_KEYBOARD, keyboard_key);
+	uint32_t joypad_value = JUN_EnumsGetInt(JUN_ENUM_JOYPAD, joypad);
+	uint32_t keyboard_value = JUN_EnumsGetInt(JUN_ENUM_KEYBOARD, keyboard);
 
 	this->inputs[joypad_value].key = keyboard_value;
-
-	MTY_Free(joypad_key);
-	MTY_Free(keyboard_key);
 }
 
 static void set_key(JUN_Input *this, const MTY_Key key, bool pressed)
@@ -408,6 +402,8 @@ void JUN_InputReset(JUN_Input *this)
 {
 	for (size_t i = 0; i < MAX_POINTERS; ++i)
 		this->pointers[i] = (JUN_InputPointer) {0};
+	for (size_t i = 0; i < INPUT_TOTAL; ++i)
+		this->inputs[i].key = 0;
 }
 
 void JUN_InputDestroy(JUN_Input **input)

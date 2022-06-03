@@ -137,11 +137,25 @@ static void refresh_files(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *jso
 
 static void get_languages(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, void *opaque)
 {
-	MTY_JSON *languages = JUN_EnumsGetAllString(JUN_ENUM_LANGUAGE);
+	MTY_JSON *languages = JUN_EnumsGetAll(JUN_ENUM_LANGUAGE);
 
 	MTY_WebviewInteropReturn(ctx, serial, true, languages);
 
 	MTY_JSONDestroy(&languages);
+}
+
+static void get_bindings(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, void *opaque)
+{
+	MTY_JSON *joypad = JUN_EnumsGetAll(JUN_ENUM_JOYPAD);
+	MTY_JSON *keyboard = JUN_EnumsGetAll(JUN_ENUM_KEYBOARD);
+
+	MTY_JSON *bindings = MTY_JSONObjCreate();
+	MTY_JSONObjSetItem(bindings, "joypad", joypad);
+	MTY_JSONObjSetItem(bindings, "keyboard", keyboard);
+
+	MTY_WebviewInteropReturn(ctx, serial, true, bindings);
+
+	MTY_JSONDestroy(&bindings);
 }
 
 static void get_settings(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, void *opaque)
@@ -172,6 +186,7 @@ static void on_ui_created(MTY_Webview *webview, void *opaque)
 	MTY_WebviewInteropBind(webview, "junie_start_game", start_game, NULL);
 	MTY_WebviewInteropBind(webview, "junie_refresh_files", refresh_files, NULL);
 	MTY_WebviewInteropBind(webview, "junie_get_languages", get_languages, NULL);
+	MTY_WebviewInteropBind(webview, "junie_get_bindings", get_bindings, NULL);
 	MTY_WebviewInteropBind(webview, "junie_get_settings", get_settings, NULL);
 }
 

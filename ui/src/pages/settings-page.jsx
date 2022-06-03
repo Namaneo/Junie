@@ -6,6 +6,7 @@ export const SettingsPage = () => {
 
 	const [settings, setSettings] = useState({});
 	const [languages, setLanguages] = useState([]);
+	const [bindings, setBindings] = useState({ joypad: [], keyboard: [] });
 	const [options, setOptions] = useState({});
 
     const pascalify = (str) => {
@@ -14,8 +15,8 @@ export const SettingsPage = () => {
         });
     }
 
-    const prettify = (lang) => {
-        lang = lang.replace('RETRO_LANGUAGE_', '');
+    const prettify = (lang, prefix) => {
+        lang = lang.replace(prefix, '');
 
         const main = lang.split('_')[0];
         const sub = lang.split('_')[1];
@@ -34,6 +35,16 @@ export const SettingsPage = () => {
         await Database.updateSettings(settings);
     };
 
+    const bind = async (button, key) => {
+        settings.bindings[button] = key;
+        if (!key)
+            delete settings.bindings[button];
+
+        setSettings({ ...settings });
+
+        await Database.updateSettings(settings);
+    }
+
     const override = async (item, value) => {
         settings.configurations[item.key] = value;
         if (!value)
@@ -47,6 +58,7 @@ export const SettingsPage = () => {
 	useIonViewWillEnter(async () => {
 		setSettings(await Database.getSettings());
 		setLanguages(await junie_get_languages());
+		setBindings(await junie_get_bindings());
 		setOptions(await junie_get_settings());
 	});
 
@@ -66,12 +78,34 @@ export const SettingsPage = () => {
                         <IonLabel>Language</IonLabel>
                         <IonSelect interface="action-sheet" value={settings.language} onIonChange={e => language(e.detail.value)}>
                             {languages.sort().map(name =>
-                                <IonSelectOption key={name} value={name}>{prettify(name)}</IonSelectOption>
+                                <IonSelectOption key={name} value={name}>{prettify(name, 'RETRO_LANGUAGE_')}</IonSelectOption>
                             )}
                         </IonSelect>
                     </IonItem>
 
-                    <IonAccordionGroup animated={false}>
+                    <IonAccordionGroup key="bindings" animated={false}>
+                        <IonAccordion>
+                            <IonItem slot="header">
+                                <IonLabel>Bindings</IonLabel>
+                            </IonItem>
+                    
+                            <IonList slot="content" lines="none">
+                                {bindings.joypad.map(button => 
+                                    <IonItem key={button}>
+                                        <IonLabel>{prettify(button, 'RETRO_DEVICE_ID_JOYPAD_')}</IonLabel>
+                                        <IonSelect interface="action-sheet" value={settings.bindings[button]} onIonChange={e => bind(button, e.detail.value)}>
+                                            <IonSelectOption value={null}>(clear)</IonSelectOption>
+                                            {bindings.keyboard.map(key =>
+                                                <IonSelectOption key={key} value={key}>{prettify(key, 'MTY_KEY_')}</IonSelectOption>
+                                            )}
+                                        </IonSelect>
+                                    </IonItem>
+                                )}
+                            </IonList>
+                        </IonAccordion>
+                    </IonAccordionGroup>
+
+                    <IonAccordionGroup key="cores" animated={false}>
                         {Object.keys(options).map(name =>
                             <IonAccordion key={name}>
                                 <IonItem slot="header">

@@ -5,7 +5,6 @@ import { Game } from '../entities/game';
 import { JunImg } from '../components/jun-img';
 import * as Requests from '../services/requests';
 import * as Database from "../services/database";
-import settings from '../config/settings.js';
 
 export const RecentPage = () => {
 
@@ -42,10 +41,7 @@ export const RecentPage = () => {
 		await junie_start_game({
 			system: played.system.name,
 			rom: played.game.rom,
-			settings: {
-				...settings,
-				...await Database.getSettings(),
-			}
+			settings: await Database.getSettings(),
 		});
 
 		window.frameElement.style.display = 'block';

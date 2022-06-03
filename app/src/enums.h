@@ -23,8 +23,7 @@ typedef enum {
 } JUN_PathType;
 
 void JUN_EnumsCreate();
-MTY_JSON *JUN_EnumsGetAllInt(JUN_EnumType type);
-MTY_JSON *JUN_EnumsGetAllString(JUN_EnumType type);
+MTY_JSON *JUN_EnumsGetAll(JUN_EnumType type);
 uint32_t JUN_EnumsGetInt(JUN_EnumType type, const char *key);
 const char *JUN_EnumsGetString(JUN_EnumType type, uint32_t value);
 void JUN_EnumsDestroy();
