@@ -62,6 +62,8 @@ export const SettingsPage = () => {
 		setOptions(await junie_get_settings());
 	});
 
+    // TODO there might be a way to lazy-load accordions content
+
 	return (
 		<IonPage>
 
@@ -96,7 +98,7 @@ export const SettingsPage = () => {
                                     <IonItem key={button}>
                                         <IonLabel>{prettify(button, 'RETRO_DEVICE_ID_JOYPAD_')}</IonLabel>
                                         <IonSelect interface="action-sheet" value={settings.bindings[button]} onIonChange={e => bind(button, e.detail.value)}>
-                                            <IonSelectOption value={null}>(clear)</IonSelectOption>
+                                            <IonSelectOption value={null}>...</IonSelectOption>
                                             {bindings.keyboard.map(key =>
                                                 <IonSelectOption key={key} value={key}>{prettify(key, 'MTY_KEY_')}</IonSelectOption>
                                             )}
@@ -117,7 +119,7 @@ export const SettingsPage = () => {
                                         <IonItem key={item.name}>
                                             <IonLabel>{item.name}</IonLabel>
                                             <IonSelect interface="action-sheet" value={settings.configurations[item.key]} onIonChange={e => override(item, e.detail.value)}>
-                                                <IonSelectOption value={null}>(clear)</IonSelectOption>
+                                                <IonSelectOption value={null}>...</IonSelectOption>
                                                 {item.options.map(option =>
                                                     <IonSelectOption key={option} value={option}>{option}</IonSelectOption>
                                                 )}
