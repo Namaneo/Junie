@@ -73,7 +73,8 @@ export const SettingsPage = () => {
 
 			<IonContent class="settings">
 
-                <IonList lines="none">
+                <IonList lines="full">
+
                     <IonItem key="languages">
                         <IonLabel>Language</IonLabel>
                         <IonSelect interface="action-sheet" value={settings.language} onIonChange={e => language(e.detail.value)}>
@@ -83,13 +84,14 @@ export const SettingsPage = () => {
                         </IonSelect>
                     </IonItem>
 
-                    <IonAccordionGroup key="bindings" animated={false}>
+                    <IonAccordionGroup animated={false}>
+
                         <IonAccordion>
                             <IonItem slot="header">
                                 <IonLabel>Bindings</IonLabel>
                             </IonItem>
                     
-                            <IonList slot="content" lines="none">
+                            <IonList slot="content">
                                 {bindings.joypad.map(button => 
                                     <IonItem key={button}>
                                         <IonLabel>{prettify(button, 'RETRO_DEVICE_ID_JOYPAD_')}</IonLabel>
@@ -103,16 +105,14 @@ export const SettingsPage = () => {
                                 )}
                             </IonList>
                         </IonAccordion>
-                    </IonAccordionGroup>
 
-                    <IonAccordionGroup key="cores" animated={false}>
                         {Object.keys(options).map(name =>
                             <IonAccordion key={name}>
                                 <IonItem slot="header">
                                     <IonLabel>{name}</IonLabel>
                                 </IonItem>
                         
-                                <IonList slot="content" lines="none">
+                                <IonList slot="content">
                                     {options[name].map(item => 
                                         <IonItem key={item.name}>
                                             <IonLabel>{item.name}</IonLabel>
@@ -127,6 +127,7 @@ export const SettingsPage = () => {
                                 </IonList>
                             </IonAccordion>
                         )}
+
                     </IonAccordionGroup>
 
                 </IonList>

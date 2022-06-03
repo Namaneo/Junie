@@ -31,11 +31,11 @@ export async function getSettings() {
 
 	const defaults = { 
 		language: 'RETRO_LANGUAGE_ENGLISH',
-		bindings: { },
-		configurations: { },
+		bindings: { }, // TODO default bindings?
+		configurations: { }, // TODO default configurations?
 	};
 
-	return JSON.parse(JSON.stringify(file ? file.data : defaults));
+	return JSON.parse(JSON.stringify({ ...defaults, ...file?.data }));
 };
 
 export async function updateSettings(settings) {
