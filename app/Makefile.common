@@ -1,4 +1,4 @@
-WASI_SDK := $(HOME)/wasi-sdk-14.0
+WASI_SDK := $(HOME)/wasi-sdk-16.0
 
 WASI_SYSROOT := $(WASI_SDK)/share/wasi-sysroot
 WASI_CC      := $(WASI_SDK)/bin/clang
