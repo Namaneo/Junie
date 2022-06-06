@@ -5,6 +5,7 @@ import { useRef, useState } from 'react';
 import { FixSaveModal } from '../modals/fix-save-modal';
 import * as Requests from '../services/requests';
 import * as Database from "../services/database";
+import * as Helpers from "../services/helpers";
 
 export const SavesPage = () => {
 
@@ -35,7 +36,7 @@ export const SavesPage = () => {
 			const blob = new Blob([encode(saves)], { type: 'octet/stream' })
 
 			a.href = URL.createObjectURL(blob);
-			a.download = `junie-${Date.now()}.sav`;
+			a.download = `junie-${Date.now()}.jsv`;
 			a.click();
 
 			URL.revokeObjectURL(a.href);
@@ -49,8 +50,25 @@ export const SavesPage = () => {
 		if (!files?.length)
 			return;
 
-		const data = await files[0].arrayBuffer();
-		const save_restore = decode(data);
+		let save_restore = null;
+
+		if (files[0].name.endsWith('.jsv')) {
+			const data = await files[0].arrayBuffer();
+			save_restore = decode(data);
+	
+		} else if (files[0].name.endsWith('.json')) {
+			const data = await files[0].text();
+			save_restore = JSON.parse(data);
+
+			for (const save of save_restore)
+				for (const file of save.files)
+					file.data = Helpers.To.Uint8Array(file.data);
+			
+		} else {
+			return;
+		}
+
+		console.log(save_restore);
 
 		fileUpload.current.value = '';
 

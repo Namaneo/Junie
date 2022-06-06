@@ -34,8 +34,11 @@ export const From = {
         return [atob(matches[2]), matches[1]];
     },
     ArrayBuffer: (buffer) => {
+        return From.Uint8Array(new Uint8Array(buffer));
+    },
+    Uint8Array: (buffer) => {
         var binary = '';
-        const array = new Uint8Array(buffer);
+        const array = buffer;
         for (var i = 0; i < array.byteLength; i++)
             binary += String.fromCharCode(array[i]);
         return binary;
@@ -47,9 +50,12 @@ export const To = {
         return `data:${contentType};base64,${btoa(binary)}`;
     },
     ArrayBuffer: (binary) => {
+        return To.Uint8Array(binary).buffer;
+    },
+    Uint8Array: (binary) => {
         var array = new Uint8Array(binary.length);
         for (var i = 0; i < binary.length; i++)
             array[i] = binary.charCodeAt(i);
-        return array.buffer;
+        return array;
     },
 }
