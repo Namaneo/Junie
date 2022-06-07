@@ -1,4 +1,5 @@
 import { createMemoryHistory } from 'history'
+import { StrictMode } from 'react'
 import { render } from 'react-dom'
 import { Redirect, Route } from 'react-router'
 import { IonReactMemoryRouter } from '@ionic/react-router'
@@ -77,4 +78,4 @@ function Junie() {
     );
 }
 
-render(<Junie />, document.getElementById('root'));
+render(<StrictMode><Junie /></StrictMode>, document.getElementById('root'));
