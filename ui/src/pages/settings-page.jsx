@@ -1,28 +1,66 @@
-import { IonAccordion, IonAccordionGroup, IonContent, IonHeader, IonItem, IonLabel, IonList, IonPage, IonSelect, IonSelectOption, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
+import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonModal, IonPage, IonSelect, IonSelectOption, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
 import { useState } from 'react';
+import { chevronForwardOutline } from 'ionicons/icons';
 import * as Database from '../services/database';
 
+const pascalify = (str) => {
+    return str.replace(/([A-Z])([A-Z]+)/g, (_, c1, c2) => {
+        return `${c1.toUpperCase()}${c2.toLowerCase()}`;
+    });
+}
+
+const prettify = (lang, prefix) => {
+    lang = lang.replace(prefix, '');
+
+    const main = lang.split('_')[0];
+    const sub = lang.split('_')[1];
+
+    return pascalify(main) + (sub ? ` (${pascalify(sub)})` : '');
+};
+
+const EditModal = ({ open, dismiss, data }) => {
+
+    return (
+        <IonModal isOpen={open}>
+            <IonHeader>
+				<IonToolbar>
+					<IonTitle>{data.name}</IonTitle>
+					<IonButtons slot="end">
+						<IonButton onClick={dismiss}>Close</IonButton>
+					</IonButtons>
+				</IonToolbar>
+			</IonHeader>
+
+			<IonContent class="modal">
+
+                <IonList>
+                    {data.items?.map(item => 
+                        <IonItem key={item.key}>
+                            <IonLabel>{item.name}</IonLabel>
+                            <IonSelect interface="action-sheet" value={data.current[item.key]} onIonChange={e => data.update(item.key, e.detail.value)}>
+                                <IonSelectOption value={null}>...</IonSelectOption>
+                                {item.options?.map(option =>
+                                    <IonSelectOption key={option.key} value={option.key}>{option.name}</IonSelectOption>
+                                )}
+                            </IonSelect>
+                        </IonItem>
+                    )}
+                </IonList>
+
+			</IonContent>
+        </IonModal>
+    );
+}
+
 export const SettingsPage = () => {
+
+	const [modal, setModal] = useState(false);
+    const [data, setData] = useState({});
 
 	const [settings, setSettings] = useState({});
 	const [languages, setLanguages] = useState([]);
 	const [bindings, setBindings] = useState({ joypad: [], keyboard: [] });
 	const [options, setOptions] = useState({});
-
-    const pascalify = (str) => {
-        return str.replace(/([A-Z])([A-Z]+)/g, (_, c1, c2) => {
-            return `${c1.toUpperCase()}${c2.toLowerCase()}`;
-        });
-    }
-
-    const prettify = (lang, prefix) => {
-        lang = lang.replace(prefix, '');
-
-        const main = lang.split('_')[0];
-        const sub = lang.split('_')[1];
-
-        return pascalify(main) + (sub ? ` (${pascalify(sub)})` : '');
-    };
 
     const language = async (lang) => {
         if (!settings.configurations)
@@ -46,23 +84,58 @@ export const SettingsPage = () => {
     }
 
     const override = async (item, value) => {
-        settings.configurations[item.key] = value;
+        settings.configurations[item] = value;
         if (!value)
-            delete settings.configurations[item.key];
+            delete settings.configurations[item];
 
         setSettings({ ...settings });
 
         await Database.updateSettings(settings);
     }
 
+    const openModal = (name) => {
+        const data =  { name: name };
+
+        if (data.name == 'Bindings') {
+            data.items = bindings.joypad.map(button => new Object({ 
+                key: button,
+                name: prettify(button, 'RETRO_DEVICE_ID_JOYPAD_'),
+                options: bindings.keyboard.map(key => new Object({
+                    key: key,
+                    name: prettify(key, 'MTY_KEY_')
+                })),
+            }));
+            data.current = settings.bindings;
+            data.update = bind;
+
+        } else {
+            data.items = options[name].map(option => new Object({ 
+                key: option.key,
+                name: option.name,
+                options: option.options.map(value => new Object({
+                    key: value,
+                    name: value
+                })),
+            }));
+            data.current = settings.configurations;
+            data.update = override;
+        }
+
+        setData(data);
+        setModal(true);
+    }
+
+    const closeModal = () => {
+        setData({});
+        setModal(false);
+    }
+
 	useIonViewWillEnter(async () => {
-		setSettings(await Database.getSettings());
 		setLanguages(await junie_get_languages());
 		setBindings(await junie_get_bindings());
 		setOptions(await junie_get_settings());
+		setSettings(await Database.getSettings());
 	});
-
-    // TODO there might be a way to lazy-load accordions content
 
 	return (
 		<IonPage>
@@ -75,6 +148,8 @@ export const SettingsPage = () => {
 
 			<IonContent class="settings">
 
+                <EditModal open={modal} dismiss={closeModal} data={data} />
+
                 <IonList lines="full">
 
                     <IonItem key="languages">
@@ -86,51 +161,17 @@ export const SettingsPage = () => {
                         </IonSelect>
                     </IonItem>
 
-                    <IonAccordionGroup animated={false}>
+                    <IonItem key="bindings" button onClick={() => openModal('Bindings')}>
+                        <IonLabel>Bindings</IonLabel>
+                        <IonIcon icon={chevronForwardOutline} slot="end" />
+                    </IonItem>
 
-                        <IonAccordion>
-                            <IonItem slot="header">
-                                <IonLabel>Bindings</IonLabel>
-                            </IonItem>
-                    
-                            <IonList slot="content">
-                                {bindings.joypad.map(button => 
-                                    <IonItem key={button}>
-                                        <IonLabel>{prettify(button, 'RETRO_DEVICE_ID_JOYPAD_')}</IonLabel>
-                                        <IonSelect interface="action-sheet" value={settings.bindings[button]} onIonChange={e => bind(button, e.detail.value)}>
-                                            <IonSelectOption value={null}>...</IonSelectOption>
-                                            {bindings.keyboard.map(key =>
-                                                <IonSelectOption key={key} value={key}>{prettify(key, 'MTY_KEY_')}</IonSelectOption>
-                                            )}
-                                        </IonSelect>
-                                    </IonItem>
-                                )}
-                            </IonList>
-                        </IonAccordion>
-
-                        {Object.keys(options).map(name =>
-                            <IonAccordion key={name}>
-                                <IonItem slot="header">
-                                    <IonLabel>{name}</IonLabel>
-                                </IonItem>
-                        
-                                <IonList slot="content">
-                                    {options[name].map(item => 
-                                        <IonItem key={item.name}>
-                                            <IonLabel>{item.name}</IonLabel>
-                                            <IonSelect interface="action-sheet" value={settings.configurations[item.key]} onIonChange={e => override(item, e.detail.value)}>
-                                                <IonSelectOption value={null}>...</IonSelectOption>
-                                                {item.options.map(option =>
-                                                    <IonSelectOption key={option} value={option}>{option}</IonSelectOption>
-                                                )}
-                                            </IonSelect>
-                                        </IonItem>
-                                    )}
-                                </IonList>
-                            </IonAccordion>
-                        )}
-
-                    </IonAccordionGroup>
+                    {Object.keys(options).map(name =>
+                        <IonItem key={name} button onClick={() => openModal(name)}>
+                            <IonLabel>{name}</IonLabel>
+                            <IonIcon icon={chevronForwardOutline} slot="end" />
+                        </IonItem>
+                    )}
 
                 </IonList>
 			</IonContent>

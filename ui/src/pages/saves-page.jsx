@@ -65,10 +65,9 @@ export const SavesPage = () => {
 					file.data = Helpers.To.Uint8Array(file.data);
 			
 		} else {
+			// TODO alert?
 			return;
 		}
-
-		console.log(save_restore);
 
 		fileUpload.current.value = '';
 
