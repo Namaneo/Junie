@@ -1,6 +1,5 @@
-import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonModal, IonPage, IonSelect, IonSelectOption, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
+import { IonButton, IonButtons, IonContent, IonHeader, IonItem, IonLabel, IonList, IonModal, IonPage, IonSelect, IonSelectOption, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
 import { useState } from 'react';
-import { chevronForwardOutline } from 'ionicons/icons';
 import * as Database from '../services/database';
 
 const pascalify = (str) => {
@@ -163,13 +162,11 @@ export const SettingsPage = () => {
 
                     <IonItem key="bindings" button onClick={() => openModal('Bindings')}>
                         <IonLabel>Bindings</IonLabel>
-                        <IonIcon icon={chevronForwardOutline} slot="end" />
                     </IonItem>
 
                     {Object.keys(options).map(name =>
                         <IonItem key={name} button onClick={() => openModal(name)}>
                             <IonLabel>{name}</IonLabel>
-                            <IonIcon icon={chevronForwardOutline} slot="end" />
                         </IonItem>
                     )}
 

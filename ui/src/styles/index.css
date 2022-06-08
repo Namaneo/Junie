@@ -1,4 +1,12 @@
 /*
+ * Global
+ */
+#root ion-card {
+    margin: 16px;
+}
+
+
+/*
  * Recent
  */
 #root .recent ion-list {

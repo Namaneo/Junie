@@ -1,6 +1,6 @@
 import { encode, decode } from "@msgpack/msgpack/dist";
-import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem, IonItemGroup, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonModal, IonPage, IonTitle, IonToolbar, useIonModal, useIonViewWillEnter } from '@ionic/react';
-import { checkmarkCircleOutline, closeCircleOutline, cloudDownload, cloudUpload } from 'ionicons/icons';
+import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonModal, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
+import { checkmarkCircleOutline, closeCircleOutline, cloudDownload, cloudUpload, buildOutline } from 'ionicons/icons';
 import { useRef, useState } from 'react';
 import { FixSaveModal } from '../modals/fix-save-modal';
 import * as Requests from '../services/requests';
@@ -118,30 +118,31 @@ export const SavesPage = () => {
 					<FixSaveModal systems={systems} apply={apply} dismiss={dismiss}  />
 				</IonModal>
 
-				<IonList>
-					<IonItemGroup>
-						{saves.map(save =>
-							<IonCard key={save.game}>
-								<IonItemSliding>
-									<IonItem>
-										{
-											save.mapped ?
-												<IonIcon color="success" icon={checkmarkCircleOutline} slot="start"></IonIcon> :
-												<IonIcon color="danger" icon={closeCircleOutline} slot="start"></IonIcon>
-										}
-										<IonLabel>
-											<h2>{save.game?.replaceAll(/ \(.*\)/g, '')}</h2>
-											<h3>{save.system}</h3>
-										</IonLabel>
-										{!save.mapped && <IonButton onClick={() => showModal(save)}>Fix</IonButton>}
-									</IonItem>
-									<IonItemOptions side="end">
-										<IonItemOption color="danger" onClick={() => deleteSave(save)}>Delete</IonItemOption>
-									</IonItemOptions>
-								</IonItemSliding>
-							</IonCard>
-						)}
-					</IonItemGroup>
+				<IonList lines="none">
+					{saves.map(save =>
+						<IonCard key={save.game}>
+							<IonItemSliding>
+								<IonItem color="light">
+									{
+										save.mapped ?
+											<IonIcon color="success" icon={checkmarkCircleOutline} slot="start"></IonIcon> :
+											<IonIcon color="danger" icon={closeCircleOutline} slot="start"></IonIcon>
+									}
+									<IonLabel>
+										<h2>{save.game?.replaceAll(/ \(.*\)/g, '')}</h2>
+										<h3>{save.system}</h3>
+									</IonLabel>
+									<IonButton onClick={() => showModal(save)} fill="clear">
+										<IonIcon slot="icon-only" icon={buildOutline} />
+									</IonButton>
+									{/* {!save.mapped && <IonButton onClick={() => showModal(save)}>Fix</IonButton>} */}
+								</IonItem>
+								<IonItemOptions side="end">
+									<IonItemOption color="danger" onClick={() => deleteSave(save)}>Delete</IonItemOption>
+								</IonItemOptions>
+							</IonItemSliding>
+						</IonCard>
+					)}
 				</IonList>
 			</IonContent>
 

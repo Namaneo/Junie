@@ -50,7 +50,7 @@ export const EditCheatModal = ({ current, systems, dismiss, apply }) => {
 			</IonHeader>
 
 			<IonContent class="modal">
-				<IonList>
+				<IonList lines="full">
 
 					<IonItem>
 						<IonLabel>System</IonLabel>
@@ -90,11 +90,11 @@ export const EditCheatModal = ({ current, systems, dismiss, apply }) => {
 						<IonTextarea value={value} onIonChange={e => setValue(e.detail.value ?? '')} autoGrow />
 					</IonItem>
 
-					<IonButton expand="block" disabled={isValid()} onClick={() => validate()}>
-						Apply
-					</IonButton>
-
 				</IonList>
+
+				<IonButton expand="block" disabled={isValid()} onClick={() => validate()}>
+					Apply
+				</IonButton>
 
 			</IonContent>
 		</>
