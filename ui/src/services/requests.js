@@ -52,10 +52,9 @@ export function getSystemCover(system) {
 }
 
 export function getGameCover(system, game) {
-    const system_name = system.full_name.replaceAll(' ', '_');
-    const cover_name = game.rom.substring(0, game.rom.lastIndexOf('.')) + '.png';
-    const host = 'https://raw.githubusercontent.com';
-    const path = `/libretro-thumbnails/${system_name}/master/Named_Boxarts/${cover_name}`;
+    const cover = game.rom.substring(0, game.rom.lastIndexOf('.')) + '.png';
+    const host = 'https://thumbnails.libretro.com';
+    const path = `/${system.full_name}/Named_Boxarts/${cover}`;
     return host + path;
 }
 
