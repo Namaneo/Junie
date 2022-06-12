@@ -6,15 +6,15 @@ import library from '../config/library'
 
 async function execute(command) {
 	const db = new Dexie('Junie');
-	db.version(2).stores({ files: 'path', games: 'path' });
-	const result = await command(db);
+	db.version(2).stores({ files: 'path' });
+	const result = await command(db.table('files'));
 	db.close();
 	return result;
 }
 
 export async function getLibrary(force) {
 	if (!force) {
-		const file = await execute(db => db.table('files').get('/library.json'));
+		const file = await execute(db => db.get('/library.json'));
 		if (file)
 			return JSON.parse(JSON.stringify(file.data));
 	}
@@ -23,11 +23,11 @@ export async function getLibrary(force) {
 };
 
 export async function updateLibrary(library) {
-	await execute(db => db.table('files').put({ path: '/library.json', data: library}));
+	await execute(db => db.put({ path: '/library.json', data: library}));
 }
 
 export async function getSettings() {
-	const file = await execute(db => db.table('files').get('/settings.json'));
+	const file = await execute(db => db.get('/settings.json'));
 
 	const defaults = { 
 		language: 'RETRO_LANGUAGE_ENGLISH',
@@ -39,13 +39,13 @@ export async function getSettings() {
 };
 
 export async function updateSettings(settings) {
-	await execute(db => db.table('files').put({ path: '/settings.json', data: settings}));
+	await execute(db => db.put({ path: '/settings.json', data: settings}));
 
 	junie_refresh_files();
 }
 
 export async function getSaves() {
-	const rawSaves = await execute(db => db.table('files').where('path').startsWith('/save/').toArray());
+	const rawSaves = await execute(db => db.where('path').startsWith('/save/').toArray());
 
 	return rawSaves.map(file => new Save(file)).reduce((acc, newSave) => {
 
@@ -58,7 +58,7 @@ export async function getSaves() {
 
 export async function updateSave(save) {
 	for (const file of save.files)
-		await execute(db => db.table('files').put(file));
+		await execute(db => db.put(file));
 
 	junie_refresh_files();
 }
@@ -70,21 +70,21 @@ export async function fixSave(save, system, game) {
 		const filename = game.rom?.replace(`.${system.extension}`, '');
 		file.path = file.path.replace(save.system, system.name).replace(save.game, filename);
 
-		await execute(async db => db.table('files').delete(key));
-		await execute(async db => db.table('files').put(file));
+		await execute(async db => db.delete(key));
+		await execute(async db => db.put(file));
 	}
 
 	junie_refresh_files();
 }
 
 export async function removeSave(save) {
-	await execute(db => db.table('files').bulkDelete(save.files.map(x => x.path)));
+	await execute(db => db.bulkDelete(save.files.map(x => x.path)));
 
 	junie_refresh_files();
 }
 
 export async function getCheats() {
-	const rawCheats = await execute(db => db.table('files').where('path').startsWith('/cheats/').toArray());
+	const rawCheats = await execute(db => db.where('path').startsWith('/cheats/').toArray());
 
 	return rawCheats.map(file => new Cheat(file));
 };
@@ -92,39 +92,38 @@ export async function getCheats() {
 export async function updateCheat(cheat, key) {
 	const file = cheat.file();
 
-	await execute(db => db.table('files').delete(key));
-	await execute(db => db.table('files').put(file));
+	await execute(db => db.delete(key));
+	await execute(db => db.put(file));
 
 	junie_refresh_files();
 }
 
 export async function removeCheat(cheat) {
-	await execute(db => db.table('files').delete(cheat.file().path));
+	await execute(db => db.delete(cheat.file().path));
 
 	junie_refresh_files();
 }
 
 export async function getGames() {
-	const games = await execute(db => db.table('games').where('path').startsWith('/games/').toArray());
+	const games = await execute(db => db.where('path').startsWith('/games/').toArray());
 
-	return games.map(game => new Game(game.system, game.game));
+	return games.filter(game => game.meta).map(game => new Game(game.meta.system, game.meta.game));
 };
 
 export async function addGame(game, data) {
-	const copy = { path: game.path(), ...JSON.parse(JSON.stringify(game)) };
-	const file = { path: game.path(), data: new Uint8Array(data) };
+	const file = { path: game.path(), data: new Uint8Array(data), meta: JSON.parse(JSON.stringify(game)) };
 
-	delete copy.system.games;
+	delete file.meta.game.installed;
+	delete file.meta.system.cover;
+	delete file.meta.system.games;
 
-	await execute(db => db.table('games').put(copy));
-	await execute(db => db.table('files').put(file));
+	await execute(db => db.put(file));
 
 	junie_refresh_files();
 }
 
 export async function removeGame(game) {
-	await execute(db => db.table('games').delete(game.path()));
-	await execute(db => db.table('files').delete(game.path()));
+	await execute(db => db.delete(game.path()));
 
 	junie_refresh_files();
 }

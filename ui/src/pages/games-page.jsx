@@ -31,7 +31,7 @@ export const GamesPage = ({ match }) => {
 		}
 
 		if (game.cover) {
-			const response = await fetch(game.cover, { mode: 'no-cors' });
+			const response = await fetch(game.cover);
 			const buffer = await response.arrayBuffer();
 			const cover = Helpers.From.ArrayBuffer(buffer);
 			const contentType = response.headers.get("Content-Type");
