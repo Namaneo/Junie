@@ -17,7 +17,7 @@ I haven't played those games yet but will do for sure!
 
 ![](assets/showcase.png)
 
-*Disclaimer: development is still in progress. I'll try my best not to break anything between releases (especially regarding local save files), but it's probably a good idea for you to test releases before updating.*
+*Disclaimer: development is still in progress. I'll try my best not to break anything between releases (especially regarding local save files), but it's probably a good idea for you to backup your saves before each update.*
 
 # Supported features
 
