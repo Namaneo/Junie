@@ -1,3 +1,3 @@
 FROM junie
 
-ADD ./games  ./games
+ADD ./games ./games

@@ -25,4 +25,4 @@ WORKDIR /junie
 
 COPY --from=build /build .
 
-ENTRYPOINT python3 -m http.server -d /build ${PORT:-8000}
+CMD python -m http.server ${PORT:-8000}
