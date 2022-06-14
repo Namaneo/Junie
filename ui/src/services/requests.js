@@ -19,11 +19,14 @@ async function fetchGames(system) {
 }
 
 export async function refreshLibrary() {
-	const library = await Database.getLibrary(true);
-
-	await Promise.all(library.map(fetchGames));
-
-	await Database.updateLibrary(library);
+	try {
+		const library = await Database.getLibrary(true);
+		await Promise.all(library.map(fetchGames));
+		await Database.updateLibrary(library);
+	} catch (e) {
+		return false;
+	}
+	return true;
 }
 
 export async function getSystems() {

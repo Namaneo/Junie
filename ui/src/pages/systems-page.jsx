@@ -1,4 +1,4 @@
-import { IonButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonIcon, IonLoading, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
+import { IonButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonIcon, IonLoading, IonPage, IonTitle, IonToolbar, useIonAlert, useIonViewWillEnter } from '@ionic/react';
 import { useState } from 'react';
 import { refreshOutline } from 'ionicons/icons';
 import { useOnline } from '../hooks/online'
@@ -8,6 +8,7 @@ export const SystemsPage = () => {
 
 	const [systems, setSystems] = useState([]);
 	const [loading, setLoading] = useState(false);
+	const [alert] = useIonAlert();
 	const online = useOnline();
 
 	const filterSystem = (system) => {
@@ -17,7 +18,17 @@ export const SystemsPage = () => {
 	const refreshLibrary = async () => {
 		setLoading(true);
 
-		await Requests.refreshLibrary();
+		const success = await Requests.refreshLibrary();
+		if (!success) {
+			setLoading(false);
+			alert({
+				header: 'Refresh failed',
+				message: `Could not refreh the library. Please check you internet connection.`,
+				buttons: [ 'OK' ],
+			});
+			return;
+		}
+
 		setSystems(await Requests.getSystems());
 
 		setLoading(false);
