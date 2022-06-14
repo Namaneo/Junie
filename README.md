@@ -13,16 +13,15 @@ Junie currently runs on most recent browsers, though your experience will probab
 [Celeste Classic](https://github.com/JeffRuLz/Celeste-Classic-GBA),
 [Daedeus](https://izma.itch.io/deadeus) and
 [GraviBots](https://retrosouls.itch.io/gravibots16bit).
-I haven't played those games yet but will do for sure!
+
+***Disclaimer**: development is still in progress. I'll try my best not to break anything between releases (especially regarding local save files), but it's probably a good idea for you to backup your saves before each update.*
 
 ![](assets/showcase.png)
-
-*Disclaimer: development is still in progress. I'll try my best not to break anything between releases (especially regarding local save files), but it's probably a good idea for you to backup your saves before each update.*
 
 # Supported features
 
 - [x] All the systems described in the [Folder structure](#folder-structure).
-- [x] Save files (stored inside your browser's storage).
+- [x] Save files and cheats (stored inside your browser's storage).
 - [x] Core-specific configurations override.
 - [x] Multi-touch controller, with D-pad used as a joystick.
 - [x] Re-mappable keyboard to joypad bindings.
@@ -30,11 +29,11 @@ I haven't played those games yet but will do for sure!
 - [x] Savestate creation and restore.
 - [x] Fast-forward up to 4 times the original speed.
 - [x] Nice platform-specific user interface.
-- [x] Fully working offline.
+- [x] Fully working offline from your homescreen.
 
 # Folder structure
 
-Games must be organized as follows, inside the application folder:
+Games must be organized as follows, inside a `games` folder next to the application binaries:
 
 ```
 games
@@ -107,10 +106,10 @@ docker run \
 
 ## Libraries
 
-- All of this could only be possible thanks to [libmatoya](https://github.com/matoya/libmatoya).
+- The main framework used here is [libmatoya](https://github.com/matoya/libmatoya).
 - The [zlib](https://github.com/madler/zlib) library is required for some cores.
-- Thumbnails are retrieved from [libretro-thumbnails](https://github.com/libretro-thumbnails/libretro-thumbnails)
-- And of course, modules and headers from [libretro-common](https://github.com/libretro/libretro-common).
+- Thumbnails are retrieved from [libretro-thumbnails](https://thumbnails.libretro.com/)
+- Modules and headers from [libretro-common](https://github.com/libretro/libretro-common).
 
 ## Cores
 
