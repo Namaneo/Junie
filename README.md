@@ -6,7 +6,7 @@ Junie is a [Libretro](https://www.libretro.com/index.php/home-2/) frontend that 
 * Wide range of supported/compatible cores (... soon).
 * Progressive Web Application fully accessible offline.
 
-Junie currently runs on most recent browsers, though your experience will probably be the best on Chrome and Safari (I have issues on Firefox on my side, not sure if it's isolated to my computer).
+Junie currently runs on most recent browsers, but your experience will probably be better on Chrome and Safari.
 
 [Demo](https://junie.herokuapp.com/): here you can play
 [Indivisible](https://kasumi.itch.io/indivisible),
