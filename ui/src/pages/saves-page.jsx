@@ -62,7 +62,7 @@ export const SavesPage = () => {
 
 			for (const save of save_restore)
 				for (const file of save.files)
-					file.data = Helpers.To.Uint8Array(file.data);
+					file.data = Helpers.To.Uint8Array(atob(file.data));
 			
 		} else {
 			// TODO alert?
