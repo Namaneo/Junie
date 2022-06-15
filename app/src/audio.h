@@ -4,7 +4,7 @@
 
 typedef struct JUN_Audio JUN_Audio;
 
-JUN_Audio *JUN_AudioCreate();
+JUN_Audio *JUN_AudioCreate(JUN_State *state);
 void JUN_AudioPrepare(JUN_Audio *this, double sample_rate, double frames_per_second);
 void JUN_AudioQueue(JUN_Audio *this, const int16_t *data, size_t frames);
 void JUN_AudioDestroy(JUN_Audio **audio);

@@ -43,7 +43,7 @@ JUN_App *JUN_AppCreate(MTY_AppFunc app_func, MTY_EventFunc event_func)
 
 	this->public.state = JUN_StateCreate();
 	this->public.input = JUN_InputCreate(this->public.state);
-	this->public.audio = JUN_AudioCreate();
+	this->public.audio = JUN_AudioCreate(this->public.state);
 	this->public.video = JUN_VideoCreate(this->public.state, app_func, event_func);
 
 	return (JUN_App *) this;

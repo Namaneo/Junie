@@ -19,7 +19,8 @@ CORES := genesis melonds mgba quicknes snes9x
 LIB_FILES  := $(LIBS:%=$(LIB_DIR)/lib%.a)
 CORE_FILES := $(CORES:%=$(CORES_DIR)/lib%.a)
 
-SRC := main.c \
+SRC := \
+	$(SRC_DIR)/main.c \
 	$(SRC_DIR)/app.c \
 	$(SRC_DIR)/wasi.c \
 	$(SRC_DIR)/core.c \

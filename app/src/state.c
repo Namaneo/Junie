@@ -78,7 +78,10 @@ uint8_t JUN_StateGetFastForward(JUN_State *this)
 
 void JUN_StateToggleFastForward(JUN_State *this)
 {
-	this->fast_forward = (this->fast_forward + 1) % 4;
+	this->fast_forward = (this->fast_forward + 1) * 2 - 1;
+
+	if (this->fast_forward > 3)
+		this->fast_forward = 0;
 }
 
 void JUN_StateGetFrameMetrics(JUN_State *this, float *width, float *height)
