@@ -17,7 +17,7 @@ struct JUN_TextureData
 	float image_height;
 };
 
-JUN_Texture *JUN_TextureCreateContext(uint32_t view_width, uint32_t view_height, uint8_t offset);
+JUN_Texture *JUN_TextureCreate(uint32_t view_width, uint32_t view_height);
 void JUN_TextureDraw(JUN_Texture *this, JUN_TextureData *texture);
 MTY_DrawData *JUN_TextureProduce(JUN_Texture *this, size_t length);
 void JUN_TextureDestroy(JUN_Texture **texture);

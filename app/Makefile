@@ -64,9 +64,23 @@ assets:
 	@cp $(LIB_DIR)/matoya/src/matoya.h $(INC_DIR)
 	@cp $(LIB_DIR)/retro/include/libretro.h $(INC_DIR)
 	@(cd ../ui/build && xxd -i index.html) > $(INC_DIR)/res_index.h
-	@(cd $(RES_DIR) && xxd -i menu.png) > $(INC_DIR)/res_menu.h
-	@(cd $(RES_DIR) && xxd -i controller_left.png) > $(INC_DIR)/res_controller_left.h
-	@(cd $(RES_DIR) && xxd -i controller_right.png) > $(INC_DIR)/res_controller_right.h
+	@xxd -i $(RES_DIR)/menu/toggle_audio.png   >  $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/menu/toggle_gamepad.png >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/menu/save_state.png     >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/menu/restore_state.png  >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/menu/fast_forward.png   >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/menu/exit.png           >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/joypad/a.png            >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/joypad/b.png            >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/joypad/x.png            >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/joypad/y.png            >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/joypad/l.png            >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/joypad/r.png            >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/joypad/up.png           >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/joypad/down.png         >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/joypad/left.png         >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/joypad/right.png        >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/joypad/start_select.png >> $(INC_DIR)/res_inputs.h
 
 $(LIB_DIR)/lib%.a:
 	@make -C $(LIB_DIR) -f Makefile.$*

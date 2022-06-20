@@ -12,8 +12,7 @@ typedef struct retro_vfs_dir_handle JUN_Directory;
 typedef void (*JUN_FilesystemCallback)(JUN_File *, void *opaque);
 
 // TODO Ugly to expose all of this publicly
-struct retro_vfs_file_handle
-{
+struct retro_vfs_file_handle {
 	bool exists;
 
 	char *path;
@@ -23,10 +22,6 @@ struct retro_vfs_file_handle
 	size_t size;
 	unsigned offset;
 	void *buffer;
-
-	bool decompressed;
-	uint32_t width;
-	uint32_t height;
 };
 
 void JUN_FilesystemCreate();

@@ -2,261 +2,121 @@
 
 #include "libretro.h"
 
-#include "enums.h"
+#include "state.h"
+#include "filesystem.h"
 
 #include "input.h"
 
-#define INPUT_LEFT_TOTAL 6
-#define INPUT_RIGHT_TOTAL 6
-#define INPUT_TOTAL INPUT_LEFT_TOTAL + INPUT_RIGHT_TOTAL
+#define MIN_RETRO_INPUTS 0
+#define MAX_RETRO_INPUTS 15
 
+#define MIN_MENU_INPUTS (0 | JUN_MENU_MASK)
+#define MAX_MENU_INPUTS (5 | JUN_MENU_MASK)
+
+#define MAX_INPUTS   UINT8_MAX
 #define MAX_POINTERS 4
 
-typedef struct JUN_InputPointer JUN_InputPointer;
-typedef struct JUN_InputStatus JUN_InputStatus;
-typedef struct JUN_InputTexture JUN_InputTexture;
-typedef struct JUN_InputController JUN_InputController;
-
-struct JUN_InputPointer
-{
-	int32_t id;
+struct jun_input_pointer {
+    int32_t id;
 	bool pressed;
-	float x;
-	float y;
+	double x;
+	double y;
 };
 
-struct JUN_InputStatus
-{
-	unsigned key;
-	unsigned button; //
-	bool axis;       // TODO Crappy configuration, must be designed better
-	bool negative;   //
-	MTY_Point center;
-	float radius;
+struct jun_input_status {
 	bool pressed;
-	JUN_InputPointer *locked_by;
-	JUN_StateCallback callback;
+
+    double x;
+    double y;
+	double radius;
+    JUN_TextureData *texture;
+
+    MTY_Key key;
+
+    struct jun_input_pointer *locked_by;
+    JUN_StateCallback callback;
 };
 
-struct JUN_InputController
-{
-	uint8_t id;
-	size_t inputs_size;
-	JUN_InputStatus **inputs;
-};
+struct JUN_Input {
+    JUN_State *state;
 
-struct JUN_Input
-{
-	JUN_State *state;
-
-	JUN_InputController controllers[CONTROLLER_MAX];
-
-	JUN_InputStatus menus[MENU_MAX];
-	JUN_InputStatus inputs[INPUT_TOTAL];
-
-	JUN_InputPointer pointers[MAX_POINTERS];
+    struct jun_input_status inputs[MAX_INPUTS];
+    struct jun_input_pointer pointers[MAX_POINTERS];
 };
 
 JUN_Input *JUN_InputCreate(JUN_State *state)
 {
-	JUN_Input *this = MTY_Alloc(1, sizeof(JUN_Input));
+    JUN_Input *ctx = MTY_Alloc(1, sizeof(JUN_Input));
 
-	this->state = state;
+    float view_width = 0, view_height = 0;
+	JUN_StateGetWindowMetrics(state, &view_width, &view_height);
 
-	/* Menu controller */
+    ctx->state = state;
 
-	this->menus[MENU_TOGGLE_AUDIO].center.x = 55;
-	this->menus[MENU_TOGGLE_AUDIO].center.y = 60;
-	this->menus[MENU_TOGGLE_AUDIO].radius = 80;
-	this->menus[MENU_TOGGLE_AUDIO].callback = JUN_StateToggleAudio;
-
-	this->menus[MENU_TOGGLE_GAMEPAD].center.x = 210;
-	this->menus[MENU_TOGGLE_GAMEPAD].center.y = 60;
-	this->menus[MENU_TOGGLE_GAMEPAD].radius = 80;
-	this->menus[MENU_TOGGLE_GAMEPAD].callback = JUN_StateToggleGamepad;
-
-	this->menus[MENU_SAVE_STATE].center.x = 400;
-	this->menus[MENU_SAVE_STATE].center.y = 60;
-	this->menus[MENU_SAVE_STATE].radius = 80;
-	this->menus[MENU_SAVE_STATE].callback = JUN_StateToggleSaveState;
-
-	this->menus[MENU_RESTORE_STATE].center.x = 510;
-	this->menus[MENU_RESTORE_STATE].center.y = 60;
-	this->menus[MENU_RESTORE_STATE].radius = 80;
-	this->menus[MENU_RESTORE_STATE].callback = JUN_StateToggleRestoreState;
-
-	this->menus[MENU_FAST_FORWARD].center.x = 665;
-	this->menus[MENU_FAST_FORWARD].center.y = 60;
-	this->menus[MENU_FAST_FORWARD].radius = 80;
-	this->menus[MENU_FAST_FORWARD].callback = JUN_StateToggleFastForward;
-
-	this->menus[MENU_EXIT].center.x = 820;
-	this->menus[MENU_EXIT].center.y = 60;
-	this->menus[MENU_EXIT].radius = 80;
-	this->menus[MENU_EXIT].callback = JUN_StateToggleExit;
-
-	JUN_InputStatus *menu_inputs[MENU_MAX] = {
-		&this->menus[MENU_TOGGLE_AUDIO],
-		&this->menus[MENU_TOGGLE_GAMEPAD],
-		&this->menus[MENU_SAVE_STATE],
-		&this->menus[MENU_RESTORE_STATE],
-		&this->menus[MENU_FAST_FORWARD],
-		&this->menus[MENU_EXIT],
-	};
-
-	this->controllers[CONTROLLER_MENU].id = CONTROLLER_MENU;
-	this->controllers[CONTROLLER_MENU].inputs_size = MENU_MAX;
-	this->controllers[CONTROLLER_MENU].inputs = MTY_Dup(menu_inputs, sizeof menu_inputs);
-
-	/* Left controller */
-
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_UP].center.x = 290;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_UP].center.y = 310;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_UP].radius = 120;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_UP].button = 1;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_UP].axis = true;
-
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_DOWN].center.x = 290;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_DOWN].center.y = 660;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_DOWN].radius = 120;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_DOWN].button = 1;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_DOWN].axis = true;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_DOWN].negative = true;
-
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_LEFT].center.x = 120;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_LEFT].center.y = 490;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_LEFT].radius = 120;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_LEFT].button = 0;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_LEFT].axis = true;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_LEFT].negative = true;
-
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_RIGHT].center.x = 470;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_RIGHT].center.y = 490;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_RIGHT].radius = 120;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_RIGHT].button = 0;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_RIGHT].axis = true;
-
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_L].center.x = 150;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_L].center.y = 60;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_L].radius = 120;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_L].button = 4;
-
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_SELECT].center.x = 540;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_SELECT].center.y = 870;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_SELECT].radius = 80;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_SELECT].button = 6;
-
-	JUN_InputStatus *left_inputs[INPUT_LEFT_TOTAL] = {
-		&this->inputs[RETRO_DEVICE_ID_JOYPAD_UP],
-		&this->inputs[RETRO_DEVICE_ID_JOYPAD_DOWN],
-		&this->inputs[RETRO_DEVICE_ID_JOYPAD_LEFT],
-		&this->inputs[RETRO_DEVICE_ID_JOYPAD_RIGHT],
-		&this->inputs[RETRO_DEVICE_ID_JOYPAD_L],
-		&this->inputs[RETRO_DEVICE_ID_JOYPAD_SELECT],
-	};
-
-	this->controllers[CONTROLLER_LEFT].id = CONTROLLER_LEFT;
-	this->controllers[CONTROLLER_LEFT].inputs_size = INPUT_LEFT_TOTAL;
-	this->controllers[CONTROLLER_LEFT].inputs = MTY_Dup(left_inputs, sizeof left_inputs);
-
-	/* Right controller */
-
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_A].center.x = 490;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_A].center.y = 490;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_A].radius = 120;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_A].button = 1;
-
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_B].center.x = 310;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_B].center.y = 670;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_B].radius = 120;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_B].button = 2;
-
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_X].center.x = 310;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_X].center.y = 300;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_X].radius = 120;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_X].button = 0;
-
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_Y].center.x = 130;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_Y].center.y = 490;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_Y].radius = 120;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_Y].button = 3;
-
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_R].center.x = 470;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_R].center.y = 60;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_R].radius = 120;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_R].button = 5;
-
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_START].center.x = 100;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_START].center.y = 870;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_START].radius = 80;
-	this->inputs[RETRO_DEVICE_ID_JOYPAD_START].button = 7;
-
-	JUN_InputStatus *right_inputs[INPUT_RIGHT_TOTAL] = {
-		&this->inputs[RETRO_DEVICE_ID_JOYPAD_A],
-		&this->inputs[RETRO_DEVICE_ID_JOYPAD_B],
-		&this->inputs[RETRO_DEVICE_ID_JOYPAD_X],
-		&this->inputs[RETRO_DEVICE_ID_JOYPAD_Y],
-		&this->inputs[RETRO_DEVICE_ID_JOYPAD_R],
-		&this->inputs[RETRO_DEVICE_ID_JOYPAD_START],
-	};
-
-	this->controllers[CONTROLLER_RIGHT].id = CONTROLLER_RIGHT;
-	this->controllers[CONTROLLER_RIGHT].inputs_size = INPUT_RIGHT_TOTAL;
-	this->controllers[CONTROLLER_RIGHT].inputs = MTY_Dup(right_inputs, sizeof right_inputs);
-
-	return this;
+    return ctx;
 }
 
-void JUN_InputSetBinding(JUN_Input *this, const char *joypad, char *keyboard)
+void JUN_InputDestroy(JUN_Input **input)
 {
-	uint32_t joypad_value = JUN_EnumsGetInt(JUN_ENUM_JOYPAD, joypad);
-	uint32_t keyboard_value = JUN_EnumsGetInt(JUN_ENUM_KEYBOARD, keyboard);
+    if (!input || !*input)
+		return;
 
-	this->inputs[joypad_value].key = keyboard_value;
+	JUN_Input *ctx = *input;
+
+	MTY_Free(ctx);
+	*input = NULL;
 }
 
-static void set_key(JUN_Input *this, const MTY_Key key, bool pressed)
+void JUN_InputMapTouch(JUN_Input *ctx, uint8_t id, double x, double y, double radius)
 {
-	for (uint8_t i = 0; i < INPUT_TOTAL; ++i) {
-		if (this->inputs[i].key == key) {
-			this->inputs[i].pressed = pressed;
-			break;
+    struct jun_input_status *input = &ctx->inputs[id];
+
+    input->x = x;
+    input->y = y;
+    input->radius = radius;
+    input->texture = JUN_StateGetMetrics(ctx->state, id);
+}
+
+void JUN_InputMapKey(JUN_Input *ctx, uint8_t id, MTY_Key key)
+{
+    struct jun_input_status *input = &ctx->inputs[id];
+
+    input->key = key;
+}
+
+void JUN_InputSetCallback(JUN_Input *ctx, uint8_t id, JUN_StateCallback callback)
+{
+    struct jun_input_status *input = &ctx->inputs[id];
+
+	input->callback = callback;
+}
+
+static void set_key(JUN_Input *ctx, const MTY_Key key, bool pressed)
+{
+	for (uint8_t i = MIN_MENU_INPUTS; i <= MAX_MENU_INPUTS; ++i) {
+		if (ctx->inputs[i].key == key) {
+			ctx->inputs[i].pressed = pressed;
+			return;
+		}
+	}
+
+	for (uint8_t i = MIN_RETRO_INPUTS; i <= MAX_RETRO_INPUTS; ++i) {
+		if (ctx->inputs[i].key == key) {
+			ctx->inputs[i].pressed = pressed;
+			return;
 		}
 	}
 }
 
-static void set_button(JUN_Input *this, const MTY_ControllerEvent *event)
+static void set_mouse(JUN_Input *ctx, struct jun_input_pointer *pointer, uint8_t min, uint8_t max)
 {
-	for (uint8_t i = 0; i < INPUT_TOTAL; ++i) {
-		JUN_InputStatus *input = &this->inputs[i];
+	for (size_t i = min; i <= max; ++i) {
+		struct jun_input_status *input = &ctx->inputs[i];
 
-		if (input->axis) {
-			const MTY_Axis *axis = &event->axes[input->button];
-			input->pressed = input->negative ?
-				axis->value < axis->min / 4 :
-				axis->value > axis->max / 4;
-		
-		} else {
-			input->pressed = event->buttons[input->button];
-		}
-	}
-}
+		float distance_x = powf(pointer->x - input->x, 2);
+		float distance_y = powf(pointer->y - input->y, 2);
 
-static void set_mouse(JUN_Input *this, JUN_InputController *controller, JUN_InputPointer *pointer)
-{
-	JUN_TextureData *texture = JUN_StateGetMetrics(this->state, controller->id);
-
-	for (size_t i = 0; i < controller->inputs_size; ++i) {
-		JUN_InputStatus *input = controller->inputs[i];
-
-		float center_x = input->center.x * (texture->width / texture->image_width);
-		float center_y = input->center.y * (texture->height / texture->image_height);
-		float radius = input->radius * (texture->width / texture->image_width);
-
-		float distance_x = powf(pointer->x - (center_x + texture->x), 2);
-		float distance_y = powf(pointer->y - (center_y + texture->y), 2);
-
-		bool insideCircle = distance_x + distance_y < powf(radius, 2);
+		bool insideCircle = distance_x + distance_y < powf(input->radius, 2);
 
 		if (insideCircle) {
 			input->pressed = pointer->pressed;
@@ -267,15 +127,15 @@ static void set_mouse(JUN_Input *this, JUN_InputController *controller, JUN_Inpu
 		}
 
 		if (input->pressed && input->callback)
-			input->callback(this->state);
+			input->callback(ctx->state);
 	}
 }
 
-static void set_touch(JUN_Input *this, JUN_InputPointer *pointer)
+static void set_touch(JUN_Input *ctx, struct jun_input_pointer *pointer)
 {
 	float view_width = 0, view_height = 0, frame_width = 0, frame_height = 0;
-	JUN_StateGetWindowMetrics(this->state, &view_width, &view_height);
-	JUN_StateGetFrameMetrics(this->state, &frame_width, &frame_height);
+	JUN_StateGetWindowMetrics(ctx->state, &view_width, &view_height);
+	JUN_StateGetFrameMetrics(ctx->state, &frame_width, &frame_height);
 
 	float aspect_ratio = frame_width / frame_height;
 
@@ -307,39 +167,34 @@ static void set_touch(JUN_Input *this, JUN_InputPointer *pointer)
 	pointer->y = ((pointer->y * 0x10000) / frame_height) - 0x8000;
 }
 
-static JUN_InputPointer *get_pointer(JUN_Input *this, int32_t id)
+static struct jun_input_pointer *get_pointer(JUN_Input *ctx, int32_t id)
 {
 	for (size_t i = 0; i < MAX_POINTERS; ++i) {
-		if (this->pointers[i].id == id)
-			return &this->pointers[i];
+		if (ctx->pointers[i].id == id)
+			return &ctx->pointers[i];
 	}
 
 	for (size_t i = 0; i < MAX_POINTERS; ++i) {
-		if (!this->pointers[i].pressed) {
-			this->pointers[i].id = id;
-			return &this->pointers[i];
+		if (!ctx->pointers[i].pressed) {
+			ctx->pointers[i].id = id;
+			return &ctx->pointers[i];
 		}
 	}
 
 	return NULL;
 }
 
-void JUN_InputSetStatus(JUN_Input *this, const MTY_Event *event)
+void JUN_InputSetStatus(JUN_Input *ctx, const MTY_Event *event)
 {
 	if (event->type == MTY_EVENT_KEY) {
-		set_key(this, event->key.key, event->key.pressed);
+		set_key(ctx, event->key.key, event->key.pressed);
 		return;
 	}
 
-	if (event->type == MTY_EVENT_CONTROLLER) {
-		set_button(this, &event->controller);
-		return;
-	}
-
-	JUN_InputPointer *pointer = NULL;
+	struct jun_input_pointer *pointer = NULL;
 
 	if (event->type == MTY_EVENT_BUTTON) {
-		pointer = get_pointer(this, event->button.id);
+		pointer = get_pointer(ctx, event->button.id);
 
 		if (!pointer)
 			return;
@@ -348,11 +203,11 @@ void JUN_InputSetStatus(JUN_Input *this, const MTY_Event *event)
 		pointer->x = event->button.x;
 		pointer->y = event->button.y;
 
-		set_mouse(this, &this->controllers[CONTROLLER_MENU], pointer);
+		set_mouse(ctx, pointer, MIN_MENU_INPUTS, MAX_MENU_INPUTS);
 	}
 
 	if (event->type == MTY_EVENT_MOTION) {
-		pointer = get_pointer(this, event->motion.id);
+		pointer = get_pointer(ctx, event->motion.id);
 
 		if (!pointer)
 			return;
@@ -364,59 +219,41 @@ void JUN_InputSetStatus(JUN_Input *this, const MTY_Event *event)
 	if (!pointer)
 		return;
 
-	if (JUN_StateHasGamepad(this->state)) {
-		set_mouse(this, &this->controllers[CONTROLLER_LEFT], pointer);
-		set_mouse(this, &this->controllers[CONTROLLER_RIGHT], pointer);
+	if (JUN_StateHasGamepad(ctx->state)) {
+		set_mouse(ctx, pointer, MIN_RETRO_INPUTS, MAX_RETRO_INPUTS);
 	
 	} else {
-		set_touch(this, pointer);
+		set_touch(ctx, pointer);
 	}
 }
 
-int16_t JUN_InputGetStatus(JUN_Input *this, uint32_t device, uint32_t retro_key)
+int16_t JUN_InputGetStatus(JUN_Input *ctx, uint8_t id, uint8_t device)
 {
 	if (device == RETRO_DEVICE_JOYPAD) {
-		if (retro_key >= INPUT_TOTAL)
-			return false;
-
-		return this->inputs[retro_key].pressed;
+		return ctx->inputs[id].pressed;
 	}
 
-	if (device == RETRO_DEVICE_POINTER && !JUN_StateHasGamepad(this->state)) {
-		switch (retro_key) {
+	if (device == RETRO_DEVICE_POINTER && !JUN_StateHasGamepad(ctx->state)) {
+		switch (id) {
 			case RETRO_DEVICE_ID_POINTER_COUNT:
 				return 1;
 			case RETRO_DEVICE_ID_POINTER_PRESSED:
-				return this->pointers[0].pressed;
+				return ctx->pointers[0].pressed;
 			case RETRO_DEVICE_ID_POINTER_X:
-				return this->pointers[0].x;
+				return ctx->pointers[0].x;
 			case RETRO_DEVICE_ID_POINTER_Y:
-				return this->pointers[0].y;
+				return ctx->pointers[0].y;
 		}
 	}
 
 	return false;
 }
 
-void JUN_InputReset(JUN_Input *this)
+void JUN_InputReset(JUN_Input *ctx)
 {
+	for (size_t i = 0; i < MAX_INPUTS; ++i)
+		ctx->inputs[i].key = 0;
 	for (size_t i = 0; i < MAX_POINTERS; ++i)
-		this->pointers[i] = (JUN_InputPointer) {0};
-	for (size_t i = 0; i < INPUT_TOTAL; ++i)
-		this->inputs[i].key = 0;
-}
+		ctx->pointers[i] = (struct jun_input_pointer) {0};
 
-void JUN_InputDestroy(JUN_Input **input)
-{
-	if (!input || !*input)
-		return;
-
-	JUN_Input *this = *input;
-
-	MTY_Free(this->controllers[CONTROLLER_MENU].inputs);
-	MTY_Free(this->controllers[CONTROLLER_LEFT].inputs);
-	MTY_Free(this->controllers[CONTROLLER_RIGHT].inputs);
-
-	MTY_Free(this);
-	*input = NULL;
 }

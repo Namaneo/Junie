@@ -7,9 +7,7 @@
 #include "video.h"
 
 #include "res_index.h"
-#include "res_menu.h"
-#include "res_controller_left.h"
-#include "res_controller_right.h"
+#include "res_inputs.h"
 
 struct jun_video_asset {
 	void *data;
@@ -22,11 +20,10 @@ struct JUN_Video {
 	MTY_Renderer *renderer;
 
 	JUN_State *state;
+	JUN_Input *input;
 
 	JUN_VideoCallback callback;
 	void *opaque;
-
-	struct jun_video_asset assets[CONTROLLER_MAX];
 
 	MTY_ColorFormat pixel_format;
 	unsigned bits_per_pixel;
@@ -42,28 +39,18 @@ struct JUN_Video {
 	JUN_Texture *ui;
 };
 
-JUN_Video *JUN_VideoCreate(JUN_State *state, MTY_AppFunc app_func, MTY_EventFunc event_func)
+JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input, MTY_AppFunc app_func, MTY_EventFunc event_func)
 {
 	JUN_Video *this = MTY_Alloc(1, sizeof(JUN_Video));
 
 	this->state = state;
+	this->input = input;
 
 	MTY_WindowDesc description = {0};
 	description.title = "Junie";
 	description.api = MTY_GFX_GL;
 	description.width = 800;
 	description.height = 600;
-
-	struct jun_video_asset *asset = NULL;
-
-	asset = &this->assets[CONTROLLER_MENU];
-	asset->data = MTY_DecompressImage(menu_png, menu_png_len, &asset->width, &asset->height);
-
-	asset = &this->assets[CONTROLLER_LEFT];
-	asset->data = MTY_DecompressImage(controller_left_png, controller_left_png_len, &asset->width, &asset->height);
-
-	asset = &this->assets[CONTROLLER_RIGHT];
-	asset->data = MTY_DecompressImage(controller_right_png, controller_right_png_len, &asset->width, &asset->height);
 
 	this->app = MTY_AppCreate(app_func, event_func, this);
 
@@ -131,79 +118,70 @@ bool JUN_VideoSetPixelFormat(JUN_Video *this, enum retro_pixel_format *format)
 	}
 }
 
-static void set_texture_metrics(JUN_Video *this, JUN_TextureType type, uint32_t view_width, uint32_t view_height)
+static void draw_input(JUN_Video *this, uint8_t id, const void *data, size_t size, double x, double y, double radius) 
 {
-	// Declare variables
-	float x = 0, y = 0, width = 0, height = 0;
+    uint32_t image_width = 0, image_height = 0;
+    void *rgba = MTY_DecompressImage(data, size, &image_width, &image_height);
+    MTY_WindowSetUITexture(this->app, 0, id + 1, rgba, image_width, image_height);
+    MTY_Free(rgba);
 
-	// Retrieve controller files
-	struct jun_video_asset *asset = &this->assets[type];
+	double aspect_ratio = (double) image_width / (double) image_height;
 
-	// Create textures on first call
-	if (!MTY_WindowHasUITexture(this->app, 0, type + 1))
-		MTY_WindowSetUITexture(this->app, 0, type + 1, asset->data, asset->width, asset->height);
+	double height = this->view_height * radius / 50.0;
+	double width = height * aspect_ratio;
+	double real_x = this->view_width * x / 100.0;
+	double real_y = this->view_height * y / 100.0;
 
-	// Compute file aspect ratio
-	float aspect_ratio = (float) asset->width / (float) asset->height;
-
-	// Deduce real image width and height
-	width = view_width / 2.0f;
-	height = width / aspect_ratio;
-
-	// Scale the other way if the image height is too big
-	if (height > view_height) {
-		height = view_height;
-		width = height * aspect_ratio;
-	}
-
-	// Position the final image
-	switch (type) {
-		case CONTROLLER_MENU:
-			x = view_width / 2 - width / 2;
-			y = 0;
-			break;
-		case CONTROLLER_LEFT:
-			x = 0;
-			y = view_height - height;
-			break;
-		case CONTROLLER_RIGHT:
-			x = view_width - width;
-			y = view_height - height;
-			break;
-		default:
-			break;
-	}
-
-	// Set texture metrics
-	JUN_StateSetMetrics(this->state, & (JUN_TextureData) {
-		.id = type,
-		.x = x,
-		.y = y,
+	JUN_TextureData texture = {
+		.id = id,
+		.x = real_x - width / 2,
+		.y = real_y - height / 2,
 		.width = width,
 		.height = height,
-		.image_width = asset->width,
-		.image_height = asset->height,
-	});
+		.image_width =  image_width,
+		.image_height = image_height,
+	};
+
+	JUN_StateSetMetrics(this->state, &texture);
+    JUN_TextureDraw(this->ui, &texture);
+	JUN_InputMapTouch(this->input, id, real_x, real_y, width / 2);
 }
 
 static void update_ui_context(JUN_Video *this)
 {
-	// Update texture metrics
-	set_texture_metrics(this, CONTROLLER_MENU, this->view_width, this->view_height);
-	set_texture_metrics(this, CONTROLLER_LEFT, this->view_width, this->view_height);
-	set_texture_metrics(this, CONTROLLER_RIGHT, this->view_width, this->view_height);
-
 	// Destroy previous textures
 	if (this->ui)
 		JUN_TextureDestroy(&this->ui);
 
 	// Create texture context
-	this->ui = JUN_TextureCreateContext(this->view_width, this->view_height, 1);
+	this->ui = JUN_TextureCreate(this->view_width, this->view_height);
 
-	// Draw all textures
-	JUN_TextureDraw(this->ui, JUN_StateGetMetrics(this->state, CONTROLLER_MENU));
-	JUN_TextureDraw(this->ui, JUN_StateGetMetrics(this->state, CONTROLLER_LEFT));
-	JUN_TextureDraw(this->ui, JUN_StateGetMetrics(this->state, CONTROLLER_RIGHT));
+	JUN_InputSetCallback(this->input, MENU_TOGGLE_AUDIO,   JUN_StateToggleAudio);
+	JUN_InputSetCallback(this->input, MENU_TOGGLE_GAMEPAD, JUN_StateToggleGamepad);
+	JUN_InputSetCallback(this->input, MENU_SAVE_STATE,     JUN_StateToggleSaveState);
+	JUN_InputSetCallback(this->input, MENU_RESTORE_STATE,  JUN_StateToggleRestoreState);
+	JUN_InputSetCallback(this->input, MENU_FAST_FORWARD,   JUN_StateToggleFastForward);
+	JUN_InputSetCallback(this->input, MENU_EXIT,           JUN_StateToggleExit);
+
+	draw_input(this, MENU_TOGGLE_AUDIO,   res_menu_toggle_audio_png,   res_menu_toggle_audio_png_len,   15, 5, 5);
+	draw_input(this, MENU_TOGGLE_GAMEPAD, res_menu_toggle_gamepad_png, res_menu_toggle_gamepad_png_len, 29, 5, 5);
+	draw_input(this, MENU_SAVE_STATE,     res_menu_save_state_png,     res_menu_save_state_png_len,     43, 5, 5);
+	draw_input(this, MENU_RESTORE_STATE,  res_menu_restore_state_png,  res_menu_restore_state_png_len,  57, 5, 5);
+	draw_input(this, MENU_FAST_FORWARD,   res_menu_fast_forward_png,   res_menu_fast_forward_png_len,   71, 5, 5);
+	draw_input(this, MENU_EXIT,           res_menu_exit_png,           res_menu_exit_png_len,           85, 5, 5);
+
+	draw_input(this, RETRO_DEVICE_ID_JOYPAD_A,      res_joypad_a_png,            res_joypad_a_png_len,            65, 80, 5);
+	draw_input(this, RETRO_DEVICE_ID_JOYPAD_B,      res_joypad_b_png,            res_joypad_b_png_len,            80, 75, 5);
+	draw_input(this, RETRO_DEVICE_ID_JOYPAD_X,      res_joypad_x_png,            res_joypad_x_png_len,            65, 70, 5);
+	draw_input(this, RETRO_DEVICE_ID_JOYPAD_Y,      res_joypad_y_png,            res_joypad_y_png_len,            60, 75, 5);
+	draw_input(this, RETRO_DEVICE_ID_JOYPAD_L,      res_joypad_l_png,            res_joypad_l_png_len,            20, 55, 5);
+	draw_input(this, RETRO_DEVICE_ID_JOYPAD_R,      res_joypad_r_png,            res_joypad_r_png_len,            80, 55, 5);
+	draw_input(this, RETRO_DEVICE_ID_JOYPAD_UP,     res_joypad_up_png,           res_joypad_up_png_len,           25, 70, 5);
+	draw_input(this, RETRO_DEVICE_ID_JOYPAD_DOWN,   res_joypad_down_png,         res_joypad_down_png_len,         25, 80, 5);
+	draw_input(this, RETRO_DEVICE_ID_JOYPAD_LEFT,   res_joypad_left_png,         res_joypad_left_png_len,         10, 75, 5);
+	draw_input(this, RETRO_DEVICE_ID_JOYPAD_RIGHT,  res_joypad_right_png,        res_joypad_right_png_len,        40, 75, 5);
+	draw_input(this, RETRO_DEVICE_ID_JOYPAD_START,  res_joypad_start_select_png, res_joypad_start_select_png_len, 45, 90, 5);
+	draw_input(this, RETRO_DEVICE_ID_JOYPAD_SELECT, res_joypad_start_select_png, res_joypad_start_select_png_len, 55, 90, 5);
 }
 
 void JUN_VideoUpdateContext(JUN_Video *this, unsigned width, unsigned height, size_t pitch)
@@ -288,7 +266,7 @@ void JUN_VideoDrawFrame(JUN_Video *this, const void *data)
 void JUN_VideoDrawUI(JUN_Video *this, bool has_gamepad)
 {
 	// Produce drawing data
-	MTY_DrawData *draw_data = JUN_TextureProduce(this->ui, !has_gamepad);
+	MTY_DrawData *draw_data = JUN_TextureProduce(this->ui, !has_gamepad ? 6 : 0);
 
 	// Draw the controller
 	MTY_WindowDrawUI(this->app, 0, draw_data);
@@ -308,10 +286,6 @@ void JUN_VideoDestroy(JUN_Video **video)
 
 	MTY_RendererDestroy(&this->renderer);
 	MTY_AppDestroy(&this->app);
-
-	MTY_Free(this->assets[CONTROLLER_MENU].data);
-	MTY_Free(this->assets[CONTROLLER_LEFT].data);
-	MTY_Free(this->assets[CONTROLLER_RIGHT].data);
 
 	MTY_Free(this);
 	*video = NULL;

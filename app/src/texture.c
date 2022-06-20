@@ -1,8 +1,6 @@
 #include "texture.h"
 
-struct JUN_Texture
-{
-	uint8_t offset;
+struct JUN_Texture {
 	uint32_t view_width;
 	uint32_t view_height;
 
@@ -11,11 +9,10 @@ struct JUN_Texture
 	MTY_CmdList *commands;
 };
 
-JUN_Texture *JUN_TextureCreateContext(uint32_t view_width, uint32_t view_height, uint8_t offset)
+JUN_Texture *JUN_TextureCreate(uint32_t view_width, uint32_t view_height)
 {
 	JUN_Texture *this = MTY_Alloc(1, sizeof(JUN_Texture));
 
-	this->offset = offset;
 	this->view_width = view_width;
 	this->view_height = view_height;
 
@@ -28,7 +25,7 @@ JUN_Texture *JUN_TextureCreateContext(uint32_t view_width, uint32_t view_height,
 void JUN_TextureDraw(JUN_Texture *this, JUN_TextureData *texture)
 {
 	// Set texture dimensions
-	uint8_t id = texture->id + this->offset;
+	uint8_t id = texture->id + 1;
 	float x = texture->x;
 	float y = texture->y;
 	float width = texture->width;

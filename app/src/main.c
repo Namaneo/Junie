@@ -35,7 +35,7 @@ static int16_t input_state(unsigned port, unsigned device, unsigned index, unsig
 	if (port != 0)
 		return 0;
 
-	return JUN_InputGetStatus(app->input, device, id);
+	return JUN_InputGetStatus(app->input, id, device);
 }
 
 static size_t audio_sample_batch(const int16_t *data, size_t frames)
