@@ -9,6 +9,32 @@
 #include "res_index.h"
 #include "res_inputs.h"
 
+#define TOP(margin)    .pos_y = JUN_POSITION_TOP,    .margin_y = margin
+#define RIGHT(margin)  .pos_x = JUN_POSITION_RIGHT,  .margin_x = margin
+#define BOTTOM(margin) .pos_y = JUN_POSITION_BOTTOM, .margin_y = margin
+#define LEFT(margin)   .pos_x = JUN_POSITION_LEFT,   .margin_x = margin
+#define CENTER(margin) .pos_x = JUN_POSITION_CENTER, .margin_x = margin
+#define MIDDLE(margin) .pos_y = JUN_POSITION_MIDDLE, .margin_y = margin
+#define RADIUS(value)  .radius = value
+#define DRAW(id, res, ...) draw_input(this, id, res_##res##_png, res_##res##_png_len, & (struct jun_draw_desc) { __VA_ARGS__ } )
+
+enum jun_position {
+	JUN_POSITION_TOP,
+	JUN_POSITION_RIGHT,
+	JUN_POSITION_BOTTOM,
+	JUN_POSITION_LEFT,
+	JUN_POSITION_CENTER,
+	JUN_POSITION_MIDDLE,
+};
+
+struct jun_draw_desc {
+	enum jun_position pos_x;
+	enum jun_position pos_y;
+	double margin_x;
+	double margin_y;
+	double radius;
+};
+
 struct jun_video_asset {
 	void *data;
 	uint32_t width;
@@ -118,24 +144,37 @@ bool JUN_VideoSetPixelFormat(JUN_Video *this, enum retro_pixel_format *format)
 	}
 }
 
-static void draw_input(JUN_Video *this, uint8_t id, const void *data, size_t size, double x, double y, double radius) 
+static void draw_input(JUN_Video *this, uint8_t id, const void *data, size_t size, struct jun_draw_desc *desc) 
 {
     uint32_t image_width = 0, image_height = 0;
     void *rgba = MTY_DecompressImage(data, size, &image_width, &image_height);
     MTY_WindowSetUITexture(this->app, 0, id + 1, rgba, image_width, image_height);
     MTY_Free(rgba);
 
+	double pixel_ratio = JUN_InteropGetPixelRatio();
 	double aspect_ratio = (double) image_width / (double) image_height;
 
-	double height = this->view_height * radius / 50.0;
-	double width = height * aspect_ratio;
-	double real_x = this->view_width * x / 100.0;
-	double real_y = this->view_height * y / 100.0;
+	double reference_x =
+		desc->pos_x == JUN_POSITION_LEFT   ? 0 :
+		desc->pos_x == JUN_POSITION_RIGHT  ? this->view_width :
+		desc->pos_x == JUN_POSITION_CENTER ? this->view_width / 2.0 :
+		0;
+
+	double reference_y =
+		desc->pos_y == JUN_POSITION_TOP    ? 0 :
+		desc->pos_y == JUN_POSITION_BOTTOM ? this->view_height :
+		desc->pos_y == JUN_POSITION_MIDDLE ? this->view_height / 2.0 :
+		0;
+
+	double width = desc->radius * 2.0 * pixel_ratio;
+	double height = width / aspect_ratio;
+	double x = reference_x + desc->margin_x * pixel_ratio;
+	double y = reference_y + desc->margin_y * pixel_ratio;
 
 	JUN_TextureData texture = {
 		.id = id,
-		.x = real_x - width / 2,
-		.y = real_y - height / 2,
+		.x = x - width / 2.0,
+		.y = y - height / 2.0,
 		.width = width,
 		.height = height,
 		.image_width =  image_width,
@@ -144,16 +183,14 @@ static void draw_input(JUN_Video *this, uint8_t id, const void *data, size_t siz
 
 	JUN_StateSetMetrics(this->state, &texture);
     JUN_TextureDraw(this->ui, &texture);
-	JUN_InputMapTouch(this->input, id, real_x, real_y, width / 2);
+	JUN_InputMapTouch(this->input, id, x, y, desc->radius * pixel_ratio * 1.5);
 }
 
 static void update_ui_context(JUN_Video *this)
 {
-	// Destroy previous textures
 	if (this->ui)
 		JUN_TextureDestroy(&this->ui);
 
-	// Create texture context
 	this->ui = JUN_TextureCreate(this->view_width, this->view_height);
 
 	JUN_InputSetCallback(this->input, MENU_TOGGLE_AUDIO,   JUN_StateToggleAudio);
@@ -163,25 +200,27 @@ static void update_ui_context(JUN_Video *this)
 	JUN_InputSetCallback(this->input, MENU_FAST_FORWARD,   JUN_StateToggleFastForward);
 	JUN_InputSetCallback(this->input, MENU_EXIT,           JUN_StateToggleExit);
 
-	draw_input(this, MENU_TOGGLE_AUDIO,   res_menu_toggle_audio_png,   res_menu_toggle_audio_png_len,   15, 5, 5);
-	draw_input(this, MENU_TOGGLE_GAMEPAD, res_menu_toggle_gamepad_png, res_menu_toggle_gamepad_png_len, 29, 5, 5);
-	draw_input(this, MENU_SAVE_STATE,     res_menu_save_state_png,     res_menu_save_state_png_len,     43, 5, 5);
-	draw_input(this, MENU_RESTORE_STATE,  res_menu_restore_state_png,  res_menu_restore_state_png_len,  57, 5, 5);
-	draw_input(this, MENU_FAST_FORWARD,   res_menu_fast_forward_png,   res_menu_fast_forward_png_len,   71, 5, 5);
-	draw_input(this, MENU_EXIT,           res_menu_exit_png,           res_menu_exit_png_len,           85, 5, 5);
+	DRAW(MENU_TOGGLE_AUDIO,   menu_toggle_audio,   CENTER(-100), TOP(25), RADIUS(20));
+	DRAW(MENU_TOGGLE_GAMEPAD, menu_toggle_gamepad, CENTER(-60), TOP(25), RADIUS(20));
+	DRAW(MENU_SAVE_STATE,     menu_save_state,     CENTER(-20),  TOP(25), RADIUS(20));
+	DRAW(MENU_RESTORE_STATE,  menu_restore_state,  CENTER(20),   TOP(25), RADIUS(20));
+	DRAW(MENU_FAST_FORWARD,   menu_fast_forward,   CENTER(60),  TOP(25), RADIUS(20));
+	DRAW(MENU_EXIT,           menu_exit,           CENTER(100),  TOP(25), RADIUS(20));
 
-	draw_input(this, RETRO_DEVICE_ID_JOYPAD_A,      res_joypad_a_png,            res_joypad_a_png_len,            65, 80, 5);
-	draw_input(this, RETRO_DEVICE_ID_JOYPAD_B,      res_joypad_b_png,            res_joypad_b_png_len,            80, 75, 5);
-	draw_input(this, RETRO_DEVICE_ID_JOYPAD_X,      res_joypad_x_png,            res_joypad_x_png_len,            65, 70, 5);
-	draw_input(this, RETRO_DEVICE_ID_JOYPAD_Y,      res_joypad_y_png,            res_joypad_y_png_len,            60, 75, 5);
-	draw_input(this, RETRO_DEVICE_ID_JOYPAD_L,      res_joypad_l_png,            res_joypad_l_png_len,            20, 55, 5);
-	draw_input(this, RETRO_DEVICE_ID_JOYPAD_R,      res_joypad_r_png,            res_joypad_r_png_len,            80, 55, 5);
-	draw_input(this, RETRO_DEVICE_ID_JOYPAD_UP,     res_joypad_up_png,           res_joypad_up_png_len,           25, 70, 5);
-	draw_input(this, RETRO_DEVICE_ID_JOYPAD_DOWN,   res_joypad_down_png,         res_joypad_down_png_len,         25, 80, 5);
-	draw_input(this, RETRO_DEVICE_ID_JOYPAD_LEFT,   res_joypad_left_png,         res_joypad_left_png_len,         10, 75, 5);
-	draw_input(this, RETRO_DEVICE_ID_JOYPAD_RIGHT,  res_joypad_right_png,        res_joypad_right_png_len,        40, 75, 5);
-	draw_input(this, RETRO_DEVICE_ID_JOYPAD_START,  res_joypad_start_select_png, res_joypad_start_select_png_len, 45, 90, 5);
-	draw_input(this, RETRO_DEVICE_ID_JOYPAD_SELECT, res_joypad_start_select_png, res_joypad_start_select_png_len, 55, 90, 5);
+	DRAW(RETRO_DEVICE_ID_JOYPAD_UP,    joypad_up,    LEFT(75),  BOTTOM(-145), RADIUS(20));
+	DRAW(RETRO_DEVICE_ID_JOYPAD_DOWN,  joypad_down,  LEFT(75),  BOTTOM(-75),  RADIUS(20));
+	DRAW(RETRO_DEVICE_ID_JOYPAD_LEFT,  joypad_left,  LEFT(40),  BOTTOM(-110), RADIUS(20));
+	DRAW(RETRO_DEVICE_ID_JOYPAD_RIGHT, joypad_right, LEFT(110), BOTTOM(-110), RADIUS(20));
+	DRAW(RETRO_DEVICE_ID_JOYPAD_L,     joypad_l,     LEFT(50),  BOTTOM(-200), RADIUS(40));
+
+	DRAW(RETRO_DEVICE_ID_JOYPAD_X, joypad_x, RIGHT(-75),  BOTTOM(-145), RADIUS(20));
+	DRAW(RETRO_DEVICE_ID_JOYPAD_B, joypad_b, RIGHT(-75),  BOTTOM(-75),  RADIUS(20));
+	DRAW(RETRO_DEVICE_ID_JOYPAD_A, joypad_a, RIGHT(-40),  BOTTOM(-110), RADIUS(20));
+	DRAW(RETRO_DEVICE_ID_JOYPAD_Y, joypad_y, RIGHT(-110), BOTTOM(-110), RADIUS(20));
+	DRAW(RETRO_DEVICE_ID_JOYPAD_R, joypad_r, RIGHT(-50),  BOTTOM(-200), RADIUS(40));
+
+	DRAW(RETRO_DEVICE_ID_JOYPAD_START,  joypad_start_select, CENTER(20),  BOTTOM(-25), RADIUS(20));
+	DRAW(RETRO_DEVICE_ID_JOYPAD_SELECT, joypad_start_select, CENTER(-20), BOTTOM(-25), RADIUS(20));
 }
 
 void JUN_VideoUpdateContext(JUN_Video *this, unsigned width, unsigned height, size_t pitch)
@@ -242,12 +281,11 @@ void JUN_VideoDrawFrame(JUN_Video *this, const void *data)
 	refresh_viewport_size(this, &description.viewWidth, &description.viewHeight);
 
 	// Compute height offset to give some space to the menu
-	uint32_t offset = description.viewWidth * 0.1f;
+	uint32_t offset = 50 * JUN_InteropGetPixelRatio();
 
 	// Position the frame on top of the screen based on the ratios
 	float view_ratio = (float)description.viewWidth / ((float)description.viewHeight - offset);
-	if (view_ratio < description.aspectRatio)
-	{
+	if (view_ratio < description.aspectRatio) {
 		description.type = MTY_POSITION_FIXED;
 		description.position.y = description.viewHeight - description.viewWidth / description.aspectRatio - offset;
 	}

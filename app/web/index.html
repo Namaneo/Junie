@@ -92,6 +92,7 @@
 			//Start core execution
 			await MTY_Start('junie.wasm', {
 				js_trace: () => console.trace(),
+				js_get_pixel_ratio: () => window.devicePixelRatio,
 				js_refresh_files: () => refresh_files(),
 				js_read_dir: (cpath, index, file, length) => {
 					path = MTY_StrToJS(cpath);

@@ -6,6 +6,7 @@
 #define PATH_SIZE 256
 
 void JUN_InteropTrace();
+double JUN_InteropGetPixelRatio();
 void JUN_InteropRefreshFiles();
 bool JUN_InteropReadDir(const char *path, size_t index, char **file);
 void *JUN_InteropReadFile(const char *path, size_t *length);

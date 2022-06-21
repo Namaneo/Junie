@@ -28,6 +28,8 @@ static void video_refresh(const void *data, unsigned width, unsigned height, siz
 
 static void input_poll()
 {
+	// TODO get input snapshot
+	// TODO reset input status
 }
 
 static int16_t input_state(unsigned port, unsigned device, unsigned index, unsigned id)
