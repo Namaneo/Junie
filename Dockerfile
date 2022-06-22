@@ -19,10 +19,12 @@ ADD ./app ./app
 RUN make OUT_DIR=/build
 
 # Run
-FROM python AS junie
+FROM alpine AS junie
+
+RUN apk --no-cache add python3
 
 WORKDIR /junie
 
 COPY --from=build /build .
 
-CMD python -m http.server ${PORT:-8000}
+CMD python3 -m http.server ${PORT:-8000}
