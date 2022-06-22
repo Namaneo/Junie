@@ -252,7 +252,7 @@ int16_t JUN_InputGetStatus(JUN_Input *ctx, uint8_t id, uint8_t device)
 void JUN_InputReset(JUN_Input *ctx)
 {
 	for (size_t i = 0; i < MAX_INPUTS; ++i)
-		ctx->inputs[i] = (struct jun_input_status) {0};
+		ctx->inputs[i].pressed = false;
 	for (size_t i = 0; i < MAX_POINTERS; ++i)
-		ctx->pointers[i] = (struct jun_input_pointer) {0};
+		ctx->pointers[i].pressed = false;
 }
