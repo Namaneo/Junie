@@ -1,5 +1,5 @@
 TARGET  := junie
-VERSION := 0.5.0
+VERSION := 0.5.1
 
 UI_DIR  := ui
 APP_DIR := app
