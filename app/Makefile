@@ -54,7 +54,7 @@ all: clean $(OUT_DIR)/$(TARGET)
 $(OUT_DIR)/$(TARGET): assets $(LIB_FILES) $(CORE_FILES) $(OBJ)
 	$(CXX) $(LDFLAGS) $(OBJ) -o $(OUT_DIR)/$(TARGET)
 
-assets: 
+prepare:
 	@mkdir -p $(OUT_DIR) 
 	@cp -R $(WEB_DIR)/* $(OUT_DIR)
 	@cp $(LIB_DIR)/matoya/src/unix/web/matoya.js $(OUT_DIR)/deps
@@ -63,7 +63,9 @@ assets:
 	@mkdir -p $(INC_DIR)
 	@cp $(LIB_DIR)/matoya/src/matoya.h $(INC_DIR)
 	@cp $(LIB_DIR)/retro/include/libretro.h $(INC_DIR)
-	@(cd ../ui/build && xxd -i index.html) > $(INC_DIR)/res_index.h
+
+assets: prepare
+	@(cd ../ui/build && xxd -i index.html)     >  $(INC_DIR)/res_index.h
 	@xxd -i $(RES_DIR)/menu/toggle_audio.png   >  $(INC_DIR)/res_inputs.h
 	@xxd -i $(RES_DIR)/menu/toggle_gamepad.png >> $(INC_DIR)/res_inputs.h
 	@xxd -i $(RES_DIR)/menu/save_state.png     >> $(INC_DIR)/res_inputs.h

@@ -53,7 +53,16 @@ export default {
     inlineDynamicImports: true,
     preserveEntrySignatures: false,
     plugins: [
-        watcher(['index.html', 'src/**', 'res/**', '../app/src/*.c', '../app/web/**']),
+        watcher([
+            'index.html',
+            'src/**',
+            'res/**',
+            '../app/Makefile*',
+            '../app/src/*.c',
+            '../app/src/*.h',
+            '../app/res/**',
+            '../app/web/**'
+        ]),
         nodeResolve({
             rootDir: path.join(process.cwd(), 'src'),
             extensions: [".js", ".jsx"],
