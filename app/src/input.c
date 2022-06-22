@@ -116,14 +116,14 @@ static void set_mouse(JUN_Input *ctx, struct jun_input_pointer *pointer, uint8_t
 		float distance_x = powf(pointer->x - input->x, 2);
 		float distance_y = powf(pointer->y - input->y, 2);
 
-		bool insideCircle = distance_x + distance_y < powf(input->radius, 2);
+		bool inside_circle = distance_x + distance_y < powf(input->radius, 2);
 
-		if (insideCircle) {
+		if (input->locked_by == pointer)
+			input->pressed = false;
+
+		if (inside_circle) {
 			input->pressed = pointer->pressed;
 			input->locked_by = pointer;
-		
-		} else if (input->locked_by == pointer) {
-			input->pressed = false;
 		}
 
 		if (input->pressed && input->callback)
