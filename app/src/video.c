@@ -72,17 +72,11 @@ JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input, MTY_AppFunc app_f
 	this->state = state;
 	this->input = input;
 
-	MTY_WindowDesc description = {0};
-	description.title = "Junie";
-	description.api = MTY_GFX_GL;
-	description.width = 800;
-	description.height = 600;
-
 	this->app = MTY_AppCreate(app_func, event_func, this);
 
-	MTY_WindowCreate(this->app, &description);
+	MTY_WindowCreate(this->app, "Junie", NULL, 0);
+	MTY_WindowSetGFX(this->app, 0, MTY_GFX_GL, true);
 	MTY_WindowMakeCurrent(this->app, 0, true);
-	MTY_WindowSetGFX(this->app, 0, MTY_GFX_GL, false);
 
 	this->renderer = MTY_RendererCreate();
 
@@ -115,7 +109,10 @@ void JUN_VideoCreateUI(JUN_Video *this, JUN_VideoCallback callback, void *opaque
 
 static void refresh_viewport_size(JUN_Video *this, uint32_t *view_width, uint32_t *view_height)
 {
-	MTY_WindowGetSize(this->app, 0, view_width, view_height);
+	MTY_Size size = MTY_WindowGetSize(this->app, 0);
+	*view_width = size.w;
+	*view_height = size.h;
+
 	JUN_StateSetWindowMetrics(this->state, *view_width, *view_height);
 }
 
@@ -275,7 +272,6 @@ void JUN_VideoDrawFrame(JUN_Video *this, const void *data)
 	description.format = this->pixel_format;
 	description.cropWidth = this->width;
 	description.cropHeight = this->height;
-	description.aspectRatio = (float)this->width / (float)this->height;
 
 	refresh_viewport_size(this, &description.viewWidth, &description.viewHeight);
 
@@ -283,21 +279,14 @@ void JUN_VideoDrawFrame(JUN_Video *this, const void *data)
 	uint32_t offset = 50 * JUN_InteropGetPixelRatio();
 
 	// Position the frame on top of the screen based on the ratios
-	float view_ratio = (float)description.viewWidth / ((float)description.viewHeight - offset);
-	if (view_ratio < description.aspectRatio) {
-		description.type = MTY_POSITION_FIXED;
-		description.position.y = description.viewHeight - description.viewWidth / description.aspectRatio - offset;
-	}
+	float scale_w = (float) description.viewWidth / (float) this->width;
+	float scale_h = (float) (description.viewHeight - offset) / (float) this->height;
+	description.position = MTY_POSITION_FIXED;
+	description.imageY = offset;
+	description.imageX = scale_w < scale_h ? 0 : (description.viewWidth - this->width * scale_h) / 2;
+	description.scale = scale_w < scale_h ? scale_w : scale_h;
 
-	// Draw the frame to the screen
-	MTY_WindowGetSize(this->app, 0, &description.viewWidth, &description.viewHeight);
-	MTY_RendererDrawQuad(this->renderer,
-		MTY_WindowGetGFX(this->app, 0),
-		MTY_WindowGetDevice(this->app, 0),
-		MTY_WindowGetContext(this->app, 0),
-		this->buffer, &description,
-		MTY_WindowGetSurface(this->app, 0)
-	);
+	MTY_WindowDrawQuad(this->app, 0, this->buffer, &description);
 }
 
 void JUN_VideoDrawUI(JUN_Video *this, bool has_gamepad)
@@ -311,6 +300,7 @@ void JUN_VideoDrawUI(JUN_Video *this, bool has_gamepad)
 
 void JUN_VideoPresent(JUN_Video *this)
 {
+	// TODO adjust swap interval: <refresh_rate> / 60
 	MTY_WindowPresent(this->app, 0, 1);
 }
 
