@@ -225,8 +225,7 @@ static void update_ui_context(JUN_Video *this)
 
 void JUN_VideoUpdateContext(JUN_Video *this, unsigned width, unsigned height, size_t pitch)
 {
-	if (this->width != width || this->height != height || this->pitch != pitch)
-	{
+	if (this->width != width || this->height != height || this->pitch != pitch) {
 		MTY_Log("%u x %u (%zu)", width, height, pitch);
 
 		if (this->buffer)

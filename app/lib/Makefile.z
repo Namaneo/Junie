@@ -6,7 +6,7 @@ all: $(TARGET)
 
 $(TARGET):
 	@cd zlib && ./configure
-	@make -C zlib $(TARGET) CC="$(CC)" AR="$(AR)" RANLIB="$(RANLIB)"
+	@make -C zlib $(TARGET) CC="$(CC)" AR="$(AR)" RANLIB="$(RANLIB)" ARFLAGS="rcs"
 	@cp zlib/$(TARGET) .
 	@make -C zlib distclean
 
