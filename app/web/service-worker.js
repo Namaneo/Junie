@@ -9,7 +9,6 @@ const fetchResource = async (request) => {
 }
 
 self.addEventListener('install', (event) => {
-    console.log('Service worker installed!');
     event.waitUntil(cacheResource([
         '/',
         '/junie.wasm',
@@ -27,7 +26,7 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-    console.log('Service worker activated!');
+    self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
