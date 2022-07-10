@@ -25,7 +25,7 @@ JUN_Audio *JUN_AudioCreate(JUN_State *state)
 
 static void jun_audio_recreate(JUN_Audio *this, bool force)
 {
-	uint8_t fast_forward = JUN_StateGetFastForward(this->state) + 1;
+	uint8_t fast_forward = JUN_StateGetFastForward(this->state);
 
 	if (fast_forward == this->last_ff && !force)
 		return;

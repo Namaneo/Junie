@@ -63,6 +63,9 @@ struct JUN_Video {
 	unsigned view_height;
 
 	JUN_Texture *ui;
+
+	MTY_Time last_run;
+	float frames;
 };
 
 JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input, MTY_AppFunc app_func, MTY_EventFunc event_func)
@@ -296,6 +299,19 @@ void JUN_VideoDrawUI(JUN_Video *this, bool has_gamepad)
 
 	// Draw the controller
 	MTY_WindowDrawUI(this->app, 0, draw_data);
+}
+
+uint32_t JUN_VideoComputeFramerate(JUN_Video *this)
+{
+	MTY_Time current_run = MTY_GetTime();
+	float framerate = 1000.0 / MTY_TimeDiff(this->last_run, current_run);
+	this->last_run = current_run;
+
+	this->frames += 60.0f / framerate;
+	uint32_t pending = (uint32_t) this->frames;
+	this->frames -= (float) pending;
+
+	return pending <= 20 ? pending : 1;
 }
 
 void JUN_VideoPresent(JUN_Video *this)

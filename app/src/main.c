@@ -56,13 +56,13 @@ static void audio_sample(int16_t left, int16_t right)
 
 static bool app_func(void *opaque)
 {
+	uint32_t factor = JUN_VideoComputeFramerate(app->video);
+
 	if (!JUN_CoreHasStarted(app->core))
 		return true;
 
-	for (int i = 0; i < JUN_StateGetFastForward(app->state); ++i)
+	for (int i = 0; i < JUN_StateGetFastForward(app->state) * factor; ++i)
 		JUN_CoreRun(app->core);
-
-	JUN_CoreRun(app->core);
 
 	JUN_CoreSaveMemories(app->core);
 

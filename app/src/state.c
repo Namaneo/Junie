@@ -73,7 +73,7 @@ void JUN_StateToggleRestoreState(JUN_State *this)
 
 uint8_t JUN_StateGetFastForward(JUN_State *this)
 {
-	return this->fast_forward;
+	return this->fast_forward + 1;
 }
 
 void JUN_StateToggleFastForward(JUN_State *this)
