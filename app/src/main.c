@@ -12,6 +12,7 @@
 JUN_App *app;
 MTY_Webview *current_webview;
 uint32_t current_serial;
+bool adaptive_framerate;
 
 static bool environment(unsigned cmd, void *data)
 {
@@ -57,6 +58,8 @@ static void audio_sample(int16_t left, int16_t right)
 static bool app_func(void *opaque)
 {
 	uint32_t factor = JUN_VideoComputeFramerate(app->video);
+	if (!adaptive_framerate)
+		factor = 1;
 
 	if (!JUN_CoreHasStarted(app->core))
 		return true;
@@ -102,6 +105,9 @@ static void start_game(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, 
 	MTY_JSONObjGetString(json, "rom", rom, PATH_SIZE);
 
 	const MTY_JSON *settings = MTY_JSONObjGetItem(json, "settings");
+
+	// TODO: Should be deduced at runtime, when the system is not powerful enough
+	MTY_JSONObjGetBool(settings, "adaptive_framerate", &adaptive_framerate);
 
 	JUN_AppLoadCore(app, system, rom, settings);
 

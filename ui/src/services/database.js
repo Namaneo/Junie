@@ -31,6 +31,7 @@ export async function getSettings() {
 
 	const defaults = { 
 		language: 'RETRO_LANGUAGE_ENGLISH',
+		adaptive_framerate: true,
 		bindings: { }, // TODO default bindings?
 		configurations: { }, // TODO default configurations?
 	};
