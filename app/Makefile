@@ -34,6 +34,7 @@ SRC := \
 	$(SRC_DIR)/interop.c \
 	$(SRC_DIR)/toolbox.c \
 	$(SRC_DIR)/settings.c \
+	$(SRC_DIR)/framerate.c \
 	$(SRC_DIR)/filesystem.c \
 	$(SRC_DIR)/configuration.c
 OBJ := $(SRC:.c=.o)

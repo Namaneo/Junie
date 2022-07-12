@@ -6,31 +6,32 @@
 #include "filesystem.h"
 #include "interop.h"
 #include "memory.h"
+#include "framerate.h"
 
 #include "app.h"
 
-JUN_App *app;
-MTY_Webview *current_webview;
-uint32_t current_serial;
-bool adaptive_framerate;
+static struct {
+	JUN_App *app;
+	MTY_Webview *current_webview;
+	uint32_t current_serial;
+} CTX;
 
 static bool environment(unsigned cmd, void *data)
 {
-	return JUN_AppEnvironment(app, cmd, data);
+	return JUN_AppEnvironment(CTX.app, cmd, data);
 }
 
 static void video_refresh(const void *data, unsigned width, unsigned height, size_t pitch)
 {
-	JUN_VideoUpdateContext(app->video, width, height, pitch);
+	JUN_VideoUpdateContext(CTX.app->video, width, height, pitch);
 
-	JUN_VideoDrawFrame(app->video, data);
-	JUN_VideoDrawUI(app->video, JUN_StateHasGamepad(app->state));
+	JUN_VideoDrawFrame(CTX.app->video, data);
+	JUN_VideoDrawUI(CTX.app->video, JUN_StateHasGamepad(CTX.app->state));
 }
 
 static void input_poll()
 {
-	// TODO get input snapshot
-	// TODO reset input status
+	// TODO Store input snapshot
 }
 
 static int16_t input_state(unsigned port, unsigned device, unsigned index, unsigned id)
@@ -38,13 +39,13 @@ static int16_t input_state(unsigned port, unsigned device, unsigned index, unsig
 	if (port != 0)
 		return 0;
 
-	return JUN_InputGetStatus(app->input, id, device);
+	return JUN_InputGetStatus(CTX.app->input, id, device);
 }
 
 static size_t audio_sample_batch(const int16_t *data, size_t frames)
 {
-	if (JUN_StateHasAudio(app->state))
-		JUN_AudioQueue(app->audio, data, frames);
+	if (JUN_StateHasAudio(CTX.app->state))
+		JUN_AudioQueue(CTX.app->audio, data, frames);
 
 	return frames;
 }
@@ -57,38 +58,38 @@ static void audio_sample(int16_t left, int16_t right)
 
 static bool app_func(void *opaque)
 {
-	uint32_t factor = JUN_VideoComputeFramerate(app->video);
-	if (!adaptive_framerate)
-		factor = 1;
-
-	if (!JUN_CoreHasStarted(app->core))
+	if (!JUN_CoreHasStarted(CTX.app->core))
 		return true;
 
-	for (int i = 0; i < JUN_StateGetFastForward(app->state) * factor; ++i)
-		JUN_CoreRun(app->core);
+	uint32_t factor = JUN_FramerateGetFactor();
 
-	JUN_CoreSaveMemories(app->core);
+	for (int i = 0; i < JUN_StateGetFastForward(CTX.app->state) * factor; ++i)
+		JUN_CoreRun(CTX.app->core);
 
-	if (JUN_StateShouldSaveState(app->state)) {
-		JUN_CoreSaveState(app->core);
-		JUN_StateToggleSaveState(app->state);
+	JUN_FramerateHasRunned();
+
+	JUN_CoreSaveMemories(CTX.app->core);
+
+	if (JUN_StateShouldSaveState(CTX.app->state)) {
+		JUN_CoreSaveState(CTX.app->core);
+		JUN_StateToggleSaveState(CTX.app->state);
 	}
 
-	if (JUN_StateShouldRestoreState(app->state)) {
-		JUN_CoreRestoreState(app->core);
-		JUN_StateToggleRestoreState(app->state);
+	if (JUN_StateShouldRestoreState(CTX.app->state)) {
+		JUN_CoreRestoreState(CTX.app->core);
+		JUN_StateToggleRestoreState(CTX.app->state);
 	}
 
-	JUN_VideoPresent(app->video);
+	JUN_VideoPresent(CTX.app->video);
 
-	if (JUN_StateShouldExit(app->state)) {
-		JUN_AppUnloadCore(app);
-		JUN_InputReset(app->input);
-		if (JUN_StateHasAudio(app->state))
-			JUN_StateToggleAudio(app->state);
-		JUN_StateToggleExit(app->state);
+	if (JUN_StateShouldExit(CTX.app->state)) {
+		JUN_AppUnloadCore(CTX.app);
+		JUN_InputReset(CTX.app->input);
+		if (JUN_StateHasAudio(CTX.app->state))
+			JUN_StateToggleAudio(CTX.app->state);
+		JUN_StateToggleExit(CTX.app->state);
 		JUN_MemoryDump();
-		MTY_WebviewInteropReturn(current_webview, current_serial, true, NULL);
+		MTY_WebviewInteropReturn(CTX.current_webview, CTX.current_serial, true, NULL);
 	}
 
 	return true;
@@ -106,12 +107,9 @@ static void start_game(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, 
 
 	const MTY_JSON *settings = MTY_JSONObjGetItem(json, "settings");
 
-	// TODO: Should be deduced at runtime, when the system is not powerful enough
-	MTY_JSONObjGetBool(settings, "adaptive_framerate", &adaptive_framerate);
+	JUN_AppLoadCore(CTX.app, system, rom, settings);
 
-	JUN_AppLoadCore(app, system, rom, settings);
-
-	JUN_CoreSetCallbacks(app->core, & (JUN_CoreCallbacks) {
+	JUN_CoreSetCallbacks(CTX.app->core, & (JUN_CoreCallbacks) {
 		environment,
 		video_refresh,
 		audio_sample,
@@ -120,22 +118,22 @@ static void start_game(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, 
 		input_state,
 	});
 
-	if (!JUN_CoreStartGame(app->core)) {
+	if (!JUN_CoreStartGame(CTX.app->core)) {
 		MTY_WebviewInteropReturn(ctx, serial, false, NULL);
 		return;
 	}
 
-	double sample_rate = JUN_CoreGetSampleRate(app->core);
-	double frames_per_second = JUN_CoreGetFramesPerSecond(app->core);
+	double sample_rate = JUN_CoreGetSampleRate(CTX.app->core);
+	double frames_per_second = JUN_CoreGetFramesPerSecond(CTX.app->core);
 
-	JUN_AudioPrepare(app->audio, sample_rate, frames_per_second);
+	JUN_AudioPrepare(CTX.app->audio, sample_rate, frames_per_second);
 
-	JUN_CoreRestoreMemories(app->core);
+	JUN_CoreRestoreMemories(CTX.app->core);
 
-	JUN_CoreSetCheats(app->core);
+	JUN_CoreSetCheats(CTX.app->core);
 
-	current_webview = ctx;
-	current_serial = serial;
+	CTX.current_webview = ctx;
+	CTX.current_serial = serial;
 }
 
 static void refresh_files(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, void *opaque)
@@ -173,12 +171,12 @@ static void get_settings(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json
 
 static void event_func(const MTY_Event *event, void *opaque)
 {
-	JUN_InputSetStatus(app->input, event);
+	JUN_InputSetStatus(CTX.app->input, event);
 
 	MTY_PrintEvent(event);
 
 	if (event->type == MTY_EVENT_CLOSE)
-		JUN_StateToggleExit(app->state);
+		JUN_StateToggleExit(CTX.app->state);
 }
 
 static void log_func(const char *message, void *opaque)
@@ -204,13 +202,13 @@ int main(int argc, char *argv[])
 
 	JUN_EnumsCreate();
 	JUN_FilesystemCreate();
-	app = JUN_AppCreate(app_func, event_func);
+	CTX.app = JUN_AppCreate(app_func, event_func);
 
-	JUN_VideoCreateUI(app->video, on_ui_created, NULL);
+	JUN_VideoCreateUI(CTX.app->video, on_ui_created, NULL);
 
-	JUN_VideoStart(app->video);
+	JUN_VideoStart(CTX.app->video);
 
-	JUN_AppDestroy(&app);
+	JUN_AppDestroy(&CTX.app);
 	JUN_FilesystemDestroy();
 	JUN_EnumsDestroy();
 

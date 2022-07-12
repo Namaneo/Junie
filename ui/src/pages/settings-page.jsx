@@ -1,4 +1,4 @@
-import { IonButton, IonButtons, IonCheckbox, IonContent, IonHeader, IonItem, IonLabel, IonList, IonModal, IonPage, IonSelect, IonSelectOption, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
+import { IonButton, IonButtons, IonContent, IonHeader, IonItem, IonLabel, IonList, IonModal, IonPage, IonSelect, IonSelectOption, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
 import { useState } from 'react';
 import * as Database from '../services/database';
 
@@ -66,17 +66,6 @@ export const SettingsPage = () => {
             return;
 
         settings.language = lang;
-
-        setSettings({ ...settings });
-
-        await Database.updateSettings(settings);
-    };
-
-    const adaptive_framerate = async (value) => {
-        if (!settings.configurations)
-            return;
-
-        settings.adaptive_framerate = value;
 
         setSettings({ ...settings });
 
@@ -169,11 +158,6 @@ export const SettingsPage = () => {
                                 <IonSelectOption key={name} value={name}>{prettify(name, 'RETRO_LANGUAGE_')}</IonSelectOption>
                             )}
                         </IonSelect>
-                    </IonItem>
-
-                    <IonItem key="framerate">
-                        <IonLabel>Adaptive framerate</IonLabel>
-                        <IonCheckbox checked={settings.adaptive_framerate} onIonChange={e => adaptive_framerate(e.detail.checked)} />
                     </IonItem>
 
                     <IonItem key="bindings" button onClick={() => openModal('Bindings')}>
