@@ -61,9 +61,8 @@ static bool app_func(void *opaque)
 		return true;
 
 	uint32_t factor = JUN_VideoComputeFramerate(CTX.app->video);
-
-	for (int i = 0; i < JUN_StateGetFastForward(CTX.app->state) * factor; ++i)
-		JUN_CoreRun(CTX.app->core);
+	JUN_CoreRun(CTX.app->core, JUN_StateGetFastForward(CTX.app->state) * factor);
+	JUN_VideoPresent(CTX.app->video);
 
 	JUN_CoreSaveMemories(CTX.app->core);
 
@@ -76,8 +75,6 @@ static bool app_func(void *opaque)
 		JUN_CoreRestoreState(CTX.app->core);
 		JUN_StateToggleRestoreState(CTX.app->state);
 	}
-
-	JUN_VideoPresent(CTX.app->video);
 
 	if (JUN_StateShouldExit(CTX.app->state)) {
 		JUN_AppUnloadCore(CTX.app);

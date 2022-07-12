@@ -32,7 +32,7 @@ double JUN_CoreGetSampleRate(JUN_Core *this);
 double JUN_CoreGetFramesPerSecond(JUN_Core *this);
 bool JUN_CoreStartGame(JUN_Core *this);
 bool JUN_CoreHasStarted(JUN_Core *this);
-void JUN_CoreRun(JUN_Core *this);
+void JUN_CoreRun(JUN_Core *this, size_t count);
 void JUN_CoreSaveMemories(JUN_Core *this);
 void JUN_CoreRestoreMemories(JUN_Core *this);
 void JUN_CoreSetCheats(JUN_Core *this);

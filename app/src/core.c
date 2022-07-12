@@ -271,9 +271,10 @@ bool JUN_CoreHasStarted(JUN_Core *this)
 	return this && this->initialized;
 }
 
-void JUN_CoreRun(JUN_Core *this)
+void JUN_CoreRun(JUN_Core *this, size_t count)
 {
-	this->sym->retro_run();
+	for (int i = 0; i < count; ++i)
+		this->sym->retro_run();
 }
 
 void save_memory(JUN_Core *this, uint32_t type, const char *path)
