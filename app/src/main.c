@@ -6,7 +6,6 @@
 #include "filesystem.h"
 #include "interop.h"
 #include "memory.h"
-#include "framerate.h"
 
 #include "app.h"
 
@@ -61,12 +60,10 @@ static bool app_func(void *opaque)
 	if (!JUN_CoreHasStarted(CTX.app->core))
 		return true;
 
-	uint32_t factor = JUN_FramerateGetFactor();
+	uint32_t factor = JUN_VideoComputeFramerate(CTX.app->video);
 
 	for (int i = 0; i < JUN_StateGetFastForward(CTX.app->state) * factor; ++i)
 		JUN_CoreRun(CTX.app->core);
-
-	JUN_FramerateHasRun();
 
 	JUN_CoreSaveMemories(CTX.app->core);
 

@@ -63,6 +63,10 @@ struct JUN_Video {
 	unsigned view_height;
 
 	JUN_Texture *ui;
+
+	MTY_Time before_run;
+    MTY_Time after_run;
+    float remaining_frames;
 };
 
 JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input, MTY_AppFunc app_func, MTY_EventFunc event_func)
@@ -298,9 +302,30 @@ void JUN_VideoDrawUI(JUN_Video *this, bool has_gamepad)
 	MTY_WindowDrawUI(this->app, 0, draw_data);
 }
 
+uint32_t JUN_VideoComputeFramerate(JUN_Video *this)
+{
+	MTY_Time before_run = MTY_GetTime();
+
+    float total_loop = MTY_TimeDiff(this->before_run, before_run);
+    float time_run = MTY_TimeDiff(this->before_run, this->after_run);
+    float time_idle = MTY_TimeDiff(this->after_run, before_run);
+
+    this->before_run = before_run;
+
+    bool throttling = time_run > time_idle;
+	float framerate = 1000.0 / total_loop;
+
+	this->remaining_frames += 60.0f / framerate;
+	uint32_t pending = (uint32_t) this->remaining_frames;
+	this->remaining_frames -= (float) pending;
+
+	return pending <= 20 && !throttling ? pending : 1;
+}
+
 void JUN_VideoPresent(JUN_Video *this)
 {
-	// TODO adjust swap interval: <refresh_rate> / 60
+	this->after_run = MTY_GetTime();
+
 	MTY_WindowPresent(this->app, 0, 1);
 }
 
