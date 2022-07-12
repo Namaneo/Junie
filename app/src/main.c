@@ -66,7 +66,7 @@ static bool app_func(void *opaque)
 	for (int i = 0; i < JUN_StateGetFastForward(CTX.app->state) * factor; ++i)
 		JUN_CoreRun(CTX.app->core);
 
-	JUN_FramerateHasRunned();
+	JUN_FramerateHasRun();
 
 	JUN_CoreSaveMemories(CTX.app->core);
 

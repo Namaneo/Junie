@@ -28,7 +28,7 @@ uint32_t JUN_FramerateGetFactor()
 	return pending <= 20 && !throttling ? pending : 1;
 }
 
-void JUN_FramerateHasRunned()
+void JUN_FramerateHasRun()
 {
     CTX.after_run = MTY_GetTime();
 }
