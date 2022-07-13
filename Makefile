@@ -14,7 +14,7 @@ watch: prepare
 
 watch-start:
 	@screen -S $(TARGET) -d -m python3 -m http.server -d $(APP_DIR)/build/ 8000
-	@yarn --cwd $(UI_DIR) rollup -c --environment BUILD:development -w --watch.onEnd "make -C ../$(APP_DIR)"
+	@yarn --cwd $(UI_DIR) rollup -c --environment BUILD:development -w --watch.onEnd "make -C ../$(APP_DIR) DEBUG=1"
 
 watch-end:
 	@screen -S $(TARGET) -X quit

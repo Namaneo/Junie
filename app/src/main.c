@@ -5,7 +5,7 @@
 #include "enums.h"
 #include "filesystem.h"
 #include "interop.h"
-#include "memory.h"
+#include "debug.h"
 
 #include "app.h"
 
@@ -82,8 +82,8 @@ static bool app_func(void *opaque)
 		if (JUN_StateHasAudio(CTX.app->state))
 			JUN_StateToggleAudio(CTX.app->state);
 		JUN_StateToggleExit(CTX.app->state);
-		JUN_MemoryDump();
 		MTY_WebviewInteropReturn(CTX.current_webview, CTX.current_serial, true, NULL);
+		JUN_MemoryDump();
 	}
 
 	return true;
@@ -167,18 +167,10 @@ static void event_func(const MTY_Event *event, void *opaque)
 {
 	JUN_InputSetStatus(CTX.app->input, event);
 
-	MTY_PrintEvent(event);
+	JUN_PrintEvent(event);
 
 	if (event->type == MTY_EVENT_CLOSE)
 		JUN_StateToggleExit(CTX.app->state);
-}
-
-static void log_func(const char *message, void *opaque)
-{
-	if (message[strlen(message) - 1] != '\n')
-		printf("%s\n", message);
-	else
-		printf("%s", message);
 }
 
 static void on_ui_created(MTY_Webview *webview, void *opaque)
@@ -192,7 +184,7 @@ static void on_ui_created(MTY_Webview *webview, void *opaque)
 
 int main(int argc, char *argv[])
 {
-	MTY_SetLogFunc(log_func, NULL);
+	JUN_SetLogFunc();
 
 	JUN_EnumsCreate();
 	JUN_FilesystemCreate();

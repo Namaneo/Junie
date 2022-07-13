@@ -29,23 +29,29 @@ SRC := \
 	$(SRC_DIR)/input.c \
 	$(SRC_DIR)/enums.c \
 	$(SRC_DIR)/state.c \
-	$(SRC_DIR)/memory.c \
 	$(SRC_DIR)/texture.c \
 	$(SRC_DIR)/interop.c \
 	$(SRC_DIR)/toolbox.c \
 	$(SRC_DIR)/settings.c \
 	$(SRC_DIR)/filesystem.c \
 	$(SRC_DIR)/configuration.c
-OBJ := $(SRC:.c=.o)
 
-CFLAGS  := \
-	-Wall -O3 \
-	-I$(SRC_DIR) -I$(DEPS_DIR) -I$(INC_DIR)
+CFLAGS  := -Wall -I$(SRC_DIR) -I$(DEPS_DIR) -I$(INC_DIR)
 LDFLAGS := \
 	-L$(LIB_DIR) -L$(CORES_DIR) $(LIBS:%=-l%) $(CORES:%=-l%) \
-	-Wl,--allow-undefined -Wl,--export-table -Wl,-error-limit=0 \
-	-Wl,--wrap=malloc -Wl,--wrap=calloc -Wl,--wrap=realloc -Wl,--wrap=free \
-	-Wl,--wrap=MTY_Alloc -Wl,--wrap=MTY_Realloc -Wl,--wrap=MTY_Free
+	-Wl,--allow-undefined,--export-table,-error-limit=0
+
+ifeq ($(DEBUG), 1)
+SRC     += $(SRC_DIR)/debug.c
+CFLAGS  += -O0 -g -D DEBUG
+LDFLAGS += \
+	-Wl,--wrap=malloc,--wrap=calloc,--wrap=realloc,--wrap=free \
+	-Wl,--wrap=MTY_Alloc,--wrap=MTY_Realloc,--wrap=MTY_Free
+else
+CFLAGS += -O3
+endif
+
+OBJ := $(SRC:.c=.o)
 
 MAKEFLAGS += --no-print-directory
 
