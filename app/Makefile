@@ -1,6 +1,6 @@
 include Makefile.common
 
-TARGET := junie.wasm
+TARGET := junie
 
 SRC_DIR   := src
 DEPS_DIR  := deps
@@ -38,8 +38,8 @@ SRC := \
 
 CFLAGS  := -Wall -I$(SRC_DIR) -I$(DEPS_DIR) -I$(INC_DIR)
 LDFLAGS := \
-	-L$(LIB_DIR) -L$(CORES_DIR) $(LIBS:%=-l%) $(CORES:%=-l%) \
-	-Wl,--allow-undefined,--export-table,-error-limit=0
+	-flto $(shell pkg-config --libs opengl x11 gtk+-3.0 webkit2gtk-4.0) -lpthread -ldl -lrt -lm \
+	-L$(LIB_DIR) -L$(CORES_DIR) $(LIBS:%=-l%) $(CORES:%=-l%)
 
 ifeq ($(DEBUG), 1)
 SRC     += $(SRC_DIR)/debug.c
@@ -58,7 +58,7 @@ MAKEFLAGS += --no-print-directory
 all: clean $(OUT_DIR)/$(TARGET)
 
 $(OUT_DIR)/$(TARGET): assets $(LIB_FILES) $(CORE_FILES) $(OBJ)
-	$(CXX) $(LDFLAGS) $(OBJ) -o $(OUT_DIR)/$(TARGET)
+	$(CXX) $(OBJ) $(LDFLAGS) -flto -o $(OUT_DIR)/$(TARGET)
 
 prepare:
 	@mkdir -p $(OUT_DIR) 
