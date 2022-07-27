@@ -12,7 +12,7 @@ export class Cheat {
 		this.order = 0;
 
 		if (file) {
-			const data = JSON.parse(new TextDecoder('ascii').decode(file.data));
+			const data = file.data;
 			this.enabled = data.enabled;
 			this.order = data.order;
 			this.value = data.value;
@@ -24,7 +24,7 @@ export class Cheat {
 	}
 
 	path() {
-		return `/cheats/${this.system}/${this.game}/${this.name}.cht`;
+		return `cheats/${this.system}/${this.game}/${this.name}.json`;
 	}
 
 	file() {
@@ -36,12 +36,12 @@ export class Cheat {
 
 		return { 
 			path: this.path(),
-			data: new TextEncoder('ascii').encode((JSON.stringify(data))),
+			data: data,
 		}
 	}
 
     match(path, index) {
-		const matches = path.match(/\/cheats\/(.*)\/(.*)\/(.*).cht/);
+		const matches = path.match(/cheats\/(.*)\/(.*)\/(.*).json/);
 
 		if (!matches || matches.length <= index)
 			return undefined;

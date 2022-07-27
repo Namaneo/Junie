@@ -36,15 +36,11 @@ export const RecentPage = () => {
 	}
 
 	const startGame = async (played) => {
-		window.frameElement.style.display = 'none';
-
 		await junie_start_game({
 			system: played.system.name,
 			rom: played.game.rom,
 			settings: await Database.getSettings(),
 		});
-
-		window.frameElement.style.display = 'block';
 	}
 
 	useIonViewWillEnter(async () => {

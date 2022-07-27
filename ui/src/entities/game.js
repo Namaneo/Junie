@@ -8,11 +8,11 @@ export class Game {
 	}
 
 	path() {
-		return `/games/${this.system.name}/${this.game.rom}`;
+		return `games/${this.system.name}/${this.game.rom}`;
 	}
 
     static match(path, index) {
-		const matches = path.match(/\/games\/(.*)\/(.*)/);
+		const matches = path.match(/games\/(.*)\/(.*)/);
 
 		if (!matches || matches.length <= index)
 			return undefined;

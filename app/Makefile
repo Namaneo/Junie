@@ -36,7 +36,7 @@ SRC := \
 	$(SRC_DIR)/filesystem.c \
 	$(SRC_DIR)/configuration.c
 
-CFLAGS  := -Wall -I$(SRC_DIR) -I$(DEPS_DIR) -I$(INC_DIR)
+CFLAGS  := -Wall -I$(SRC_DIR) -I$(DEPS_DIR) -I$(INC_DIR) -Ilib/retro/include
 LDFLAGS := \
 	-flto $(shell pkg-config --libs opengl x11 gtk+-3.0 webkit2gtk-4.0) -lpthread -ldl -lrt -lm \
 	-L$(LIB_DIR) -L$(CORES_DIR) $(LIBS:%=-l%) $(CORES:%=-l%)

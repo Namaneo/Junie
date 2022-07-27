@@ -2,6 +2,6 @@ NAME   := genesis
 TARGET := lib$(NAME).a
 
 BUILD_DIR   := $(TARGET:lib%.a=%)
-BUILD_FLAGS := TARGET=../$(TARGET) -f Makefile.libretro
+BUILD_FLAGS := TARGET=../$(TARGET) -f Makefile.libretro LIBRETRO_COMM_DIR=../../lib/retro
 
 include Makefile.core
