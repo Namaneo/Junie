@@ -30,13 +30,12 @@ SRC := \
 	$(SRC_DIR)/enums.c \
 	$(SRC_DIR)/state.c \
 	$(SRC_DIR)/texture.c \
-	$(SRC_DIR)/interop.c \
 	$(SRC_DIR)/toolbox.c \
 	$(SRC_DIR)/settings.c \
 	$(SRC_DIR)/filesystem.c \
 	$(SRC_DIR)/configuration.c
 
-CFLAGS  := -Wall -I$(SRC_DIR) -I$(DEPS_DIR) -I$(INC_DIR)
+CFLAGS  := -Wall -I$(SRC_DIR) -I$(DEPS_DIR) -I$(INC_DIR) -Ilib/retro/include
 LDFLAGS := \
 	-L$(LIB_DIR) -L$(CORES_DIR) $(LIBS:%=-l%) $(CORES:%=-l%) \
 	-Wl,--allow-undefined,--export-table,-error-limit=0

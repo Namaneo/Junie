@@ -24,6 +24,7 @@ export async function refreshLibrary() {
 		await Promise.all(library.map(fetchGames));
 		await Database.updateLibrary(library);
 	} catch (e) {
+		console.error(e);
 		return false;
 	}
 	return true;
@@ -67,6 +68,7 @@ export async function fetchGame(system, game) {
 		const response = await fetch(path);
 		return response.status == 200 ? await response.arrayBuffer() : null;
 	} catch (e) {
+		console.error(e);
 		return null;
 	}
 }

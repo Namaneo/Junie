@@ -7,6 +7,7 @@ SRC := \
 	retro/compat/fopen_utf8.c \
 	retro/compat/compat_posix_string.c \
 	retro/compat/compat_strcasestr.c \
+	retro/encodings/encoding_base64.c \
 	retro/encodings/encoding_utf.c \
 	retro/file/file_path.c \
 	retro/streams/memory_stream.c \

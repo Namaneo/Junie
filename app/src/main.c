@@ -2,12 +2,16 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "encodings/base64.h"
+
 #include "enums.h"
 #include "filesystem.h"
 #include "interop.h"
 #include "debug.h"
 
 #include "app.h"
+
+#define PATH_SIZE 256
 
 static struct {
 	JUN_App *app;
@@ -130,9 +134,14 @@ static void start_game(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, 
 	CTX.current_serial = serial;
 }
 
-static void refresh_files(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, void *opaque)
+static void event_func(const MTY_Event *event, void *opaque)
 {
-	JUN_InteropRefreshFiles();
+	JUN_InputSetStatus(CTX.app->input, event);
+
+	JUN_PrintEvent(event);
+
+	if (event->type == MTY_EVENT_CLOSE)
+		JUN_StateToggleExit(CTX.app->state);
 }
 
 static void get_languages(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, void *opaque)
@@ -163,23 +172,85 @@ static void get_settings(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json
 	MTY_WebviewInteropReturn(ctx, serial, true, JUN_CoreGetDefaultConfiguration());
 }
 
-static void event_func(const MTY_Event *event, void *opaque)
+static void list_files(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, void *opaque)
 {
-	JUN_InputSetStatus(CTX.app->input, event);
+	const char *path = MTY_JSONObjGetFullString(json, "path");
 
-	JUN_PrintEvent(event);
+	MTY_JSON *result = MTY_JSONArrayCreate();
 
-	if (event->type == MTY_EVENT_CLOSE)
-		JUN_StateToggleExit(CTX.app->state);
+	char *file = NULL;
+	for (size_t index = 0; JUN_InteropReadDir(path, index, &file); index++) {
+		MTY_JSONArraySetString(result, index, file);
+		MTY_Free(file);
+	}
+
+	MTY_WebviewInteropReturn(ctx, serial, true, result);
+
+	MTY_JSONDestroy(&result);
+}
+
+static void read_file(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, void *opaque)
+{
+	const char *path = MTY_JSONObjGetFullString(json, "path");
+
+	int32_t data_len = 0;
+	size_t data_raw_len = 0;
+	void *data_raw = JUN_InteropReadFile(path, &data_raw_len);
+
+	if (!data_raw) {
+		MTY_WebviewInteropReturn(ctx, serial, true, NULL);
+		return;
+	}
+
+	char *data = base64(data_raw, data_raw_len, &data_len);
+
+	MTY_JSON *result = MTY_JSONObjCreate();
+
+	MTY_JSONObjSetString(result, "path", path);
+	MTY_JSONObjSetString(result, "data", data);
+
+	MTY_WebviewInteropReturn(ctx, serial, true, result);
+
+	MTY_JSONDestroy(&result);
+	MTY_Free(data);
+	MTY_Free(data_raw);
+}
+
+static void write_file(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, void *opaque)
+{
+	const char *path = MTY_JSONObjGetFullString(json, "path");
+	const char *data = MTY_JSONObjGetFullString(json, "data");
+
+	int32_t data_raw_len = 0;
+	void *data_raw = unbase64(data, strlen(data), &data_raw_len);
+	JUN_InteropWriteFile(path, data_raw, data_raw_len);
+
+	MTY_WebviewInteropReturn(ctx, serial, true, NULL);
+
+	MTY_Free(data_raw);
+}
+
+static void remove_file(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, void *opaque)
+{
+	const char *path = MTY_JSONObjGetFullString(json, "path");
+
+	JUN_InteropRemoveFile(path);
+
+	MTY_WebviewInteropReturn(ctx, serial, true, NULL);
 }
 
 static void on_ui_created(MTY_Webview *webview, void *opaque)
 {
 	MTY_WebviewInteropBind(webview, "junie_start_game", start_game, NULL);
-	MTY_WebviewInteropBind(webview, "junie_refresh_files", refresh_files, NULL);
+	
 	MTY_WebviewInteropBind(webview, "junie_get_languages", get_languages, NULL);
 	MTY_WebviewInteropBind(webview, "junie_get_bindings", get_bindings, NULL);
 	MTY_WebviewInteropBind(webview, "junie_get_settings", get_settings, NULL);
+
+	MTY_WebviewInteropBind(webview, "junie_list_files", list_files, NULL);
+	MTY_WebviewInteropBind(webview, "junie_read_file", read_file, NULL);
+	MTY_WebviewInteropBind(webview, "junie_write_file", write_file, NULL);
+	MTY_WebviewInteropBind(webview, "junie_remove_file", remove_file, NULL);
 }
 
 int main(int argc, char *argv[])
