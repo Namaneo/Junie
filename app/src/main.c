@@ -61,7 +61,7 @@ static void audio_sample(int16_t left, int16_t right)
 
 static bool app_func(void *opaque)
 {
-	if (!JUN_CoreHasStarted(CTX.app->core))
+	if (!JUN_VideoAssetsReady(CTX.app->video) || !JUN_CoreHasStarted(CTX.app->core))
 		return true;
 
 	uint32_t factor = JUN_VideoComputeFramerate(CTX.app->video);
@@ -176,7 +176,7 @@ static void list_files(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, 
 {
 	const char *path = MTY_JSONObjGetFullString(json, "path");
 
-	MTY_JSON *result = MTY_JSONArrayCreate();
+	MTY_JSON *result = MTY_JSONArrayCreate(0);
 
 	char *file = NULL;
 	for (size_t index = 0; JUN_InteropReadDir(path, index, &file); index++) {
@@ -242,7 +242,7 @@ static void remove_file(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json,
 static void on_ui_created(MTY_Webview *webview, void *opaque)
 {
 	MTY_WebviewInteropBind(webview, "junie_start_game", start_game, NULL);
-	
+
 	MTY_WebviewInteropBind(webview, "junie_get_languages", get_languages, NULL);
 	MTY_WebviewInteropBind(webview, "junie_get_bindings", get_bindings, NULL);
 	MTY_WebviewInteropBind(webview, "junie_get_settings", get_settings, NULL);
@@ -262,6 +262,7 @@ int main(int argc, char *argv[])
 	CTX.app = JUN_AppCreate(app_func, event_func);
 
 	JUN_VideoCreateUI(CTX.app->video, on_ui_created, NULL);
+	JUN_VideoPrepareAssets(CTX.app->video);
 
 	JUN_VideoStart(CTX.app->video);
 

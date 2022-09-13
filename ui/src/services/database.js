@@ -10,7 +10,7 @@ async function read(path) {
 
 	if (file)
 		file.data = atob(file.data);
-	
+
 	return file;
 }
 
@@ -90,7 +90,7 @@ export async function updateLibrary(library) {
 export async function getSettings() {
 	const file = await read_json('/settings.json');
 
-	const defaults = { 
+	const defaults = {
 		language: 'RETRO_LANGUAGE_ENGLISH',
 		bindings: { }, // TODO default bindings?
 		configurations: { }, // TODO default configurations?
@@ -162,10 +162,10 @@ export async function getGames() {
 };
 
 export async function addGame(game, data) {
-	const file = { 
-		path: game.path(), 
-		data: new Uint8Array(data), 
-		meta: JSON.parse(JSON.stringify(game)) 
+	const file = {
+		path: game.path(),
+		data: new Uint8Array(data),
+		meta: JSON.parse(JSON.stringify(game))
 	};
 
 	delete file.meta.game.installed;

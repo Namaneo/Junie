@@ -122,7 +122,7 @@ static bool jun_core_environment(struct jun_core_sym *sym, unsigned cmd, void *d
 	if (command != RETRO_ENVIRONMENT_SET_VARIABLES)
 		return false;
 
-	sym->configuration = MTY_JSONArrayCreate();
+	sym->configuration = MTY_JSONArrayCreate(0);
 
 	const struct retro_variable *variables = data;
 
@@ -146,7 +146,7 @@ static bool jun_core_environment(struct jun_core_sym *sym, unsigned cmd, void *d
 		MTY_JSONObjSetString(item, "default", element);
 
 		uint32_t i_option = 0;
-		MTY_JSON *options = MTY_JSONArrayCreate();
+		MTY_JSON *options = MTY_JSONArrayCreate(0);
 		while (element) {
 			MTY_JSONArraySetString(options, i_option, element);
 			element = MTY_Strtok(NULL, "|", &ptr);
@@ -200,7 +200,7 @@ JUN_Core *JUN_CoreCreate(JUN_CoreType type, MTY_Hash *paths)
 
 	jun_core_initialize();
 
-	this->sym = 
+	this->sym =
 		type == JUN_CORE_GENESIS  ? &CORES.genesis  :
 		type == JUN_CORE_MELONDS  ? &CORES.melonds  :
 		type == JUN_CORE_MGBA     ? &CORES.mgba     :
