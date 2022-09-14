@@ -338,7 +338,7 @@ void JUN_CoreSetCheats(JUN_Core *this)
 	const char *cheats_path = MTY_HashGetInt(this->paths, JUN_FOLDER_CHEATS);
 
 	while (JUN_InteropReadDir(cheats_path, index++, &path)) {
-		void *cheat = JUN_InteropReadFile(path, NULL);
+		void *cheat = JUN_FilesystemGetExistingFile(path);
 		MTY_JSON *json = MTY_JSONParse(cheat);
 
 		bool enabled = false;

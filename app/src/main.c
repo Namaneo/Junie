@@ -17,6 +17,7 @@ static struct {
 	JUN_App *app;
 	MTY_Webview *current_webview;
 	uint32_t current_serial;
+	uint32_t file_count;
 } CTX;
 
 static bool environment(unsigned cmd, void *data)
@@ -93,7 +94,24 @@ static bool app_func(void *opaque)
 	return true;
 }
 
-static void start_game(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, void *opaque)
+static void on_prepare_file(char *path, void *data, size_t length, void *opaque)
+{
+	MTY_Webview *ctx = (MTY_Webview *) ((uint64_t *) opaque)[0];
+	uint32_t serial = (uint32_t) ((uint64_t *) opaque)[1];
+
+	JUN_FilesystemSaveFile(path, data, length);
+
+	CTX.file_count--;
+
+	if (!CTX.file_count)
+		MTY_WebviewInteropReturn(ctx, serial, true, NULL);
+
+	MTY_Free(path);
+	MTY_Free(data);
+	MTY_Free(opaque);
+}
+
+static void prepare_game(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, void *opaque)
 {
 	JUN_MemoryDump();
 
@@ -107,6 +125,49 @@ static void start_game(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, 
 
 	JUN_AppLoadCore(CTX.app, system, rom, settings);
 
+	const char *game_path   = JUN_AppGetPath(CTX.app, JUN_FILE_GAME);
+	const char *save_path   = JUN_AppGetPath(CTX.app, JUN_FOLDER_SAVES);
+	const char *system_path = JUN_AppGetPath(CTX.app, JUN_FOLDER_SYSTEM);
+	const char *cheat_path  = JUN_AppGetPath(CTX.app, JUN_FOLDER_CHEATS);
+
+	MTY_List *files = MTY_ListCreate();
+
+	char *file = NULL;
+	CTX.file_count = 0;
+
+	MTY_ListAppend(files, MTY_Strdup(game_path));
+	CTX.file_count++;
+
+	for (size_t index = 0; JUN_InteropReadDir(save_path, index, &file); index++) {
+		MTY_ListAppend(files, file);
+		CTX.file_count++;
+	}
+
+	for (size_t index = 0; JUN_InteropReadDir(system_path, index, &file); index++) {
+		MTY_ListAppend(files, file);
+		CTX.file_count++;
+	}
+
+	for (size_t index = 0; JUN_InteropReadDir(cheat_path, index, &file); index++) {
+		MTY_ListAppend(files, file);
+		CTX.file_count++;
+	}
+
+	uint64_t *new_opaque = MTY_Alloc(2, sizeof(uint64_t));
+	new_opaque[0] = (uint64_t) ctx;
+	new_opaque[1] = (uint64_t) serial;
+
+	MTY_ListNode *node = MTY_ListGetFirst(files);
+	while (node) {
+		JUN_InteropReadFile(node->value, on_prepare_file, new_opaque);
+		node = node->next;
+	}
+
+	MTY_ListDestroy(&files, MTY_Free);
+}
+
+static void start_game(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, void *opaque)
+{
 	JUN_CoreSetCallbacks(CTX.app->core, & (JUN_CoreCallbacks) {
 		environment,
 		video_refresh,
@@ -132,6 +193,13 @@ static void start_game(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, 
 
 	CTX.current_webview = ctx;
 	CTX.current_serial = serial;
+}
+
+static void clear_game(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, void *opaque)
+{
+	JUN_FilesystemClearAllFiles();
+
+	MTY_WebviewInteropReturn(ctx, serial, true, NULL);
 }
 
 static void event_func(const MTY_Event *event, void *opaque)
@@ -189,19 +257,17 @@ static void list_files(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, 
 	MTY_JSONDestroy(&result);
 }
 
-static void read_file(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, void *opaque)
+static void on_read_file(char *path, void *data_raw, size_t data_raw_len, void *opaque)
 {
-	const char *path = MTY_JSONObjGetFullString(json, "path");
-
-	int32_t data_len = 0;
-	size_t data_raw_len = 0;
-	void *data_raw = JUN_InteropReadFile(path, &data_raw_len);
+	MTY_Webview *ctx = (MTY_Webview *) ((uint64_t *) opaque)[0];
+	uint32_t serial = (uint32_t) ((uint64_t *) opaque)[1];
 
 	if (!data_raw) {
 		MTY_WebviewInteropReturn(ctx, serial, true, NULL);
 		return;
 	}
 
+	int32_t data_len = 0;
 	char *data = base64(data_raw, data_raw_len, &data_len);
 
 	MTY_JSON *result = MTY_JSONObjCreate();
@@ -214,6 +280,20 @@ static void read_file(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, v
 	MTY_JSONDestroy(&result);
 	MTY_Free(data);
 	MTY_Free(data_raw);
+
+	MTY_Free(path);
+	MTY_Free(opaque);
+}
+
+static void read_file(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, void *opaque)
+{
+	const char *path = MTY_JSONObjGetFullString(json, "path");
+
+	uint64_t *new_opaque = MTY_Alloc(2, sizeof(uint64_t));
+	new_opaque[0] = (uint64_t) ctx;
+	new_opaque[1] = (uint64_t) serial;
+
+	JUN_InteropReadFile(path, on_read_file, new_opaque);
 }
 
 static void write_file(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, void *opaque)
@@ -241,7 +321,9 @@ static void remove_file(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json,
 
 static void on_ui_created(MTY_Webview *webview, void *opaque)
 {
+	MTY_WebviewInteropBind(webview, "junie_prepare_game", prepare_game, NULL);
 	MTY_WebviewInteropBind(webview, "junie_start_game", start_game, NULL);
+	MTY_WebviewInteropBind(webview, "junie_clear_game", clear_game, NULL);
 
 	MTY_WebviewInteropBind(webview, "junie_get_languages", get_languages, NULL);
 	MTY_WebviewInteropBind(webview, "junie_get_bindings", get_bindings, NULL);

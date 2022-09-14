@@ -108,6 +108,13 @@ void JUN_AppLoadCore(JUN_App *public, const char *system, const char *rom, const
 	MTY_Free(game);
 }
 
+const char *JUN_AppGetPath(JUN_App *public, JUN_PathType type)
+{
+	_JUN_App *this = (_JUN_App *) public;
+
+	return MTY_HashGetInt(this->paths, type);
+}
+
 void JUN_AppUnloadCore(JUN_App *public)
 {
 	_JUN_App *this = (_JUN_App *) public;
@@ -116,7 +123,6 @@ void JUN_AppUnloadCore(JUN_App *public)
 		return;
 
 	JUN_CoreDestroy(&this->public.core);
-	JUN_FilesystemClearFile(MTY_HashGetInt(this->paths, JUN_FILE_GAME));
 	MTY_HashDestroy(&this->paths, MTY_Free);
 }
 

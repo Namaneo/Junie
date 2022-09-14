@@ -46,7 +46,7 @@
 
 		let files = [];
 		const refresh_files = async () => {
-			files = await database.table('files').toArray();
+			files = await database.table('files').toCollection().primaryKeys();
 		}
 
 		const start = async () => {
@@ -74,31 +74,33 @@
 				JUN_InteropGetPixelRatio: () => window.devicePixelRatio,
 				JUN_InteropReadDir: (cpath, index, file) => {
 					const base_path = MTY_StrToJS(cpath);
-					const filtered = files.filter(file => file.path.startsWith(base_path));
+					const filtered = files.filter(file => file.startsWith(base_path));
 
 					if (index >= filtered.length)
 						return false;
 
-					const path = filtered[index].path;
+					const path = filtered[index];
 					MTY_SetUint32(file, MTY_Alloc(path.length, 1))
 					MTY_StrToC(path, MTY_GetUint32(file), path.length + 1);
 
 					return true;
 				},
-				JUN_InteropReadFile: (cpath, clength) => {
-					const path = MTY_StrToJS(cpath);
-					const file = files.find(file => file.path == path);
-					if (!file)
-						return null;
+				JUN_InteropReadFile: async (cpath, cfunc, opaque) => {
+					const search = MTY_StrToJS(cpath);
+					const path = files.find(file => file == search);
+					if (!path)
+						MTY_CFunc(cfunc)(null, null, 0, opaque);
+
+					cpath = MTY_Alloc(path.length + 1, 1);
+					MTY_StrToC(search, cpath, path.length + 1);
+
+					const file = await database.table('files').get(path);
 
 					const result = MTY_Alloc(file.data.length, 1);
 					const view = new Uint8Array(mty_mem(), result, file.data.length);
 					view.set(file.data);
 
-					if (clength)
-						MTY_SetUint32(clength, file.data.length);
-
-					return result;
+					MTY_CFunc(cfunc)(cpath, result, file.data.length, opaque);
 				},
 				JUN_InteropWriteFile: async (cpath, cdata, length) => {
 					const path = MTY_StrToJS(cpath);
@@ -107,22 +109,13 @@
 					const data = new Uint8Array(mty_mem(), cdata, length);
 					buffer.set(data);
 
-					const new_file = { path: path, data: new Uint8Array(data) };
-					const file = files.find(file => file.path == path);
-					if (file)
-						file.data = data;
-					else
-						files.push(new_file)
-
-					await database.table('files').put(new_file);
+					const file = { path: path, data: new Uint8Array(data) };
+					await database.table('files').put(file);
 
 					await refresh_files();
 				},
 				JUN_InteropRemoveFile: async (cpath) => {
 					const path = MTY_StrToJS(cpath);
-
-					const index = files.findIndex(file => file.path == path);
-					files = files.splice(index, 1);
 
 					await database.table('files').delete(path);
 
