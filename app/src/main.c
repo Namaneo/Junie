@@ -96,19 +96,15 @@ static bool app_func(void *opaque)
 
 static void on_prepare_file(char *path, void *data, size_t length, void *opaque)
 {
-	MTY_Webview *ctx = (MTY_Webview *) ((uint64_t *) opaque)[0];
-	uint32_t serial = (uint32_t) ((uint64_t *) opaque)[1];
-
 	JUN_FilesystemSaveFile(path, data, length);
 
 	CTX.file_count--;
 
 	if (!CTX.file_count)
-		MTY_WebviewInteropReturn(ctx, serial, true, NULL);
+		MTY_WebviewInteropReturn(CTX.current_webview, CTX.current_serial, true, NULL);
 
 	MTY_Free(path);
 	MTY_Free(data);
-	MTY_Free(opaque);
 }
 
 static void prepare_game(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, void *opaque)
@@ -153,13 +149,12 @@ static void prepare_game(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json
 		CTX.file_count++;
 	}
 
-	uint64_t *new_opaque = MTY_Alloc(2, sizeof(uint64_t));
-	new_opaque[0] = (uint64_t) ctx;
-	new_opaque[1] = (uint64_t) serial;
+	CTX.current_webview = ctx;
+	CTX.current_serial = serial;
 
 	MTY_ListNode *node = MTY_ListGetFirst(files);
 	while (node) {
-		JUN_InteropReadFile(node->value, on_prepare_file, new_opaque);
+		JUN_InteropReadFile(node->value, on_prepare_file, NULL);
 		node = node->next;
 	}
 
