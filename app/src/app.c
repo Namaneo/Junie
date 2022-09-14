@@ -92,12 +92,12 @@ void JUN_AppLoadCore(JUN_App *public, const char *system, const char *rom, const
 	this->paths = MTY_HashCreate(0);
 
 	MTY_HashSetInt(this->paths, JUN_FILE_GAME,  MTY_SprintfD("/games/%s/%s", system, rom));
-	MTY_HashSetInt(this->paths, JUN_FILE_STATE, MTY_SprintfD("/save/%s/%s.state", system, game));
-	MTY_HashSetInt(this->paths, JUN_FILE_SRAM,  MTY_SprintfD("/save/%s/%s.srm", system, game));
-	MTY_HashSetInt(this->paths, JUN_FILE_RTC,   MTY_SprintfD("/save/%s/%s.rtc", system, game));
+	MTY_HashSetInt(this->paths, JUN_FILE_STATE, MTY_SprintfD("/saves/%s/%s.state", system, game));
+	MTY_HashSetInt(this->paths, JUN_FILE_SRAM,  MTY_SprintfD("/saves/%s/%s.srm", system, game));
+	MTY_HashSetInt(this->paths, JUN_FILE_RTC,   MTY_SprintfD("/saves/%s/%s.rtc", system, game));
 
-	MTY_HashSetInt(this->paths, JUN_FOLDER_SAVES,  MTY_SprintfD("/save/%s", system));
-	MTY_HashSetInt(this->paths, JUN_FOLDER_SYSTEM, MTY_SprintfD("/system/%s", system));
+	MTY_HashSetInt(this->paths, JUN_FOLDER_SAVES,  MTY_SprintfD("/saves/%s", system));
+	MTY_HashSetInt(this->paths, JUN_FOLDER_SYSTEM, MTY_SprintfD("/systems/%s", system));
 	MTY_HashSetInt(this->paths, JUN_FOLDER_CHEATS, MTY_SprintfD("/cheats/%s/%s", system, rom));
 
 	JUN_CoreType type = jun_core_get_type(system);

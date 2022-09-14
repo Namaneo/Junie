@@ -104,7 +104,7 @@ export async function updateSettings(settings) {
 }
 
 export async function getSaves() {
-	const rawSaves = await list_buffer('/save');
+	const rawSaves = await list_buffer('/saves');
 
 	return rawSaves.map(file => new Save(file)).reduce((acc, newSave) => {
 

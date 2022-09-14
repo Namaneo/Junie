@@ -86,13 +86,15 @@
 					return true;
 				},
 				JUN_InteropReadFile: async (cpath, cfunc, opaque) => {
-					const search = MTY_StrToJS(cpath);
-					const path = files.find(file => file == search);
-					if (!path)
-						MTY_CFunc(cfunc)(null, null, 0, opaque);
+					const path = MTY_StrToJS(cpath);
+
+					if (!files.find(file => file == path)) {
+						MTY_CFunc(cfunc)(cpath, null, 0, opaque);
+						return;
+					}
 
 					cpath = MTY_Alloc(path.length + 1, 1);
-					MTY_StrToC(search, cpath, path.length + 1);
+					MTY_StrToC(path, cpath, path.length + 1);
 
 					const file = await database.table('files').get(path);
 
