@@ -15,7 +15,6 @@ const resources = [
 const cacheResources = async () => {
     const cache = await caches.open('v1');
     await cache.addAll(resources);
-    self.skipWaiting();
 };
 
 const fetchResource = async (request) => {
@@ -25,10 +24,6 @@ const fetchResource = async (request) => {
 
 self.addEventListener('install', (event) => {
     event.waitUntil(cacheResources());
-});
-
-self.addEventListener('activate', () => {
-    self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {

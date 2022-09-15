@@ -94,6 +94,19 @@ static bool app_func(void *opaque)
 	return true;
 }
 
+static void get_version(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, void *opaque)
+{
+	char *version = JUN_InteropGetVersion();
+
+	MTY_JSON *result = MTY_JSONObjCreate();
+	MTY_JSONObjSetString(result, "version", version);
+
+	MTY_WebviewInteropReturn(ctx, serial, true, result);
+
+	MTY_JSONDestroy(&result);
+	MTY_Free(version);
+}
+
 static void on_prepare_file(char *path, void *data, size_t length, void *opaque)
 {
 	JUN_FilesystemSaveFile(path, data, length);
@@ -316,6 +329,8 @@ static void remove_file(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json,
 
 static void on_ui_created(MTY_Webview *webview, void *opaque)
 {
+	MTY_WebviewInteropBind(webview, "junie_get_version", get_version, NULL);
+
 	MTY_WebviewInteropBind(webview, "junie_prepare_game", prepare_game, NULL);
 	MTY_WebviewInteropBind(webview, "junie_start_game", start_game, NULL);
 	MTY_WebviewInteropBind(webview, "junie_clear_game", clear_game, NULL);

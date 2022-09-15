@@ -1,6 +1,7 @@
 include Makefile.common
 
 TARGET := junie.wasm
+BUILD  := development
 
 SRC_DIR   := src
 DEPS_DIR  := deps
@@ -60,11 +61,12 @@ $(OUT_DIR)/$(TARGET): assets $(LIB_FILES) $(CORE_FILES) $(OBJ)
 	$(CXX) $(LDFLAGS) $(OBJ) -o $(OUT_DIR)/$(TARGET)
 
 prepare:
-	@mkdir -p $(OUT_DIR) 
+	@mkdir -p $(OUT_DIR)
 	@cp -R $(WEB_DIR)/* $(OUT_DIR)
+	@sed -i $(OUT_DIR)/index.html -e "s/const junie_build = '.*';/const junie_build = '$(BUILD)';/"
 	@cp $(LIB_DIR)/matoya/src/unix/web/matoya.js $(OUT_DIR)/deps
 	@(cd $(OUT_DIR) && ln -s ../../demo/games games)
-	@echo // `date +%s` >> $(OUT_DIR)/service-worker.js
+	@echo // $(BUILD) >> $(OUT_DIR)/service-worker.js
 	@mkdir -p $(INC_DIR)
 	@cp $(LIB_DIR)/matoya/src/matoya.h $(INC_DIR)
 	@cp $(LIB_DIR)/retro/include/libretro.h $(INC_DIR)

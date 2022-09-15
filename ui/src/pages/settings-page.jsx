@@ -33,7 +33,7 @@ const EditModal = ({ open, dismiss, data }) => {
 			<IonContent class="modal">
 
                 <IonList>
-                    {data.items?.map(item => 
+                    {data.items?.map(item =>
                         <IonItem key={item.key}>
                             <IonLabel>{item.name}</IonLabel>
                             <IonSelect interface="action-sheet" value={data.current[item.key]} onIonChange={e => data.update(item.key, e.detail.value)}>
@@ -56,6 +56,7 @@ export const SettingsPage = () => {
 	const [modal, setModal] = useState(false);
     const [data, setData] = useState({});
 
+	const [version, setVersion] = useState({});
 	const [settings, setSettings] = useState({});
 	const [languages, setLanguages] = useState([]);
 	const [bindings, setBindings] = useState({ joypad: [], keyboard: [] });
@@ -96,7 +97,7 @@ export const SettingsPage = () => {
         const data =  { name: name };
 
         if (data.name == 'Bindings') {
-            data.items = bindings.joypad.map(button => new Object({ 
+            data.items = bindings.joypad.map(button => new Object({
                 key: button,
                 name: prettify(button, 'RETRO_DEVICE_ID_JOYPAD_'),
                 options: bindings.keyboard.map(key => new Object({
@@ -108,7 +109,7 @@ export const SettingsPage = () => {
             data.update = bind;
 
         } else {
-            data.items = options[name].map(option => new Object({ 
+            data.items = options[name].map(option => new Object({
                 key: option.key,
                 name: option.name,
                 options: option.options.map(value => new Object({
@@ -130,6 +131,7 @@ export const SettingsPage = () => {
     }
 
 	useIonViewWillEnter(async () => {
+		setVersion(await junie_get_version());
 		setLanguages(await junie_get_languages());
 		setBindings(await junie_get_bindings());
 		setOptions(await junie_get_settings());
@@ -169,6 +171,10 @@ export const SettingsPage = () => {
                             <IonLabel>{name}</IonLabel>
                         </IonItem>
                     )}
+
+					<IonItem key="version" class="version">
+                        <IonLabel>{version.version}</IonLabel>
+                    </IonItem>
 
                 </IonList>
 			</IonContent>

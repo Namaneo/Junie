@@ -10,7 +10,7 @@
  * Recent
  */
 #root .recent ion-list {
-    padding: 0; 
+    padding: 0;
     background: transparent;
 }
 
@@ -83,6 +83,13 @@
 #root .settings ion-list {
     padding: 0;
     background: transparent;
+}
+
+#root .settings .version {
+	text-align: center;
+	opacity: 0.75;
+    font-family: monospace;
+    font-style: italic;
 }
 
 #root .settings ion-select {

@@ -1,5 +1,7 @@
 TARGET  := junie
-VERSION := 0.5.1
+
+VERSION := 0.5.2
+BUILD   := $(VERSION)-$(shell date +%s)
 
 UI_DIR  := ui
 APP_DIR := app
@@ -7,7 +9,7 @@ OUT_DIR := build
 
 all: prepare
 	@yarn --cwd $(UI_DIR) rollup -c --environment BUILD:production
-	@make -C $(APP_DIR)
+	@make -C $(APP_DIR) BUILD=$(BUILD)
 
 watch: prepare
 	@bash -c "trap '$(MAKE) watch-end' EXIT; $(MAKE) watch-start;"
