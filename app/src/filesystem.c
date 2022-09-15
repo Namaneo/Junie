@@ -107,18 +107,6 @@ JUN_File *JUN_FilesystemGetExistingFile(const char *path)
 		if (files[i].exists && strcmp(files[i].path, path) == 0)
 			return &files[i];
 
-	size_t size;
-	void *buffer = JUN_InteropReadFile(path, &size);
-
-	if (buffer) {
-		JUN_File *file = JUN_FilesystemGetNewFile(path);
-
-		file->buffer = buffer;
-		file->size = size;
-
-		return file;
-	}
-
 	return NULL;
 }
 
@@ -152,6 +140,13 @@ void JUN_FilesystemClearFile(const char *path)
 		MTY_Free(file->buffer);
 
 	*file = (JUN_File) {0};
+}
+
+void JUN_FilesystemClearAllFiles()
+{
+	for (int i = 0; i < MAX_FILES; ++i)
+		if (files[i].exists)
+			JUN_FilesystemClearFile(files[i].path);
 }
 
 void JUN_FilesystemDestroy()

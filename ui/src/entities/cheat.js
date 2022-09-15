@@ -12,10 +12,9 @@ export class Cheat {
 		this.order = 0;
 
 		if (file) {
-			const data = JSON.parse(new TextDecoder('ascii').decode(file.data));
-			this.enabled = data.enabled;
-			this.order = data.order;
-			this.value = data.value;
+			this.enabled = file.data.enabled;
+			this.order = file.data.order;
+			this.value = file.data.value;
 
 			this.system = this.match(file.path, 1);
 			this.game = this.match(file.path, 2);
@@ -34,9 +33,9 @@ export class Cheat {
 			value: this.value,
 		}
 
-		return { 
+		return {
 			path: this.path(),
-			data: new TextEncoder('ascii').encode((JSON.stringify(data))),
+			data: data,
 		}
 	}
 

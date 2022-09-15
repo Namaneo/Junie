@@ -15,9 +15,9 @@ static void set_bindings(JUN_Settings *this)
 
 	const MTY_JSON *bindings = MTY_JSONObjGetItem(this->json, "bindings");
 
-	size_t lenght = MTY_JSONGetLength(bindings);
-	for (size_t i = 0; i < lenght; ++i) {
-		const char *key = MTY_JSONObjGetKey(bindings, i);
+	uint64_t iter = 0;
+	const char *key = NULL;
+	while (MTY_JSONObjGetNextKey(bindings, &iter, &key)) {
 		MTY_JSONObjGetString(bindings, key, value, PATH_SIZE);
 		MTY_HashSet(this->bindings, key, MTY_Strdup(value));
 	}
@@ -31,9 +31,9 @@ static void set_configurations(JUN_Settings *this)
 	if (!configurations)
 		return;
 
-	size_t lenght = MTY_JSONGetLength(configurations);
-	for (size_t i = 0; i < lenght; ++i) {
-		const char *key = MTY_JSONObjGetKey(configurations, i);
+	uint64_t iter = 0;
+	const char *key = NULL;
+	while (MTY_JSONObjGetNextKey(configurations, &iter, &key)) {
 		MTY_JSONObjGetString(configurations, key, value, PATH_SIZE);
 		MTY_HashSet(this->configurations, key, MTY_Strdup(value));
 	}

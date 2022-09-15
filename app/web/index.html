@@ -44,9 +44,26 @@
 		const database = new Dexie('Junie');
 		database.version(2).stores({ files: 'path' });
 
+		const version3 = database.version(3);
+		version3.upgrade(async transaction => {
+			const files = transaction.table('files').toCollection();
+			const json = files.filter(file => file.path.endsWith('.json'));
+			await json.modify(file => file.data = new TextEncoder().encode(JSON.stringify(file.data)));
+		});
+		version3.upgrade(async transaction => {
+			const files = transaction.table('files').toCollection();
+			const saves = files.filter(file => file.path.startsWith('/save/'));
+			await saves.modify(file => file.path = file.path.replace('/save/', '/saves/'));
+		});
+		version3.upgrade(async transaction => {
+			const files = transaction.table('files').toCollection();
+			const games = files.filter(file => file.path.startsWith('/games/'));
+			await games.delete();
+		});
+
 		let files = [];
 		const refresh_files = async () => {
-			files = await database.table('files').toArray();
+			files = await database.table('files').toCollection().primaryKeys();
 		}
 
 		const start = async () => {
@@ -69,75 +86,60 @@
 
 			await refresh_files();
 
-			// TODO compatibility with previous version of Junie
-			{
-				const convertFile = (base64) => {
-					var binary = window.atob(base64);
-					var bytes = new Uint8Array(binary.length);
-					for (var i = 0; i < binary.length; i++)
-						bytes[i] = binary.charCodeAt(i);
-					return bytes;
-				}
-
-				for (let file of files) {
-					const save = file.path.startsWith('/save/');
-					const cheat = file.path.startsWith('/cheats/');
-					const type = typeof file.data == 'string';
-
-					if ((save || cheat) && type) {
-						file.data = convertFile(file.data);
-						await database.table('files').put(file);
-					}
-				}
-			}
-
 			//Start core execution
 			await MTY_Start('junie.wasm', {
-				js_trace: () => console.trace(),
-				js_get_pixel_ratio: () => window.devicePixelRatio,
-				js_refresh_files: () => refresh_files(),
-				js_read_dir: (cpath, index, file, length) => {
-					path = MTY_StrToJS(cpath);
+				JUN_InteropGetPixelRatio: () => window.devicePixelRatio,
+				JUN_InteropReadDir: (cpath, index, file) => {
+					const base_path = MTY_StrToJS(cpath);
+					const filtered = files.filter(file => file.startsWith(base_path));
 
-					const filtered = files.filter(file => file.path.startsWith(path));
 					if (index >= filtered.length)
 						return false;
-					
-					MTY_StrToC(filtered[index], file, length);
+
+					const path = filtered[index];
+					MTY_SetUint32(file, MTY_Alloc(path.length, 1))
+					MTY_StrToC(path, MTY_GetUint32(file), path.length + 1);
 
 					return true;
 				},
-				js_read_file: (cpath, clength) => {
+				JUN_InteropReadFile: async (cpath, cfunc, opaque) => {
 					const path = MTY_StrToJS(cpath);
-					const file = files.find(file => file.path == path);
-					if (!file)
-						return null;
+
+					if (!files.find(file => file == path)) {
+						MTY_CFunc(cfunc)(cpath, null, 0, opaque);
+						return;
+					}
+
+					cpath = MTY_Alloc(path.length + 1, 1);
+					MTY_StrToC(path, cpath, path.length + 1);
+
+					const file = await database.table('files').get(path);
 
 					const result = MTY_Alloc(file.data.length, 1);
 					const view = new Uint8Array(mty_mem(), result, file.data.length);
 					view.set(file.data);
 
-					if (clength)
-						MTY_SetUint32(clength, file.data.length);
-
-					return result;
+					MTY_CFunc(cfunc)(cpath, result, file.data.length, opaque);
 				},
-				js_write_file: (cpath, cdata, length) => {
+				JUN_InteropWriteFile: async (cpath, cdata, length) => {
 					const path = MTY_StrToJS(cpath);
 
 					const buffer = new Uint8Array(length);
 					const data = new Uint8Array(mty_mem(), cdata, length);
 					buffer.set(data);
 
-					const new_file = { path: path, data: new Uint8Array(data) };
-					const file = files.find(file => file.path == path);
-					if (file)
-						file.data = data;
-					else
-						files.push(new_file)
+					const file = { path: path, data: new Uint8Array(data) };
+					await database.table('files').put(file);
 
-					database.table('files').put(new_file);
+					await refresh_files();
 				},
+				JUN_InteropRemoveFile: async (cpath) => {
+					const path = MTY_StrToJS(cpath);
+
+					await database.table('files').delete(path);
+
+					await refresh_files();
+				}
 			});
 
 			document.getElementById('loading').hidden = true;

@@ -16,6 +16,8 @@
 #define CENTER(margin) .pos_x = JUN_POSITION_CENTER, .margin_x = margin
 #define MIDDLE(margin) .pos_y = JUN_POSITION_MIDDLE, .margin_y = margin
 #define RADIUS(value)  .radius = value
+
+#define PREPARE(id, res)   prepare_asset(this, id, res_##res##_png, res_##res##_png_len)
 #define DRAW(id, res, ...) draw_input(this, id, res_##res##_png, res_##res##_png_len, & (struct jun_draw_desc) { __VA_ARGS__ } )
 
 enum jun_position {
@@ -36,7 +38,6 @@ struct jun_draw_desc {
 };
 
 struct jun_video_asset {
-	void *data;
 	uint32_t width;
 	uint32_t height;
 };
@@ -44,6 +45,8 @@ struct jun_video_asset {
 struct JUN_Video {
 	MTY_App *app;
 	MTY_Renderer *renderer;
+	MTY_Hash *assets;
+	uint32_t remaining_assets;
 
 	JUN_State *state;
 	JUN_Input *input;
@@ -80,9 +83,11 @@ JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input, MTY_AppFunc app_f
 
 	MTY_WindowCreate(this->app, "Junie", NULL, 0);
 	MTY_WindowSetGFX(this->app, 0, MTY_GFX_GL, true);
-	MTY_WindowMakeCurrent(this->app, 0, true);
+	MTY_Frame frame = MTY_MakeDefaultFrame(0, 0, 1000, 700, 0.75);
+	MTY_WindowSetFrame(this->app, 0, &frame);
 
 	this->renderer = MTY_RendererCreate();
+	this->assets = MTY_HashCreate(0);
 
 	return this;
 }
@@ -145,15 +150,41 @@ bool JUN_VideoSetPixelFormat(JUN_Video *this, enum retro_pixel_format *format)
 	}
 }
 
-static void draw_input(JUN_Video *this, uint8_t id, const void *data, size_t size, struct jun_draw_desc *desc) 
+static void asset_prepared(void *image, uint32_t width, uint32_t height, void *opaque)
 {
-    uint32_t image_width = 0, image_height = 0;
-    void *rgba = MTY_DecompressImage(data, size, &image_width, &image_height);
-    MTY_WindowSetUITexture(this->app, 0, id + 1, rgba, image_width, image_height);
-    MTY_Free(rgba);
+	JUN_Video *this = (JUN_Video *) ((uint64_t *) opaque)[0];
+	uint8_t id = (uint8_t) ((uint64_t *) opaque)[1];
+
+	struct jun_video_asset *asset = MTY_Alloc(1, sizeof(struct jun_video_asset));
+	asset->width  = width;
+	asset->height = height;
+
+	MTY_HashSetInt(this->assets, id, asset);
+    MTY_WindowSetUITexture(this->app, 0, id + 1, image, width, height);
+
+	this->remaining_assets--;
+
+	MTY_Free(image);
+	MTY_Free(opaque);
+}
+
+static void prepare_asset(JUN_Video *this, uint8_t id, const void *data, size_t size)
+{
+	uint64_t *opaque = MTY_Alloc(2, sizeof(uint64_t));
+	opaque[0] = (uint64_t) this;
+	opaque[1] = (uint64_t) id;
+
+	this->remaining_assets++;
+
+	MTY_DecompressImageAsync(data, size, asset_prepared, opaque);
+}
+
+static void draw_input(JUN_Video *this, uint8_t id, const void *data, size_t size, struct jun_draw_desc *desc)
+{
+	struct jun_video_asset *asset = MTY_HashGetInt(this->assets, id);
 
 	double pixel_ratio = JUN_InteropGetPixelRatio();
-	double aspect_ratio = (double) image_width / (double) image_height;
+	double aspect_ratio = (double) asset->width / (double) asset->height;
 
 	double reference_x =
 		desc->pos_x == JUN_POSITION_LEFT   ? 0 :
@@ -178,8 +209,8 @@ static void draw_input(JUN_Video *this, uint8_t id, const void *data, size_t siz
 		.y = y - height / 2.0,
 		.width = width,
 		.height = height,
-		.image_width =  image_width,
-		.image_height = image_height,
+		.image_width =  asset->width,
+		.image_height = asset->height,
 	};
 
 	JUN_StateSetMetrics(this->state, &texture);
@@ -222,6 +253,36 @@ static void update_ui_context(JUN_Video *this)
 
 	DRAW(RETRO_DEVICE_ID_JOYPAD_START,  joypad_start_select, CENTER(20),  BOTTOM(-40), RADIUS(20));
 	DRAW(RETRO_DEVICE_ID_JOYPAD_SELECT, joypad_start_select, CENTER(-20), BOTTOM(-40), RADIUS(20));
+}
+
+void JUN_VideoPrepareAssets(JUN_Video *this)
+{
+	PREPARE(MENU_TOGGLE_AUDIO,   menu_toggle_audio);
+	PREPARE(MENU_TOGGLE_GAMEPAD, menu_toggle_gamepad);
+	PREPARE(MENU_SAVE_STATE,     menu_save_state);
+	PREPARE(MENU_RESTORE_STATE,  menu_restore_state);
+	PREPARE(MENU_FAST_FORWARD,   menu_fast_forward);
+	PREPARE(MENU_EXIT,           menu_exit);
+
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_UP,    joypad_up);
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_DOWN,  joypad_down);
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_LEFT,  joypad_left);
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_RIGHT, joypad_right);
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_L,     joypad_l);
+
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_X, joypad_x);
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_B, joypad_b);
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_A, joypad_a);
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_Y, joypad_y);
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_R, joypad_r);
+
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_START,  joypad_start_select);
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_SELECT, joypad_start_select);
+}
+
+bool JUN_VideoAssetsReady(JUN_Video *this)
+{
+	return !this->remaining_assets;
 }
 
 void JUN_VideoUpdateContext(JUN_Video *this, unsigned width, unsigned height, size_t pitch)
@@ -276,6 +337,7 @@ void JUN_VideoDrawFrame(JUN_Video *this, const void *data)
 	description.format = this->pixel_format;
 	description.cropWidth = this->width;
 	description.cropHeight = this->height;
+	description.clear = true;
 
 	refresh_viewport_size(this, &description.viewWidth, &description.viewHeight);
 
@@ -326,7 +388,7 @@ void JUN_VideoPresent(JUN_Video *this)
 {
 	this->after_run = MTY_GetTime();
 
-	MTY_WindowPresent(this->app, 0, 1);
+	MTY_WindowPresent(this->app, 0);
 }
 
 void JUN_VideoDestroy(JUN_Video **video)
@@ -336,6 +398,7 @@ void JUN_VideoDestroy(JUN_Video **video)
 
 	JUN_Video *this = *video;
 
+	MTY_HashDestroy(&this->assets, MTY_Free);
 	MTY_RendererDestroy(&this->renderer);
 	MTY_AppDestroy(&this->app);
 

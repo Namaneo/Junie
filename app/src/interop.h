@@ -3,11 +3,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define PATH_SIZE 256
+typedef void (*JUN_InteropOnFile)(char *path, void *data, size_t size, void *opaque);
 
-void JUN_InteropTrace();
 double JUN_InteropGetPixelRatio();
-void JUN_InteropRefreshFiles();
 bool JUN_InteropReadDir(const char *path, size_t index, char **file);
-void *JUN_InteropReadFile(const char *path, size_t *length);
+void JUN_InteropReadFile(const char *path, JUN_InteropOnFile callback, void *opaque);
 void JUN_InteropWriteFile(const char *path, const void *data, size_t length);
+void JUN_InteropRemoveFile(const char *path);

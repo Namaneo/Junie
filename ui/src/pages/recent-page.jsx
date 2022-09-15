@@ -19,9 +19,9 @@ export const RecentPage = () => {
 		const system = systems.find(x => x.extension == file.name.split('.').pop());;
 
 		const data = await file.arrayBuffer();
-		const game = new Game(system, { 
+		const game = new Game(system, {
 			name: file.name.substring(0, file.name.lastIndexOf('.')),
-			rom: file.name 
+			rom: file.name
 		});
 
 		await Database.addGame(game, data);
@@ -38,11 +38,15 @@ export const RecentPage = () => {
 	const startGame = async (played) => {
 		window.frameElement.style.display = 'none';
 
-		await junie_start_game({
+		const game = {
 			system: played.system.name,
 			rom: played.game.rom,
 			settings: await Database.getSettings(),
-		});
+		};
+
+		await junie_prepare_game(game);
+		await junie_start_game();
+		await junie_clear_game();
 
 		window.frameElement.style.display = 'block';
 	}
