@@ -5,7 +5,6 @@
 
 app/include
 app/build
-app/**/*.a
 app/**/*.o
 app/**/*.tmp
 
