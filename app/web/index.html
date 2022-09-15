@@ -44,6 +44,23 @@
 		const database = new Dexie('Junie');
 		database.version(2).stores({ files: 'path' });
 
+		const version3 = database.version(3);
+		version3.upgrade(async transaction => {
+			const files = transaction.table('files').toCollection();
+			const json = files.filter(file => file.path.endsWith('.json'));
+			await json.modify(file => file.data = new TextEncoder().encode(JSON.stringify(file.data)));
+		});
+		version3.upgrade(async transaction => {
+			const files = transaction.table('files').toCollection();
+			const saves = files.filter(file => file.path.startsWith('/save/'));
+			await saves.modify(file => file.path = file.path.replace('/save/', '/saves/'));
+		});
+		version3.upgrade(async transaction => {
+			const files = transaction.table('files').toCollection();
+			const games = files.filter(file => file.path.startsWith('/games/'));
+			await games.delete();
+		});
+
 		let files = [];
 		const refresh_files = async () => {
 			files = await database.table('files').toCollection().primaryKeys();
