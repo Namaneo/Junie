@@ -1,6 +1,21 @@
-const cacheResource = async (resources) => {
+const resources = [
+	'/',
+	'/junie.wasm',
+	'/manifest.json',
+
+	'/deps/dexie.js',
+	'/deps/pwacompat.js',
+	'/deps/matoya.js',
+
+	'/res/icon.png',
+	'/res/favicon.png',
+	'/res/loading.png',
+];
+
+const cacheResources = async () => {
     const cache = await caches.open('v1');
     await cache.addAll(resources);
+    self.skipWaiting();
 };
 
 const fetchResource = async (request) => {
@@ -9,23 +24,10 @@ const fetchResource = async (request) => {
 }
 
 self.addEventListener('install', (event) => {
-    event.waitUntil(cacheResource([
-        '/',
-        '/junie.wasm',
-        '/manifest.json',
-
-        '/deps/dexie.js',
-        '/deps/pwacompat.js',
-        '/deps/matoya.js',
-
-        '/res/icon.png',
-        '/res/favicon.png',
-        '/res/loading.png',
-    ]));
-    self.skipWaiting();
+    event.waitUntil(cacheResources());
 });
 
-self.addEventListener('activate', (event) => {
+self.addEventListener('activate', () => {
     self.clients.claim();
 });
 
