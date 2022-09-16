@@ -1,5 +1,3 @@
-include Makefile.common
-
 TARGET := junie.wasm
 BUILD  := development
 
@@ -23,7 +21,6 @@ CORE_FILES := $(CORES:%=$(CORES_DIR)/lib%.a)
 SRC := \
 	$(SRC_DIR)/main.c \
 	$(SRC_DIR)/app.c \
-	$(SRC_DIR)/wasi.c \
 	$(SRC_DIR)/core.c \
 	$(SRC_DIR)/video.c \
 	$(SRC_DIR)/audio.c \
@@ -39,7 +36,8 @@ SRC := \
 CFLAGS  := -Wall -I$(SRC_DIR) -I$(DEPS_DIR) -I$(INC_DIR) -Ilib/retro/include
 LDFLAGS := \
 	-L$(LIB_DIR) -L$(CORES_DIR) $(LIBS:%=-l%) $(CORES:%=-l%) \
-	-Wl,--allow-undefined,--export-table,-error-limit=0
+	-fwasm-exceptions -sWASM -sINITIAL_MEMORY=1GB \
+	-sERROR_ON_UNDEFINED_SYMBOLS=0 -sWARN_ON_UNDEFINED_SYMBOLS=0
 
 ifeq ($(DEBUG), 1)
 SRC     += $(SRC_DIR)/debug.c
@@ -92,10 +90,10 @@ assets: prepare
 	@xxd -i $(RES_DIR)/joypad/start_select.png >> $(INC_DIR)/res_inputs.h
 
 $(LIB_DIR)/lib%.a:
-	@make -C $(LIB_DIR) -f Makefile.$*
+	@$(MAKE) -C $(LIB_DIR) -f Makefile.$*
 
 $(CORES_DIR)/lib%.a:
-	@make -C $(CORES_DIR) -f Makefile.$*
+	@$(MAKE) -C $(CORES_DIR) -f Makefile.$*
 
 clean:
 	rm -rf $(OBJ) $(INC_DIR) $(OUT_DIR) $(DIST_DIR)
@@ -103,7 +101,7 @@ clean:
 clean-all: $(LIBS:%=clean-lib-%) $(CORES:%=clean-core-%) clean
 
 clean-lib-%:
-	@make -C $(LIB_DIR) -f Makefile.$* clean
+	@$(MAKE) -C $(LIB_DIR) -f Makefile.$* clean
 
 clean-core-%:
-	@make -C $(CORES_DIR) -f Makefile.$* clean
+	@$(MAKE) -C $(CORES_DIR) -f Makefile.$* clean

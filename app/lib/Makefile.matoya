@@ -1,13 +1,15 @@
 TARGET := libmatoya.a
 
-include ../Makefile.common
+MAKEFLAGS += --no-print-directory
+QUIET := > /dev/null 2>&1
 
 all: $(TARGET)
 
 $(TARGET):
-	@make -C matoya WASM=1 CC="$(CC)" AR="$(AR)"
+	@echo Building $(TARGET)...
+	@$(MAKE) -C matoya WASM=1 CC="$(CC)" AR="$(AR)" $(QUIET)
 	@cp matoya/bin/web/wasm32/libmatoya.a .
 
 clean:
-	@make -C matoya clean
+	@$(MAKE) -C matoya clean $(QUIET)
 	@rm -f libmatoya.a

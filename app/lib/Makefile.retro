@@ -1,6 +1,7 @@
 TARGET := libretro.a
 
-include ../Makefile.common
+MAKEFLAGS += --no-print-directory
+QUIET := > /dev/null 2>&1
 
 SRC := \
 	retro/compat/compat_strl.c \
@@ -23,10 +24,15 @@ CFLAGS := \
 	-Iretro/include \
 	-D_WASI_EMULATED_MMAN
 
-all: $(TARGET)
+all:
+	@echo Building $(TARGET)...
+	@$(MAKE) -f Makefile.retro $(TARGET)
 
 $(TARGET): $(OBJ)
-	$(AR) rcs $@ $(OBJ)
+	@$(AR) rcs $@ $(OBJ)
+
+%.o: %.c
+	@$(CC) -c -o $@ $(CFLAGS) $^
 
 clean:
-	$(RM) $(OBJ) $(TARGET)
+	@$(RM) $(OBJ) $(TARGET)

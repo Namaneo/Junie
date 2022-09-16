@@ -148,7 +148,23 @@
 					await database.table('files').delete(path);
 
 					await refresh_files();
-				}
+				},
+
+				// Emscripten stubs
+				invoke_v: () => {},
+				invoke_vii: () => {},
+				invoke_ii: () => {},
+				_msync_js: () => {},
+				_emscripten_throw_longjmp: () => {},
+				__syscall_stat64: () => {},
+				__syscall_newfstatat: () => {},
+				__syscall_lstat64: () => {},
+				__syscall_ftruncate64: () => {},
+				__syscall__newselect: () => {},
+				__syscall_bind: () => {},
+				__syscall_recvfrom: () => {},
+				__syscall_sendto: () => {},
+				__syscall_socket: () => {},
 			});
 
 			document.getElementById('version').hidden = true;

@@ -7,16 +7,18 @@ UI_DIR  := ui
 APP_DIR := app
 OUT_DIR := build
 
+MAKEFLAGS += --no-print-directory
+
 all: prepare
 	@yarn --cwd $(UI_DIR) rollup -c --environment BUILD:production
-	@make -C $(APP_DIR) BUILD=$(BUILD)
+	@$(MAKE) -C $(APP_DIR) BUILD=$(BUILD)
 
 watch: prepare
 	@bash -c "trap '$(MAKE) watch-end' EXIT; $(MAKE) watch-start;"
 
 watch-start:
 	@screen -S $(TARGET) -d -m python3 -m http.server -d $(APP_DIR)/build/ 8000
-	@yarn --cwd $(UI_DIR) rollup -c --environment BUILD:development -w --watch.onEnd "make -C ../$(APP_DIR) DEBUG=1"
+	@yarn --cwd $(UI_DIR) rollup -c --environment BUILD:development -w --watch.onEnd "$(MAKE) -C ../$(APP_DIR) DEBUG=1"
 
 watch-end:
 	@screen -S $(TARGET) -X quit
@@ -32,4 +34,4 @@ clean:
 	@rm -rf $(OUT_DIR) $(APP_DIR)/$(OUT_DIR) $(UI_DIR)/$(OUT_DIR)
 
 clean-all: clean
-	@make -C app clean-all
+	@$(MAKE) -C app clean-all

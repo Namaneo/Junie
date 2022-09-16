@@ -1,15 +1,17 @@
 TARGET := libz.a
 
-include ../Makefile.common
+MAKEFLAGS += --no-print-directory
+QUIET := > /dev/null 2>&1
 
 all: $(TARGET)
 
 $(TARGET):
-	@cd zlib && ./configure
-	@make -C zlib $(TARGET) CC="$(CC)" AR="$(AR)" RANLIB="$(RANLIB)" ARFLAGS="rcs"
+	@echo Building $(TARGET)...
+	@cd zlib && ./configure $(QUIET)
+	@$(MAKE) -C zlib $(TARGET) CC="$(CC)" AR="$(AR)" RANLIB="$(RANLIB)" ARFLAGS="rcs" $(QUIET)
 	@cp zlib/$(TARGET) .
-	@make -C zlib distclean
+	@$(MAKE) -C zlib distclean $(QUIET)
 
 clean:
-	@make -C zlib distclean
+	@$(MAKE) -C zlib distclean $(QUIET)
 	@rm -f $(TARGET)

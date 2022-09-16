@@ -2,6 +2,6 @@ NAME   := mgba
 TARGET := lib$(NAME).a
 
 BUILD_DIR   := $(TARGET:lib%.a=%)
-BUILD_FLAGS := TARGET=../$(TARGET) HAVE_VFS_FD=0
+BUILD_FLAGS := TARGET=../$(TARGET)
 
 include Makefile.core
