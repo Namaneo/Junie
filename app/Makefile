@@ -36,8 +36,8 @@ SRC := \
 CFLAGS  := -Wall -I$(SRC_DIR) -I$(DEPS_DIR) -I$(INC_DIR) -Ilib/retro/include
 LDFLAGS := \
 	-L$(LIB_DIR) -L$(CORES_DIR) $(LIBS:%=-l%) $(CORES:%=-l%) \
-	-fwasm-exceptions -sWASM -sINITIAL_MEMORY=1GB \
-	-sERROR_ON_UNDEFINED_SYMBOLS=0 -sWARN_ON_UNDEFINED_SYMBOLS=0
+	-sERROR_ON_UNDEFINED_SYMBOLS=0 -sWARN_ON_UNDEFINED_SYMBOLS=0 \
+	-sWASM -sINITIAL_MEMORY=1GB
 
 ifeq ($(DEBUG), 1)
 SRC     += $(SRC_DIR)/debug.c
@@ -53,9 +53,11 @@ OBJ := $(SRC:.c=.o)
 
 MAKEFLAGS += --no-print-directory
 
-all: clean build
+all: clean deps build
 
-build: assets $(LIB_FILES) $(CORE_FILES)
+deps: $(LIB_FILES) $(CORE_FILES)
+
+build: deps assets
 	@echo Building $(TARGET)...
 	@$(MAKE) $(OUT_DIR)/$(TARGET)
 

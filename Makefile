@@ -11,6 +11,7 @@ QUIET := > /dev/null 2>&1
 MAKEFLAGS += --no-print-directory
 
 all: prepare
+	@$(MAKE) -C $(APP_DIR) BUILD=$(BUILD) deps
 	@echo Building index.html...
 	@yarn --cwd $(UI_DIR) rollup -c --environment BUILD:production $(QUIET)
 	@$(MAKE) -C $(APP_DIR) BUILD=$(BUILD)

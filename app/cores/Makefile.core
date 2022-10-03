@@ -9,7 +9,7 @@ all: $(TARGET)
 
 $(TARGET):
 	@echo Building $(TARGET)...
-	@CFLAGS="$(SYMBOLS)" CXXFLAGS="$(SYMBOLS) -fwasm-exceptions" $(MAKE) -C $(BUILD_DIR) -j 8 $(BUILD_FLAGS) $(QUIET)
+	@CFLAGS="$(SYMBOLS)" CXXFLAGS="$(SYMBOLS)" $(MAKE) -C $(BUILD_DIR) -j 8 $(BUILD_FLAGS) $(QUIET)
 
 clean:
 	@$(MAKE) -C $(BUILD_DIR) $(BUILD_FLAGS) platform=$(PLATFORM) clean $(QUIET)
