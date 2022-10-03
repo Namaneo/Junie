@@ -7,10 +7,12 @@ UI_DIR  := ui
 APP_DIR := app
 OUT_DIR := build
 
+QUIET := > /dev/null 2>&1
 MAKEFLAGS += --no-print-directory
 
 all: prepare
-	@yarn --cwd $(UI_DIR) rollup -c --environment BUILD:production
+	@echo Building index.html...
+	@yarn --cwd $(UI_DIR) rollup -c --environment BUILD:production $(QUIET)
 	@$(MAKE) -C $(APP_DIR) BUILD=$(BUILD)
 
 watch: prepare
@@ -24,11 +26,12 @@ watch-end:
 	@screen -S $(TARGET) -X quit
 
 prepare: clean
-	@mkdir $(OUT_DIR)
-	@yarn --cwd $(UI_DIR) install
+	@yarn --cwd $(UI_DIR) install $(QUIET)
 
 pack: all
-	@( cd $(APP_DIR)/$(OUT_DIR) && zip -r ../../$(OUT_DIR)/$(TARGET)-$(VERSION).zip `ls -I games` )
+	@echo Packing Junie $(BUILD)...
+	@mkdir $(OUT_DIR)
+	@( cd $(APP_DIR)/$(OUT_DIR) && zip -r ../../$(OUT_DIR)/$(TARGET)-$(VERSION).zip `ls -I games` $(QUIET) )
 
 clean:
 	@rm -rf $(OUT_DIR) $(APP_DIR)/$(OUT_DIR) $(UI_DIR)/$(OUT_DIR)

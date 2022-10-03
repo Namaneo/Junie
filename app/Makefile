@@ -53,10 +53,14 @@ OBJ := $(SRC:.c=.o)
 
 MAKEFLAGS += --no-print-directory
 
-all: clean $(OUT_DIR)/$(TARGET)
+all: clean build
 
-$(OUT_DIR)/$(TARGET): assets $(LIB_FILES) $(CORE_FILES) $(OBJ)
-	$(CXX) $(LDFLAGS) $(OBJ) -o $(OUT_DIR)/$(TARGET)
+build: assets $(LIB_FILES) $(CORE_FILES)
+	@echo Building $(TARGET)...
+	@$(MAKE) $(OUT_DIR)/$(TARGET)
+
+$(OUT_DIR)/$(TARGET): $(OBJ)
+	@$(CXX) $(LDFLAGS) $(OBJ) -o $(OUT_DIR)/$(TARGET)
 
 prepare:
 	@mkdir -p $(OUT_DIR)
@@ -96,7 +100,7 @@ $(CORES_DIR)/lib%.a:
 	@$(MAKE) -C $(CORES_DIR) -f Makefile.$*
 
 clean:
-	rm -rf $(OBJ) $(INC_DIR) $(OUT_DIR) $(DIST_DIR)
+	@rm -rf $(OBJ) $(INC_DIR) $(OUT_DIR) $(DIST_DIR)
 
 clean-all: $(LIBS:%=clean-lib-%) $(CORES:%=clean-core-%) clean
 
@@ -105,3 +109,6 @@ clean-lib-%:
 
 clean-core-%:
 	@$(MAKE) -C $(CORES_DIR) -f Makefile.$* clean
+
+%.o: %.c
+	@$(CC) -c -o $@ $(CFLAGS) $^
