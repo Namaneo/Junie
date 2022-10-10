@@ -10,8 +10,11 @@ $(TARGET):
 	@cd zlib && ./configure $(QUIET)
 	@$(MAKE) -C zlib $(TARGET) CC="$(CC)" AR="$(AR)" RANLIB="$(RANLIB)" ARFLAGS="rcs" $(QUIET)
 	@cp zlib/$(TARGET) .
-	@$(MAKE) -C zlib distclean $(QUIET)
+	@$(MAKE) -f $(lastword $(MAKEFILE_LIST)) zclean
 
-clean:
+zclean:
 	@$(MAKE) -C zlib distclean $(QUIET)
+	@rm -f zlib/*.wasm
+
+clean: zclean
 	@rm -f $(TARGET)
