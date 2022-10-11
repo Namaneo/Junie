@@ -47,17 +47,6 @@ games
 └── SNES
 ```
 
-# Side notes
-
-## Cores compatibility
-
-Well, when I wrote "wide range of cores", it might be a little exagerated...
-
-Junie is using the [wasi-sdk](https://github.com/WebAssembly/wasi-sdk) to build the cores, and it currently lacks features that cores sometimes use extensively.
-Right now, the most problematic ones are threading and JIT backend. Also, no OpenGL support at this time (this one is actually doable but probably requires a lot of work).
-
-That said, even after disabling all the above features when building the cores, performance is still acceptable for most cores. You will however have some trouble with 3D games on Nintendo DS (2D games run quite fine on recent hardware, as far as I've tested). Low-end mobile phones might also struggle with the SNES.
-
 # Build & Run
 
 ## Prerequisites
@@ -95,12 +84,6 @@ docker run \
     -v /path/to/games:/junie/games \
     namaneo/junie
 ```
-
-# Next steps
-
-- [ ] Synchronize save files for cross-browser play.
-- [ ] Build Junie for `libmatoya`'s supported platforms as well.
-- [ ] Multiplayer support, both locally and through WebRTC.
 
 # Credits
 
