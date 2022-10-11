@@ -150,21 +150,24 @@
 					await refresh_files();
 				},
 
+				// Exception stubs
+				invoke_i: (ptr) => MTY_CFunc(ptr)(),
+				invoke_v: (ptr) => MTY_CFunc(ptr)(),
+				invoke_vii: (ptr, x, y) => MTY_CFunc(ptr)(x, y),
+				invoke_ii: (ptr, x) => MTY_CFunc(ptr)(x),
+
 				// Emscripten stubs
-				invoke_v: () => {},
-				invoke_vii: () => {},
-				invoke_ii: () => {},
-				_msync_js: () => {},
-				_emscripten_throw_longjmp: () => {},
-				__syscall_stat64: () => {},
-				__syscall_newfstatat: () => {},
-				__syscall_lstat64: () => {},
-				__syscall_ftruncate64: () => {},
-				__syscall__newselect: () => {},
-				__syscall_bind: () => {},
-				__syscall_recvfrom: () => {},
-				__syscall_sendto: () => {},
-				__syscall_socket: () => {},
+				_msync_js: () => console.log('_msync_js'),
+				_emscripten_throw_longjmp: () => console.log('_emscripten_throw_longjmp'),
+				__syscall_stat64: () => console.log('__syscall_stat64'),
+				__syscall_newfstatat: () => console.log('__syscall_newfstatat'),
+				__syscall_lstat64: () => console.log('__syscall_lstat64'),
+				__syscall_ftruncate64: () => console.log('__syscall_ftruncate64'),
+				__syscall__newselect: () => console.log('__syscall__newselect'),
+				__syscall_bind: () => console.log('__syscall_bind'),
+				__syscall_recvfrom: () => console.log('__syscall_recvfrom'),
+				__syscall_sendto: () => console.log('__syscall_sendto'),
+				__syscall_socket: () => console.log('__syscall_socket'),
 			});
 
 			document.getElementById('version').hidden = true;

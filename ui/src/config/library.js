@@ -34,7 +34,7 @@ export default library = [
 		name: "Mega Drive",
 		full_name: "Sega - Mega Drive - Genesis",
 		core_name: "Genesis Plus GX",
-		extension: "bin",
+		extension: "md",
 		cover: cover_mega_drive,
 	},
 	{
