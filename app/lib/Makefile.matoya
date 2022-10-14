@@ -1,5 +1,14 @@
 TARGET := libmatoya.a
 
+FLAGS := CC="$(CC)" AR="$(AR)"
+
+ifdef EM_CONFIG
+BIN_PATH := matoya/bin/web/wasm32
+FLAGS += WASM=1
+else
+BIN_PATH := matoya/bin/linux/x86_64
+endif
+
 MAKEFLAGS += --no-print-directory
 QUIET := > /dev/null 2>&1
 
@@ -7,9 +16,9 @@ all: $(TARGET)
 
 $(TARGET):
 	@echo Building $(TARGET)...
-	@$(MAKE) -C matoya WASM=1 CC="$(CC)" AR="$(AR)" $(QUIET)
-	@cp matoya/bin/web/wasm32/libmatoya.a .
+	@$(MAKE) -C matoya $(FLAGS) $(QUIET)
+	@cp $(BIN_PATH)/$(TARGET) .
 
 clean:
-	@$(MAKE) -C matoya clean $(QUIET)
+	@$(MAKE) -C matoya $(FLAGS) clean $(QUIET)
 	@rm -f libmatoya.a

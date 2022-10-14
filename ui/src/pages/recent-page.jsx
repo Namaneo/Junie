@@ -36,8 +36,6 @@ export const RecentPage = () => {
 	}
 
 	const startGame = async (played) => {
-		window.frameElement.style.display = 'none';
-
 		const game = {
 			system: played.system.name,
 			rom: played.game.rom,
@@ -47,8 +45,6 @@ export const RecentPage = () => {
 		await junie_prepare_game(game);
 		await junie_start_game();
 		await junie_clear_game();
-
-		window.frameElement.style.display = 'block';
 	}
 
 	useIonViewWillEnter(async () => {

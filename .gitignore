@@ -1,10 +1,10 @@
 /.vscode
-/system
 /games
-/build
+/data
 
 app/include
 app/build
+app/**/*.a
 app/**/*.o
 app/**/*.tmp
 

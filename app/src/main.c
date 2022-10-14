@@ -122,6 +122,9 @@ static void on_prepare_file(char *path, void *data, size_t length, void *opaque)
 
 static void prepare_game(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, void *opaque)
 {
+	MTY_WebviewAutomaticSize(ctx, false);
+	MTY_WebviewSetSize(ctx, 0, 0);
+
 	JUN_MemoryDump();
 
 	char system[PATH_SIZE] = {0};
@@ -206,6 +209,9 @@ static void start_game(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, 
 static void clear_game(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, void *opaque)
 {
 	JUN_FilesystemClearAllFiles();
+
+	MTY_WebviewAutomaticSize(ctx, true);
+	MTY_WebviewSetSize(ctx, 0, 0);
 
 	MTY_WebviewInteropReturn(ctx, serial, true, NULL);
 }

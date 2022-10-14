@@ -1,4 +1,4 @@
-TARGET := junie.wasm
+TARGET := junie
 BUILD  := development
 
 SRC_DIR   := src
@@ -33,18 +33,28 @@ SRC := \
 	$(SRC_DIR)/filesystem.c \
 	$(SRC_DIR)/configuration.c
 
-CFLAGS  := -Wall -I$(SRC_DIR) -I$(DEPS_DIR) -I$(INC_DIR) -Ilib/retro/include
-LDFLAGS := \
-	-L$(LIB_DIR) -L$(CORES_DIR) $(LIBS:%=-l%) $(CORES:%=-l%) \
+CFLAGS := \
+	-Wall -DJUNIE_BUILD="\"$(BUILD)"\" \
+	-I$(SRC_DIR) -I$(DEPS_DIR) -I$(INC_DIR) -Ilib/retro/include
+LDFLAGS := -L$(CORES_DIR) $(CORES:%=-l%) -L$(LIB_DIR) $(LIBS:%=-l%)
+PREPARE := prepare
+
+ifdef EM_CONFIG
+TARGET := $(TARGET).wasm
+PREPARE += prepare-web
+LDFLAGS += \
 	-sERROR_ON_UNDEFINED_SYMBOLS=0 -sWARN_ON_UNDEFINED_SYMBOLS=0 \
 	-sSTANDALONE_WASM -sINITIAL_MEMORY=250MB
+else
+# LIBGL_ALWAYS_SOFTWARE=1 ./app/build/junie
+SRC += $(SRC_DIR)/interop.c
+LDFLAGS += $(shell pkg-config --libs x11 gtk+-3.0 webkit2gtk-4.0)
+endif
 
 ifeq ($(DEBUG), 1)
 SRC     += $(SRC_DIR)/debug.c
 CFLAGS  += -O0 -g -D DEBUG
-LDFLAGS += \
-	-Wl,--wrap=malloc,--wrap=calloc,--wrap=realloc,--wrap=free \
-	-Wl,--wrap=MTY_Alloc,--wrap=MTY_Realloc,--wrap=MTY_Free
+LDFLAGS += -Wl,--wrap=malloc,--wrap=calloc,--wrap=realloc,--wrap=free
 else
 CFLAGS += -O3
 endif
@@ -62,20 +72,21 @@ build: deps assets
 	@$(MAKE) $(OUT_DIR)/$(TARGET)
 
 $(OUT_DIR)/$(TARGET): $(OBJ)
-	@$(CXX) $(LDFLAGS) $(OBJ) -o $(OUT_DIR)/$(TARGET)
+	@$(CXX) -o $(OUT_DIR)/$(TARGET) $(OBJ) $(LDFLAGS)
 
 prepare:
-	@mkdir -p $(OUT_DIR)
+	@mkdir -p $(INC_DIR) $(OUT_DIR)
+	@cp $(LIB_DIR)/matoya/src/matoya.h $(INC_DIR)
+	@cp $(LIB_DIR)/retro/include/libretro.h $(INC_DIR)
+
+prepare-web:
 	@cp -R $(WEB_DIR)/* $(OUT_DIR)
 	@sed -i $(OUT_DIR)/index.html -e "s/const junie_build = '.*';/const junie_build = '$(BUILD)';/"
 	@cp $(LIB_DIR)/matoya/src/unix/web/matoya.js $(OUT_DIR)/deps
 	@(cd $(OUT_DIR) && ln -s ../../demo/games games)
 	@echo // $(BUILD) >> $(OUT_DIR)/service-worker.js
-	@mkdir -p $(INC_DIR)
-	@cp $(LIB_DIR)/matoya/src/matoya.h $(INC_DIR)
-	@cp $(LIB_DIR)/retro/include/libretro.h $(INC_DIR)
 
-assets: prepare
+assets: $(PREPARE)
 	@(cd ../ui/build && xxd -i index.html)     >  $(INC_DIR)/res_index.h
 	@xxd -i $(RES_DIR)/menu/toggle_audio.png   >  $(INC_DIR)/res_inputs.h
 	@xxd -i $(RES_DIR)/menu/toggle_gamepad.png >> $(INC_DIR)/res_inputs.h
