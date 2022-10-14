@@ -45,16 +45,33 @@ PREPARE += prepare-web
 LDFLAGS += \
 	-sERROR_ON_UNDEFINED_SYMBOLS=0 -sWARN_ON_UNDEFINED_SYMBOLS=0 \
 	-sSTANDALONE_WASM -sINITIAL_MEMORY=250MB
-else
-# LIBGL_ALWAYS_SOFTWARE=1 ./app/build/junie
+else 
 SRC += $(SRC_DIR)/interop.c
+ifeq ($(shell uname -s), Linux)
+# LIBGL_ALWAYS_SOFTWARE=1 ./app/build/junie
 LDFLAGS += $(shell pkg-config --libs x11 gtk+-3.0 webkit2gtk-4.0)
+else ifeq ($(shell uname -s), Darwin)
+LDFLAGS += \
+	-framework OpenGL \
+	-framework AppKit \
+	-framework Metal \
+	-framework IOKit \
+	-framework CoreVideo \
+	-framework Carbon \
+	-framework QuartzCore \
+	-framework Security \
+	-framework AudioToolbox \
+	-framework WebKit
+endif
 endif
 
 ifeq ($(DEBUG), 1)
+CFLAGS += -O0 -g
+ifneq ($(shell uname -s), Darwin)
+CFLAGS  += -D DEBUG
 SRC     += $(SRC_DIR)/debug.c
-CFLAGS  += -O0 -g -D DEBUG
 LDFLAGS += -Wl,--wrap=malloc,--wrap=calloc,--wrap=realloc,--wrap=free
+endif
 else
 CFLAGS += -O3
 endif
@@ -124,4 +141,4 @@ clean-core-%:
 	@$(MAKE) -C $(CORES_DIR) -f Makefile.$* clean
 
 %.o: %.c
-	@$(CC) -c -o $@ $(CFLAGS) $^
+	@$(CC) -c $(CFLAGS) -o $@ $^

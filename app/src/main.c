@@ -218,6 +218,9 @@ static void clear_game(MTY_Webview *ctx, uint32_t serial, const MTY_JSON *json, 
 
 static void event_func(const MTY_Event *event, void *opaque)
 {
+	if (!CTX.app)
+		return;
+
 	JUN_InputSetStatus(CTX.app->input, event);
 
 	JUN_PrintEvent(event);

@@ -34,7 +34,7 @@ static JUN_CoreType jun_core_get_type(const char *system)
 		MTY_HashSet(core_types, "Nintendo DS",      (void *) JUN_CORE_MELONDS);
 	}
 
-	return (JUN_CoreType) MTY_HashGet(core_types, system);
+	return (JUN_CoreType) (uint64_t) MTY_HashGet(core_types, system);
 }
 
 JUN_App *JUN_AppCreate(MTY_AppFunc app_func, MTY_EventFunc event_func)

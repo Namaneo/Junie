@@ -5,8 +5,10 @@ FLAGS := CC="$(CC)" AR="$(AR)"
 ifdef EM_CONFIG
 BIN_PATH := matoya/bin/web/wasm32
 FLAGS += WASM=1
-else
-BIN_PATH := matoya/bin/linux/x86_64
+else ifeq ($(shell uname -s), Linux)
+BIN_PATH := matoya/bin/linux/$(shell uname -m)
+else ifeq ($(shell uname -s), Darwin)
+BIN_PATH := matoya/bin/macosx/$(shell uname -m)
 endif
 
 MAKEFLAGS += --no-print-directory
