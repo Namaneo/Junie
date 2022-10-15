@@ -1,5 +1,19 @@
+TARGET := lib$(name).a
+
+BUILD_DIR   := $(TARGET:lib%.a=%)
+BUILD_FLAGS := TARGET=../$(TARGET)
+
+ifeq ($(name), genesis)
+BUILD_FLAGS += -f Makefile.libretro LIBRETRO_COMM_DIR=../../lib/retro
+endif
+
+ifeq ($(name), snes9x)
+BUILD_DIR   := $(TARGET:lib%.a=%)/libretro
+BUILD_FLAGS := TARGET=../../$(TARGET)
+endif
+
 SYM_FILE := $(shell pwd)/symbols.txt
-SYMBOLS  := $(shell cat symbols.txt | sed -e 's/\(.*\)/-D \1=$(NAME)_\1 /')
+SYMBOLS  := $(shell cat symbols.txt | sed -e 's/\(.*\)/-D \1=$(name)_\1 /')
 
 RANLIB ?= ranlib
 

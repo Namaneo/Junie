@@ -1,7 +1,0 @@
-NAME   := melonds
-TARGET := lib$(NAME).a
-
-BUILD_DIR   := $(TARGET:lib%.a=%)
-BUILD_FLAGS := TARGET=../$(TARGET)
-
-include Makefile.core

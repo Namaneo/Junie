@@ -45,7 +45,7 @@ PREPARE += prepare-web
 LDFLAGS += \
 	-sERROR_ON_UNDEFINED_SYMBOLS=0 -sWARN_ON_UNDEFINED_SYMBOLS=0 \
 	-sSTANDALONE_WASM -sINITIAL_MEMORY=250MB
-else 
+else
 SRC += $(SRC_DIR)/interop.c
 ifeq ($(shell uname -s), Linux)
 # LIBGL_ALWAYS_SOFTWARE=1 ./app/build/junie
@@ -124,10 +124,10 @@ assets: $(PREPARE)
 	@xxd -i $(RES_DIR)/joypad/start_select.png >> $(INC_DIR)/res_inputs.h
 
 $(LIB_DIR)/lib%.a:
-	@$(MAKE) -C $(LIB_DIR) -f Makefile.$*
+	@$(MAKE) -C $(LIB_DIR) name=$*
 
 $(CORES_DIR)/lib%.a:
-	@$(MAKE) -C $(CORES_DIR) -f Makefile.$*
+	@$(MAKE) -C $(CORES_DIR) name=$*
 
 clean:
 	@rm -rf $(OBJ) $(INC_DIR) $(OUT_DIR) $(DIST_DIR)
@@ -135,10 +135,10 @@ clean:
 clean-all: $(LIBS:%=clean-lib-%) $(CORES:%=clean-core-%) clean
 
 clean-lib-%:
-	@$(MAKE) -C $(LIB_DIR) -f Makefile.$* clean
+	@$(MAKE) -C $(LIB_DIR) name=$* clean
 
 clean-core-%:
-	@$(MAKE) -C $(CORES_DIR) -f Makefile.$* clean
+	@$(MAKE) -C $(CORES_DIR) name=$* clean
 
 %.o: %.c
 	@$(CC) -c $(CFLAGS) -o $@ $^

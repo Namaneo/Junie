@@ -1,7 +1,0 @@
-NAME   := snes9x
-TARGET := lib$(NAME).a
-
-BUILD_DIR   := $(TARGET:lib%.a=%)/libretro
-BUILD_FLAGS := TARGET=../../$(TARGET)
-
-include Makefile.core
