@@ -1,6 +1,7 @@
 /.vscode
 /games
 /data
+/build
 
 app/include
 app/build

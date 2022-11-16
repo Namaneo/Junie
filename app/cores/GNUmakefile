@@ -21,10 +21,6 @@ BUILD_FLAGS += -j 8 platform=emscripten STATIC_LINKING=1 STATIC_LINKING_LINK=1
 MAKEFLAGS += --no-print-directory
 QUIET := > /dev/null 2>&1
 
-ifeq ($(shell uname -s), Darwin)
-SYMBOLS += -DHAVE_STRLCPY -DHAVE_XLOCALE
-endif
-
 all: $(TARGET)
 
 $(TARGET):

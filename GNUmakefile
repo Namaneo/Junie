@@ -1,6 +1,6 @@
 TARGET  := junie
 
-VERSION := 0.5.2
+VERSION := 0.6.0
 BUILD   := $(VERSION)-$(shell date +%s)
 
 UI_DIR  := ui

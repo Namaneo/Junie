@@ -64,7 +64,7 @@ git submodule update --init
 
 ## Build
 
-First, install the following dependencies: **yarn**, **python**, **make**, **zip** and **xxd**. Then download the [wasi-sdk](https://github.com/WebAssembly/wasi-sdk) and extract it in your home directory.
+First, install the following dependencies: **yarn**, **python**, **make**, **zip** and **xxd**. Then follow the instructions to install and setup [emscripten](https://emscripten.org/docs/getting_started/downloads.html).
 
 ```bash
 make       # Build cores, libraries and the application

@@ -3,17 +3,8 @@ TARGET := lib$(name).a
 # libmatoya.a
 ifeq ($(name), matoya)
 
-FLAGS := CC="$(CC)" AR="$(AR)"
-
-ifdef EM_CONFIG
+FLAGS := WASM=1 CC="$(CC)" AR="$(AR)"
 BIN_PATH := matoya/bin/web/wasm32
-FLAGS += WASM=1
-else ifeq ($(shell uname -s), Linux)
-BIN_PATH := matoya/bin/linux/$(shell uname -m)
-else ifeq ($(shell uname -s), Darwin)
-BIN_PATH := matoya/bin/macosx/$(shell uname -m)
-endif
-
 MAKEFLAGS += --no-print-directory
 QUIET := > /dev/null 2>&1
 
