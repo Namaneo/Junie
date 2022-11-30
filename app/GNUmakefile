@@ -74,10 +74,10 @@ prepare:
 	@cp $(LIB_DIR)/retro/include/libretro.h $(INC_DIR)
 
 prepare-web:
+	@(cd $(OUT_DIR) && if [ -e ../../games ]; then ln -s ../../games games; fi;)
 	@cp -R $(WEB_DIR)/* $(OUT_DIR)
 	@sed -i $(OUT_DIR)/index.html -e "s/const junie_build = '.*';/const junie_build = '$(BUILD)';/"
 	@cp $(LIB_DIR)/matoya/src/unix/web/matoya.js $(OUT_DIR)/deps
-	@(cd $(OUT_DIR) && ln -s ../../demo/games games)
 	@echo // $(BUILD) >> $(OUT_DIR)/service-worker.js
 
 assets: $(PREPARE)

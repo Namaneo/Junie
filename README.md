@@ -8,12 +8,6 @@ Junie is a [Libretro](https://www.libretro.com/index.php/home-2/) frontend that 
 
 Junie currently runs on most recent browsers, but your experience will probably be better on Chrome and Safari.
 
-[Demo](https://junie.herokuapp.com/): here you can play
-[Indivisible](https://kasumi.itch.io/indivisible),
-[Celeste Classic](https://github.com/JeffRuLz/Celeste-Classic-GBA),
-[Daedeus](https://izma.itch.io/deadeus) and
-[GraviBots](https://retrosouls.itch.io/gravibots16bit).
-
 ***Disclaimer**: development is still in progress. I'll try my best not to break anything between releases (especially regarding local save files), but it's probably a good idea for you to backup your saves before each update.*
 
 ![](assets/showcase.png)
