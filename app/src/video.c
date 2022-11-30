@@ -51,9 +51,6 @@ struct JUN_Video {
 	JUN_State *state;
 	JUN_Input *input;
 
-	JUN_VideoCallback callback;
-	void *opaque;
-
 	MTY_ColorFormat pixel_format;
 	unsigned bits_per_pixel;
 
@@ -92,28 +89,9 @@ JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input, MTY_AppFunc app_f
 	return this;
 }
 
-static void jun_video_on_webview_created(MTY_Webview *ctx, void *opaque)
+MTY_App *JUN_VideoGetMTY(JUN_Video *this)
 {
-	JUN_Video *this = opaque;
-
-	this->callback(ctx, this->opaque);
-
-	char *index = MTY_Alloc(index_html_len + 1, 1);
-	memcpy(index, index_html, index_html_len);
-
-	MTY_WebviewNavigateHTML(ctx, index);
-
-	MTY_Free(index);
-}
-
-void JUN_VideoCreateUI(JUN_Video *this, JUN_VideoCallback callback, void *opaque)
-{
-	this->callback = callback;
-	this->opaque = opaque;
-
-	MTY_Webview *webview = MTY_WindowCreateWebview(this->app, 0);
-	MTY_WebviewAutomaticSize(webview, true);
-	MTY_WebviewShow(webview, jun_video_on_webview_created);
+	return this->app;
 }
 
 static void refresh_viewport_size(JUN_Video *this, uint32_t *view_width, uint32_t *view_height)
@@ -127,6 +105,10 @@ static void refresh_viewport_size(JUN_Video *this, uint32_t *view_width, uint32_
 
 void JUN_VideoStart(JUN_Video *this)
 {
+	char *index = MTY_Alloc(index_html_len + 1, 1);
+	memcpy(index, index_html, index_html_len);
+
+	MTY_WebviewCreate(this->app, 0, index, false);
 	MTY_AppRun(this->app);
 }
 

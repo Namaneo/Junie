@@ -1,6 +1,7 @@
 import { IonButton, IonButtons, IonContent, IonHeader, IonItem, IonLabel, IonList, IonModal, IonPage, IonSelect, IonSelectOption, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
 import { useState } from 'react';
 import * as Database from '../services/database';
+import Junie from '../services/interop';
 
 const pascalify = (str) => {
     return str.replace(/([A-Z])([A-Z]+)/g, (_, c1, c2) => {
@@ -131,10 +132,10 @@ export const SettingsPage = () => {
     }
 
 	useIonViewWillEnter(async () => {
-		setVersion(await junie_get_version());
-		setLanguages(await junie_get_languages());
-		setBindings(await junie_get_bindings());
-		setOptions(await junie_get_settings());
+		setVersion(await Junie.get_version());
+		setLanguages(await Junie.get_languages());
+		setBindings(await Junie.get_bindings());
+		setOptions(await Junie.get_settings());
 		setSettings(await Database.getSettings());
 	});
 

@@ -1,12 +1,12 @@
-// import { encode, decode } from "@msgpack/msgpack/dist";
 import { Save } from '../entities/save';
 import { Cheat } from '../entities/cheat';
 import { Game } from '../entities/game';
 import library from '../config/library'
 import * as Helpers from '../services/helpers';
+import Junie from '../services/interop';
 
 async function read(path) {
-	const file = await junie_read_file({ path });
+	const file = await Junie.read_file({ path });
 
 	if (file)
 		file.data = atob(file.data);
@@ -33,7 +33,7 @@ async function read_buffer(path) {
 }
 
 async function list(path, suffix, func) {
-	let paths = await junie_list_files({ path });
+	let paths = await Junie.list_files({ path });
 	if (suffix)
 		paths = paths.filter(x => x.endsWith(suffix));
 
@@ -54,7 +54,7 @@ async function list_buffer(path, suffix) {
 
 async function write(path, data) {
 	data = btoa(data);
-	await junie_write_file({ path, data });
+	await Junie.write_file({ path, data });
 	await new Promise(r => setTimeout(r, 250));
 }
 
@@ -69,7 +69,7 @@ async function write_buffer(path, data) {
 }
 
 async function remove(path) {
-	await junie_remove_file({ path });
+	await Junie.remove_file({ path });
 	await new Promise(r => setTimeout(r, 250));
 }
 

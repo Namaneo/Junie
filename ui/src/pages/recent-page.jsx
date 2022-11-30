@@ -4,7 +4,8 @@ import { add, playOutline } from 'ionicons/icons';
 import { Game } from '../entities/game';
 import { JunImg } from '../components/jun-img';
 import * as Requests from '../services/requests';
-import * as Database from "../services/database";
+import * as Database from '../services/database';
+import Junie from '../services/interop';
 
 export const RecentPage = () => {
 
@@ -42,9 +43,9 @@ export const RecentPage = () => {
 			settings: await Database.getSettings(),
 		};
 
-		await junie_prepare_game(game);
-		await junie_start_game();
-		await junie_clear_game();
+		await Junie.prepare_game(game);
+		await Junie.start_game();
+		await Junie.clear_game();
 	}
 
 	useIonViewWillEnter(async () => {

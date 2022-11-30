@@ -4,10 +4,8 @@
 
 typedef struct JUN_Video JUN_Video;
 
-typedef void (*JUN_VideoCallback)(MTY_Webview *webview, void *opaque);
-
 JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input, MTY_AppFunc app_func, MTY_EventFunc event_func);
-void JUN_VideoCreateUI(JUN_Video *this, JUN_VideoCallback callback, void *opaque);
+MTY_App *JUN_VideoGetMTY(JUN_Video *this);
 void JUN_VideoStart(JUN_Video *this);
 bool JUN_VideoSetPixelFormat(JUN_Video *this, enum retro_pixel_format *format);
 void JUN_VideoPrepareAssets(JUN_Video *this);

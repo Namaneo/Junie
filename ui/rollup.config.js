@@ -57,7 +57,7 @@ export default {
             'index.html',
             'src/**',
             'res/**',
-            '../app/Makefile*',
+            '../app/GNUmakefile*',
             '../app/src/*.c',
             '../app/src/*.h',
             '../app/res/**',

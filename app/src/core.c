@@ -122,7 +122,7 @@ static bool jun_core_environment(struct jun_core_sym *sym, unsigned cmd, void *d
 	if (command != RETRO_ENVIRONMENT_SET_VARIABLES)
 		return false;
 
-	sym->configuration = MTY_JSONArrayCreate(0);
+	sym->configuration = MTY_JSONArrayCreate(100);
 
 	const struct retro_variable *variables = data;
 
@@ -146,7 +146,7 @@ static bool jun_core_environment(struct jun_core_sym *sym, unsigned cmd, void *d
 		MTY_JSONObjSetString(item, "default", element);
 
 		uint32_t i_option = 0;
-		MTY_JSON *options = MTY_JSONArrayCreate(0);
+		MTY_JSON *options = MTY_JSONArrayCreate(100);
 		while (element) {
 			MTY_JSONArraySetString(options, i_option, element);
 			element = MTY_Strtok(NULL, "|", &ptr);
@@ -261,7 +261,8 @@ bool JUN_CoreStartGame(JUN_Core *this)
 
 	this->initialized = this->sym->retro_load_game(&this->game);
 
-	this->sym->retro_get_system_av_info(&this->av);
+	if (this->initialized)
+		this->sym->retro_get_system_av_info(&this->av);
 
 	return this->initialized;
 }
@@ -346,8 +347,8 @@ void JUN_CoreSetCheats(JUN_Core *this)
 		if (!enabled)
 			continue;
 
-		uint32_t order = 0;
-		MTY_JSONObjGetUInt(json, "order", &order);
+		int32_t order = 0;
+		MTY_JSONObjGetInt(json, "order", &order);
 
 		char value[1024] = {0};
 		MTY_JSONObjGetString(json, "value", value, 1024);

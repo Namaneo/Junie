@@ -260,7 +260,7 @@ MTY_JSON *JUN_EnumsGetAll(JUN_EnumType type)
 	size_t size = 0;
 	const struct jun_enum_item *values = get_values(type, &size);
 
-	MTY_JSON *json = MTY_JSONArrayCreate(0);
+	MTY_JSON *json = MTY_JSONArrayCreate(100);
 
 	for (size_t i = 0; i < size; ++i)
 		if (values[i].name)
