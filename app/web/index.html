@@ -4,23 +4,25 @@
 <head>
 	<title>Junie</title>
 
-	<meta charset="utf-8" />
-	<meta name="color-scheme" content="light dark" />
-	<meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-	<meta http-equiv="Content-Security-Policy" content="default-src * data: 'unsafe-eval' 'unsafe-inline' blob:">
+	<meta charset="utf-8">
+	<meta name="color-scheme" content="light dark">
+	<meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-	<link rel="manifest" href="manifest.json" />
+	<link rel="manifest" href="/manifest.json">
+	<link rel="icon" href="/res/favicon.png">
+	<link rel="apple-touch-icon" href="/res/icon-apple.png">
 
-	<script src="deps/pwacompat.js"></script>
-	<script src="deps/dexie.js"></script>
-
-	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+	<meta name="theme-color" content="#000000">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
 </head>
 
 <body>
 	<div id="version" style="text-align: right; margin: 16px; font-family: monospace; font-size: 18px;"></div>
-	<img id="loading" src="res/loading.png" style="position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: contain; z-index: -1;" />
-	<script src="deps/matoya.js"></script>
+	<img id="loading" src="/res/loading.png" style="position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: contain; z-index: -1;" />
+
+	<script src="/deps/dexie.js"></script>
+	<script src="/matoya.js"></script>
 
 	<script>
 		const registerServiceWorker = async () => {

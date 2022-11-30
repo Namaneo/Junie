@@ -2,12 +2,13 @@ const resources = [
 	'/',
 	'/junie.wasm',
 	'/manifest.json',
+	'/matoya.js',
 
 	'/deps/dexie.js',
-	'/deps/pwacompat.js',
-	'/deps/matoya.js',
 
-	'/res/icon.png',
+	'/res/icon-192.png',
+	'/res/icon-512.png',
+	'/res/icon-apple.png',
 	'/res/favicon.png',
 	'/res/loading.png',
 ];
