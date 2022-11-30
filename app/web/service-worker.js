@@ -4,8 +4,6 @@ const resources = [
 	'/manifest.json',
 	'/matoya.js',
 
-	'/deps/dexie.js',
-
 	'/res/icon-192.png',
 	'/res/icon-512.png',
 	'/res/icon-apple.png',

@@ -36,16 +36,35 @@ export const RecentPage = () => {
 		setPlayed(await Database.getGames());
 	}
 
+	const sendFiles = (files) => new Promise(resolve => {
+		const callback = (e) => {
+			window.removeEventListener('files', callback);
+			resolve(e.detail);
+		};
+
+		window.addEventListener('files', callback);
+		window.parent.dispatchEvent(new CustomEvent('files', { detail: files }));
+	});
+
 	const startGame = async (played) => {
-		const game = {
+		const info = {
 			system: played.system.name,
 			rom: played.game.rom,
 			settings: await Database.getSettings(),
 		};
 
-		await Junie.prepare_game(game);
+		const files = []
+		const paths = await Junie.prepare_core(info);
+
+		// TODO Too much save and system
+		files.push(await Database.read(paths.game));
+		files.push(...await Database.list_buffer(paths.save));
+		files.push(...await Database.list_buffer(paths.system));
+		files.push(...await Database.list_buffer(paths.cheat));
+
+		await sendFiles(files);
+
 		await Junie.start_game();
-		await Junie.clear_game();
 	}
 
 	useIonViewWillEnter(async () => {

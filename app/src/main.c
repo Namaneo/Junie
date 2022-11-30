@@ -18,7 +18,6 @@ typedef void (*webview_func)(const char *id, const MTY_JSON *data);
 static struct {
 	JUN_App *app;
 	MTY_Hash *interop;
-	uint32_t file_count;
 	char *id;
 } CTX;
 
@@ -96,8 +95,10 @@ static bool app_func(void *opaque)
 		if (JUN_StateHasAudio(CTX.app->state))
 			JUN_StateToggleAudio(CTX.app->state);
 		JUN_StateToggleExit(CTX.app->state);
+		JUN_FilesystemClearAllFiles();
 		JUN_MemoryDump();
 
+		MTY_WebviewShow(CTX.app->mty, 0, true);
 		webview_send_event(CTX.id, NULL);
 		MTY_Free(CTX.id);
 		CTX.id = NULL;
@@ -119,23 +120,7 @@ static void get_version(const char *id, const MTY_JSON *json)
 	MTY_Free(version);
 }
 
-static void on_prepare_file(char *path, void *data, size_t length, void *opaque)
-{
-	char *id = opaque;
-
-	JUN_FilesystemSaveFile(path, data, length, false);
-
-	CTX.file_count--;
-
-	if (!CTX.file_count)
-		webview_send_event(id, NULL);
-
-	MTY_Free(path);
-	MTY_Free(data);
-	MTY_Free(id);
-}
-
-static void prepare_game(const char *id, const MTY_JSON *json)
+static void prepare_core(const char *id, const MTY_JSON *json)
 {
 	MTY_WebviewShow(CTX.app->mty, 0, false);
 
@@ -151,45 +136,27 @@ static void prepare_game(const char *id, const MTY_JSON *json)
 
 	JUN_AppLoadCore(CTX.app, system, rom, settings);
 
-	const char *game_path   = JUN_AppGetPath(CTX.app, JUN_FILE_GAME);
-	const char *save_path   = JUN_AppGetPath(CTX.app, JUN_FOLDER_SAVES);
-	const char *system_path = JUN_AppGetPath(CTX.app, JUN_FOLDER_SYSTEM);
-	const char *cheat_path  = JUN_AppGetPath(CTX.app, JUN_FOLDER_CHEATS);
+	MTY_JSON *result = MTY_JSONObjCreate();
+	MTY_JSONObjSetString(result, "game",   JUN_AppGetPath(CTX.app, JUN_FILE_GAME));
+	MTY_JSONObjSetString(result, "save",   JUN_AppGetPath(CTX.app, JUN_FOLDER_SAVES));
+	MTY_JSONObjSetString(result, "system", JUN_AppGetPath(CTX.app, JUN_FOLDER_SYSTEM));
+	MTY_JSONObjSetString(result, "cheat",  JUN_AppGetPath(CTX.app, JUN_FOLDER_CHEATS));
 
-	MTY_List *files = MTY_ListCreate();
+	webview_send_event(id, result);
 
-	char *file = NULL;
-	CTX.file_count = 0;
-
-	MTY_ListAppend(files, MTY_Strdup(game_path));
-	CTX.file_count++;
-
-	for (size_t index = 0; JUN_InteropReadDir(save_path, index, &file); index++) {
-		MTY_ListAppend(files, file);
-		CTX.file_count++;
-	}
-
-	for (size_t index = 0; JUN_InteropReadDir(system_path, index, &file); index++) {
-		MTY_ListAppend(files, file);
-		CTX.file_count++;
-	}
-
-	for (size_t index = 0; JUN_InteropReadDir(cheat_path, index, &file); index++) {
-		MTY_ListAppend(files, file);
-		CTX.file_count++;
-	}
-
-	MTY_ListNode *node = MTY_ListGetFirst(files);
-	while (node) {
-		JUN_InteropReadFile(node->value, on_prepare_file, MTY_Strdup(id));
-		node = node->next;
-	}
-
-	MTY_ListDestroy(&files, MTY_Free);
+	MTY_JSONDestroy(&result);
 }
 
 static void start_game(const char *id, const MTY_JSON *json)
 {
+	char *path = NULL;
+	size_t length = 0;
+
+	for (size_t index = 0; JUN_InteropReadDir("/", index, &path); index++) {
+		void *data = JUN_InteropReadFile(path, &length);
+		JUN_FilesystemSaveFile(path, data, length, false);
+	}
+
 	JUN_CoreSetCallbacks(CTX.app->core, & (JUN_CoreCallbacks) {
 		environment,
 		video_refresh,
@@ -210,19 +177,9 @@ static void start_game(const char *id, const MTY_JSON *json)
 	JUN_AudioPrepare(CTX.app->audio, sample_rate, frames_per_second);
 
 	JUN_CoreRestoreMemories(CTX.app->core);
-
 	JUN_CoreSetCheats(CTX.app->core);
 
 	CTX.id = MTY_Strdup(id);
-}
-
-static void clear_game(const char *id, const MTY_JSON *json)
-{
-	JUN_FilesystemClearAllFiles();
-
-	MTY_WebviewShow(CTX.app->mty, 0, true);
-
-	webview_send_event(id, NULL);
 }
 
 static void get_languages(const char *id, const MTY_JSON *json)
@@ -285,14 +242,11 @@ static MTY_Hash *create_bindings()
 	MTY_Hash *interop = MTY_HashCreate(0);
 
 	MTY_HashSet(interop, "get_version", get_version);
-
-	MTY_HashSet(interop, "prepare_game", prepare_game);
-	MTY_HashSet(interop, "start_game", start_game);
-	MTY_HashSet(interop, "clear_game", clear_game);
-
 	MTY_HashSet(interop, "get_languages", get_languages);
 	MTY_HashSet(interop, "get_bindings", get_bindings);
 	MTY_HashSet(interop, "get_settings", get_settings);
+	MTY_HashSet(interop, "prepare_core", prepare_core);
+	MTY_HashSet(interop, "start_game", start_game);
 
 	return interop;
 }

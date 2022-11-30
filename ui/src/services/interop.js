@@ -14,10 +14,9 @@ function event(type, data) {
 
 export default {
 	get_version:   (data) => event('get_version',   data),
-	prepare_game:  (data) => event('prepare_game',  data),
-	start_game:    (data) => event('start_game',    data),
-	clear_game:    (data) => event('clear_game',    data),
 	get_languages: (data) => event('get_languages', data),
 	get_bindings:  (data) => event('get_bindings',  data),
 	get_settings:  (data) => event('get_settings',  data),
+	prepare_core:  (data) => event('prepare_core',  data),
+	start_game:    (data) => event('start_game',    data),
 };
