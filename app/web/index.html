@@ -118,7 +118,7 @@
 
 					const file = { path: path, data: new Uint8Array(data) };
 
-					// TODO should go to the webview
+					window.frames[0].dispatchEvent(new CustomEvent('save', { detail: file }));
 				},
 
 				// Exception stubs

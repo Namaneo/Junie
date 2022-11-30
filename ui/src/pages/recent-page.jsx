@@ -61,10 +61,14 @@ export const RecentPage = () => {
 		files.push(...await Database.list_buffer(paths.save));
 		files.push(...await Database.list_buffer(paths.system));
 		files.push(...await Database.list_buffer(paths.cheat));
-
 		await sendFiles(files);
 
+		const saveFile = (e) => Database.write(e.detail.path, e.detail.data);
+		window.addEventListener('save', saveFile);
+
 		await Junie.start_game();
+
+		window.removeEventListener('save', saveFile);
 	}
 
 	useIonViewWillEnter(async () => {
