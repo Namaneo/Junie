@@ -1,20 +1,20 @@
+import Dexie from 'dexie';
 import { Save } from '../entities/save';
 import { Cheat } from '../entities/cheat';
 import { Game } from '../entities/game';
 import library from '../config/library'
-import * as Helpers from '../services/helpers';
-import Junie from '../services/interop';
 
-async function read(path) {
-	const file = await Junie.read_file({ path });
-
-	if (file)
-		file.data = atob(file.data);
-
-	return file;
+function filesystem() {
+	const database = new Dexie('Junie');
+	database.version(1).stores({ files: 'path' });
+	return database.table('files');
 }
 
-async function read_json(path) {
+export async function read(path) {
+	return await filesystem().get(path);
+}
+
+export async function read_json(path) {
 	const file = await read(path);
 
 	if (file)
@@ -23,17 +23,10 @@ async function read_json(path) {
 	return file;
 }
 
-async function read_buffer(path) {
-	const file = await read(path);
+export async function list(path, suffix, func) {
+	let paths = await filesystem().toCollection().primaryKeys();
+	paths = paths.filter(x => x.startsWith(path));
 
-	if (file)
-		file.data = Helpers.To.ArrayBuffer(file.data);
-
-	return file;
-}
-
-async function list(path, suffix, func) {
-	let paths = await Junie.list_files({ path });
 	if (suffix)
 		paths = paths.filter(x => x.endsWith(suffix));
 
@@ -44,33 +37,25 @@ async function list(path, suffix, func) {
 	return files;
 }
 
-async function list_json(path, suffix) {
+export async function list_json(path, suffix) {
 	return await list(path, suffix, path => read_json(path));
 }
 
-async function list_buffer(path, suffix) {
-	return await list(path, suffix, path => read_buffer(path));
+export async function list_buffer(path, suffix) {
+	return await list(path, suffix, path => read(path));
 }
 
-async function write(path, data) {
-	data = btoa(data);
-	await Junie.write_file({ path, data });
-	await new Promise(r => setTimeout(r, 250));
+export async function write(path, data) {
+	await filesystem().put({ path, data });
 }
 
-async function write_json(path, data) {
+export async function write_json(path, data) {
 	data = JSON.stringify(data);
 	await write(path, data);
 }
 
-async function write_buffer(path, data) {
-	data = Helpers.From.Uint8Array(data);
-	await write(path, data);
-}
-
-async function remove(path) {
-	await Junie.remove_file({ path });
-	await new Promise(r => setTimeout(r, 250));
+export async function remove(path) {
+	await filesystem().delete(path);
 }
 
 export async function getLibrary(force) {
@@ -117,7 +102,7 @@ export async function getSaves() {
 
 export async function updateSave(save) {
 	for (const file of save.files)
-		await write_buffer(file.path, file.data);
+		await write(file.path, file.data);
 }
 
 export async function fixSave(save, system, game) {
@@ -128,7 +113,7 @@ export async function fixSave(save, system, game) {
 		file.path = file.path.replace(save.system, system.name).replace(save.game, filename);
 
 		await remove(key);
-		await write_buffer(file.path, file.data);
+		await write(file.path, file.data);
 	}
 }
 
@@ -172,7 +157,7 @@ export async function addGame(game, data) {
 	delete file.meta.system.cover;
 	delete file.meta.system.games;
 
-	await write_buffer(file.path, file.data);
+	await write(file.path, file.data);
 	await write_json(file.path + '.meta', file.meta);
 }
 

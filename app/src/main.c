@@ -123,7 +123,7 @@ static void on_prepare_file(char *path, void *data, size_t length, void *opaque)
 {
 	char *id = opaque;
 
-	JUN_FilesystemSaveFile(path, data, length);
+	JUN_FilesystemSaveFile(path, data, length, false);
 
 	CTX.file_count--;
 
@@ -253,82 +253,6 @@ static void get_settings(const char *id, const MTY_JSON *json)
 	webview_send_event(id, JUN_CoreGetDefaultConfiguration());
 }
 
-static void list_files(const char *id, const MTY_JSON *json)
-{
-	const char *path = MTY_JSONObjGetStringPtr(json, "path");
-
-	MTY_JSON *result = MTY_JSONArrayCreate(100);
-
-	char *file = NULL;
-	for (size_t index = 0; JUN_InteropReadDir(path, index, &file); index++) {
-		MTY_JSONArraySetString(result, index, file);
-		MTY_Free(file);
-	}
-
-	webview_send_event(id, result);
-
-	MTY_JSONDestroy(&result);
-}
-
-static void on_read_file(char *path, void *data_raw, size_t data_raw_len, void *opaque)
-{
-	char *id = opaque;
-
-	if (!data_raw) {
-		webview_send_event(id, NULL);
-		MTY_Free(id);
-		return;
-	}
-
-	int32_t data_len = 0;
-	char *data = base64(data_raw, data_raw_len, &data_len);
-
-	MTY_JSON *result = MTY_JSONObjCreate();
-
-	MTY_JSONObjSetString(result, "path", path);
-	MTY_JSONObjSetString(result, "data", data);
-
-	webview_send_event(id, result);
-
-	MTY_JSONDestroy(&result);
-	MTY_Free(data);
-	MTY_Free(data_raw);
-
-	MTY_Free(path);
-	MTY_Free(opaque);
-	MTY_Free(id);
-}
-
-static void read_file(const char *id, const MTY_JSON *json)
-{
-	const char *path = MTY_JSONObjGetStringPtr(json, "path");
-
-	JUN_InteropReadFile(path, on_read_file, MTY_Strdup(id));
-}
-
-static void write_file(const char *id, const MTY_JSON *json)
-{
-	const char *path = MTY_JSONObjGetStringPtr(json, "path");
-	const char *data = MTY_JSONObjGetStringPtr(json, "data");
-
-	int32_t data_raw_len = 0;
-	void *data_raw = unbase64(data, strlen(data), &data_raw_len);
-	JUN_InteropWriteFile(path, data_raw, data_raw_len);
-
-	webview_send_event(id, NULL);
-
-	MTY_Free(data_raw);
-}
-
-static void remove_file(const char *id, const MTY_JSON *json)
-{
-	const char *path = MTY_JSONObjGetStringPtr(json, "path");
-
-	JUN_InteropRemoveFile(path);
-
-	webview_send_event(id, NULL);
-}
-
 static void event_func(const MTY_Event *event, void *opaque)
 {
 	if (!CTX.app)
@@ -369,11 +293,6 @@ static MTY_Hash *create_bindings()
 	MTY_HashSet(interop, "get_languages", get_languages);
 	MTY_HashSet(interop, "get_bindings", get_bindings);
 	MTY_HashSet(interop, "get_settings", get_settings);
-
-	MTY_HashSet(interop, "list_files", list_files);
-	MTY_HashSet(interop, "read_file", read_file);
-	MTY_HashSet(interop, "write_file", write_file);
-	MTY_HashSet(interop, "remove_file", remove_file);
 
 	return interop;
 }

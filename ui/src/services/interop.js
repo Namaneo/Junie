@@ -4,7 +4,6 @@ function event(type, data) {
 
 		const callback = e => {
 			window.removeEventListener(id, callback);
-			console.log(e.detail);
 			resolve(e.detail);
 		};
 
@@ -21,8 +20,4 @@ export default {
 	get_languages: (data) => event('get_languages', data),
 	get_bindings:  (data) => event('get_bindings',  data),
 	get_settings:  (data) => event('get_settings',  data),
-	list_files:    (data) => event('list_files',    data),
-	read_file:     (data) => event('read_file',     data),
-	write_file:    (data) => event('write_file',    data),
-	remove_file:   (data) => event('remove_file',   data),
 };

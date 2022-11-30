@@ -288,7 +288,7 @@ void save_memory(JUN_Core *this, uint32_t type, const char *path)
 	if (!size)
 		return;
 
-	JUN_FilesystemSaveFile(path, buffer, size);
+	JUN_FilesystemSaveFile(path, buffer, size, true);
 }
 
 void JUN_CoreSaveMemories(JUN_Core *this)
@@ -377,7 +377,7 @@ void JUN_CoreSaveState(JUN_Core *this)
 	this->sym->retro_serialize(data, size);
 
 	const char *state_path = MTY_HashGetInt(this->paths, JUN_FILE_STATE);
-	JUN_FilesystemSaveFile(state_path, data, size);
+	JUN_FilesystemSaveFile(state_path, data, size, true);
 
 	MTY_Free(data);
 }
