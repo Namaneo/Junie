@@ -110,7 +110,7 @@ export async function fixSave(save, system, game) {
 		const key = file.path;
 
 		const filename = game.rom?.replace(`.${system.extension}`, '');
-		file.path = file.path.replace(save.system, system.name).replace(save.game, filename);
+		file.path = file.path.replace(save.system, system.name).replaceAll(save.game, filename);
 
 		await remove(key);
 		await write(file.path, file.data);

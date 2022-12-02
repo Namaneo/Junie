@@ -10,7 +10,7 @@ export class Save {
 
 		this.system = this.match(1);
 		this.game = this.match(2);
-		this.extension = this.match(3);
+		this.extension = this.match(4);
 	}
 
 	isMapped(systems) {
@@ -26,7 +26,7 @@ export class Save {
 	}
 
 	match(index) {
-		const matches = this.files[0].path.match(/\/saves\/(.*)\/(.*)\.(.*)/);
+		const matches = this.files[0].path.match(/\/saves\/(.*)\/(.*)\/(.*)\.(.*)/);
 
 		if (!matches)
 			return undefined;
