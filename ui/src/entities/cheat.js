@@ -23,7 +23,8 @@ export class Cheat {
 	}
 
 	path() {
-		return `/cheats/${this.system}/${this.game}/${this.name}.cht`;
+		const filename = (this.game || '').split('.').slice(0, -1).join('.');
+		return `/cheats/${this.system}/${filename}/${this.name}.cht`;
 	}
 
 	file() {
