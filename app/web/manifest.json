@@ -1,36 +1,36 @@
 {
-  "$schema": "http://json.schemastore.org/web-manifest",
-  "short_name": "Junie",
-  "name": "Junie",
-  "description": "Web-based retro emulator",
-  "theme_color": "#000000",
-  "background_color": "#000000",
-  "display": "standalone",
-  "orientation": "any",
-  "scope": "/",
-  "start_url": "/",
-  "icons": [
-	{
-		"src": "res/icon-192.png",
-		"sizes": "192x192",
-		"type": "image/png"
-	},
-	{
-		"src": "res/icon-512.png",
-		"sizes": "512x512",
-		"type": "image/png"
-	},
-	{
-		"src": "res/icon-192.png",
-		"sizes": "192x192",
-		"type": "image/png",
-		"purpose": "maskable"
-	},
-	{
-		"src": "res/icon-512.png",
-		"sizes": "512x512",
-		"type": "image/png",
-		"purpose": "maskable"
-	}
-  ]
+	"$schema": "http://json.schemastore.org/web-manifest",
+	"short_name": "Junie",
+	"name": "Junie",
+	"description": "Web-based retro emulator",
+	"theme_color": "#000000",
+	"background_color": "#000000",
+	"display": "standalone",
+	"orientation": "any",
+	"scope": "/",
+	"start_url": "/",
+	"icons": [
+		{
+			"src": "res/icon-192.png",
+			"sizes": "192x192",
+			"type": "image/png"
+		},
+		{
+			"src": "res/icon-512.png",
+			"sizes": "512x512",
+			"type": "image/png"
+		},
+		{
+			"src": "res/icon-192.png",
+			"sizes": "192x192",
+			"type": "image/png",
+			"purpose": "maskable"
+		},
+		{
+			"src": "res/icon-512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "maskable"
+		}
+	]
 }
