@@ -94,9 +94,9 @@ void JUN_AppLoadCore(JUN_App *public, const char *system, const char *rom, const
 
 	MTY_HashSetInt(this->paths, JUN_FILE_GAME,  MTY_SprintfD("/games/%s/%s", system, rom));
 
-	MTY_HashSetInt(this->paths, JUN_FOLDER_SAVES,  MTY_SprintfD("/saves/%s/%s",   system, game));
-	MTY_HashSetInt(this->paths, JUN_FOLDER_SYSTEM, MTY_SprintfD("/systems/%s/%s", system, game));
-	MTY_HashSetInt(this->paths, JUN_FOLDER_CHEATS, MTY_SprintfD("/cheats/%s/%s",  system, game));
+	MTY_HashSetInt(this->paths, JUN_FOLDER_SYSTEM, MTY_SprintfD("/systems/%s",   system));
+	MTY_HashSetInt(this->paths, JUN_FOLDER_SAVES,  MTY_SprintfD("/saves/%s/%s",  system, game));
+	MTY_HashSetInt(this->paths, JUN_FOLDER_CHEATS, MTY_SprintfD("/cheats/%s/%s", system, game));
 
 	const char *saves = MTY_HashGetInt(this->paths, JUN_FOLDER_SAVES);
 	MTY_HashSetInt(this->paths, JUN_FILE_STATE, MTY_SprintfD("%s/%s.state", saves, game));
