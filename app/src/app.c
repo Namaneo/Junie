@@ -255,23 +255,12 @@ void JUN_AppDestroy(JUN_App **public)
 
 	_JUN_App *this = * (_JUN_App **) public;
 
-	if (this->public.core)
-		JUN_CoreDestroy(&this->public.core);
-
-	if (this->public.video)
-		JUN_VideoDestroy(&this->public.video);
-
-	if (this->public.audio)
-		JUN_AudioDestroy(&this->public.audio);
-
-	if (this->public.input)
-		JUN_InputDestroy(&this->public.input);
-
-	if (this->public.state)
-		JUN_StateDestroy(&this->public.state);
-
-	if (this->paths)
-		MTY_HashDestroy(&this->paths, MTY_Free);
+	JUN_CoreDestroy(&this->public.core);
+	JUN_VideoDestroy(&this->public.video);
+	JUN_AudioDestroy(&this->public.audio);
+	JUN_InputDestroy(&this->public.input);
+	JUN_StateDestroy(&this->public.state);
+	MTY_HashDestroy(&this->paths, MTY_Free);
 
 	MTY_Free(this);
 	*public = NULL;

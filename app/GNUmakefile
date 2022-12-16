@@ -46,11 +46,12 @@ LDFLAGS += \
 	-sSTANDALONE_WASM -sINITIAL_MEMORY=250MB
 
 ifeq ($(DEBUG), 1)
-CFLAGS  += -O0 -D DEBUG
 SRC     += $(SRC_DIR)/debug.c
-LDFLAGS += -g -Wl,--wrap=malloc,--wrap=calloc,--wrap=realloc,--wrap=free
+CFLAGS  += -O0 -D DEBUG
+LDFLAGS += -O0 -g -Wl,--wrap=malloc,--wrap=calloc,--wrap=realloc,--wrap=free
 else
-CFLAGS += -O3
+CFLAGS  += -O3
+LDFLAGS += -O3
 endif
 
 OBJ := $(SRC:.c=.o)
