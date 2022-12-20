@@ -110,7 +110,7 @@ static void initialize()
 	CTX.initialized = true;
 }
 
-static void prepare_game(const char *system, const char *rom, const char *settings)
+static bool prepare_game(const char *system, const char *rom, const char *settings)
 {
 	char *path = NULL;
 	size_t length = 0;
@@ -126,10 +126,8 @@ static void prepare_game(const char *system, const char *rom, const char *settin
 		input_state,
 	});
 
-	if (!JUN_CoreStartGame()) {
-		JUN_StateToggleExit(CTX.app->state);
-		return;
-	}
+	if (!JUN_CoreStartGame())
+		return false;
 
 	double sample_rate = JUN_CoreGetSampleRate();
 	double frames_per_second = JUN_CoreGetFramesPerSecond();
@@ -138,6 +136,8 @@ static void prepare_game(const char *system, const char *rom, const char *settin
 
 	JUN_CoreRestoreMemories();
 	JUN_CoreSetCheats();
+
+	return true;
 }
 
 static void event_func(const MTY_Event *event, void *opaque)
@@ -168,8 +168,13 @@ void start_game(const char *system, const char *rom, const char *settings)
 	JUN_InteropShowUI(false);
 
 	CTX.app = JUN_AppCreate(NULL, event_func);
-	prepare_game(system, rom, settings);
 	JUN_VideoStart(CTX.app->video);
+
+	if (!prepare_game(system, rom, settings)) {
+		MTY_Log("Core for system '%s' failed to start rom '%s'", system, rom);
+		JUN_InteropShowUI(true);
+		return;
+	}
 
 	emscripten_set_main_loop(app_func, 0, 0);
 }

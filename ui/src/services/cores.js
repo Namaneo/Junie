@@ -35,7 +35,6 @@ async function createTools() {
 	tools.module = await (await import(`${origin}/cores/tools.js`)).default();
 	tools.languages = JSON.parse(tools.module.UTF8ToString(tools.module._get_languages()));
 	tools.bindings = JSON.parse(tools.module.UTF8ToString(tools.module._get_bindings()));
-	tools.graphics = createGraphics();
 }
 
 async function createCore(name) {
@@ -48,10 +47,9 @@ async function createCore(name) {
 
 	const core = {}
 	core.module = await (await import(`${origin}/cores/${name}.js`)).default();
-	core.settings = JSON.parse(core.module.UTF8ToString(core.module._get_settings()));
-
-	core.module._MTY.gl = tools.graphics;
 	core.module._MTY.module = core.module;
+
+	core.settings = JSON.parse(core.module.UTF8ToString(core.module._get_settings()));
 
 	cores[name] = core;
 }
@@ -89,7 +87,12 @@ export async function getSettings() {
 export async function runCore(name, system, rom, settings) {
 	await createCore(name);
 
-	await cores[name].module.ccall('start_game', null,
+	const module = cores[name].module;
+	const MTY = module._MTY;
+
+	MTY.gl = createGraphics();
+
+	await module.ccall('start_game', null,
 		['string', 'string', 'string'],
 		[system, rom, JSON.stringify(settings)],
 		{ async: true }
@@ -102,7 +105,7 @@ export async function runCore(name, system, rom, settings) {
 			if (!ev.detail)
 				return;
 
-			const MTY = cores[name].module._MTY;
+			MTY.gl.canvas.remove();
 
 			window.removeEventListener('resize',      MTY.events.resize);
 			window.removeEventListener('mousemove',   MTY.events.mousemove);

@@ -57,7 +57,6 @@ export const SettingsPage = () => {
 	const [modal, setModal] = useState(false);
     const [data, setData] = useState({});
 
-	const [version, setVersion] = useState('');
 	const [settings, setSettings] = useState({});
 	const [languages, setLanguages] = useState([]);
 	const [bindings, setBindings] = useState({ joypad: [], keyboard: [] });
@@ -132,7 +131,6 @@ export const SettingsPage = () => {
     }
 
 	useIonViewWillEnter(async () => {
-		setVersion('development');
 		setLanguages(await Cores.getLanguages());
 		setBindings(await Cores.getBindings());
 		setOptions(await Cores.getSettings());
@@ -174,7 +172,7 @@ export const SettingsPage = () => {
                     )}
 
 					<IonItem key="version" class="version">
-                        <IonLabel>{version}</IonLabel>
+                        <IonLabel>{window.junie_build}</IonLabel>
                     </IonItem>
 
                 </IonList>

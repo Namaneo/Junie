@@ -1,7 +1,11 @@
 TARGET  := junie
+VERSION := 0.6.0-$(shell date +%s)
 
-VERSION := 0.6.0
-BUILD   := $(VERSION)-$(shell date +%s)
+ifeq ($(DEBUG), 1)
+BUILD := development
+else
+BUILD := production
+endif
 
 UI_DIR  := ui
 APP_DIR := app
@@ -9,6 +13,10 @@ OUT_DIR := build
 
 QUIET := > /dev/null 2>&1
 MAKEFLAGS += --no-print-directory
+
+UI_FLAGS := \
+	--environment BUILD:$(BUILD) \
+	--environment VERSION:$(VERSION)
 
 .PHONY: app ui
 
@@ -20,12 +28,11 @@ prepare:
 	@yarn --cwd $(UI_DIR) install $(QUIET)
 
 app:
-	@$(MAKE) -C $(APP_DIR) BUILD=$(BUILD)
+	@$(MAKE) -C $(APP_DIR) DEBUG=$(DEBUG)
 
 ui:
 	@echo Building index.html...
-	@yarn --cwd $(UI_DIR) $(QUIET)
-	@yarn --cwd $(UI_DIR) rollup -c --environment BUILD:production $(QUIET)
+	@yarn --cwd $(UI_DIR) rollup -c $(UI_FLAGS) $(QUIET)
 
 # Watch
 
@@ -34,7 +41,7 @@ watch: clean prepare
 
 watch-start:
 	@screen -S $(TARGET) -d -m python3 -m http.server -d $(UI_DIR)/build/ 8000
-	@yarn --cwd $(UI_DIR) rollup -c --environment BUILD:development -w --watch.onStart "$(MAKE) -C ../$(APP_DIR) DEBUG=1"
+	@yarn --cwd $(UI_DIR) rollup -c $(UI_FLAGS) -w --watch.onStart "$(MAKE) -C ../$(APP_DIR) DEBUG=$(DEBUG)"
 
 watch-end:
 	@screen -S $(TARGET) -X quit

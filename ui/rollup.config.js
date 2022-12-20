@@ -12,7 +12,7 @@ import copy from 'rollup-plugin-copy'
 import { terser } from 'rollup-plugin-terser'
 
 const build = process.env.BUILD || 'development';
-const isProduction = build == 'production';
+const version = process.env.VERSION;
 
 function watcher(globs) {
     return {
@@ -35,6 +35,11 @@ function html(input) {
 			code = Buffer.from(code).toString('base64');
 
 			let template = readFileSync(input, 'utf-8');
+
+			template = template.replace(
+				'window.junie_build = null;',
+				`window.junie_build = '${version}';`
+			);
 			template = template.replace(
 				'const source = null;',
 				`const source = '${code}';`
@@ -76,11 +81,11 @@ export default {
         url({ limit: 256 * 1024 }),
         commonjs(),
         babel({
-            compact: true,
+            compact: false,
             babelHelpers: 'bundled',
             presets: [['@babel/preset-react', { runtime: 'automatic' }]],
         }),
-        isProduction && terser(),
+        (build == 'production') && terser(),
         html('index.html'),
 		copy({
 			hook: 'buildStart',

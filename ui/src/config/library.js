@@ -1,12 +1,12 @@
-import cover_game_boy_avance  from '../../res/covers/game-boy-advance.png'
-import cover_game_boy_color   from '../../res/covers/game-boy-color.png'
-import cover_game_boy         from '../../res/covers/game-boy.png'
-import cover_master_system    from '../../res/covers/master-system.png'
-import cover_mega_drive       from '../../res/covers/mega-drive.png'
-import cover_nes              from '../../res/covers/nes.png'
-import cover_nintendo_ds_dark from '../../res/covers/nintendo-ds-dark.png'
-import cover_nintendo_ds      from '../../res/covers/nintendo-ds.png'
-import cover_snes             from '../../res/covers/snes.png'
+import cover_game_boy_avance  from '../../images/covers/game-boy-advance.png'
+import cover_game_boy_color   from '../../images/covers/game-boy-color.png'
+import cover_game_boy         from '../../images/covers/game-boy.png'
+import cover_master_system    from '../../images/covers/master-system.png'
+import cover_mega_drive       from '../../images/covers/mega-drive.png'
+import cover_nes              from '../../images/covers/nes.png'
+import cover_nintendo_ds_dark from '../../images/covers/nintendo-ds-dark.png'
+import cover_nintendo_ds      from '../../images/covers/nintendo-ds.png'
+import cover_snes             from '../../images/covers/snes.png'
 
 export default [
 	{

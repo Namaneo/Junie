@@ -16,8 +16,8 @@
 #define MIDDLE(margin) .pos_y = JUN_POSITION_MIDDLE, .margin_y = margin
 #define RADIUS(value)  .radius = value
 
-#define PREPARE(id, res)   prepare_asset(this, id, res_##res##_png, res_##res##_png_len)
-#define DRAW(id, res, ...) draw_input(this, id, res_##res##_png, res_##res##_png_len, & (struct jun_draw_desc) { __VA_ARGS__ } )
+#define PREPARE(id, res) prepare_asset(this, id, res_##res##_png, res_##res##_png_len)
+#define DRAW(id, ...)    draw_input(this, id, & (struct jun_draw_desc) { __VA_ARGS__ } )
 
 enum jun_position {
 	JUN_POSITION_TOP,
@@ -151,7 +151,7 @@ static void prepare_asset(JUN_Video *this, uint8_t id, const void *data, size_t 
 	MTY_DecompressImageAsync(data, size, asset_prepared, opaque);
 }
 
-static void draw_input(JUN_Video *this, uint8_t id, const void *data, size_t size, struct jun_draw_desc *desc)
+static void draw_input(JUN_Video *this, uint8_t id, struct jun_draw_desc *desc)
 {
 	struct jun_video_asset *asset = MTY_HashGetInt(this->assets, id);
 
@@ -204,27 +204,27 @@ static void update_ui_context(JUN_Video *this)
 	JUN_InputSetCallback(this->input, MENU_FAST_FORWARD,   JUN_StateToggleFastForward);
 	JUN_InputSetCallback(this->input, MENU_EXIT,           JUN_StateToggleExit);
 
-	DRAW(MENU_TOGGLE_AUDIO,   menu_toggle_audio,   CENTER(-150), TOP(25), RADIUS(20));
-	DRAW(MENU_TOGGLE_GAMEPAD, menu_toggle_gamepad, CENTER(-90),  TOP(25), RADIUS(20));
-	DRAW(MENU_SAVE_STATE,     menu_save_state,     CENTER(-30),  TOP(25), RADIUS(20));
-	DRAW(MENU_RESTORE_STATE,  menu_restore_state,  CENTER(30),   TOP(25), RADIUS(20));
-	DRAW(MENU_FAST_FORWARD,   menu_fast_forward,   CENTER(90),   TOP(25), RADIUS(20));
-	DRAW(MENU_EXIT,           menu_exit,           CENTER(150),  TOP(25), RADIUS(20));
+	DRAW(MENU_TOGGLE_AUDIO,   CENTER(-150), TOP(25), RADIUS(20));
+	DRAW(MENU_TOGGLE_GAMEPAD, CENTER(-90),  TOP(25), RADIUS(20));
+	DRAW(MENU_SAVE_STATE,     CENTER(-30),  TOP(25), RADIUS(20));
+	DRAW(MENU_RESTORE_STATE,  CENTER(30),   TOP(25), RADIUS(20));
+	DRAW(MENU_FAST_FORWARD,   CENTER(90),   TOP(25), RADIUS(20));
+	DRAW(MENU_EXIT,           CENTER(150),  TOP(25), RADIUS(20));
 
-	DRAW(RETRO_DEVICE_ID_JOYPAD_UP,    joypad_up,    LEFT(100), BOTTOM(-200), RADIUS(30));
-	DRAW(RETRO_DEVICE_ID_JOYPAD_DOWN,  joypad_down,  LEFT(100), BOTTOM(-100), RADIUS(30));
-	DRAW(RETRO_DEVICE_ID_JOYPAD_LEFT,  joypad_left,  LEFT(50),  BOTTOM(-150), RADIUS(30));
-	DRAW(RETRO_DEVICE_ID_JOYPAD_RIGHT, joypad_right, LEFT(150), BOTTOM(-150), RADIUS(30));
-	DRAW(RETRO_DEVICE_ID_JOYPAD_L,     joypad_l,     LEFT(75),  BOTTOM(-300), RADIUS(60));
+	DRAW(RETRO_DEVICE_ID_JOYPAD_UP,    LEFT(100), BOTTOM(-200), RADIUS(30));
+	DRAW(RETRO_DEVICE_ID_JOYPAD_DOWN,  LEFT(100), BOTTOM(-100), RADIUS(30));
+	DRAW(RETRO_DEVICE_ID_JOYPAD_LEFT,  LEFT(50),  BOTTOM(-150), RADIUS(30));
+	DRAW(RETRO_DEVICE_ID_JOYPAD_RIGHT, LEFT(150), BOTTOM(-150), RADIUS(30));
+	DRAW(RETRO_DEVICE_ID_JOYPAD_L,     LEFT(75),  BOTTOM(-300), RADIUS(60));
 
-	DRAW(RETRO_DEVICE_ID_JOYPAD_X, joypad_x, RIGHT(-100), BOTTOM(-200), RADIUS(30));
-	DRAW(RETRO_DEVICE_ID_JOYPAD_B, joypad_b, RIGHT(-100), BOTTOM(-100), RADIUS(30));
-	DRAW(RETRO_DEVICE_ID_JOYPAD_A, joypad_a, RIGHT(-50),  BOTTOM(-150), RADIUS(30));
-	DRAW(RETRO_DEVICE_ID_JOYPAD_Y, joypad_y, RIGHT(-150), BOTTOM(-150), RADIUS(30));
-	DRAW(RETRO_DEVICE_ID_JOYPAD_R, joypad_r, RIGHT(-75),  BOTTOM(-300), RADIUS(60));
+	DRAW(RETRO_DEVICE_ID_JOYPAD_X, RIGHT(-100), BOTTOM(-200), RADIUS(30));
+	DRAW(RETRO_DEVICE_ID_JOYPAD_B, RIGHT(-100), BOTTOM(-100), RADIUS(30));
+	DRAW(RETRO_DEVICE_ID_JOYPAD_A, RIGHT(-50),  BOTTOM(-150), RADIUS(30));
+	DRAW(RETRO_DEVICE_ID_JOYPAD_Y, RIGHT(-150), BOTTOM(-150), RADIUS(30));
+	DRAW(RETRO_DEVICE_ID_JOYPAD_R, RIGHT(-75),  BOTTOM(-300), RADIUS(60));
 
-	DRAW(RETRO_DEVICE_ID_JOYPAD_START,  joypad_start_select, CENTER(20),  BOTTOM(-40), RADIUS(20));
-	DRAW(RETRO_DEVICE_ID_JOYPAD_SELECT, joypad_start_select, CENTER(-20), BOTTOM(-40), RADIUS(20));
+	DRAW(RETRO_DEVICE_ID_JOYPAD_START,  CENTER(20),  BOTTOM(-40), RADIUS(20));
+	DRAW(RETRO_DEVICE_ID_JOYPAD_SELECT, CENTER(-20), BOTTOM(-40), RADIUS(20));
 }
 
 void JUN_VideoStart(JUN_Video *this)
