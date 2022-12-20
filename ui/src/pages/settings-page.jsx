@@ -1,7 +1,7 @@
 import { IonButton, IonButtons, IonContent, IonHeader, IonItem, IonLabel, IonList, IonModal, IonPage, IonSelect, IonSelectOption, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
 import { useState } from 'react';
+import * as Cores from '../services/cores';
 import * as Database from '../services/database';
-import Junie from '../services/interop';
 
 const pascalify = (str) => {
     return str.replace(/([A-Z])([A-Z]+)/g, (_, c1, c2) => {
@@ -57,13 +57,13 @@ export const SettingsPage = () => {
 	const [modal, setModal] = useState(false);
     const [data, setData] = useState({});
 
-	const [version, setVersion] = useState({});
+	const [version, setVersion] = useState('');
 	const [settings, setSettings] = useState({});
 	const [languages, setLanguages] = useState([]);
 	const [bindings, setBindings] = useState({ joypad: [], keyboard: [] });
 	const [options, setOptions] = useState({});
 
-    const language = async (lang) => {
+	const language = async (lang) => {
         if (!settings.configurations)
             return;
 
@@ -132,10 +132,10 @@ export const SettingsPage = () => {
     }
 
 	useIonViewWillEnter(async () => {
-		setVersion(await Junie.get_version());
-		setLanguages(await Junie.get_languages());
-		setBindings(await Junie.get_bindings());
-		setOptions(await Junie.get_settings());
+		setVersion('development');
+		setLanguages(await Cores.getLanguages());
+		setBindings(await Cores.getBindings());
+		setOptions(await Cores.getSettings());
 		setSettings(await Database.getSettings());
 	});
 
@@ -174,7 +174,7 @@ export const SettingsPage = () => {
                     )}
 
 					<IonItem key="version" class="version">
-                        <IonLabel>{version.version}</IonLabel>
+                        <IonLabel>{version}</IonLabel>
                     </IonItem>
 
                 </IonList>

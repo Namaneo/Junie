@@ -107,10 +107,22 @@ JUN_File *JUN_FilesystemGetExistingFile(const char *path)
 		if (files[i].exists && strcmp(files[i].path, path) == 0)
 			return &files[i];
 
+	int32_t size = 0;
+	void *buffer = JUN_InteropReadFile(path, &size);
+
+	if (buffer) {
+		JUN_File *file = JUN_FilesystemGetNewFile(path);
+
+		file->buffer = buffer;
+		file->size = size;
+
+		return file;
+	}
+
 	return NULL;
 }
 
-void JUN_FilesystemSaveFile(const char *path, const void *buffer, size_t length, bool persist)
+void JUN_FilesystemSaveFile(const char *path, const void *buffer, size_t length)
 {
 	JUN_File *file = JUN_FilesystemGetExistingFile(path);
 
@@ -124,8 +136,7 @@ void JUN_FilesystemSaveFile(const char *path, const void *buffer, size_t length,
 
 	memcpy(file->buffer, buffer, file->size);
 
-	if (persist)
-		JUN_InteropWriteFile(file->path, file->buffer, file->size);
+	JUN_InteropWriteFile(file->path, file->buffer, file->size);
 }
 
 void JUN_FilesystemClearFile(const char *path)
@@ -257,7 +268,7 @@ static int64_t write(JUN_File *stream, const void *s, uint64_t len)
 
 	stream->offset += len;
 
-	JUN_FilesystemSaveFile(stream->path, stream->buffer, stream->size, true);
+	JUN_FilesystemSaveFile(stream->path, stream->buffer, stream->size);
 
 	return 0;
 }

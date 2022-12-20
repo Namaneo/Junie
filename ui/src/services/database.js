@@ -1,30 +1,24 @@
-import Dexie from 'dexie';
+import { getFS } from './cores'
 import { Save } from '../entities/save';
 import { Cheat } from '../entities/cheat';
 import { Game } from '../entities/game';
 import library from '../config/library'
 
-function filesystem() {
-	const database = new Dexie('Junie');
-	database.version(1).stores({ files: 'path' });
-	return database.table('files');
-}
-
 export async function read(path) {
-	return await filesystem().get(path);
+	return await getFS().get(path);
 }
 
 export async function read_json(path) {
-	const file = await read(path);
+	let file = await read(path);
 
 	if (file)
-		file.data = JSON.parse(file.data);
+		file = JSON.parse(file);
 
 	return file;
 }
 
 export async function list(path, suffix, func) {
-	let paths = await filesystem().toCollection().primaryKeys();
+	let paths = await getFS().keys();
 	paths = paths.filter(x => x.startsWith(path));
 
 	if (suffix)
@@ -32,7 +26,7 @@ export async function list(path, suffix, func) {
 
 	const files = [];
 	for (let path of paths)
-		files.push(await func(path));
+		files.push({ path, data: await func(path) });
 
 	return files;
 }
@@ -46,7 +40,7 @@ export async function list_buffer(path, suffix) {
 }
 
 export async function write(path, data) {
-	await filesystem().put({ path, data });
+	await getFS().put(path, data);
 }
 
 export async function write_json(path, data) {
@@ -55,14 +49,14 @@ export async function write_json(path, data) {
 }
 
 export async function remove(path) {
-	await filesystem().delete(path);
+	await getFS().delete(path);
 }
 
 export async function getLibrary(force) {
 	if (!force) {
 		const file = await read_json('/library.json');
 		if (file)
-			return JSON.parse(JSON.stringify(file.data));
+			return JSON.parse(JSON.stringify(file));
 	}
 
 	return JSON.parse(JSON.stringify(library));
@@ -81,7 +75,7 @@ export async function getSettings() {
 		configurations: { }, // TODO default configurations?
 	};
 
-	return JSON.parse(JSON.stringify({ ...defaults, ...file?.data }));
+	return JSON.parse(JSON.stringify({ ...defaults, ...file }));
 };
 
 export async function updateSettings(settings) {

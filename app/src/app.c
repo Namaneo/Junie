@@ -18,25 +18,6 @@ struct _JUN_App
 	MTY_Hash *paths;
 };
 
-static MTY_Hash *core_types = NULL;
-static JUN_CoreType jun_core_get_type(const char *system)
-{
-	if (!core_types) {
-		core_types = MTY_HashCreate(0);
-
-		MTY_HashSet(core_types, "NES",              (void *) JUN_CORE_QUICKNES);
-		MTY_HashSet(core_types, "SNES",             (void *) JUN_CORE_SNES9X);
-		MTY_HashSet(core_types, "Master System",    (void *) JUN_CORE_GENESIS);
-		MTY_HashSet(core_types, "Mega Drive",       (void *) JUN_CORE_GENESIS);
-		MTY_HashSet(core_types, "Game Boy",         (void *) JUN_CORE_MGBA);
-		MTY_HashSet(core_types, "Game Boy Color",   (void *) JUN_CORE_MGBA);
-		MTY_HashSet(core_types, "Game Boy Advance", (void *) JUN_CORE_MGBA);
-		MTY_HashSet(core_types, "Nintendo DS",      (void *) JUN_CORE_MELONDS);
-	}
-
-	return (JUN_CoreType) (uint64_t) MTY_HashGet(core_types, system);
-}
-
 JUN_App *JUN_AppCreate(MTY_AppFunc app_func, MTY_EventFunc event_func)
 {
 	_JUN_App *this = MTY_Alloc(1, sizeof(_JUN_App));
@@ -50,7 +31,7 @@ JUN_App *JUN_AppCreate(MTY_AppFunc app_func, MTY_EventFunc event_func)
 	return (JUN_App *) this;
 }
 
-static void jun_app_configure(_JUN_App *this, const char *system, const MTY_JSON *json)
+static void jun_app_configure(_JUN_App *this, const char *system, const char *json)
 {
 	uint64_t iter;
 	const char *key;
@@ -74,7 +55,7 @@ static void jun_app_configure(_JUN_App *this, const char *system, const MTY_JSON
 	// Set custom configurations
 	iter = 0;
 	key = NULL;
-	JUN_Configuration *configuration = JUN_CoreGetConfiguration(this->public.core);
+	JUN_Configuration *configuration = JUN_CoreGetConfiguration();
 	while (MTY_HashGetNextKey(settings->configurations, &iter, &key)) {
 		char *value = MTY_HashGet(settings->configurations, key);
 		JUN_ConfigurationOverride(configuration, key, value);
@@ -84,7 +65,7 @@ static void jun_app_configure(_JUN_App *this, const char *system, const MTY_JSON
 	JUN_SettingsDestroy(&settings);
 }
 
-void JUN_AppLoadCore(JUN_App *public, const char *system, const char *rom, const MTY_JSON *settings)
+void JUN_AppLoadCore(JUN_App *public, const char *system, const char *rom, const char *settings)
 {
 	_JUN_App *this = (_JUN_App *) public;
 
@@ -103,8 +84,7 @@ void JUN_AppLoadCore(JUN_App *public, const char *system, const char *rom, const
 	MTY_HashSetInt(this->paths, JUN_FILE_SRAM,  MTY_SprintfD("%s/%s.srm",   saves, game));
 	MTY_HashSetInt(this->paths, JUN_FILE_RTC,   MTY_SprintfD("%s/%s.rtc",   saves, game));
 
-	JUN_CoreType type = jun_core_get_type(system);
-	this->public.core = JUN_CoreCreate(type, this->paths);
+	JUN_CoreCreate(this->paths);
 
 	jun_app_configure(this, system, settings);
 
@@ -122,10 +102,7 @@ void JUN_AppUnloadCore(JUN_App *public)
 {
 	_JUN_App *this = (_JUN_App *) public;
 
-	if (!this->public.core)
-		return;
-
-	JUN_CoreDestroy(&this->public.core);
+	JUN_CoreDestroy();
 	MTY_HashDestroy(&this->paths, MTY_Free);
 }
 
@@ -196,7 +173,7 @@ bool JUN_AppEnvironment(JUN_App *public, unsigned cmd, void *data)
 		case RETRO_ENVIRONMENT_SET_VARIABLES: {
 			const struct retro_variable *variables = data;
 
-			JUN_Configuration *configuration = JUN_CoreGetConfiguration(this->public.core);
+			JUN_Configuration *configuration = JUN_CoreGetConfiguration();
 
 			for (uint32_t x = 0; x < UINT32_MAX; x++)
 			{
@@ -215,7 +192,7 @@ bool JUN_AppEnvironment(JUN_App *public, unsigned cmd, void *data)
 		case RETRO_ENVIRONMENT_GET_VARIABLE: {
 			struct retro_variable *variable = data;
 
-			JUN_Configuration *configuration = JUN_CoreGetConfiguration(this->public.core);
+			JUN_Configuration *configuration = JUN_CoreGetConfiguration();
 			variable->value = JUN_ConfigurationGet(configuration, variable->key);
 
 			MTY_Log("GET -> %s: %s", variable->key, variable->value);
@@ -255,7 +232,7 @@ void JUN_AppDestroy(JUN_App **public)
 
 	_JUN_App *this = * (_JUN_App **) public;
 
-	JUN_CoreDestroy(&this->public.core);
+	JUN_CoreDestroy();
 	JUN_VideoDestroy(&this->public.video);
 	JUN_AudioDestroy(&this->public.audio);
 	JUN_InputDestroy(&this->public.input);

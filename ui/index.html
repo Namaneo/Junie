@@ -1,7 +1,21 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
+<html lang="en-US">
+	<head>
+		<title>Junie</title>
+
+		<meta charset="utf-8">
+		<meta name="color-scheme" content="light dark">
+		<meta name="viewport" content="viewport-fit=cover, width=device-width">
+		<meta name="description" content="Web-based retro emulator">
+
+		<link rel="manifest" href="manifest.json">
+		<link rel="icon" href="icons/favicon.png">
+		<link rel="apple-touch-icon" href="icons/icon-apple.png">
+
+		<meta name="theme-color" content="#000000">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
         <style>
             @media (prefers-color-scheme: dark) {
                 body { background-color: #1e2023; }
@@ -11,14 +25,35 @@
                 body { background-color: #808289; }
             }
         </style>
-    </head>
+	</head>
     <body>
         <div id="root"></div>
+
+		<script>
+			const registerServiceWorker = async () => {
+				if (!navigator.serviceWorker)
+					return;
+
+				try {
+					const origin = location.origin + location.pathname.replace(/\/$/, '');
+					const registration = await navigator.serviceWorker.register(origin + '/service-worker.js');
+
+					registration.update();
+				} catch (error) {
+					console.error(`Registration failed with ${error}`);
+				}
+			};
+
+			if (location.hostname != 'localhost')
+				registerServiceWorker();
+		</script>
+
         <script>
             const source = null;
 
             const script = document.createElement('script');
-            script.src = URL.createObjectURL(new Blob([atob(source)]));
+			script.type = 'module';
+            script.src = URL.createObjectURL(new Blob([atob(source)], { type: 'text/javascript'}));
             document.body.appendChild(script);
 
             document.currentScript.remove();

@@ -5,7 +5,7 @@ import { Game } from '../entities/game';
 import { JunImg } from '../components/jun-img';
 import * as Requests from '../services/requests';
 import * as Database from '../services/database';
-import Junie from '../services/interop';
+import { runCore } from '../services/cores';
 
 export const RecentPage = () => {
 
@@ -36,40 +36,16 @@ export const RecentPage = () => {
 		setPlayed(await Database.getGames());
 	}
 
-	const sendFiles = (files) => new Promise(resolve => {
-		const callback = (e) => {
-			window.removeEventListener('files', callback);
-			resolve(e.detail);
-		};
-
-		window.addEventListener('files', callback);
-		window.parent.dispatchEvent(new CustomEvent('files', { detail: files }));
-	});
-
 	const startGame = async (played) => {
-		const info = {
-			system: played.system.name,
-			rom: played.game.rom,
-			settings: await Database.getSettings(),
-		};
-
-		const files = []
-		const paths = await Junie.prepare_core(info);
-
-		// TODO Too much save and system
-		files.push(await Database.read(paths.game));
-		files.push(...await Database.list_buffer(paths.save));
-		files.push(...await Database.list_buffer(paths.system));
-		files.push(...await Database.list_buffer(paths.cheat));
-		await sendFiles(files);
-
-		const saveFile = (e) => Database.write(e.detail.path, e.detail.data);
-		window.addEventListener('save', saveFile);
-
-		await Junie.start_game();
-
-		window.removeEventListener('save', saveFile);
-	}
+		document.getElementById('root').hidden = true;
+		await runCore(
+			played.system.lib_name,
+			played.system.name,
+			played.game.rom,
+			await Database.getSettings(),
+		);
+		document.getElementById('root').hidden = false;
+	};
 
 	useIonViewWillEnter(async () => {
 		setPlayed(await Database.getGames());

@@ -4,17 +4,6 @@
 
 #include "libretro.h"
 
-typedef struct JUN_Core JUN_Core;
-
-typedef enum {
-	JUN_CORE_NONE,
-	JUN_CORE_GENESIS,
-	JUN_CORE_MELONDS,
-	JUN_CORE_MGBA,
-	JUN_CORE_QUICKNES,
-	JUN_CORE_SNES9X,
-} JUN_CoreType;
-
 typedef struct {
 	retro_environment_t environment;
 	retro_video_refresh_t video_refresh;
@@ -24,19 +13,19 @@ typedef struct {
 	retro_input_state_t input_state;
 } JUN_CoreCallbacks;
 
-JUN_Core *JUN_CoreCreate(JUN_CoreType type, MTY_Hash *paths);
+void JUN_CoreCreate(MTY_Hash *paths);
 const MTY_JSON *JUN_CoreGetDefaultConfiguration();
-JUN_Configuration *JUN_CoreGetConfiguration(JUN_Core *this);
-void JUN_CoreSetCallbacks(JUN_Core *this, JUN_CoreCallbacks *callbacks);
-double JUN_CoreGetSampleRate(JUN_Core *this);
-double JUN_CoreGetFramesPerSecond(JUN_Core *this);
-bool JUN_CoreStartGame(JUN_Core *this);
-bool JUN_CoreHasStarted(JUN_Core *this);
-void JUN_CoreRun(JUN_Core *this, size_t count);
-void JUN_CoreSaveMemories(JUN_Core *this);
-void JUN_CoreRestoreMemories(JUN_Core *this);
-void JUN_CoreSetCheats(JUN_Core *this);
-void JUN_CoreResetCheats(JUN_Core *this);
-void JUN_CoreSaveState(JUN_Core *this);
-void JUN_CoreRestoreState(JUN_Core *this);
-void JUN_CoreDestroy(JUN_Core **this);
+JUN_Configuration *JUN_CoreGetConfiguration();
+void JUN_CoreSetCallbacks(JUN_CoreCallbacks *callbacks);
+double JUN_CoreGetSampleRate();
+double JUN_CoreGetFramesPerSecond();
+bool JUN_CoreStartGame();
+bool JUN_CoreHasStarted();
+void JUN_CoreRun(size_t count);
+void JUN_CoreSaveMemories();
+void JUN_CoreRestoreMemories();
+void JUN_CoreSetCheats();
+void JUN_CoreResetCheats();
+void JUN_CoreSaveState();
+void JUN_CoreRestoreState();
+void JUN_CoreDestroy();

@@ -10,34 +10,31 @@ OUT_DIR := build
 QUIET := > /dev/null 2>&1
 MAKEFLAGS += --no-print-directory
 
-.PHONY: ui app
+.PHONY: app ui
 
 # Common
 
-all: prepare deps ui app
+all: clean prepare app ui
 
-deps:
-	@$(MAKE) -C $(APP_DIR) BUILD=$(BUILD) deps
+prepare:
+	@yarn --cwd $(UI_DIR) install $(QUIET)
+
+app:
+	@$(MAKE) -C $(APP_DIR) BUILD=$(BUILD)
 
 ui:
 	@echo Building index.html...
 	@yarn --cwd $(UI_DIR) $(QUIET)
 	@yarn --cwd $(UI_DIR) rollup -c --environment BUILD:production $(QUIET)
 
-app:
-	@$(MAKE) -C $(APP_DIR) BUILD=$(BUILD)
-
-prepare: clean
-	@yarn --cwd $(UI_DIR) install $(QUIET)
-
 # Watch
 
-watch: prepare
+watch: clean prepare
 	@bash -c "trap '$(MAKE) watch-end' EXIT; $(MAKE) watch-start;"
 
 watch-start:
-	@screen -S $(TARGET) -d -m python3 -m http.server -d $(APP_DIR)/build/ 8000
-	@yarn --cwd $(UI_DIR) rollup -c --environment BUILD:development -w --watch.onEnd "$(MAKE) -C ../$(APP_DIR) DEBUG=1"
+	@screen -S $(TARGET) -d -m python3 -m http.server -d $(UI_DIR)/build/ 8000
+	@yarn --cwd $(UI_DIR) rollup -c --environment BUILD:development -w --watch.onStart "$(MAKE) -C ../$(APP_DIR) DEBUG=1"
 
 watch-end:
 	@screen -S $(TARGET) -X quit
@@ -47,7 +44,7 @@ watch-end:
 pack: all
 	@echo Packing Junie $(BUILD)...
 	@mkdir $(OUT_DIR)
-	@( cd $(APP_DIR)/$(OUT_DIR) && zip -r ../../$(OUT_DIR)/$(TARGET)-$(VERSION).zip `ls -I games` $(QUIET) )
+	@( cd $(UI_DIR)/$(OUT_DIR) && zip -r ../../$(OUT_DIR)/$(TARGET)-$(VERSION).zip `ls -I games` $(QUIET) )
 
 # Clean
 

@@ -1,7 +1,5 @@
 import * as Database from './database'
 
-// Requests
-
 async function fetchGames(system) {
 	const path = `${location.origin}/games/${system.name}/`;
 	const folder = await fetch(path);

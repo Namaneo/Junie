@@ -1,14 +1,17 @@
 const resources = [
-	'/',
-	'/junie.wasm',
-	'/manifest.json',
-	'/matoya.js',
+	'./',
+	'./manifest.json',
 
-	'/res/icon-192.png',
-	'/res/icon-512.png',
-	'/res/icon-apple.png',
-	'/res/favicon.png',
-	'/res/loading.png',
+	'./icons/icon-192.png',
+	'./icons/icon-512.png',
+	'./icons/icon-apple.png',
+	'./icons/favicon.png',
+
+	'./cores/genesis.js',
+	'./cores/melonds.js',
+	'./cores/mgba.js',
+	'./cores/quicknes.js',
+	'./cores/snes9x.js',
 ];
 
 const cacheResources = async () => {

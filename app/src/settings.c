@@ -39,11 +39,11 @@ static void set_configurations(JUN_Settings *this)
 	}
 }
 
-JUN_Settings *JUN_SettingsCreate(const MTY_JSON *json)
+JUN_Settings *JUN_SettingsCreate(const char *json)
 {
 	JUN_Settings *this = MTY_Alloc(1, sizeof(JUN_Settings));
 
-	this->json = json;
+	this->json = MTY_JSONParse(json);
 
 	this->dependencies = MTY_ListCreate();
 	this->configurations = MTY_HashCreate(0);
@@ -69,6 +69,8 @@ void JUN_SettingsDestroy(JUN_Settings **settings)
 
 	if (this->language)
 		MTY_Free(this->language);
+
+	MTY_JSONDestroy(&this->json);
 
 	MTY_Free(this);
 	*settings = NULL;

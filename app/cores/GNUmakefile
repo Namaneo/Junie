@@ -12,12 +12,9 @@ BUILD_DIR   := $(TARGET:lib%.a=%)/libretro
 BUILD_FLAGS := TARGET=../../$(TARGET)
 endif
 
-SYM_FILE := $(shell pwd)/symbols.txt
-SYMBOLS  := $(shell cat symbols.txt | sed -e 's/\(.*\)/-D \1=$(name)_\1 /')
-
 RANLIB ?= ranlib
 
-BUILD_FLAGS += -j 8 platform=emscripten STATIC_LINKING=1 STATIC_LINKING_LINK=1
+BUILD_FLAGS += -j 8 platform=emscripten STATIC_LINKING=1 STATIC_LINKING_LINK=1 fpic=-fPIC
 MAKEFLAGS += --no-print-directory
 QUIET := > /dev/null 2>&1
 
@@ -25,7 +22,7 @@ all: $(TARGET)
 
 $(TARGET):
 	@echo Building $(TARGET)...
-	@CFLAGS="$(SYMBOLS)" CXXFLAGS="$(SYMBOLS)" $(MAKE) -C $(BUILD_DIR) $(BUILD_FLAGS) $(QUIET)
+	@$(MAKE) -C $(BUILD_DIR) $(BUILD_FLAGS) $(QUIET)
 	@$(RANLIB) $(TARGET)
 
 clean:

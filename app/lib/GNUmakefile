@@ -46,7 +46,8 @@ OBJ := $(SRC:.c=.o)
 
 CFLAGS := \
 	-Iretro/include \
-	-D_WASI_EMULATED_MMAN
+	-D_WASI_EMULATED_MMAN \
+	-fPIC
 
 all:
 	@echo Building $(TARGET)...
@@ -74,6 +75,7 @@ all: $(TARGET)
 $(TARGET):
 	@echo Building $(TARGET)...
 	@cd zlib && ./configure $(QUIET)
+	@cd zlib && CFLAGS="-fPIC" ./configure $(QUIET)
 	@$(MAKE) -C zlib $(TARGET) CC="$(CC)" AR="$(AR)" RANLIB="$(RANLIB)" ARFLAGS="rcs" $(QUIET)
 	@cp zlib/$(TARGET) .
 	@$(MAKE) -f $(lastword $(MAKEFILE_LIST)) zclean

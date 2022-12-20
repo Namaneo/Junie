@@ -6,7 +6,6 @@
 
 #include "video.h"
 
-#include "res_index.h"
 #include "res_inputs.h"
 
 #define TOP(margin)    .pos_y = JUN_POSITION_TOP,    .margin_y = margin
@@ -101,15 +100,6 @@ static void refresh_viewport_size(JUN_Video *this, uint32_t *view_width, uint32_
 	*view_height = size.h;
 
 	JUN_StateSetWindowMetrics(this->state, *view_width, *view_height);
-}
-
-void JUN_VideoStart(JUN_Video *this)
-{
-	char *index = MTY_Alloc(index_html_len + 1, 1);
-	memcpy(index, index_html, index_html_len);
-
-	MTY_WebviewCreate(this->app, 0, index, false);
-	MTY_AppRun(this->app);
 }
 
 bool JUN_VideoSetPixelFormat(JUN_Video *this, enum retro_pixel_format *format)
@@ -237,7 +227,7 @@ static void update_ui_context(JUN_Video *this)
 	DRAW(RETRO_DEVICE_ID_JOYPAD_SELECT, joypad_start_select, CENTER(-20), BOTTOM(-40), RADIUS(20));
 }
 
-void JUN_VideoPrepareAssets(JUN_Video *this)
+void JUN_VideoStart(JUN_Video *this)
 {
 	PREPARE(MENU_TOGGLE_AUDIO,   menu_toggle_audio);
 	PREPARE(MENU_TOGGLE_GAMEPAD, menu_toggle_gamepad);
@@ -260,6 +250,8 @@ void JUN_VideoPrepareAssets(JUN_Video *this)
 
 	PREPARE(RETRO_DEVICE_ID_JOYPAD_START,  joypad_start_select);
 	PREPARE(RETRO_DEVICE_ID_JOYPAD_SELECT, joypad_start_select);
+
+	MTY_AppRun(this->app);
 }
 
 bool JUN_VideoAssetsReady(JUN_Video *this)

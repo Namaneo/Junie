@@ -34,7 +34,7 @@ import './styles/index.css';
 
 function Junie() {
 
-    setupIonicReact();
+	setupIonicReact();
 
     return (
         <IonApp>
