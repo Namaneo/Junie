@@ -181,7 +181,7 @@ bool JUN_CoreStartGame()
 
 	CTX.sym.retro_get_system_info(&CTX.system);
 
-	const char *game_path = MTY_HashGetInt(CTX.paths, JUN_FILE_GAME);
+	const char *game_path = MTY_HashGetInt(CTX.paths, JUN_PATH_GAME);
 	JUN_File *game = JUN_FilesystemGetExistingFile(game_path);
 
 	CTX.game.path = game->path;
@@ -230,8 +230,8 @@ void JUN_CoreSaveMemories()
 
 	CTX.last_save = MTY_GetTime();
 
-	const char *sram_path = MTY_HashGetInt(CTX.paths, JUN_FILE_SRAM);
-	const char *rtc_path = MTY_HashGetInt(CTX.paths, JUN_FILE_RTC);
+	const char *sram_path = MTY_HashGetInt(CTX.paths, JUN_PATH_SRAM);
+	const char *rtc_path = MTY_HashGetInt(CTX.paths, JUN_PATH_RTC);
 
 	save_memory(RETRO_MEMORY_SAVE_RAM, sram_path);
 	save_memory(RETRO_MEMORY_RTC, rtc_path);
@@ -256,8 +256,8 @@ static void restore_memory(uint32_t type, const char *path)
 
 void JUN_CoreRestoreMemories()
 {
-	const char *sram_path = MTY_HashGetInt(CTX.paths, JUN_FILE_SRAM);
-	const char *rtc_path = MTY_HashGetInt(CTX.paths, JUN_FILE_RTC);
+	const char *sram_path = MTY_HashGetInt(CTX.paths, JUN_PATH_SRAM);
+	const char *rtc_path = MTY_HashGetInt(CTX.paths, JUN_PATH_RTC);
 
 	restore_memory(RETRO_MEMORY_SAVE_RAM, sram_path);
 	restore_memory(RETRO_MEMORY_RTC, rtc_path);
@@ -268,7 +268,7 @@ void JUN_CoreSetCheats()
 	char *path = NULL;
 	size_t index = 0;
 
-	const char *cheats_path = MTY_HashGetInt(CTX.paths, JUN_FOLDER_CHEATS);
+	const char *cheats_path = MTY_HashGetInt(CTX.paths, JUN_PATH_CHEATS);
 
 	// while (JUN_InteropReadDir(cheats_path, index++, &path)) {
 	// 	void *cheat = JUN_FilesystemGetExistingFile(path);
@@ -308,7 +308,7 @@ void JUN_CoreSaveState()
 
 	CTX.sym.retro_serialize(data, size);
 
-	const char *state_path = MTY_HashGetInt(CTX.paths, JUN_FILE_STATE);
+	const char *state_path = MTY_HashGetInt(CTX.paths, JUN_PATH_STATE);
 	JUN_FilesystemSaveFile(state_path, data, size);
 
 	MTY_Free(data);
@@ -318,7 +318,7 @@ void JUN_CoreRestoreState()
 {
 	size_t size = CTX.sym.retro_serialize_size();
 
-	const char *state_path = MTY_HashGetInt(CTX.paths, JUN_FILE_STATE);
+	const char *state_path = MTY_HashGetInt(CTX.paths, JUN_PATH_STATE);
 	JUN_File *file = JUN_FilesystemGetExistingFile(state_path);
 	if (!file)
 		return;

@@ -52,19 +52,7 @@ export const SavesPage = () => {
 
 		let save_restore = null;
 
-		if (files[0].name.endsWith('.jsv')) {
-			const data = await files[0].arrayBuffer();
-			save_restore = decode(data);
-	
-		} else if (files[0].name.endsWith('.json')) {
-			const data = await files[0].text();
-			save_restore = JSON.parse(data);
-
-			for (const save of save_restore)
-				for (const file of save.files)
-					file.data = Helpers.To.Uint8Array(atob(file.data));
-			
-		} else {
+		if (!files[0].name.endsWith('.jsv')) {
 			// TODO alert?
 			return;
 		}
@@ -135,7 +123,6 @@ export const SavesPage = () => {
 									<IonButton onClick={() => showModal(save)} fill="clear">
 										<IonIcon slot="icon-only" icon={buildOutline} />
 									</IonButton>
-									{/* {!save.mapped && <IonButton onClick={() => showModal(save)}>Fix</IonButton>} */}
 								</IonItem>
 								<IonItemOptions side="end">
 									<IonItemOption color="danger" onClick={() => deleteSave(save)}>Delete</IonItemOption>

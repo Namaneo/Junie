@@ -73,16 +73,13 @@ void JUN_AppLoadCore(JUN_App *public, const char *system, const char *rom, const
 
 	this->paths = MTY_HashCreate(0);
 
-	MTY_HashSetInt(this->paths, JUN_FILE_GAME,  MTY_SprintfD("/games/%s/%s", system, rom));
-
-	MTY_HashSetInt(this->paths, JUN_FOLDER_SYSTEM, MTY_SprintfD("/systems/%s",   system));
-	MTY_HashSetInt(this->paths, JUN_FOLDER_SAVES,  MTY_SprintfD("/saves/%s/%s",  system, game));
-	MTY_HashSetInt(this->paths, JUN_FOLDER_CHEATS, MTY_SprintfD("/cheats/%s/%s", system, game));
-
-	const char *saves = MTY_HashGetInt(this->paths, JUN_FOLDER_SAVES);
-	MTY_HashSetInt(this->paths, JUN_FILE_STATE, MTY_SprintfD("%s/%s.state", saves, game));
-	MTY_HashSetInt(this->paths, JUN_FILE_SRAM,  MTY_SprintfD("%s/%s.srm",   saves, game));
-	MTY_HashSetInt(this->paths, JUN_FILE_RTC,   MTY_SprintfD("%s/%s.rtc",   saves, game));
+	MTY_HashSetInt(this->paths, JUN_PATH_SYSTEM, MTY_SprintfD("/%s",             system));
+	MTY_HashSetInt(this->paths, JUN_PATH_GAME,   MTY_SprintfD("/%s/%s",          system, rom));
+	MTY_HashSetInt(this->paths, JUN_PATH_SAVES,  MTY_SprintfD("/%s/%s",          system, game));
+	MTY_HashSetInt(this->paths, JUN_PATH_STATE,  MTY_SprintfD("/%s/%s/%s.state", system, game, game));
+	MTY_HashSetInt(this->paths, JUN_PATH_SRAM,   MTY_SprintfD("/%s/%s/%s.srm",   system, game, game));
+	MTY_HashSetInt(this->paths, JUN_PATH_RTC,    MTY_SprintfD("/%s/%s/%s.rtc",   system, game, game));
+	MTY_HashSetInt(this->paths, JUN_PATH_CHEATS, MTY_SprintfD("/%s/%s/%s.cht",   system, game, game));
 
 	JUN_CoreCreate(this->paths);
 
@@ -144,14 +141,14 @@ bool JUN_AppEnvironment(JUN_App *public, unsigned cmd, void *data)
 		case RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY: {
 			char **system_directory = data;
 
-			*system_directory = MTY_HashGetInt(this->paths, JUN_FOLDER_SYSTEM);
+			*system_directory = MTY_HashGetInt(this->paths, JUN_PATH_SYSTEM);
 
 			return true;
 		}
 		case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY: {
 			char **save_directory = data;
 
-			*save_directory = MTY_HashGetInt(this->paths, JUN_FOLDER_SAVES);
+			*save_directory = MTY_HashGetInt(this->paths, JUN_PATH_SAVES);
 
 			return true;
 		}

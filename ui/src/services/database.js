@@ -17,12 +17,11 @@ export async function read_json(path) {
 	return file;
 }
 
-export async function list(path, suffix, func) {
+export async function list(func, ...suffixes) {
 	let paths = await getFS().keys();
-	paths = paths.filter(x => x.startsWith(path));
 
-	if (suffix)
-		paths = paths.filter(x => x.endsWith(suffix));
+	if (suffixes)
+		paths = paths.filter(p => suffixes.some(s => p.endsWith(s)));
 
 	const files = [];
 	for (let path of paths)
@@ -31,12 +30,12 @@ export async function list(path, suffix, func) {
 	return files;
 }
 
-export async function list_json(path, suffix) {
-	return await list(path, suffix, path => read_json(path));
+export async function list_json(...suffixes) {
+	return await list(path => read_json(path), ...suffixes);
 }
 
-export async function list_buffer(path, suffix) {
-	return await list(path, suffix, path => read(path));
+export async function list_buffer(...suffixes) {
+	return await list(path => read(path), ...suffixes);
 }
 
 export async function write(path, data) {
@@ -83,7 +82,7 @@ export async function updateSettings(settings) {
 }
 
 export async function getSaves() {
-	const rawSaves = await list_buffer('/saves');
+	const rawSaves = await list_buffer('.sav', '.srm', '.rtc', '.state');
 
 	return rawSaves.map(file => new Save(file)).reduce((acc, newSave) => {
 
@@ -118,7 +117,7 @@ export async function removeSave(save) {
 }
 
 export async function getCheats() {
-	const rawCheats = await list_json('/cheats');
+	const rawCheats = await list_json('.cht');
 
 	return rawCheats.map(file => new Cheat(file));
 };
@@ -135,7 +134,7 @@ export async function removeCheat(cheat) {
 }
 
 export async function getGames() {
-	const games = await list_json('/games', '.meta');
+	const games = await list_json('.meta');
 
 	return games.map(game => new Game(game.data.system, game.data.game));
 };
@@ -151,11 +150,11 @@ export async function addGame(game, data) {
 	delete file.meta.system.cover;
 	delete file.meta.system.games;
 
-	await write(file.path, file.data);
-	await write_json(file.path + '.meta', file.meta);
+	await write(game.path(), file.data);
+	await write_json(game.meta(), file.meta);
 }
 
 export async function removeGame(game) {
 	await remove(game.path());
-	await remove(game.path() + '.meta');
+	await remove(game.meta());
 }

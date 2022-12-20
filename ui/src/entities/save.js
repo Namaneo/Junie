@@ -26,7 +26,7 @@ export class Save {
 	}
 
 	match(index) {
-		const matches = this.files[0].path.match(/\/saves\/(.*)\/(.*)\/(.*)\.(.*)/);
+		const matches = this.files[0].path.match(/\/(.*)\/(.*)\/(.*)\.(.*)/);
 
 		if (!matches)
 			return undefined;
