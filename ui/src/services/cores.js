@@ -67,6 +67,9 @@ export async function getBindings() {
 }
 
 export async function getSettings() {
+	if (tools.settings)
+		return tools.settings;
+
 	await Promise.allSettled([
 		createCore('genesis'),
 		createCore('melonds'),
@@ -75,13 +78,21 @@ export async function getSettings() {
 		createCore('snes9x'),
 	]);
 
-	return {
-		'Genesis Plus GX': cores['genesis'].settings,
-		'melonDS': cores['melonds'].settings,
-		'mGBA': cores['mgba'].settings,
-		'QuickNES': cores['quicknes'].settings,
-		'Snes9x': cores['snes9x'].settings,
+	tools.settings = {
+		'Genesis Plus GX': cores.genesis?.settings  || [],
+		'melonDS':         cores.melonds?.settings  || [],
+		'mGBA':            cores.mgba?.settings     || [],
+		'QuickNES':        cores.quicknes?.settings || [],
+		'Snes9x':          cores.snes9x?.settings   || [],
 	};
+
+	delete cores.genesis;
+	delete cores.melonds;
+	delete cores.mgba;
+	delete cores.quicknes;
+	delete cores.snes9x;
+
+	return tools.settings;
 }
 
 export async function runCore(name, system, rom, settings) {
