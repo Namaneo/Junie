@@ -1,7 +1,7 @@
 import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonModal, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
 import { add, checkmarkCircleOutline, closeCircleOutline, buildOutline } from 'ionicons/icons';
 import { useState } from 'react';
-import { Cheat } from '../entities/cheat';
+import { CheatList } from '../entities/cheat';
 import { EditCheatModal } from '../modals/edit-cheat-modal';
 import * as Requests from '../services/requests';
 import * as Database from "../services/database";
@@ -9,25 +9,42 @@ import * as Database from "../services/database";
 export const CheatsPage = () => {
 
 	const [modal, setModal] = useState(false);
-	const [current, setCurrent] = useState(null);
-	const [cheats, setCheats] = useState([]);
+	const [currentList, setCurrentList] = useState(null);
+	const [currentCheat, setCurrentCheat] = useState(null);
+
+	const [lists, setLists] = useState([]);
 	const [systems, setSystems] = useState([]);
 
-	const showModal = (cheat) => {
-		setCurrent(cheat);
+	const showModal = (list, cheat) => {
+		setCurrentList(list);
+		setCurrentCheat(cheat);
 		setModal(true);
 	}
 
-	const deleteCheat = async (cheat) => {
-		await Database.removeCheat(cheat);
+	const deleteCheat = async (list, cheat) => {
+		list.cheats = list.cheats.filter(x => x != cheat);
 
-		setCheats(await Database.getCheats());
+		if (list.cheats.length) {
+			await Database.updateCheat(list);
+
+		} else {
+			await Database.removeCheat(list);
+		}
+
+		setLists(await Database.getCheats());
 	};
 
-	const apply = async (cheat, key) => {
-		await Database.updateCheat(cheat, key);
+	const apply = async (cheat, system, game) => {
+		const list = currentList
+			|| lists.find(x => x.system == system.name && x.game == game.name)
+			|| CheatList.fromGame(system, game);
 
-		setCheats(await Database.getCheats());
+		if (cheat != currentCheat)
+			list.cheats.push(cheat);
+
+		await Database.updateCheat(list);
+
+		setLists(await Database.getCheats());
 		setModal(false);
 	};
 
@@ -36,7 +53,7 @@ export const CheatsPage = () => {
 	}
 
 	useIonViewWillEnter(async () => {
-		setCheats(await Database.getCheats());
+		setLists(await Database.getCheats());
 		setSystems(await Requests.getSystems());
 	});
 
@@ -47,7 +64,7 @@ export const CheatsPage = () => {
 				<IonToolbar>
 					<IonTitle>Cheats</IonTitle>
 					<IonButtons slot="end">
-						<IonButton onClick={() => showModal(new Cheat())}>
+						<IonButton onClick={() => showModal()}>
 							<IonIcon slot="icon-only" icon={add} />
 						</IonButton>
 					</IonButtons>
@@ -56,12 +73,12 @@ export const CheatsPage = () => {
 
 			<IonContent class="cheats">
 				<IonModal isOpen={modal}>
-					<EditCheatModal current={current} systems={systems} apply={apply} dismiss={dismiss}  />
+					<EditCheatModal current={currentCheat} systems={systems} apply={apply} dismiss={dismiss}  />
 				</IonModal>
 
 				<IonList lines="none">
-					{cheats.map(cheat =>
-						<IonCard key={cheat.name}>
+					{lists.map(list => list.cheats.map(cheat =>
+						<IonCard key={list.system + list.game + cheat.name}>
 							<IonItemSliding>
 								<IonItem color="light">
 									{
@@ -71,19 +88,19 @@ export const CheatsPage = () => {
 									}
 									<IonLabel>
 										<h2>{cheat.name}</h2>
-										<h3>{cheat.game?.replaceAll(/ \(.*\)|\.[a-z]+/g, '')}</h3>
-										<h3>{cheat.system}</h3>
+										<h3>{list.game}</h3>
+										<h3>{list.system}</h3>
 									</IonLabel>
-									<IonButton onClick={() => showModal(cheat)} fill="clear">
+									<IonButton onClick={() => showModal(list, cheat)} fill="clear">
 										<IonIcon slot="icon-only" icon={buildOutline} />
 									</IonButton>
 								</IonItem>
 								<IonItemOptions side="end">
-									<IonItemOption color="danger" onClick={() => deleteCheat(cheat)}>Delete</IonItemOption>
+									<IonItemOption color="danger" onClick={() => deleteCheat(list, cheat)}>Delete</IonItemOption>
 								</IonItemOptions>
 							</IonItemSliding>
 						</IonCard>
-					)}
+					))}
 				</IonList>
 			</IonContent>
 

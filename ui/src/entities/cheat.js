@@ -1,51 +1,50 @@
 export class Cheat {
-	system;
-	game;
-    name;
+	/** @type {string} */
+	name;
 
+	/** @type {boolean} */
 	enabled;
+
+	/** @type {number} */
 	order;
+
+	/** @type {string} */
 	value;
+}
 
-	constructor(file) {
-		this.enabled = true;
-		this.order = 0;
+export class CheatList {
+	/** @type {string} */
+	system;
 
-		if (file) {
-			this.enabled = file.data.enabled;
-			this.order = file.data.order;
-			this.value = file.data.value;
+	/** @type {string} */
+	game;
 
-			this.system = this.match(file.path, 1);
-			this.game = this.match(file.path, 2);
-			this.name = this.match(file.path, 3);
-		}
+	/** @type {Cheat[]} */
+	cheats;
+
+	static fromGame(system, game) {
+		const obj = new CheatList();
+
+		obj.system = system.name;
+		obj.game = game.name;
+		obj.cheats = [];
+
+		return obj;
+	}
+
+	static fromFile(file) {
+		const obj = new CheatList();
+
+		const matches = file.path.match(/(.*)\/(.*)\/(.*).(.*)/)
+
+		obj.system = matches[1];
+		obj.game = matches[2];
+		obj.cheats = file.data;
+
+		return obj;
 	}
 
 	path() {
-		const filename = (this.game || '').split('.').slice(0, -1).join('.');
-		return `/cheats/${this.system}/${filename}/${this.name}.cht`;
-	}
-
-	file() {
-		const data = {
-			enabled: this.enabled,
-			order: this.order,
-			value: this.value,
-		}
-
-		return {
-			path: this.path(),
-			data: data,
-		}
-	}
-
-    match(path, index) {
-		const matches = path.match(/\/cheats\/(.*)\/(.*)\/(.*).cht/);
-
-		if (!matches || matches.length <= index)
-			return undefined;
-
-		return matches[index];
+		return `${this.system}/${this.game}/${this.game}.cht`;
 	}
 }

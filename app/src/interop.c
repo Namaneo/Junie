@@ -1,3 +1,4 @@
+#include <string.h>
 #include <emscripten.h>
 
 #include "matoya.h"
@@ -20,9 +21,18 @@ void JUN_InteropShowUI(bool show)
 void *JUN_InteropReadFile(const char *path, int32_t *length)
 {
 	void *data = NULL;
-	int error = 0;
+	int32_t size = 0, error = 0;
+	emscripten_idb_load("Junie", path, &data, &size, &error);
 
-	emscripten_idb_load("Junie", path, &data, length, &error);
+	if (length) {
+		*length = size;
+
+	} else if (data) {
+		void *tmp = MTY_Alloc(size + 1, 1);
+		memcpy(tmp, data, size);
+		MTY_Free(data);
+		data = tmp;
+	}
 
 	return !error ? data : NULL;
 }

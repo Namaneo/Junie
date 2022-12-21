@@ -3,15 +3,13 @@ import { useState } from "react";
 
 export const EditCheatModal = ({ current, systems, dismiss, apply }) => {
 
-	const systemEntry = systems.find(x => x.name == current.system);
-	const gameEntry = systemEntry?.games.find(x => x.rom == current.game);
+	const [system, setSystem] = useState(undefined);
+	const [game, setGame] = useState(undefined);
 
-	const [system, setSystem] = useState(systemEntry);
-	const [game, setGame] = useState(gameEntry);
-	const [name, setName] = useState(current.name);
-	const [enabled, setEnabed] = useState(current.enabled);
-	const [order, setOrder] = useState(current.order);
-	const [value, setValue] = useState(current.value);
+	const [name, setName] = useState(current?.name);
+	const [enabled, setEnabed] = useState(current?.enabled);
+	const [order, setOrder] = useState(current?.order);
+	const [value, setValue] = useState(current?.value);
 
 	const systemChanged = (system) => {
 		setSystem(system);
@@ -19,23 +17,19 @@ export const EditCheatModal = ({ current, systems, dismiss, apply }) => {
 	};
 
 	const isValid = () => {
-		return !system || !game || !name?.length || !value?.length;
+		return (current || (system && game)) && name?.length && value?.length;
 	}
 
 	const validate = () => {
-		if (!system || !game)
-			return;
+		if (!current)
+			current = {};
 
-		const key = current.path();
-		
-		current.system = system.name;
-		current.game = game.rom;
 		current.name = name;
 		current.enabled = enabled;
 		current.order = order;
 		current.value = value;
 
-		apply(current, key);
+		apply(current, system, game);
 	}
 
 	return (
@@ -52,23 +46,23 @@ export const EditCheatModal = ({ current, systems, dismiss, apply }) => {
 			<IonContent class="modal">
 				<IonList lines="full">
 
-					<IonItem>
+					{!current && <IonItem>
 						<IonLabel>System</IonLabel>
 						<IonSelect interface="action-sheet" value={system} onIonChange={e => systemChanged(e.detail.value)}>
 							{systems.filter(system => system.games.length).map(system =>
 								<IonSelectOption key={system.name} value={system}>{system.name}</IonSelectOption>
 							)}
 						</IonSelect>
-					</IonItem>
+					</IonItem>}
 
-					<IonItem>
+					{!current && <IonItem>
 						<IonLabel>Game</IonLabel>
 						<IonSelect interface="action-sheet" value={game} disabled={!system} onIonChange={e => setGame(e.detail.value)}>
 							{system?.games.map(game =>
 								<IonSelectOption key={game.name} value={game}>{game.name}</IonSelectOption>
 							)}
 						</IonSelect>
-					</IonItem>
+					</IonItem>}
 
 					<IonItem>
 						<IonLabel>Enabled</IonLabel>
@@ -92,7 +86,7 @@ export const EditCheatModal = ({ current, systems, dismiss, apply }) => {
 
 				</IonList>
 
-				<IonButton expand="block" disabled={isValid()} onClick={() => validate()}>
+				<IonButton expand="block" disabled={!isValid()} onClick={() => validate()}>
 					Apply
 				</IonButton>
 

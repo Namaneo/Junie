@@ -8,19 +8,10 @@ export class Game {
 	}
 
 	path() {
-		return `/${this.system.name}/${this.game.rom}`;
+		return `${this.system.name}/${this.game.rom}`;
 	}
 
 	meta() {
-		return `/${this.system.name}/${this.game.name}/${this.game.name}.meta`;
-	}
-
-    static match(path, index) {
-		const matches = path.match(/\/(.*)\/(.*)/);
-
-		if (!matches || matches.length <= index)
-			return undefined;
-
-		return matches[index];
+		return `${this.system.name}/${this.game.name}/${this.game.name}.meta`;
 	}
 }

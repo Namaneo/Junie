@@ -8,9 +8,10 @@ export class Save {
 	constructor(file) {
 		this.files.push(file);
 
-		this.system = this.match(1);
-		this.game = this.match(2);
-		this.extension = this.match(4);
+		const path = this.files[0].path;
+		this.system = this.match(path, 1);
+		this.game = this.match(path, 2);
+		this.extension = this.match(path, 4);
 	}
 
 	isMapped(systems) {
@@ -25,10 +26,10 @@ export class Save {
 		return true;
 	}
 
-	match(index) {
-		const matches = this.files[0].path.match(/\/(.*)\/(.*)\/(.*)\.(.*)/);
+	match(path, index) {
+		const matches = path.match(/(.*)\/(.*)\/(.*)\.(.*)/);
 
-		if (!matches)
+		if (!matches || matches.length <= index)
 			return undefined;
 
 		return matches[index];

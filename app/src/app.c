@@ -73,13 +73,13 @@ void JUN_AppLoadCore(JUN_App *public, const char *system, const char *rom, const
 
 	this->paths = MTY_HashCreate(0);
 
-	MTY_HashSetInt(this->paths, JUN_PATH_SYSTEM, MTY_SprintfD("/%s",             system));
-	MTY_HashSetInt(this->paths, JUN_PATH_GAME,   MTY_SprintfD("/%s/%s",          system, rom));
-	MTY_HashSetInt(this->paths, JUN_PATH_SAVES,  MTY_SprintfD("/%s/%s",          system, game));
-	MTY_HashSetInt(this->paths, JUN_PATH_STATE,  MTY_SprintfD("/%s/%s/%s.state", system, game, game));
-	MTY_HashSetInt(this->paths, JUN_PATH_SRAM,   MTY_SprintfD("/%s/%s/%s.srm",   system, game, game));
-	MTY_HashSetInt(this->paths, JUN_PATH_RTC,    MTY_SprintfD("/%s/%s/%s.rtc",   system, game, game));
-	MTY_HashSetInt(this->paths, JUN_PATH_CHEATS, MTY_SprintfD("/%s/%s/%s.cht",   system, game, game));
+	MTY_HashSetInt(this->paths, JUN_PATH_SYSTEM, MTY_SprintfD("%s",             system));
+	MTY_HashSetInt(this->paths, JUN_PATH_GAME,   MTY_SprintfD("%s/%s",          system, rom));
+	MTY_HashSetInt(this->paths, JUN_PATH_SAVES,  MTY_SprintfD("%s/%s",          system, game));
+	MTY_HashSetInt(this->paths, JUN_PATH_STATE,  MTY_SprintfD("%s/%s/%s.state", system, game, game));
+	MTY_HashSetInt(this->paths, JUN_PATH_SRAM,   MTY_SprintfD("%s/%s/%s.srm",   system, game, game));
+	MTY_HashSetInt(this->paths, JUN_PATH_RTC,    MTY_SprintfD("%s/%s/%s.rtc",   system, game, game));
+	MTY_HashSetInt(this->paths, JUN_PATH_CHEATS, MTY_SprintfD("%s/%s/%s.cht",   system, game, game));
 
 	JUN_CoreCreate(this->paths);
 

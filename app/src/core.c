@@ -270,29 +270,34 @@ void JUN_CoreSetCheats()
 
 	const char *cheats_path = MTY_HashGetInt(CTX.paths, JUN_PATH_CHEATS);
 
-	// while (JUN_InteropReadDir(cheats_path, index++, &path)) {
-	// 	void *cheat = JUN_FilesystemGetExistingFile(path);
-	// 	MTY_JSON *json = MTY_JSONParse(cheat);
+	char *data = JUN_InteropReadFile(cheats_path, NULL);
+	if (!data)
+		return;
 
-	// 	bool enabled = false;
-	// 	MTY_JSONObjGetBool(json, "enabled", &enabled);
-	// 	if (!enabled)
-	// 		continue;
+	MTY_JSON *json = MTY_JSONParse(data);
+	for (size_t i = 0; i < MTY_JSONArrayGetLength(json); ++i) {
+		const MTY_JSON *cheat = MTY_JSONArrayGetItem(json, i);
 
-	// 	int32_t order = 0;
-	// 	MTY_JSONObjGetInt(json, "order", &order);
+		bool enabled = false;
+		MTY_JSONObjGetBool(cheat, "enabled", &enabled);
+		if (!enabled)
+			continue;
 
-	// 	char value[1024] = {0};
-	// 	MTY_JSONObjGetString(json, "value", value, 1024);
-	// 	for (size_t i = 0; i < strlen(value); i++) {
-	// 		if (value[i] == ' ' || value[i] == '\n')
-	// 			value[i] = '+';
-	// 	}
+		int32_t order = 0;
+		MTY_JSONObjGetInt(cheat, "order", &order);
 
-	// 	CTX.sym.retro_cheat_set(order, enabled, value);
+		char value[1024] = {0};
+		MTY_JSONObjGetString(cheat, "value", value, 1024);
+		for (size_t i = 0; i < strlen(value); i++) {
+			if (value[i] == ' ' || value[i] == '\n')
+				value[i] = '+';
+		}
 
-	// 	MTY_JSONDestroy(&json);
-	// }
+		CTX.sym.retro_cheat_set(order, enabled, value);
+	}
+
+	MTY_JSONDestroy(&json);
+	MTY_Free(data);
 }
 
 void JUN_CoreResetCheats()
