@@ -18,15 +18,14 @@ struct _JUN_App
 	MTY_Hash *paths;
 };
 
-JUN_App *JUN_AppCreate(MTY_AppFunc app_func, MTY_EventFunc event_func)
+JUN_App *JUN_AppCreate(MTY_EventFunc event)
 {
 	_JUN_App *this = MTY_Alloc(1, sizeof(_JUN_App));
 
 	this->public.state = JUN_StateCreate();
 	this->public.input = JUN_InputCreate(this->public.state);
 	this->public.audio = JUN_AudioCreate(this->public.state);
-	this->public.video = JUN_VideoCreate(this->public.state, this->public.input, app_func, event_func);
-	this->public.mty   = JUN_VideoGetMTY(this->public.video);
+	this->public.video = JUN_VideoCreate(this->public.state, this->public.input, event);
 
 	return (JUN_App *) this;
 }
@@ -41,16 +40,6 @@ static void jun_app_configure(_JUN_App *this, const char *system, const char *js
 
 	// Set prefered language
 	this->language = JUN_EnumsGetInt(JUN_ENUM_LANGUAGE, settings->language);
-
-	// Set keyboard bindings
-	iter = 0;
-	key = NULL;
-	while (MTY_HashGetNextKey(settings->bindings, &iter, &key)) {
-		const char *value = MTY_HashGet(settings->bindings, key);
-		uint32_t joypad = JUN_EnumsGetInt(JUN_ENUM_JOYPAD, key);
-		uint32_t keyboard = JUN_EnumsGetInt(JUN_ENUM_KEYBOARD, value);
-		JUN_InputMapKey(this->public.input, joypad, keyboard);
-	}
 
 	// Set custom configurations
 	iter = 0;

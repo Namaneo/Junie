@@ -70,8 +70,7 @@ export async function getSettings() {
 
 	const defaults = {
 		language: 'RETRO_LANGUAGE_ENGLISH',
-		bindings: { }, // TODO default bindings?
-		configurations: { }, // TODO default configurations?
+		configurations: { },
 	};
 
 	return JSON.parse(JSON.stringify({ ...defaults, ...file }));

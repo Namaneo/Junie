@@ -42,7 +42,7 @@ struct jun_video_asset {
 };
 
 struct JUN_Video {
-	MTY_App *app;
+	MTY_EventFunc event;
 	MTY_Renderer *renderer;
 	MTY_Hash *assets;
 	uint32_t remaining_assets;
@@ -68,19 +68,54 @@ struct JUN_Video {
     float remaining_frames;
 };
 
-JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input, MTY_AppFunc app_func, MTY_EventFunc event_func)
+typedef void (*motion_func)(JUN_Video *this, int32_t id, bool relative, int32_t x, int32_t y);
+typedef void (*button_func)(JUN_Video *this, int32_t id, bool pressed, int32_t button, int32_t x, int32_t y);
+
+void gl_attach_events(JUN_Video *this, motion_func motion, button_func button);
+void gl_get_size(uint32_t *width, uint32_t *height);
+void gl_flush();
+
+static void window_motion(JUN_Video *this, int32_t id, bool relative, int32_t x, int32_t y)
+{
+	MTY_Event evt = {0};
+	evt.type = MTY_EVENT_MOTION;
+	evt.motion.id = id;
+	evt.motion.relative = relative;
+	evt.motion.x = x;
+	evt.motion.y = y;
+
+	this->event(&evt, NULL);
+}
+
+static void window_button(JUN_Video *this, int32_t id, bool pressed, int32_t button, int32_t x, int32_t y)
+{
+	MTY_Event evt = {0};
+	evt.type = MTY_EVENT_BUTTON;
+	evt.button.id = id;
+	evt.button.pressed = pressed;
+	evt.button.button =
+		button == 0 ? MTY_BUTTON_LEFT :
+		button == 1 ? MTY_BUTTON_MIDDLE :
+		button == 2 ? MTY_BUTTON_RIGHT :
+		button == 3 ? MTY_BUTTON_X1 :
+		button == 4 ? MTY_BUTTON_X2 :
+		MTY_BUTTON_NONE;
+
+	evt.button.x = x;
+	evt.button.y = y;
+
+	this->event(&evt, NULL);
+}
+
+JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input, MTY_EventFunc event)
 {
 	JUN_Video *this = MTY_Alloc(1, sizeof(JUN_Video));
 
+	this->event = event;
 	this->state = state;
 	this->input = input;
 
-	this->app = MTY_AppCreate(app_func, event_func, this);
-
-	MTY_WindowCreate(this->app, "Junie", NULL, 0);
-	MTY_WindowSetGFX(this->app, 0, MTY_GFX_GL, true);
-	MTY_Frame frame = MTY_MakeDefaultFrame(0, 0, 1000, 700, 0.75);
-	MTY_WindowSetFrame(this->app, 0, &frame);
+	gl_attach_events(this, window_motion, window_button);
 
 	this->renderer = MTY_RendererCreate();
 	this->assets = MTY_HashCreate(0);
@@ -88,16 +123,9 @@ JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input, MTY_AppFunc app_f
 	return this;
 }
 
-MTY_App *JUN_VideoGetMTY(JUN_Video *this)
-{
-	return this->app;
-}
-
 static void refresh_viewport_size(JUN_Video *this, uint32_t *view_width, uint32_t *view_height)
 {
-	MTY_Size size = MTY_WindowGetSize(this->app, 0);
-	*view_width = size.w;
-	*view_height = size.h;
+	gl_get_size(view_width, view_height);
 
 	JUN_StateSetWindowMetrics(this->state, *view_width, *view_height);
 }
@@ -132,7 +160,7 @@ static void asset_prepared(void *image, uint32_t width, uint32_t height, void *o
 	asset->height = height;
 
 	MTY_HashSetInt(this->assets, id, asset);
-    MTY_WindowSetUITexture(this->app, 0, id + 1, image, width, height);
+	MTY_RendererSetUITexture(this->renderer, MTY_GFX_GL, NULL, NULL, id + 1, image, width, height);
 
 	this->remaining_assets--;
 
@@ -250,8 +278,6 @@ void JUN_VideoStart(JUN_Video *this)
 
 	PREPARE(RETRO_DEVICE_ID_JOYPAD_START,  joypad_start_select);
 	PREPARE(RETRO_DEVICE_ID_JOYPAD_SELECT, joypad_start_select);
-
-	MTY_AppRun(this->app);
 }
 
 bool JUN_VideoAssetsReady(JUN_Video *this)
@@ -314,6 +340,8 @@ void JUN_VideoDrawFrame(JUN_Video *this, const void *data)
 	description.clear = true;
 
 	refresh_viewport_size(this, &description.viewWidth, &description.viewHeight);
+	description.displayWidth = description.viewWidth;
+	description.displayHeight = description.viewHeight;
 
 	// Compute height offset to give some space to the menu
 	uint32_t offset = 50 * JUN_InteropGetPixelRatio();
@@ -326,7 +354,7 @@ void JUN_VideoDrawFrame(JUN_Video *this, const void *data)
 	description.imageX = scale_w < scale_h ? 0 : (description.viewWidth - this->width * scale_h) / 2;
 	description.scale = scale_w < scale_h ? scale_w : scale_h;
 
-	MTY_WindowDrawQuad(this->app, 0, this->buffer, &description);
+	MTY_RendererDrawQuad(this->renderer, MTY_GFX_GL, NULL, NULL, this->buffer, &description, NULL);
 }
 
 void JUN_VideoDrawUI(JUN_Video *this, bool has_gamepad)
@@ -335,7 +363,7 @@ void JUN_VideoDrawUI(JUN_Video *this, bool has_gamepad)
 	MTY_DrawData *draw_data = JUN_TextureProduce(this->ui, !has_gamepad ? 6 : 0);
 
 	// Draw the controller
-	MTY_WindowDrawUI(this->app, 0, draw_data);
+	MTY_RendererDrawUI(this->renderer, MTY_GFX_GL, NULL, NULL, draw_data, NULL);
 }
 
 uint32_t JUN_VideoComputeFramerate(JUN_Video *this)
@@ -362,7 +390,7 @@ void JUN_VideoPresent(JUN_Video *this)
 {
 	this->after_run = MTY_GetTime();
 
-	MTY_WindowPresent(this->app, 0);
+	gl_flush();
 }
 
 void JUN_VideoDestroy(JUN_Video **video)
@@ -374,7 +402,6 @@ void JUN_VideoDestroy(JUN_Video **video)
 
 	MTY_HashDestroy(&this->assets, MTY_Free);
 	MTY_RendererDestroy(&this->renderer);
-	MTY_AppDestroy(&this->app);
 
 	MTY_Free(this);
 	*video = NULL;

@@ -59,7 +59,6 @@ export const SettingsPage = () => {
 
 	const [settings, setSettings] = useState({});
 	const [languages, setLanguages] = useState([]);
-	const [bindings, setBindings] = useState({ joypad: [], keyboard: [] });
 	const [options, setOptions] = useState({});
 
 	const language = async (lang) => {
@@ -72,16 +71,6 @@ export const SettingsPage = () => {
 
         await Database.updateSettings(settings);
     };
-
-    const bind = async (button, key) => {
-        settings.bindings[button] = key;
-        if (!key)
-            delete settings.bindings[button];
-
-        setSettings({ ...settings });
-
-        await Database.updateSettings(settings);
-    }
 
     const override = async (item, value) => {
         settings.configurations[item] = value;
@@ -96,30 +85,16 @@ export const SettingsPage = () => {
     const openModal = (name) => {
         const data =  { name: name };
 
-        if (data.name == 'Bindings') {
-            data.items = bindings.joypad.map(button => new Object({
-                key: button,
-                name: prettify(button, 'RETRO_DEVICE_ID_JOYPAD_'),
-                options: bindings.keyboard.map(key => new Object({
-                    key: key,
-                    name: prettify(key, 'MTY_KEY_')
-                })),
-            }));
-            data.current = settings.bindings;
-            data.update = bind;
-
-        } else {
-            data.items = options[name].map(option => new Object({
-                key: option.key,
-                name: option.name,
-                options: option.options.map(value => new Object({
-                    key: value,
-                    name: value
-                })),
-            }));
-            data.current = settings.configurations;
-            data.update = override;
-        }
+        data.items = options[name].map(option => new Object({
+			key: option.key,
+			name: option.name,
+			options: option.options.map(value => new Object({
+				key: value,
+				name: value
+			})),
+		}));
+		data.current = settings.configurations;
+		data.update = override;
 
         setData(data);
         setModal(true);
@@ -132,7 +107,6 @@ export const SettingsPage = () => {
 
 	useIonViewWillEnter(async () => {
 		setLanguages(await Cores.getLanguages());
-		setBindings(await Cores.getBindings());
 		setOptions(await Cores.getSettings());
 		setSettings(await Database.getSettings());
 	});
@@ -159,10 +133,6 @@ export const SettingsPage = () => {
                                 <IonSelectOption key={name} value={name}>{prettify(name, 'RETRO_LANGUAGE_')}</IonSelectOption>
                             )}
                         </IonSelect>
-                    </IonItem>
-
-                    <IonItem key="bindings" button onClick={() => openModal('Bindings')}>
-                        <IonLabel>Bindings</IonLabel>
                     </IonItem>
 
                     {Object.keys(options).map(name =>

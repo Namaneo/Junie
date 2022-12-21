@@ -149,7 +149,7 @@ void start_game(const char *system, const char *rom, const char *settings)
 
 	JUN_InteropShowUI(false);
 
-	CTX.app = JUN_AppCreate(NULL, event_func);
+	CTX.app = JUN_AppCreate(event_func);
 	JUN_VideoStart(CTX.app->video);
 
 	if (!prepare_game(system, rom, settings)) {

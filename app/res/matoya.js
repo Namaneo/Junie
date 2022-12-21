@@ -1,4 +1,4 @@
-//`yarn global bin`/emscripten-library-generator ../app/res/matoya.js > ../app/res/library.js
+//`yarn global bin`/emscripten-library-generator app/res/matoya.js > app/res/library.js
 
 // Global state
 
@@ -6,7 +6,6 @@ const MTY = {
 	module: null,
 	audio: null,
 	gl: null,
-	keys: {},
 	events: {},
 };
 
@@ -19,19 +18,6 @@ function mty_mem() {
 
 function mty_mem_view() {
 	return new DataView(mty_mem());
-}
-
-function mty_char_to_js(buf) {
-	let str = '';
-
-	for (let x = 0; x < 0x7FFFFFFF && x < buf.length; x++) {
-		if (buf[x] == 0)
-			break;
-
-		str += String.fromCharCode(buf[x]);
-	}
-
-	return str;
 }
 
 
@@ -58,26 +44,9 @@ function MTY_Memcpy(cptr, abuffer) {
 	heap.set(abuffer);
 }
 
-function MTY_StrToJS(ptr) {
-	return mty_char_to_js(new Uint8Array(mty_mem(), ptr));
-}
-
-function MTY_StrToC(js_str, ptr, size) {
-	const view = new Uint8Array(mty_mem(), ptr);
-
-	let len = 0;
-	for (; len < js_str.length && len < size - 1; len++)
-		view[len] = js_str.charCodeAt(len);
-
-	// '\0' character
-	view[len] = 0;
-
-	return ptr;
-}
-
 // GL
 
-function web_gl_flush () {
+function gl_flush () {
 	MTY.gl.flush();
 }
 
@@ -170,7 +139,6 @@ function MTY_AudioQueue (ctx, frames, count) {
 	}
 }
 
-
 // Image
 
 function mty_decompress_image(input, func) {
@@ -211,47 +179,23 @@ function MTY_DecompressImageAsync (input, size, func, opaque) {
 	});
 }
 
-
-
 // Web API (mostly used in app.c)
-
-function mty_get_mods(ev) {
-	let mods = 0;
-
-	if (ev.shiftKey) mods |= 0x01;
-	if (ev.ctrlKey)  mods |= 0x02;
-	if (ev.altKey)   mods |= 0x04;
-	if (ev.metaKey)  mods |= 0x08;
-
-	if (ev.getModifierState("CapsLock")) mods |= 0x10;
-	if (ev.getModifierState("NumLock") ) mods |= 0x20;
-
-	return mods;
-}
 
 function mty_scaled(num) {
 	return Math.round(num * window.devicePixelRatio);
 }
 
-function web_set_mem_funcs (alloc, free) {
+function gl_get_size (c_width, c_height) {
+	const rect = MTY.gl.canvas.getBoundingClientRect();
 
-}
+	MTY.gl.canvas.width = mty_scaled(rect.width);
+	MTY.gl.canvas.height = mty_scaled(rect.height);
 
-function web_set_key (reverse, code, key) {
-	const str = MTY_StrToJS(code);
-	MTY.keys[str] = key;
-}
-
-function web_get_size (c_width, c_height) {
 	MTY_SetUint32(c_width, MTY.gl.drawingBufferWidth);
 	MTY_SetUint32(c_height, MTY.gl.drawingBufferHeight);
 }
 
-function web_set_title (title) {
-	document.title = MTY_StrToJS(title);
-}
-
-function web_attach_events (app, mouse_motion, mouse_button, mouse_wheel, keyboard, focus, drop, resize) {
+function gl_attach_events (app, mouse_motion, mouse_button) {
 	var currentTouches = new Array;
 
 	var touch_started = function (ev) {
@@ -308,13 +252,11 @@ function web_attach_events (app, mouse_motion, mouse_button, mouse_wheel, keyboa
 		}
 	};
 
-	MTY.events.resize = (ev) => {
+	MTY.events.resize = () => {
 		const rect = MTY.gl.canvas.getBoundingClientRect();
 
 		MTY.gl.canvas.width = mty_scaled(rect.width);
 		MTY.gl.canvas.height = mty_scaled(rect.height);
-
-		MTY_CFunc(resize)(app);
 	};
 
 	MTY.events.mousemove = (ev) => {
@@ -329,27 +271,6 @@ function web_attach_events (app, mouse_motion, mouse_button, mouse_wheel, keyboa
 	MTY.events.mouseup = (ev) => {
 		ev.preventDefault();
 		MTY_CFunc(mouse_button)(app, 0, false, ev.button, mty_scaled(ev.clientX), mty_scaled(ev.clientY));
-	}
-
-	MTY.events.keydown = (ev) => {
-		const key = MTY.keys[ev.code];
-
-		if (key != undefined) {
-			const cbuf = MTY_Alloc(1024);
-			const text = ev.key.length == 1 ? MTY_StrToC(ev.key, cbuf, 1024) : 0;
-
-			if (MTY_CFunc(keyboard)(app, true, key, text, mty_get_mods(ev)))
-				ev.preventDefault();
-			MTY_Free(cbuf);
-		}
-	}
-
-	MTY.events.keyup = (ev) => {
-		const key = MTY.keys[ev.code];
-
-		if (key != undefined)
-			if (MTY_CFunc(keyboard)(app, false, key, 0, mty_get_mods(ev)))
-				ev.preventDefault();
 	}
 
 	MTY.events.touchstart = (ev) => {
@@ -381,26 +302,9 @@ function web_attach_events (app, mouse_motion, mouse_button, mouse_wheel, keyboa
 	window.addEventListener('mousemove',   MTY.events.mousemove);
 	window.addEventListener('mousedown',   MTY.events.mousedown);
 	window.addEventListener('mouseup',     MTY.events.mouseup);
-	window.addEventListener('keydown',     MTY.events.keydown);
-	window.addEventListener('keyup',       MTY.events.keyup);
 	window.addEventListener('touchstart',  MTY.events.touchstart);
 	window.addEventListener('touchmove',   MTY.events.touchmove);
 	window.addEventListener('touchend',    MTY.events.touchend);
 	window.addEventListener('touchleave',  MTY.events.touchleave);
 	window.addEventListener('touchcancel', MTY.events.touchcancel);
-}
-
-function web_raf (app, func, controller, move, opaque) {
-	const rect = MTY.gl.canvas.getBoundingClientRect();
-
-	MTY.gl.canvas.width = mty_scaled(rect.width);
-	MTY.gl.canvas.height = mty_scaled(rect.height);
-}
-
-function web_view_destroy () {
-
-}
-
-function web_view_resize (hidden) {
-
 }

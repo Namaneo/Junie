@@ -9,8 +9,6 @@ struct JUN_Settings
     MTY_JSON *json;
 
     char *language;
-    MTY_Hash *bindings;
-    MTY_List *dependencies;
     MTY_Hash *configurations;
 };
 

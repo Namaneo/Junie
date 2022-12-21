@@ -34,7 +34,6 @@ async function createTools() {
 
 	tools.module = await (await import(`${origin}/cores/tools.js`)).default();
 	tools.languages = JSON.parse(tools.module.UTF8ToString(tools.module._get_languages()));
-	tools.bindings = JSON.parse(tools.module.UTF8ToString(tools.module._get_bindings()));
 }
 
 async function createCore(name) {
@@ -58,12 +57,6 @@ export async function getLanguages() {
 	await createTools();
 
 	return tools.languages;
-}
-
-export async function getBindings() {
-	await createTools();
-
-	return tools.bindings;
 }
 
 export async function getSettings() {

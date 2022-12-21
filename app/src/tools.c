@@ -31,21 +31,6 @@ char *get_languages()
 	return serialized;
 }
 
-char *get_bindings()
-{
-	initialize();
-
-	MTY_JSON *bindings = MTY_JSONObjCreate();
-	MTY_JSONObjSetItem(bindings, "joypad", JUN_EnumsGetAll(JUN_ENUM_JOYPAD));
-	MTY_JSONObjSetItem(bindings, "keyboard", JUN_EnumsGetAll(JUN_ENUM_KEYBOARD));
-
-	char *serialized = MTY_JSONSerialize(bindings);
-
-	MTY_JSONDestroy(&bindings);
-
-	return serialized;
-}
-
 char *get_settings()
 {
 	initialize();

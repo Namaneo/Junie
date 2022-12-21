@@ -13,10 +13,9 @@ typedef struct {
 	JUN_Input *input;
 	JUN_Audio *audio;
 	JUN_Video *video;
-	MTY_App *mty;
 } JUN_App;
 
-JUN_App *JUN_AppCreate(MTY_AppFunc app_func, MTY_EventFunc event_func);
+JUN_App *JUN_AppCreate(MTY_EventFunc event);
 void JUN_AppLoadCore(JUN_App *public, const char *system, const char *rom, const char *settings);
 const char *JUN_AppGetPath(JUN_App *public, JUN_PathType type);
 void JUN_AppUnloadCore(JUN_App *public);

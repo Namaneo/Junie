@@ -31,8 +31,6 @@ struct jun_input_status {
 	double radius;
     JUN_TextureData *texture;
 
-    MTY_Key key;
-
     struct jun_input_pointer *locked_by; // TODO remove that
     JUN_StateCallback callback;
 };
@@ -77,35 +75,11 @@ void JUN_InputMapTouch(JUN_Input *ctx, uint8_t id, double x, double y, double ra
     input->texture = JUN_StateGetMetrics(ctx->state, id);
 }
 
-void JUN_InputMapKey(JUN_Input *ctx, uint8_t id, MTY_Key key)
-{
-    struct jun_input_status *input = &ctx->inputs[id];
-
-    input->key = key;
-}
-
 void JUN_InputSetCallback(JUN_Input *ctx, uint8_t id, JUN_StateCallback callback)
 {
     struct jun_input_status *input = &ctx->inputs[id];
 
 	input->callback = callback;
-}
-
-static void set_key(JUN_Input *ctx, const MTY_Key key, bool pressed)
-{
-	for (uint8_t i = MIN_MENU_INPUTS; i <= MAX_MENU_INPUTS; ++i) {
-		if (ctx->inputs[i].key == key) {
-			ctx->inputs[i].pressed = pressed;
-			return;
-		}
-	}
-
-	for (uint8_t i = MIN_RETRO_INPUTS; i <= MAX_RETRO_INPUTS; ++i) {
-		if (ctx->inputs[i].key == key) {
-			ctx->inputs[i].pressed = pressed;
-			return;
-		}
-	}
 }
 
 static void set_mouse(JUN_Input *ctx, struct jun_input_pointer *pointer, uint8_t min, uint8_t max)
@@ -186,11 +160,6 @@ static struct jun_input_pointer *get_pointer(JUN_Input *ctx, int32_t id)
 
 void JUN_InputSetStatus(JUN_Input *ctx, const MTY_Event *event)
 {
-	if (event->type == MTY_EVENT_KEY) {
-		set_key(ctx, event->key.key, event->key.pressed);
-		return;
-	}
-
 	struct jun_input_pointer *pointer = NULL;
 
 	if (event->type == MTY_EVENT_BUTTON) {
@@ -221,7 +190,7 @@ void JUN_InputSetStatus(JUN_Input *ctx, const MTY_Event *event)
 
 	if (JUN_StateHasGamepad(ctx->state)) {
 		set_mouse(ctx, pointer, MIN_RETRO_INPUTS, MAX_RETRO_INPUTS);
-	
+
 	} else {
 		set_touch(ctx, pointer);
 	}
