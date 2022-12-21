@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <emscripten.h>
-#include <emscripten/html5.h>
 
 #include "matoya.h"
 #include "enums.h"
@@ -16,7 +15,6 @@
 
 static struct {
 	JUN_App *app;
-	bool initialized;
 } CTX;
 
 static bool environment(unsigned cmd, void *data)
@@ -68,6 +66,25 @@ void app_func()
 	JUN_CoreRun(JUN_StateGetFastForward(CTX.app->state) * factor);
 	JUN_VideoPresent(CTX.app->video);
 
+	if (JUN_StateShouldExit(CTX.app->state)) {
+		emscripten_cancel_main_loop();
+
+		// TODO Useless in emscripten
+
+		// JUN_AppUnloadCore(CTX.app);
+		// JUN_InputReset(CTX.app->input);
+		// if (JUN_StateHasAudio(CTX.app->state))
+		// 	JUN_StateToggleAudio(CTX.app->state);
+		// JUN_FilesystemClearAllFiles();
+
+		// JUN_AppDestroy(&CTX.app);
+		// JUN_FilesystemDestroy();
+		// JUN_EnumsDestroy();
+
+		JUN_InteropShowUI(true);
+		return;
+	}
+
 	JUN_CoreSaveMemories();
 
 	if (JUN_StateShouldSaveState(CTX.app->state)) {
@@ -79,35 +96,6 @@ void app_func()
 		JUN_CoreRestoreState();
 		JUN_StateToggleRestoreState(CTX.app->state);
 	}
-
-	if (JUN_StateShouldExit(CTX.app->state)) {
-		JUN_AppUnloadCore(CTX.app);
-		JUN_InputReset(CTX.app->input);
-		if (JUN_StateHasAudio(CTX.app->state))
-			JUN_StateToggleAudio(CTX.app->state);
-		JUN_FilesystemClearAllFiles();
-
-		JUN_AppDestroy(&CTX.app);
-		JUN_FilesystemDestroy();
-		JUN_EnumsDestroy();
-
-		CTX.initialized = false;
-
-		emscripten_cancel_main_loop();
-		JUN_InteropShowUI(true);
-	}
-}
-
-static void initialize()
-{
-	if (CTX.initialized)
-		return;
-
-	JUN_SetLogFunc();
-	JUN_EnumsCreate();
-	JUN_FilesystemCreate();
-
-	CTX.initialized = true;
 }
 
 static bool prepare_game(const char *system, const char *rom, const char *settings)
@@ -155,15 +143,9 @@ static void event_func(const MTY_Event *event, void *opaque)
 
 void start_game(const char *system, const char *rom, const char *settings)
 {
-	initialize();
-
-	EmscriptenWebGLContextAttributes attrs = {0};
-	emscripten_webgl_init_context_attributes(&attrs);
-	attrs.depth = false;
-	attrs.antialias = false;
-	attrs.premultipliedAlpha = true;
-	EMSCRIPTEN_WEBGL_CONTEXT_HANDLE ctx = emscripten_webgl_create_context("canvas", &attrs);
-	emscripten_webgl_make_context_current(ctx);
+	JUN_SetLogFunc();
+	JUN_EnumsCreate();
+	JUN_FilesystemCreate();
 
 	JUN_InteropShowUI(false);
 

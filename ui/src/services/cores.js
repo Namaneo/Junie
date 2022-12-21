@@ -121,6 +121,8 @@ export async function runCore(name, system, rom, settings) {
 
 			window.removeEventListener('show_ui', show_ui);
 
+			delete cores[name];
+
 			resolve();
 		}
 

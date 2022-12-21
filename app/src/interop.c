@@ -1,5 +1,6 @@
 #include <string.h>
 #include <emscripten.h>
+#include <emscripten/html5.h>
 
 #include "matoya.h"
 #include "interop.h"
@@ -11,6 +12,16 @@ double JUN_InteropGetPixelRatio()
 
 void JUN_InteropShowUI(bool show)
 {
+	if (!show) {
+		EmscriptenWebGLContextAttributes attrs = {0};
+		emscripten_webgl_init_context_attributes(&attrs);
+		attrs.depth = false;
+		attrs.antialias = false;
+		attrs.premultipliedAlpha = true;
+		EMSCRIPTEN_WEBGL_CONTEXT_HANDLE ctx = emscripten_webgl_create_context("canvas", &attrs);
+		emscripten_webgl_make_context_current(ctx);
+	}
+
 	const char *script = show
 		? "window.dispatchEvent(new CustomEvent('show_ui', { detail: true } ));"
 		: "window.dispatchEvent(new CustomEvent('show_ui', { detail: false } ));";
