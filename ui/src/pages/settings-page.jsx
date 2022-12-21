@@ -21,7 +21,7 @@ const prettify = (lang, prefix) => {
 const EditModal = ({ open, dismiss, data }) => {
 
     return (
-        <IonModal isOpen={open}>
+        <IonModal isOpen={open} backdropDismiss={false}>
             <IonHeader>
 				<IonToolbar>
 					<IonTitle>{data.name}</IonTitle>
