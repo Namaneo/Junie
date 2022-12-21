@@ -70,6 +70,7 @@ export default {
             '../app/web/**'
         ]),
         nodeResolve({
+			preferBuiltins: true,
             rootDir: path.join(process.cwd(), 'src'),
             extensions: ['.js', '.jsx'],
         }),

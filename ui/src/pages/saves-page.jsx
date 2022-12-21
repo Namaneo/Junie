@@ -1,4 +1,3 @@
-import { encode, decode } from "@msgpack/msgpack/dist";
 import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonModal, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
 import { checkmarkCircleOutline, closeCircleOutline, cloudDownload, cloudUpload, buildOutline } from 'ionicons/icons';
 import { useRef, useState } from 'react';
@@ -29,14 +28,16 @@ export const SavesPage = () => {
 	};
 
 	const backupSave = async () => {
-		await new Promise(resolve => {
+		await new Promise(async resolve => {
 			const a = document.createElement('a');
 			document.body.appendChild(a);
 
-			const blob = new Blob([encode(saves)], { type: 'octet/stream' })
+			const files = saves.reduce((acc, save) => acc.concat(save.files), []);
+			const content = await Helpers.zip(files);
+			const blob = new Blob([content], { type: 'octet/stream' })
 
 			a.href = URL.createObjectURL(blob);
-			a.download = `junie-${Date.now()}.jsv`;
+			a.download = `junie-${Date.now()}.zip`;
 			a.click();
 
 			URL.revokeObjectURL(a.href);
@@ -46,21 +47,17 @@ export const SavesPage = () => {
 		});
 	}
 
-	const restoreSaves = async (files) => {
-		if (!files?.length)
+	const restoreSaves = async (input) => {
+		if (!input?.length)
 			return;
 
-		let save_restore = null;
-
-		if (!files[0].name.endsWith('.jsv')) {
-			// TODO alert?
-			return;
-		}
+		const content = await input[0].arrayBuffer();
+		const files = await Helpers.unzip(content);
 
 		fileUpload.current.value = '';
 
-		for (const save of save_restore)
-			await Database.updateSave(save);
+		for (const file of files)
+			await Database.write(file.path, file.data);
 
 		setSaves(await Database.getSaves());
 	}
