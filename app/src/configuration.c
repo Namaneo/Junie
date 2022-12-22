@@ -27,13 +27,19 @@ JUN_Configuration *JUN_ConfigurationCreate()
 
 char *JUN_ConfigurationGet(JUN_Configuration *this, const char *key)
 {
-	JUN_ConfigurationElement *element = MTY_HashGet(this->values, key);
-
 	char *value = MTY_HashGet(this->overrides, key);
 	if (value)
 		return value;
 
-	return (char *) MTY_ListGetFirst(element->values)->value;
+	JUN_ConfigurationElement *element = MTY_HashGet(this->values, key);
+	if (!element)
+		return NULL;
+
+	MTY_ListNode *node = MTY_ListGetFirst(element->values);
+	if (!node)
+		return NULL;
+
+	return (char *) node->value;
 }
 
 void JUN_ConfigurationSet(JUN_Configuration *this, const char *key, const char *value)
