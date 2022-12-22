@@ -46,8 +46,6 @@ async function createCore(name) {
 
 	const core = {}
 	core.module = await (await import(`${origin}/cores/${name}.js`)).default();
-	core.module._MTY.module = core.module;
-
 	core.settings = JSON.parse(core.module.UTF8ToString(core.module._get_settings()));
 
 	cores[name] = core;

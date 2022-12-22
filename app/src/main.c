@@ -59,7 +59,7 @@ static void audio_sample(int16_t left, int16_t right)
 
 void app_func()
 {
-	if (!JUN_VideoAssetsReady(CTX.app->video) || !JUN_CoreHasStarted())
+	if (!JUN_CoreHasStarted())
 		return;
 
 	uint32_t factor = JUN_VideoComputeFramerate(CTX.app->video);

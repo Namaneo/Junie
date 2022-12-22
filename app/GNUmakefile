@@ -50,7 +50,7 @@ OPTIONS_TOOLS := $(OPTIONS) \
 	-sEXPORTED_FUNCTIONS=_get_languages \
 	-sEXPORTED_RUNTIME_METHODS=UTF8ToString,IDBStore
 
-CFLAGS  := -I$(SRC_DIR) -I$(INC_DIR) -fPIC
+CFLAGS  := -I$(SRC_DIR) -I$(INC_DIR) -Ilib/retro/include -fPIC
 LDFLAGS := -L$(LIB_DIR) $(LIBS:%=-l%) --no-entry --js-library res/library.js -Wno-limited-postlink-optimizations
 
 ifeq ($(DEBUG), 1)

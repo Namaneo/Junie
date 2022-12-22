@@ -35,19 +35,22 @@ SRC := \
 	retro/encodings/encoding_base64.c \
 	retro/encodings/encoding_utf.c \
 	retro/file/file_path.c \
+	retro/formats/png/rpng.c \
 	retro/streams/memory_stream.c \
 	retro/streams/file_stream.c \
 	retro/streams/file_stream_transforms.c \
 	retro/streams/memory_stream.c \
+	retro/streams/trans_stream.c \
+	retro/streams/trans_stream_zlib.c \
 	retro/string/stdstring.c \
 	retro/vfs/vfs_implementation.c \
 	retro/time/rtime.c
 OBJ := $(SRC:.c=.o)
 
 CFLAGS := \
-	-Iretro/include \
+	-Iretro/include -Izlib \
 	-D_WASI_EMULATED_MMAN \
-	-fPIC
+	-fPIC -DHAVE_ZLIB
 
 all:
 	@echo Building $(TARGET)...

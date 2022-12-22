@@ -1,5 +1,8 @@
 #include <string.h>
 
+#include "formats/image.h"
+#include "formats/rpng.h"
+
 #include "filesystem.h"
 #include "texture.h"
 #include "interop.h"
@@ -45,7 +48,6 @@ struct JUN_Video {
 	MTY_EventFunc event;
 	MTY_Renderer *renderer;
 	MTY_Hash *assets;
-	uint32_t remaining_assets;
 
 	JUN_State *state;
 	JUN_Input *input;
@@ -150,33 +152,23 @@ bool JUN_VideoSetPixelFormat(JUN_Video *this, enum retro_pixel_format *format)
 	}
 }
 
-static void asset_prepared(void *image, uint32_t width, uint32_t height, void *opaque)
-{
-	JUN_Video *this = (JUN_Video *) ((uint64_t *) opaque)[0];
-	uint8_t id = (uint8_t) ((uint64_t *) opaque)[1];
-
-	struct jun_video_asset *asset = MTY_Alloc(1, sizeof(struct jun_video_asset));
-	asset->width  = width;
-	asset->height = height;
-
-	MTY_HashSetInt(this->assets, id, asset);
-	MTY_RendererSetUITexture(this->renderer, MTY_GFX_GL, NULL, NULL, id + 1, image, width, height);
-
-	this->remaining_assets--;
-
-	MTY_Free(image);
-	MTY_Free(opaque);
-}
-
 static void prepare_asset(JUN_Video *this, uint8_t id, const void *data, size_t size)
 {
-	uint64_t *opaque = MTY_Alloc(2, sizeof(uint64_t));
-	opaque[0] = (uint64_t) this;
-	opaque[1] = (uint64_t) id;
+	void *image = NULL;
 
-	this->remaining_assets++;
+	struct jun_video_asset *asset = MTY_Alloc(1, sizeof(struct jun_video_asset));
 
-	MTY_DecompressImageAsync(data, size, asset_prepared, opaque);
+	rpng_t *png = rpng_alloc();
+	rpng_set_buf_ptr(png, (void *) data, size);
+	rpng_start(png);
+	while (rpng_iterate_image(png));
+	while (rpng_process_image(png, &image, size, &asset->width, &asset->height) == IMAGE_PROCESS_NEXT)
+
+	MTY_HashSetInt(this->assets, id, asset);
+	MTY_RendererSetUITexture(this->renderer, MTY_GFX_GL, NULL, NULL, id + 1, image, asset->width, asset->height);
+
+	MTY_Free(image);
+	rpng_free(png);
 }
 
 static void draw_input(JUN_Video *this, uint8_t id, struct jun_draw_desc *desc)
@@ -278,11 +270,6 @@ void JUN_VideoStart(JUN_Video *this)
 
 	PREPARE(RETRO_DEVICE_ID_JOYPAD_START,  joypad_start_select);
 	PREPARE(RETRO_DEVICE_ID_JOYPAD_SELECT, joypad_start_select);
-}
-
-bool JUN_VideoAssetsReady(JUN_Video *this)
-{
-	return !this->remaining_assets;
 }
 
 void JUN_VideoUpdateContext(JUN_Video *this, unsigned width, unsigned height, size_t pitch)

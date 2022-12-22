@@ -3,46 +3,9 @@
 // Global state
 
 const MTY = {
-	module: null,
-	audio: null,
 	gl: null,
 	events: {},
 };
-
-
-// Private helpers
-
-function mty_mem() {
-	return wasmMemory.buffer;
-}
-
-function mty_mem_view() {
-	return new DataView(mty_mem());
-}
-
-
-// WASM utility
-
-function MTY_CFunc(ptr) {
-	return wasmTable.get(ptr);
-}
-
-function MTY_Alloc(size, el) {
-	return MTY.module._calloc(size, el ? el : 1);
-}
-
-function MTY_Free(ptr) {
-	MTY.module._free(ptr);
-}
-
-function MTY_SetUint32(ptr, value) {
-	mty_mem_view().setUint32(ptr, value, true);
-}
-
-function MTY_Memcpy(cptr, abuffer) {
-	const heap = new Uint8Array(mty_mem(), cptr, abuffer.length);
-	heap.set(abuffer);
-}
 
 // GL
 
@@ -50,152 +13,27 @@ function gl_flush () {
 	MTY.gl.flush();
 }
 
-// Audio
-
-function mty_audio_queued_ms() {
-	let queued_ms = Math.round((MTY.audio.next_time - MTY.audio.ctx.currentTime) * 1000.0);
-	let buffered_ms = Math.round((MTY.audio.offset / 4) / MTY.audio.frames_per_ms);
-
-	return (queued_ms < 0 ? 0 : queued_ms) + buffered_ms;
-}
-
-function MTY_AudioCreate (sampleRate, minBuffer, maxBuffer) {
-	MTY.audio = {};
-	MTY.audio.flushing = false;
-	MTY.audio.playing = false;
-	MTY.audio.sample_rate = sampleRate;
-
-	MTY.audio.frames_per_ms = Math.round(sampleRate / 1000.0);
-	MTY.audio.min_buffer = minBuffer * MTY.audio.frames_per_ms;
-	MTY.audio.max_buffer = maxBuffer * MTY.audio.frames_per_ms;
-
-	MTY.audio.offset = 0;
-	MTY.audio.buf = MTY_Alloc(sampleRate * 4);
-
-	return 0xCDD;
-}
-
-function MTY_AudioDestroy (audio) {
-	MTY_Free(MTY.audio.buf);
-	MTY_SetUint32(audio, 0);
-	MTY.audio = null;
-}
-
-function MTY_AudioQueue (ctx, frames, count) {
-	// Initialize on first queue otherwise the browser may complain about user interaction
-	if (!MTY.audio.ctx)
-		MTY.audio.ctx = new AudioContext();
-
-	let queued_frames = MTY.audio.frames_per_ms * mty_audio_queued_ms();
-
-	// Stop playing and flush if we've exceeded the maximum buffer
-	if (queued_frames > MTY.audio.max_buffer) {
-		MTY.audio.playing = false;
-		MTY.audio.flushing = true;
-	}
-
-	// Stop flushing when the queue reaches zero
-	if (queued_frames == 0) {
-		MTY.audio.flushing = false;
-		MTY.audio.playing = false;
-	}
-
-	// Convert PCM int16_t to float
-	if (!MTY.audio.flushing) {
-		let size = count * 4;
-		MTY_Memcpy(MTY.audio.buf + MTY.audio.offset, new Uint8Array(mty_mem(), frames, size));
-		MTY.audio.offset += size;
-	}
-
-	// Begin playing again if the buffer has accumulated past the min
-	if (!MTY.audio.playing && !MTY.audio.flushing && MTY.audio.offset / 4 > MTY.audio.min_buffer) {
-		MTY.audio.next_time = MTY.audio.ctx.currentTime;
-		MTY.audio.playing = true;
-	}
-
-	// Queue the audio if playing
-	if (MTY.audio.playing) {
-		const src = new Int16Array(mty_mem(), MTY.audio.buf);
-		const bcount = MTY.audio.offset / 4;
-
-		const buf = MTY.audio.ctx.createBuffer(2, bcount, MTY.audio.sample_rate);
-		const left = buf.getChannelData(0);
-		const right = buf.getChannelData(1);
-
-		let offset = 0;
-		for (let x = 0; x < bcount * 2; x += 2) {
-			left[offset] = src[x] / 32768;
-			right[offset] = src[x + 1] / 32768;
-			offset++;
-		}
-
-		const source = MTY.audio.ctx.createBufferSource();
-		source.buffer = buf;
-		source.connect(MTY.audio.ctx.destination);
-		source.start(MTY.audio.next_time);
-
-		MTY.audio.next_time += buf.duration;
-		MTY.audio.offset = 0;
-	}
-}
-
-// Image
-
-function mty_decompress_image(input, func) {
-	const img = new Image();
-	img.src = URL.createObjectURL(new Blob([input]));
-
-	img.decode().then(() => {
-		const width = img.naturalWidth;
-		const height = img.naturalHeight;
-
-		let canvas = null;
-		if (typeof OffscreenCanvas !== "undefined") {
-			canvas = new OffscreenCanvas(width, height);
-
-		} else {
-			canvas = document.createElement('canvas');
-			canvas.width = width;
-			canvas.height = height;
-		}
-
-		const ctx = canvas.getContext('2d');
-		ctx.drawImage(img, 0, 0, width, height);
-
-		const imgData = ctx.getImageData(0, 0, width, height);
-
-		func(imgData.data, width, height);
-	});
-}
-
-function MTY_DecompressImageAsync (input, size, func, opaque) {
-	const jinput = new Uint8Array(mty_mem(), input, size);
-
-	mty_decompress_image(jinput, (image, width, height) => {
-		const cimage = MTY_Alloc(width * height * 4);
-		MTY_Memcpy(cimage, image);
-
-		MTY_CFunc(func)(cimage, width, height, opaque);
-	});
-}
-
 // Web API (mostly used in app.c)
 
-function mty_scaled(num) {
+function scale(num) {
 	return Math.round(num * window.devicePixelRatio);
 }
 
 function gl_get_size (c_width, c_height) {
 	const rect = MTY.gl.canvas.getBoundingClientRect();
 
-	MTY.gl.canvas.width = mty_scaled(rect.width);
-	MTY.gl.canvas.height = mty_scaled(rect.height);
+	MTY.gl.canvas.width = scale(rect.width);
+	MTY.gl.canvas.height = scale(rect.height);
 
-	MTY_SetUint32(c_width, MTY.gl.drawingBufferWidth);
-	MTY_SetUint32(c_height, MTY.gl.drawingBufferHeight);
+	const view = new DataView(wasmMemory.buffer);
+	view.setUint32(c_width, MTY.gl.drawingBufferWidth, true);
+	view.setUint32(c_height, MTY.gl.drawingBufferHeight, true);
 }
 
 function gl_attach_events (app, mouse_motion, mouse_button) {
+	const motion = wasmTable.get(mouse_motion);
+	const button = wasmTable.get(mouse_button);
+
 	var currentTouches = new Array;
 
 	var touch_started = function (ev) {
@@ -210,7 +48,7 @@ function gl_attach_events (app, mouse_motion, mouse_button) {
 				clientY: touch.clientY,
 			});
 
-			MTY_CFunc(mouse_button)(app, touch.identifier, true, 0, mty_scaled(touch.clientX), mty_scaled(touch.clientY));
+			button(app, touch.identifier, true, 0, scale(touch.clientX), scale(touch.clientY));
 		}
 	};
 
@@ -224,13 +62,13 @@ function gl_attach_events (app, mouse_motion, mouse_button) {
 			if (touchIndex != -1) {
 				const touch = currentTouches[touchIndex];
 
-				let x = mty_scaled(newTouch.clientX);
-				let y = mty_scaled(newTouch.clientY);
+				let x = scale(newTouch.clientX);
+				let y = scale(newTouch.clientY);
 
 				touch.clientX = x;
 				touch.clientY = y;
 
-				MTY_CFunc(mouse_motion)(app, touch.identifier, false, touch.clientX, touch.clientY);
+				motion(app, touch.identifier, false, touch.clientX, touch.clientY);
 			}
 		}
 	};
@@ -247,7 +85,7 @@ function gl_attach_events (app, mouse_motion, mouse_button) {
 
 				currentTouches.splice(touchIndex, 1);
 
-				MTY_CFunc(mouse_button)(app, touch.identifier, false, 0, mty_scaled(touch.clientX), mty_scaled(touch.clientY));
+				button(app, touch.identifier, false, 0, scale(touch.clientX), scale(touch.clientY));
 			}
 		}
 	};
@@ -255,22 +93,22 @@ function gl_attach_events (app, mouse_motion, mouse_button) {
 	MTY.events.resize = () => {
 		const rect = MTY.gl.canvas.getBoundingClientRect();
 
-		MTY.gl.canvas.width = mty_scaled(rect.width);
-		MTY.gl.canvas.height = mty_scaled(rect.height);
+		MTY.gl.canvas.width = scale(rect.width);
+		MTY.gl.canvas.height = scale(rect.height);
 	};
 
 	MTY.events.mousemove = (ev) => {
-		MTY_CFunc(mouse_motion)(app, 0, false, mty_scaled(ev.clientX), mty_scaled(ev.clientY));
+		motion(app, 0, false, scale(ev.clientX), scale(ev.clientY));
 	}
 
 	MTY.events.mousedown = (ev) => {
 		ev.preventDefault();
-		MTY_CFunc(mouse_button)(app, 0, true, ev.button, mty_scaled(ev.clientX), mty_scaled(ev.clientY));
+		button(app, 0, true, ev.button, scale(ev.clientX), scale(ev.clientY));
 	}
 
 	MTY.events.mouseup = (ev) => {
 		ev.preventDefault();
-		MTY_CFunc(mouse_button)(app, 0, false, ev.button, mty_scaled(ev.clientX), mty_scaled(ev.clientY));
+		button(app, 0, false, ev.button, scale(ev.clientX), scale(ev.clientY));
 	}
 
 	MTY.events.touchstart = (ev) => {
