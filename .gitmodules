@@ -21,4 +21,4 @@
 	url = https://github.com/libretro/QuickNES_Core.git
 [submodule "app/cores/snes9x"]
 	path = app/cores/snes9x
-	url = https://github.com/libretro/snes9x
+	url = https://github.com/libretro/snes9x2010.git

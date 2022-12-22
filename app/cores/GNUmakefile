@@ -7,11 +7,6 @@ ifeq ($(name), genesis)
 BUILD_FLAGS += -f Makefile.libretro LIBRETRO_COMM_DIR=../../lib/retro
 endif
 
-ifeq ($(name), snes9x)
-BUILD_DIR   := $(TARGET:lib%.a=%)/libretro
-BUILD_FLAGS := TARGET=../../$(TARGET)
-endif
-
 RANLIB ?= ranlib
 
 BUILD_FLAGS += -j 8 platform=emscripten STATIC_LINKING=1 STATIC_LINKING_LINK=1 fpic=-fPIC

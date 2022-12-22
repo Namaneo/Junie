@@ -7,8 +7,6 @@ typedef struct JUN_Enums JUN_Enums;
 typedef enum {
 	JUN_ENUM_ENVIRONMENT,
 	JUN_ENUM_LANGUAGE,
-	JUN_ENUM_JOYPAD,
-	JUN_ENUM_KEYBOARD,
 } JUN_EnumType;
 
 typedef enum {

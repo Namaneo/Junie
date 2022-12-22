@@ -6,8 +6,6 @@
 
 #define ENVIRONMENT_MAX 72
 #define LANGUAGE_MAX    30
-#define JOYPAD_MAX      16
-#define KEYBOARD_MAX    64
 
 struct jun_enum_item {
 	int32_t value;
@@ -17,8 +15,6 @@ struct jun_enum_item {
 struct JUN_Enums {
 	struct jun_enum_item environments[ENVIRONMENT_MAX];
 	struct jun_enum_item languages[LANGUAGE_MAX];
-	struct jun_enum_item joypad[JOYPAD_MAX];
-	struct jun_enum_item keyboard[KEYBOARD_MAX];
 };
 
 static JUN_Enums *this;
@@ -138,100 +134,12 @@ static void register_languages()
 	register(this->languages, RETRO_LANGUAGE_CATALAN);
 }
 
-static void register_joypad()
-{
-	size_t index = 0;
-	register(this->joypad, RETRO_DEVICE_ID_JOYPAD_A);
-	register(this->joypad, RETRO_DEVICE_ID_JOYPAD_B);
-	register(this->joypad, RETRO_DEVICE_ID_JOYPAD_X);
-	register(this->joypad, RETRO_DEVICE_ID_JOYPAD_Y);
-	register(this->joypad, RETRO_DEVICE_ID_JOYPAD_L);
-	register(this->joypad, RETRO_DEVICE_ID_JOYPAD_R);
-	register(this->joypad, RETRO_DEVICE_ID_JOYPAD_UP);
-	register(this->joypad, RETRO_DEVICE_ID_JOYPAD_DOWN);
-	register(this->joypad, RETRO_DEVICE_ID_JOYPAD_LEFT);
-	register(this->joypad, RETRO_DEVICE_ID_JOYPAD_RIGHT);
-	register(this->joypad, RETRO_DEVICE_ID_JOYPAD_START);
-	register(this->joypad, RETRO_DEVICE_ID_JOYPAD_SELECT);
-}
-
-static void register_keyboard()
-{
-	size_t index = 0;
-	register(this->keyboard, MTY_KEY_A);
-	register(this->keyboard, MTY_KEY_B);
-	register(this->keyboard, MTY_KEY_C);
-	register(this->keyboard, MTY_KEY_D);
-	register(this->keyboard, MTY_KEY_E);
-	register(this->keyboard, MTY_KEY_F);
-	register(this->keyboard, MTY_KEY_G);
-	register(this->keyboard, MTY_KEY_H);
-	register(this->keyboard, MTY_KEY_I);
-	register(this->keyboard, MTY_KEY_J);
-	register(this->keyboard, MTY_KEY_K);
-	register(this->keyboard, MTY_KEY_L);
-	register(this->keyboard, MTY_KEY_M);
-	register(this->keyboard, MTY_KEY_N);
-	register(this->keyboard, MTY_KEY_O);
-	register(this->keyboard, MTY_KEY_P);
-	register(this->keyboard, MTY_KEY_Q);
-	register(this->keyboard, MTY_KEY_R);
-	register(this->keyboard, MTY_KEY_S);
-	register(this->keyboard, MTY_KEY_T);
-	register(this->keyboard, MTY_KEY_U);
-	register(this->keyboard, MTY_KEY_V);
-	register(this->keyboard, MTY_KEY_W);
-	register(this->keyboard, MTY_KEY_X);
-	register(this->keyboard, MTY_KEY_Y);
-	register(this->keyboard, MTY_KEY_Z);
-	register(this->keyboard, MTY_KEY_0);
-	register(this->keyboard, MTY_KEY_1);
-	register(this->keyboard, MTY_KEY_2);
-	register(this->keyboard, MTY_KEY_3);
-	register(this->keyboard, MTY_KEY_4);
-	register(this->keyboard, MTY_KEY_5);
-	register(this->keyboard, MTY_KEY_6);
-	register(this->keyboard, MTY_KEY_7);
-	register(this->keyboard, MTY_KEY_8);
-	register(this->keyboard, MTY_KEY_9);
-	register(this->keyboard, MTY_KEY_UP);
-	register(this->keyboard, MTY_KEY_DOWN);
-	register(this->keyboard, MTY_KEY_LEFT);
-	register(this->keyboard, MTY_KEY_RIGHT);
-	register(this->keyboard, MTY_KEY_LALT);
-	register(this->keyboard, MTY_KEY_RALT);
-	register(this->keyboard, MTY_KEY_LBRACKET);
-	register(this->keyboard, MTY_KEY_RBRACKET);
-	register(this->keyboard, MTY_KEY_LCTRL);
-	register(this->keyboard, MTY_KEY_RCTRL);
-	register(this->keyboard, MTY_KEY_LSHIFT);
-	register(this->keyboard, MTY_KEY_RSHIFT);
-	register(this->keyboard, MTY_KEY_BACKSLASH);
-	register(this->keyboard, MTY_KEY_BACKSPACE);
-	register(this->keyboard, MTY_KEY_COMMA);
-	register(this->keyboard, MTY_KEY_DELETE);
-	register(this->keyboard, MTY_KEY_END);
-	register(this->keyboard, MTY_KEY_ENTER);
-	register(this->keyboard, MTY_KEY_EQUALS);
-	register(this->keyboard, MTY_KEY_ESCAPE);
-	register(this->keyboard, MTY_KEY_GRAVE);
-	register(this->keyboard, MTY_KEY_MINUS);
-	register(this->keyboard, MTY_KEY_PERIOD);
-	register(this->keyboard, MTY_KEY_QUOTE);
-	register(this->keyboard, MTY_KEY_SEMICOLON);
-	register(this->keyboard, MTY_KEY_SLASH);
-	register(this->keyboard, MTY_KEY_SPACE);
-	register(this->keyboard, MTY_KEY_TAB);
-}
-
 void JUN_EnumsCreate()
 {
 	this = MTY_Alloc(1, sizeof(JUN_Enums));
 
 	register_environments();
 	register_languages();
-	register_joypad();
-	register_keyboard();
 }
 
 static const struct jun_enum_item *get_values(JUN_EnumType type, size_t *size)
@@ -243,12 +151,6 @@ static const struct jun_enum_item *get_values(JUN_EnumType type, size_t *size)
 		case JUN_ENUM_LANGUAGE:
 			*size = LANGUAGE_MAX;
 			return this->languages;
-		case JUN_ENUM_JOYPAD:
-			*size = JOYPAD_MAX;
-			return this->joypad;
-		case JUN_ENUM_KEYBOARD:
-			*size = KEYBOARD_MAX;
-			return this->keyboard;
 		default:
 			*size = 0;
 			return NULL;
