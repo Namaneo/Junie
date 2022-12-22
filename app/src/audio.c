@@ -32,7 +32,7 @@ JUN_Audio *JUN_AudioCreate(JUN_State *state)
 	return this;
 }
 
-void JUN_AudioPrepare(JUN_Audio *this, double sample_rate, double frames_per_second)
+void JUN_AudioSetSampleRate(JUN_Audio *this, double sample_rate)
 {
 	this->sample_rate = sample_rate;
 }

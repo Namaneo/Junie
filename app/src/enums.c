@@ -97,6 +97,7 @@ static void register_environments()
 	register(this->environments, RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK);
 	register(this->environments, RETRO_ENVIRONMENT_SET_VARIABLE);
 	register(this->environments, RETRO_ENVIRONMENT_GET_THROTTLE_STATE);
+	register(this->environments, RETRO_ENVIRONMENT_GET_SAVESTATE_CONTEXT);
 }
 
 static void register_languages()

@@ -62,7 +62,8 @@ void app_func()
 	if (!JUN_CoreHasStarted())
 		return;
 
-	uint32_t factor = JUN_VideoComputeFramerate(CTX.app->video);
+	double frames_per_second = JUN_CoreGetFramesPerSecond();
+	uint32_t factor = JUN_VideoComputeFramerate(CTX.app->video, frames_per_second);
 	JUN_CoreRun(JUN_StateGetFastForward(CTX.app->state) * factor);
 	JUN_VideoPresent(CTX.app->video);
 
@@ -117,10 +118,7 @@ static bool prepare_game(const char *system, const char *rom, const char *settin
 	if (!JUN_CoreStartGame())
 		return false;
 
-	double sample_rate = JUN_CoreGetSampleRate();
-	double frames_per_second = JUN_CoreGetFramesPerSecond();
-
-	JUN_AudioPrepare(CTX.app->audio, sample_rate, frames_per_second);
+	JUN_AudioSetSampleRate(CTX.app->audio, JUN_CoreGetSampleRate());
 
 	JUN_CoreRestoreMemories();
 	JUN_CoreSetCheats();
