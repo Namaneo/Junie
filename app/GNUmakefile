@@ -43,7 +43,7 @@ OPTIONS_GAME := $(OPTIONS) \
 	-sASYNCIFY \
 	-sINITIAL_MEMORY=32mb \
 	-sMIN_WEBGL_VERSION=2 \
-	-sEXPORTED_FUNCTIONS=_start_game,_get_settings,_MTY,_calloc,_free \
+	-sEXPORTED_FUNCTIONS=_start_game,_get_settings \
 	-sEXPORTED_RUNTIME_METHODS=ccall,UTF8ToString
 
 OPTIONS_TOOLS := $(OPTIONS) \

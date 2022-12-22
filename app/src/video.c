@@ -83,8 +83,8 @@ static void window_motion(JUN_Video *this, int32_t id, bool relative, int32_t x,
 	evt.type = MTY_EVENT_MOTION;
 	evt.motion.id = id;
 	evt.motion.relative = relative;
-	evt.motion.x = x;
-	evt.motion.y = y;
+	evt.motion.x = x * JUN_InteropGetPixelRatio();
+	evt.motion.y = y * JUN_InteropGetPixelRatio();
 
 	this->event(&evt, NULL);
 }
@@ -103,8 +103,8 @@ static void window_button(JUN_Video *this, int32_t id, bool pressed, int32_t but
 		button == 4 ? MTY_BUTTON_X2 :
 		MTY_BUTTON_NONE;
 
-	evt.button.x = x;
-	evt.button.y = y;
+	evt.button.x = x * JUN_InteropGetPixelRatio();
+	evt.button.y = y * JUN_InteropGetPixelRatio();
 
 	this->event(&evt, NULL);
 }

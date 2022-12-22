@@ -1,33 +1,18 @@
 //`yarn global bin`/emscripten-library-generator app/res/matoya.js > app/res/library.js
 
-// Global state
-
-const MTY = {
-	gl: null,
-	events: {},
-};
-
-// GL
-
 function gl_flush () {
-	MTY.gl.flush();
-}
-
-// Web API (mostly used in app.c)
-
-function scale(num) {
-	return Math.round(num * window.devicePixelRatio);
+	GLctx.flush();
 }
 
 function gl_get_size (c_width, c_height) {
-	const rect = MTY.gl.canvas.getBoundingClientRect();
+	const rect = GLctx.canvas.getBoundingClientRect();
 
-	MTY.gl.canvas.width = scale(rect.width);
-	MTY.gl.canvas.height = scale(rect.height);
+	GLctx.canvas.width = rect.width * window.devicePixelRatio;
+	GLctx.canvas.height = rect.height * window.devicePixelRatio;
 
 	const view = new DataView(wasmMemory.buffer);
-	view.setUint32(c_width, MTY.gl.drawingBufferWidth, true);
-	view.setUint32(c_height, MTY.gl.drawingBufferHeight, true);
+	view.setUint32(c_width, GLctx.drawingBufferWidth, true);
+	view.setUint32(c_height, GLctx.drawingBufferHeight, true);
 }
 
 function gl_attach_events (app, mouse_motion, mouse_button) {
@@ -36,7 +21,7 @@ function gl_attach_events (app, mouse_motion, mouse_button) {
 
 	var currentTouches = new Array;
 
-	var touch_started = function (ev) {
+	const touch_started = function (ev) {
 		const touches = ev.changedTouches;
 
 		for (var i = 0; i < touches.length; i++) {
@@ -48,11 +33,11 @@ function gl_attach_events (app, mouse_motion, mouse_button) {
 				clientY: touch.clientY,
 			});
 
-			button(app, touch.identifier, true, 0, scale(touch.clientX), scale(touch.clientY));
+			button(app, touch.identifier, true, 0, touch.clientX, touch.clientY);
 		}
 	};
 
-	var touch_moved = function (ev) {
+	const touch_moved = function (ev) {
 		const touches = ev.changedTouches;
 
 		for (var i = 0; i < touches.length; i++) {
@@ -62,18 +47,15 @@ function gl_attach_events (app, mouse_motion, mouse_button) {
 			if (touchIndex != -1) {
 				const touch = currentTouches[touchIndex];
 
-				let x = scale(newTouch.clientX);
-				let y = scale(newTouch.clientY);
-
-				touch.clientX = x;
-				touch.clientY = y;
+				touch.clientX = newTouch.clientX;
+				touch.clientY = newTouch.clientY;
 
 				motion(app, touch.identifier, false, touch.clientX, touch.clientY);
 			}
 		}
 	};
 
-	var touch_ended = function (ev) {
+	const touch_ended = function (ev) {
 		const touches = ev.changedTouches;
 
 		for (var i = 0; i < touches.length; i++) {
@@ -85,64 +67,51 @@ function gl_attach_events (app, mouse_motion, mouse_button) {
 
 				currentTouches.splice(touchIndex, 1);
 
-				button(app, touch.identifier, false, 0, scale(touch.clientX), scale(touch.clientY));
+				button(app, touch.identifier, false, 0, touch.clientX, touch.clientY);
 			}
 		}
 	};
 
-	MTY.events.resize = () => {
-		const rect = MTY.gl.canvas.getBoundingClientRect();
-
-		MTY.gl.canvas.width = scale(rect.width);
-		MTY.gl.canvas.height = scale(rect.height);
-	};
-
-	MTY.events.mousemove = (ev) => {
-		motion(app, 0, false, scale(ev.clientX), scale(ev.clientY));
-	}
-
-	MTY.events.mousedown = (ev) => {
+	GLctx.canvas.addEventListener('contextmenu', (ev) => {
 		ev.preventDefault();
-		button(app, 0, true, ev.button, scale(ev.clientX), scale(ev.clientY));
-	}
+	});
 
-	MTY.events.mouseup = (ev) => {
+	GLctx.canvas.addEventListener('mousemove', (ev) => {
+		motion(app, 0, false, ev.clientX, ev.clientY);
+	});
+
+	GLctx.canvas.addEventListener('mousedown', (ev) => {
 		ev.preventDefault();
-		button(app, 0, false, ev.button, scale(ev.clientX), scale(ev.clientY));
-	}
+		button(app, 0, true, ev.button, ev.clientX, ev.clientY);
+	});
 
-	MTY.events.touchstart = (ev) => {
+	GLctx.canvas.addEventListener('mouseup', (ev) => {
+		ev.preventDefault();
+		button(app, 0, false, ev.button, ev.clientX, ev.clientY);
+	});
+
+	GLctx.canvas.addEventListener('touchstart', (ev) => {
 		ev.preventDefault();
 		touch_started(ev);
-	}
+	});
 
-	MTY.events.touchmove = (ev) => {
+	GLctx.canvas.addEventListener('touchmove', (ev) => {
 		ev.preventDefault();
 		touch_moved(ev);
-	}
+	});
 
-	MTY.events.touchend = (ev) => {
+	GLctx.canvas.addEventListener('touchend', (ev) => {
 		ev.preventDefault();
 		touch_ended(ev);
-	}
+	});
 
-	MTY.events.touchleave = (ev) => {
+	GLctx.canvas.addEventListener('touchleave', (ev) => {
 		ev.preventDefault();
 		touch_ended(ev);
-	}
+	});
 
-	MTY.events.touchcancel = (ev) => {
+	GLctx.canvas.addEventListener('touchcancel', (ev) => {
 		ev.preventDefault();
 		touch_ended(ev);
-	}
-
-	window.addEventListener('resize',      MTY.events.resize);
-	window.addEventListener('mousemove',   MTY.events.mousemove);
-	window.addEventListener('mousedown',   MTY.events.mousedown);
-	window.addEventListener('mouseup',     MTY.events.mouseup);
-	window.addEventListener('touchstart',  MTY.events.touchstart);
-	window.addEventListener('touchmove',   MTY.events.touchmove);
-	window.addEventListener('touchend',    MTY.events.touchend);
-	window.addEventListener('touchleave',  MTY.events.touchleave);
-	window.addEventListener('touchcancel', MTY.events.touchcancel);
+	});
 }

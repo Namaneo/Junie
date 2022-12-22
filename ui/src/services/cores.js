@@ -19,11 +19,7 @@ function createGraphics() {
 	canvas.style.height = '100%';
 	document.body.appendChild(canvas);
 
-	return canvas.getContext('webgl2', {
-		depth: false,
-		antialias: false,
-		premultipliedAlpha: true,
-	});
+	return canvas;
 }
 
 async function createTools() {
@@ -44,7 +40,7 @@ async function createCore(name) {
 
 	const origin = location.origin + location.pathname.replace(/\/$/, '');
 
-	const core = {}
+	const core = {};
 	core.module = await (await import(`${origin}/cores/${name}.js`)).default();
 	core.settings = JSON.parse(core.module.UTF8ToString(core.module._get_settings()));
 
@@ -90,9 +86,13 @@ export async function runCore(name, system, rom, settings) {
 	await createCore(name);
 
 	const module = cores[name].module;
-	const MTY = module._MTY;
+	const graphics = createGraphics();
 
-	MTY.gl = createGraphics();
+	module.createContext(graphics, true, true, {
+		depth: false,
+		antialias: false,
+		premultipliedAlpha: true,
+	});
 
 	await module.ccall('start_game', null,
 		['string', 'string', 'string'],
@@ -107,22 +107,9 @@ export async function runCore(name, system, rom, settings) {
 			if (!ev.detail)
 				return;
 
-			MTY.gl.canvas.remove();
-
-			window.removeEventListener('resize',      MTY.events.resize);
-			window.removeEventListener('mousemove',   MTY.events.mousemove);
-			window.removeEventListener('mousedown',   MTY.events.mousedown);
-			window.removeEventListener('mouseup',     MTY.events.mouseup);
-			window.removeEventListener('keydown',     MTY.events.keydown);
-			window.removeEventListener('keyup',       MTY.events.keyup);
-			window.removeEventListener('touchstart',  MTY.events.touchstart);
-			window.removeEventListener('touchmove',   MTY.events.touchmove);
-			window.removeEventListener('touchend',    MTY.events.touchend);
-			window.removeEventListener('touchleave',  MTY.events.touchleave);
-			window.removeEventListener('touchcancel', MTY.events.touchcancel);
-
 			window.removeEventListener('show_ui', show_ui);
 
+			graphics.remove();
 			delete cores[name];
 
 			resolve();
