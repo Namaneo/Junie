@@ -9,6 +9,7 @@ RUN apt install -y xxd
 ADD GNUmakefile .
 ADD ./app ./app
 
+ENV TERM=xterm
 RUN emmake make app
 
 # Build UI

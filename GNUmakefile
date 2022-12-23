@@ -22,17 +22,17 @@ UI_FLAGS := \
 
 # Common
 
-all: clean prepare app ui
-
-prepare:
-	@yarn --cwd $(UI_DIR) install $(QUIET)
+all: clean app ui
 
 app:
 	@$(MAKE) -C $(APP_DIR) DEBUG=$(DEBUG)
 
-ui:
+ui: prepare
 	@echo Building index.html...
 	@yarn --cwd $(UI_DIR) rollup -c $(UI_FLAGS) $(QUIET)
+
+prepare:
+	@yarn --cwd $(UI_DIR) install $(QUIET)
 
 # Watch
 
