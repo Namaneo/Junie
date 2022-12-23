@@ -29,7 +29,6 @@ async function createTools() {
 	const origin = location.origin + location.pathname.replace(/\/$/, '');
 
 	tools.module = await (await import(`${origin}/cores/tools.js`)).default();
-	tools.languages = JSON.parse(tools.module.UTF8ToString(tools.module._get_languages()));
 }
 
 async function createCore(name) {
@@ -45,12 +44,6 @@ async function createCore(name) {
 	core.settings = JSON.parse(core.module.UTF8ToString(core.module._get_settings()));
 
 	cores[name] = core;
-}
-
-export async function getLanguages() {
-	await createTools();
-
-	return tools.languages;
 }
 
 export async function getSettings() {

@@ -2,13 +2,23 @@
 
 #include "libretro.h"
 
-#include "enums.h"
 #include "filesystem.h"
 #include "interop.h"
 
 #include "core.h"
 
 #define MAP_SYMBOL(function) CTX.sym.function = function;
+
+typedef enum {
+	JUN_PATH_GAME   = 1,
+	JUN_PATH_STATE  = 2,
+	JUN_PATH_SRAM   = 3,
+	JUN_PATH_RTC    = 4,
+	JUN_PATH_CHEATS = 7,
+	JUN_PATH_SAVES  = 5,
+	JUN_PATH_SYSTEM = 6,
+	JUN_PATH_MAKE64 = UINT64_MAX
+} JUN_PathType;
 
 struct jun_core_sym {
 	bool initialized;
@@ -131,10 +141,33 @@ static bool jun_core_environment(unsigned cmd, void *data)
 	return true;
 }
 
-void JUN_CoreCreate(MTY_Hash *paths)
+static char *remove_extension(const char *str)
+{
+	if (!str)
+		return NULL;
+
+	size_t length = (uint64_t) strrchr(str, '.') - (uint64_t) str;
+	char *result = MTY_Alloc(length + 1, 1);
+	memcpy(result, str, length);
+
+	return result;
+}
+
+void JUN_CoreCreate(const char *system, const char *rom)
 {
 	CTX.configuration = JUN_ConfigurationCreate();
-	CTX.paths = paths;
+
+	char *game = remove_extension(rom);
+
+	CTX.paths = MTY_HashCreate(0);
+
+	MTY_HashSetInt(CTX.paths, JUN_PATH_SYSTEM, MTY_SprintfD("%s",             system));
+	MTY_HashSetInt(CTX.paths, JUN_PATH_GAME,   MTY_SprintfD("%s/%s",          system, rom));
+	MTY_HashSetInt(CTX.paths, JUN_PATH_SAVES,  MTY_SprintfD("%s/%s",          system, game));
+	MTY_HashSetInt(CTX.paths, JUN_PATH_STATE,  MTY_SprintfD("%s/%s/%s.state", system, game, game));
+	MTY_HashSetInt(CTX.paths, JUN_PATH_SRAM,   MTY_SprintfD("%s/%s/%s.srm",   system, game, game));
+	MTY_HashSetInt(CTX.paths, JUN_PATH_RTC,    MTY_SprintfD("%s/%s/%s.rtc",   system, game, game));
+	MTY_HashSetInt(CTX.paths, JUN_PATH_CHEATS, MTY_SprintfD("%s/%s/%s.cht",   system, game, game));
 
 	initialize_symbols();
 }
@@ -173,6 +206,16 @@ double JUN_CoreGetSampleRate()
 double JUN_CoreGetFramesPerSecond()
 {
 	return CTX.av.timing.fps;
+}
+
+const char *JUN_CoreGetSavesPath()
+{
+	return MTY_HashGetInt(CTX.paths, JUN_PATH_SAVES);
+}
+
+const char *JUN_CoreGetSystemPath()
+{
+	return MTY_HashGetInt(CTX.paths, JUN_PATH_SYSTEM);
 }
 
 bool JUN_CoreStartGame()
@@ -334,6 +377,7 @@ void JUN_CoreRestoreState()
 void JUN_CoreDestroy()
 {
 	JUN_ConfigurationDestroy(&CTX.configuration);
+	MTY_HashDestroy(&CTX.paths, MTY_Free);
 
 	CTX.sym.retro_deinit();
 

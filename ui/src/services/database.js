@@ -66,14 +66,7 @@ export async function updateLibrary(library) {
 }
 
 export async function getSettings() {
-	const file = await read_json('settings.json');
-
-	const defaults = {
-		language: 'RETRO_LANGUAGE_ENGLISH',
-		configurations: { },
-	};
-
-	return JSON.parse(JSON.stringify({ ...defaults, ...file }));
+	return await read_json('settings.json');
 };
 
 export async function updateSettings(settings) {

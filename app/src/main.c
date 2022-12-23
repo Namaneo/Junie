@@ -4,7 +4,6 @@
 #include <emscripten.h>
 
 #include "matoya.h"
-#include "enums.h"
 #include "filesystem.h"
 #include "interop.h"
 #include "debug.h"
@@ -72,15 +71,8 @@ void app_func()
 
 		// TODO Useless in emscripten
 
-		// JUN_AppUnloadCore(CTX.app);
-		// JUN_InputReset(CTX.app->input);
-		// if (JUN_StateHasAudio(CTX.app->state))
-		// 	JUN_StateToggleAudio(CTX.app->state);
-		// JUN_FilesystemClearAllFiles();
-
 		// JUN_AppDestroy(&CTX.app);
 		// JUN_FilesystemDestroy();
-		// JUN_EnumsDestroy();
 
 		JUN_InteropShowUI(true);
 		return;
@@ -139,13 +131,18 @@ static void event_func(const MTY_Event *event, void *opaque)
 		JUN_StateToggleExit(CTX.app->state);
 }
 
+char *get_settings()
+{
+	return MTY_JSONSerialize(JUN_CoreGetDefaultConfiguration());
+}
+
 void start_game(const char *system, const char *rom, const char *settings)
 {
+	JUN_InteropShowUI(false);
+
 	JUN_SetLogFunc();
-	JUN_EnumsCreate();
 	JUN_FilesystemCreate();
 
-	JUN_InteropShowUI(false);
 
 	CTX.app = JUN_AppCreate(event_func);
 	JUN_VideoStart(CTX.app->video);

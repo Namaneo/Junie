@@ -3,21 +3,6 @@ import { useState } from 'react';
 import * as Cores from '../services/cores';
 import * as Database from '../services/database';
 
-const pascalify = (str) => {
-    return str.replace(/([A-Z])([A-Z]+)/g, (_, c1, c2) => {
-        return `${c1.toUpperCase()}${c2.toLowerCase()}`;
-    });
-}
-
-const prettify = (lang, prefix) => {
-    lang = lang.replace(prefix, '');
-
-    const main = lang.split('_')[0];
-    const sub = lang.split('_')[1];
-
-    return pascalify(main) + (sub ? ` (${pascalify(sub)})` : '');
-};
-
 const EditModal = ({ open, dismiss, data }) => {
 
     return (
@@ -58,29 +43,17 @@ export const SettingsPage = () => {
     const [data, setData] = useState({});
 
 	const [settings, setSettings] = useState({});
-	const [languages, setLanguages] = useState([]);
 	const [options, setOptions] = useState({});
 
-	const language = async (lang) => {
-        if (!settings.configurations)
-            return;
-
-        settings.language = lang;
-
-        setSettings({ ...settings });
-
-        await Database.updateSettings(settings);
-    };
-
     const override = async (item, value) => {
-        settings.configurations[item] = value;
+        settings[item] = value;
         if (!value)
-            delete settings.configurations[item];
-
-        setSettings({ ...settings });
+            delete settings[item];
 
         await Database.updateSettings(settings);
-    }
+
+        setSettings({ ...settings });
+	}
 
     const openModal = (name) => {
         const data =  { name: name };
@@ -93,7 +66,7 @@ export const SettingsPage = () => {
 				name: value
 			})),
 		}));
-		data.current = settings.configurations;
+		data.current = settings;
 		data.update = override;
 
         setData(data);
@@ -106,9 +79,8 @@ export const SettingsPage = () => {
     }
 
 	useIonViewWillEnter(async () => {
-		setLanguages(await Cores.getLanguages());
-		setOptions(await Cores.getSettings());
-		setSettings(await Database.getSettings());
+		setOptions({ ...options, ...await Cores.getSettings() });
+		setSettings({ ...settings, ...await Database.getSettings() });
 	});
 
 	return (
@@ -125,15 +97,6 @@ export const SettingsPage = () => {
                 <EditModal open={modal} dismiss={closeModal} data={data} />
 
                 <IonList lines="full">
-
-                    <IonItem key="languages">
-                        <IonLabel>Language</IonLabel>
-                        <IonSelect interface="action-sheet" value={settings.language} onIonChange={e => language(e.detail.value)}>
-                            {languages.sort().map(name =>
-                                <IonSelectOption key={name} value={name}>{prettify(name, 'RETRO_LANGUAGE_')}</IonSelectOption>
-                            )}
-                        </IonSelect>
-                    </IonItem>
 
                     {Object.keys(options).map(name =>
                         <IonItem key={name} button onClick={() => openModal(name)}>

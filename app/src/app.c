@@ -1,95 +1,41 @@
 #include <stdio.h>
 
-#include "enums.h"
 #include "filesystem.h"
-#include "settings.h"
 #include "interop.h"
-#include "toolbox.h"
 
 #include "app.h"
 
-typedef struct _JUN_App _JUN_App;
-
-struct _JUN_App
-{
-	JUN_App public;
-
-	uint32_t language;
-	MTY_Hash *paths;
-};
-
 JUN_App *JUN_AppCreate(MTY_EventFunc event)
 {
-	_JUN_App *this = MTY_Alloc(1, sizeof(_JUN_App));
+	JUN_App *this = MTY_Alloc(1, sizeof(JUN_App));
 
-	this->public.state = JUN_StateCreate();
-	this->public.input = JUN_InputCreate(this->public.state);
-	this->public.audio = JUN_AudioCreate(this->public.state);
-	this->public.video = JUN_VideoCreate(this->public.state, this->public.input, event);
+	this->state = JUN_StateCreate();
+	this->input = JUN_InputCreate(this->state);
+	this->audio = JUN_AudioCreate(this->state);
+	this->video = JUN_VideoCreate(this->state, this->input, event);
 
 	return (JUN_App *) this;
 }
 
-static void jun_app_configure(_JUN_App *this, const char *system, const char *json)
+static void jun_app_configure(JUN_App *this, const char *system, const char *json)
 {
-	uint64_t iter;
-	const char *key;
-
-	// Initialize settings instance
-	JUN_Settings *settings = JUN_SettingsCreate(json);
-
-	// Set prefered language
-	this->language = JUN_EnumsGetInt(JUN_ENUM_LANGUAGE, settings->language);
-
-	// Set custom configurations
-	iter = 0;
-	key = NULL;
+	MTY_JSON *settings = MTY_JSONParse(json);
 	JUN_Configuration *configuration = JUN_CoreGetConfiguration();
-	while (MTY_HashGetNextKey(settings->configurations, &iter, &key)) {
-		char *value = MTY_HashGet(settings->configurations, key);
+
+	uint64_t iter = 0;
+	const char *key = NULL;
+	while (MTY_JSONObjGetNextKey(settings, &iter, &key)) {
+		const char *value = MTY_JSONObjGetStringPtr(settings, key);
 		JUN_ConfigurationOverride(configuration, key, value);
 	}
 
-	// Destroy settings instance
-	JUN_SettingsDestroy(&settings);
+	MTY_JSONDestroy(&settings);
 }
 
-void JUN_AppLoadCore(JUN_App *public, const char *system, const char *rom, const char *settings)
+void JUN_AppLoadCore(JUN_App *this, const char *system, const char *rom, const char *settings)
 {
-	_JUN_App *this = (_JUN_App *) public;
-
-	char *game = JUN_ToolboxRemoveExtension(rom);
-
-	this->paths = MTY_HashCreate(0);
-
-	MTY_HashSetInt(this->paths, JUN_PATH_SYSTEM, MTY_SprintfD("%s",             system));
-	MTY_HashSetInt(this->paths, JUN_PATH_GAME,   MTY_SprintfD("%s/%s",          system, rom));
-	MTY_HashSetInt(this->paths, JUN_PATH_SAVES,  MTY_SprintfD("%s/%s",          system, game));
-	MTY_HashSetInt(this->paths, JUN_PATH_STATE,  MTY_SprintfD("%s/%s/%s.state", system, game, game));
-	MTY_HashSetInt(this->paths, JUN_PATH_SRAM,   MTY_SprintfD("%s/%s/%s.srm",   system, game, game));
-	MTY_HashSetInt(this->paths, JUN_PATH_RTC,    MTY_SprintfD("%s/%s/%s.rtc",   system, game, game));
-	MTY_HashSetInt(this->paths, JUN_PATH_CHEATS, MTY_SprintfD("%s/%s/%s.cht",   system, game, game));
-
-	JUN_CoreCreate(this->paths);
-
+	JUN_CoreCreate(system, rom);
 	jun_app_configure(this, system, settings);
-
-	MTY_Free(game);
-}
-
-const char *JUN_AppGetPath(JUN_App *public, JUN_PathType type)
-{
-	_JUN_App *this = (_JUN_App *) public;
-
-	return MTY_HashGetInt(this->paths, type);
-}
-
-void JUN_AppUnloadCore(JUN_App *public)
-{
-	_JUN_App *this = (_JUN_App *) public;
-
-	JUN_CoreDestroy();
-	MTY_HashDestroy(&this->paths, MTY_Free);
 }
 
 static void core_log(enum retro_log_level level, const char *fmt, ...)
@@ -104,14 +50,12 @@ static void core_log(enum retro_log_level level, const char *fmt, ...)
 	MTY_Log("%s", buffer);
 }
 
-bool JUN_AppEnvironment(JUN_App *public, unsigned cmd, void *data)
+bool JUN_AppEnvironment(JUN_App *this, unsigned cmd, void *data)
 {
-	_JUN_App *this = (_JUN_App *) public;
-
 	unsigned command = cmd & ~RETRO_ENVIRONMENT_EXPERIMENTAL;
 	switch (command) {
 		case RETRO_ENVIRONMENT_SET_PIXEL_FORMAT: {
-			return JUN_VideoSetPixelFormat(this->public.video, data);
+			return JUN_VideoSetPixelFormat(this->video, data);
 		}
 		case RETRO_ENVIRONMENT_GET_LOG_INTERFACE: {
 			struct retro_log_callback *callback = data;
@@ -120,24 +64,17 @@ bool JUN_AppEnvironment(JUN_App *public, unsigned cmd, void *data)
 
 			return true;
 		}
-		case RETRO_ENVIRONMENT_GET_LANGUAGE: {
-			unsigned *language = data;
-
-			*language = this->language;
-
-			return true;
-		}
 		case RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY: {
-			char **system_directory = data;
+			const char **system_directory = data;
 
-			*system_directory = MTY_HashGetInt(this->paths, JUN_PATH_SYSTEM);
+			*system_directory = JUN_CoreGetSystemPath();
 
 			return true;
 		}
 		case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY: {
-			char **save_directory = data;
+			const char **save_directory = data;
 
-			*save_directory = MTY_HashGetInt(this->paths, JUN_PATH_SAVES);
+			*save_directory = JUN_CoreGetSavesPath();
 
 			return true;
 		}
@@ -202,29 +139,26 @@ bool JUN_AppEnvironment(JUN_App *public, unsigned cmd, void *data)
 			return true;
 		}
 		default: {
-			const char *name = JUN_EnumsGetString(JUN_ENUM_ENVIRONMENT, cmd);
-
-			MTY_Log("Unhandled command: %s (%d)", name, command);
+			MTY_Log("Unhandled command: %d", command);
 
 			return false;
 		}
 	}
 }
 
-void JUN_AppDestroy(JUN_App **public)
+void JUN_AppDestroy(JUN_App **app)
 {
-	if (!public || !*public)
+	if (!app || !*app)
 		return;
 
-	_JUN_App *this = * (_JUN_App **) public;
+	JUN_App *this = *app;
 
 	JUN_CoreDestroy();
-	JUN_VideoDestroy(&this->public.video);
-	JUN_AudioDestroy(&this->public.audio);
-	JUN_InputDestroy(&this->public.input);
-	JUN_StateDestroy(&this->public.state);
-	MTY_HashDestroy(&this->paths, MTY_Free);
+	JUN_VideoDestroy(&this->video);
+	JUN_AudioDestroy(&this->audio);
+	JUN_InputDestroy(&this->input);
+	JUN_StateDestroy(&this->state);
 
 	MTY_Free(this);
-	*public = NULL;
+	*app = NULL;
 }

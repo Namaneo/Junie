@@ -8,7 +8,7 @@ OUT_DIR  := build
 DIST_DIR := dist
 
 LIBS  := matoya retro z
-CORES := genesis melonds mgba quicknes snes9x
+CORES := melonds#genesis melonds mgba quicknes snes9x
 
 LIB_FILES  := $(LIBS:%=$(LIB_DIR)/lib%.a)
 CORE_FILES := $(CORES:%=$(CORES_DIR)/lib%.a)
@@ -21,13 +21,9 @@ SRC := \
 	$(SRC_DIR)/video.c \
 	$(SRC_DIR)/audio.c \
 	$(SRC_DIR)/input.c \
-	$(SRC_DIR)/tools.c \
-	$(SRC_DIR)/enums.c \
 	$(SRC_DIR)/state.c \
 	$(SRC_DIR)/interop.c \
 	$(SRC_DIR)/texture.c \
-	$(SRC_DIR)/toolbox.c \
-	$(SRC_DIR)/settings.c \
 	$(SRC_DIR)/filesystem.c \
 	$(SRC_DIR)/configuration.c
 
@@ -47,7 +43,6 @@ OPTIONS_GAME := $(OPTIONS) \
 	-sEXPORTED_RUNTIME_METHODS=ccall,UTF8ToString
 
 OPTIONS_TOOLS := $(OPTIONS) \
-	-sEXPORTED_FUNCTIONS=_get_languages \
 	-sEXPORTED_RUNTIME_METHODS=UTF8ToString,IDBStore
 
 CFLAGS  := -I$(SRC_DIR) -I$(INC_DIR) -Ilib/retro/include -fPIC

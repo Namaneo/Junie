@@ -16,8 +16,6 @@ typedef struct {
 } JUN_App;
 
 JUN_App *JUN_AppCreate(MTY_EventFunc event);
-void JUN_AppLoadCore(JUN_App *public, const char *system, const char *rom, const char *settings);
-const char *JUN_AppGetPath(JUN_App *public, JUN_PathType type);
-void JUN_AppUnloadCore(JUN_App *public);
-bool JUN_AppEnvironment(JUN_App *public, unsigned cmd, void *data);
-void JUN_AppDestroy(JUN_App **public);
+void JUN_AppLoadCore(JUN_App *this, const char *system, const char *rom, const char *settings);
+bool JUN_AppEnvironment(JUN_App *this, unsigned cmd, void *data);
+void JUN_AppDestroy(JUN_App **app);

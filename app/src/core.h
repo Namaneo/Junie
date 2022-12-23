@@ -13,12 +13,14 @@ typedef struct {
 	retro_input_state_t input_state;
 } JUN_CoreCallbacks;
 
-void JUN_CoreCreate(MTY_Hash *paths);
+void JUN_CoreCreate(const char *system, const char *rom);
 const MTY_JSON *JUN_CoreGetDefaultConfiguration();
 JUN_Configuration *JUN_CoreGetConfiguration();
 void JUN_CoreSetCallbacks(JUN_CoreCallbacks *callbacks);
 double JUN_CoreGetSampleRate();
 double JUN_CoreGetFramesPerSecond();
+const char *JUN_CoreGetSavesPath();
+const char *JUN_CoreGetSystemPath();
 bool JUN_CoreStartGame();
 bool JUN_CoreHasStarted();
 void JUN_CoreRun(size_t count);
