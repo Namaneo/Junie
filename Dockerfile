@@ -1,38 +1,26 @@
-# Build app
-FROM emscripten/emsdk AS app
+# Build
+FROM emscripten/emsdk AS build
 
 WORKDIR /junie
 
 RUN apt update
-RUN apt install -y xxd
+RUN apt install -y xxd bsdmainutils
+RUN npm install -g yarn
 
 ADD GNUmakefile .
 ADD ./app ./app
-
-ENV TERM=xterm
-RUN emmake make app
-
-# Build UI
-FROM node AS ui
-
-WORKDIR /junie
-
-RUN apt update
-RUN apt install -y make
-
-ADD GNUmakefile .
-COPY --from=app /junie/app/build ./app/build
 ADD ./ui ./ui
 
-RUN make ui
+ENV TERM=xterm
+RUN emmake make
 
 # Run
-FROM alpine AS junie
+FROM alpine AS run
 
 WORKDIR /junie
 
 RUN apk --no-cache add python3
 
-COPY --from=ui /junie/ui/build .
+COPY --from=build /junie/ui/build .
 
 CMD python3 -m http.server ${PORT:-8000}

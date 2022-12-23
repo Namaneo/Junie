@@ -60,7 +60,7 @@ $(TARGET): $(OBJ)
 	@$(AR) rcs $@ $(OBJ)
 
 %.o: %.c
-	@$(CC) -c -o $@ $(CFLAGS) $^
+	@$(CC) -c -o $@ $(CFLAGS) $^ $(QUIET)
 
 clean:
 	@$(RM) $(OBJ) $(TARGET)

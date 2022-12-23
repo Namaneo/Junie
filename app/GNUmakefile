@@ -59,6 +59,7 @@ endif
 
 OBJ := $(SRC:.c=.o)
 
+QUIET := > /dev/null 2>&1
 MAKEFLAGS += --no-print-directory
 
 .SECONDARY: $(OBJ)
@@ -98,11 +99,11 @@ $(CORES_DIR)/lib%.a:
 
 $(OUT_DIR)/%.js:
 	@echo Building $*.js...
-	$(CXX) -o $(OUT_DIR)/$*.js $(OBJ) -L$(CORES_DIR) -l$* $(LDFLAGS) $(OPTIONS_GAME) -sEXPORT_NAME=$*
+	@$(CXX) -o $(OUT_DIR)/$*.js $(OBJ) -L$(CORES_DIR) -l$* $(LDFLAGS) $(OPTIONS_GAME) -sEXPORT_NAME=$* $(QUIET)
 
 $(OUT_DIR)/tools.js:
 	@echo Building tools.js...
-	$(CXX) -o $(OUT_DIR)/tools.js $(OBJ) $(LDFLAGS) $(OPTIONS_TOOLS) -sEXPORT_NAME=tools
+	@$(CXX) -o $(OUT_DIR)/tools.js $(OBJ) $(LDFLAGS) $(OPTIONS_TOOLS) -sEXPORT_NAME=tools $(QUIET)
 
 clean:
 	@rm -rf $(OBJ) $(INC_DIR) $(OUT_DIR) $(DIST_DIR)
@@ -116,4 +117,4 @@ clean-core-%:
 	@$(MAKE) -C $(CORES_DIR) name=$* clean
 
 %.o: %.c
-	$(CC) -c $(CFLAGS) -o $@ $^
+	@$(CC) -c $(CFLAGS) -o $@ $^ $(QUIET)

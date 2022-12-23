@@ -18,21 +18,12 @@ UI_FLAGS := \
 	--environment BUILD:$(BUILD) \
 	--environment VERSION:$(VERSION)
 
-.PHONY: app ui
+# Build
 
-# Common
-
-all: clean app ui
-
-app:
+all: clean prepare
 	@$(MAKE) -C $(APP_DIR) DEBUG=$(DEBUG)
-
-ui: prepare
 	@echo Building index.html...
 	@yarn --cwd $(UI_DIR) rollup -c $(UI_FLAGS) $(QUIET)
-
-prepare:
-	@yarn --cwd $(UI_DIR) install $(QUIET)
 
 # Watch
 
@@ -45,6 +36,12 @@ watch-start:
 
 watch-end:
 	@screen -S $(TARGET) -X quit
+
+# Common
+
+prepare:
+	@echo Fetching dependencies...
+	@yarn --cwd $(UI_DIR) install $(QUIET)
 
 # Pack
 
