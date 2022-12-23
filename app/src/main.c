@@ -10,11 +10,8 @@
 
 #include "app.h"
 
-#define PATH_SIZE 256
 
-static struct {
-	JUN_App *app;
-} CTX;
+static JUN_App *app = NULL;
 
 static bool environment(unsigned cmd, void *data)
 {
@@ -24,10 +21,10 @@ static bool environment(unsigned cmd, void *data)
 static void video_refresh(const void *data, unsigned width, unsigned height, size_t pitch)
 {
 	enum retro_pixel_format format = JUN_CoreGetFormat();
-	JUN_VideoUpdateContext(CTX.app->video, format, width, height, pitch);
+	JUN_VideoUpdateContext(app->video, format, width, height, pitch);
 
-	JUN_VideoDrawFrame(CTX.app->video, data);
-	JUN_VideoDrawUI(CTX.app->video, JUN_StateHasGamepad(CTX.app->state));
+	JUN_VideoDrawFrame(app->video, data);
+	JUN_VideoDrawUI(app->video, JUN_StateHasGamepad(app->state));
 }
 
 static void input_poll()
@@ -40,13 +37,13 @@ static int16_t input_state(unsigned port, unsigned device, unsigned index, unsig
 	if (port != 0)
 		return 0;
 
-	return JUN_InputGetStatus(CTX.app->input, id, device);
+	return JUN_InputGetStatus(app->input, id, device);
 }
 
 static size_t audio_sample_batch(const int16_t *data, size_t frames)
 {
-	if (JUN_StateHasAudio(CTX.app->state))
-		JUN_AudioQueue(CTX.app->audio, data, frames);
+	if (JUN_StateHasAudio(app->state))
+		JUN_AudioQueue(app->audio, data, frames);
 
 	return frames;
 }
@@ -57,18 +54,15 @@ static void audio_sample(int16_t left, int16_t right)
 	audio_sample_batch(buf, 1);
 }
 
-void app_func()
+void main_loop()
 {
-	if (!JUN_CoreHasStarted())
-		return;
-
 	double frames_per_second = JUN_CoreGetFramesPerSecond();
-	uint32_t factor = JUN_VideoComputeFramerate(CTX.app->video, frames_per_second);
-	JUN_CoreRun(JUN_StateGetFastForward(CTX.app->state) * factor);
-	JUN_VideoPresent(CTX.app->video);
+	uint32_t factor = JUN_VideoComputeFramerate(app->video, frames_per_second);
+	JUN_CoreRun(JUN_StateGetFastForward(app->state) * factor);
+	JUN_VideoPresent(app->video);
 
-	if (JUN_StateShouldExit(CTX.app->state)) {
-		JUN_AppDestroy(&CTX.app);
+	if (JUN_StateShouldExit(app->state)) {
+		JUN_AppDestroy(&app);
 
 		emscripten_cancel_main_loop();
 		JUN_InteropShowUI(true);
@@ -77,33 +71,25 @@ void app_func()
 
 	JUN_CoreSaveMemories();
 
-	if (JUN_StateShouldSaveState(CTX.app->state)) {
+	if (JUN_StateShouldSaveState(app->state)) {
 		JUN_CoreSaveState();
-		JUN_StateToggleSaveState(CTX.app->state);
+		JUN_StateToggleSaveState(app->state);
 	}
 
-	if (JUN_StateShouldRestoreState(CTX.app->state)) {
+	if (JUN_StateShouldRestoreState(app->state)) {
 		JUN_CoreRestoreState();
-		JUN_StateToggleRestoreState(CTX.app->state);
+		JUN_StateToggleRestoreState(app->state);
 	}
 }
 
-static void event_func(const MTY_Event *event, void *opaque)
+char *get_settings()
 {
-	if (!CTX.app)
-		return;
-
-	JUN_InputSetStatus(CTX.app->input, event);
-
-	JUN_PrintEvent(event);
-
-	if (event->type == MTY_EVENT_CLOSE)
-		JUN_StateToggleExit(CTX.app->state);
+	return MTY_JSONSerialize(JUN_CoreGetDefaultConfiguration());
 }
 
-static bool prepare_game(const char *system, const char *rom, const char *settings)
+void start_game(const char *system, const char *rom, const char *settings)
 {
-	CTX.app = JUN_AppCreate(event_func, system, rom, settings);
+	app = JUN_AppCreate(system, rom, settings);
 
 	JUN_CoreSetCallbacks(& (JUN_CoreCallbacks) {
 		environment,
@@ -114,29 +100,16 @@ static bool prepare_game(const char *system, const char *rom, const char *settin
 		input_state,
 	});
 
-	if (!JUN_CoreStartGame())
-		return false;
-
-	JUN_AudioSetSampleRate(CTX.app->audio, JUN_CoreGetSampleRate());
-
-	JUN_CoreRestoreMemories();
-	JUN_CoreSetCheats();
-
-	return true;
-}
-
-char *get_settings()
-{
-	return MTY_JSONSerialize(JUN_CoreGetDefaultConfiguration());
-}
-
-void start_game(const char *system, const char *rom, const char *settings)
-{
-	if (!prepare_game(system, rom, settings)) {
+	if (!JUN_CoreStartGame()) {
 		MTY_Log("Core for system '%s' failed to start rom '%s'", system, rom);
 		return;
 	}
 
+	JUN_AudioSetSampleRate(app->audio, JUN_CoreGetSampleRate());
+
+	JUN_CoreRestoreMemories();
+	JUN_CoreSetCheats();
+
 	JUN_InteropShowUI(false);
-	emscripten_set_main_loop(app_func, 0, 0);
+	emscripten_set_main_loop(main_loop, 0, 0);
 }

@@ -15,6 +15,6 @@ typedef struct {
 	JUN_Video *video;
 } JUN_App;
 
-JUN_App *JUN_AppCreate(MTY_EventFunc event, const char *system, const char *rom, const char *settings);
+JUN_App *JUN_AppCreate(const char *system, const char *rom, const char *settings);
 bool JUN_AppEnvironment(JUN_App *this, unsigned cmd, void *data);
 void JUN_AppDestroy(JUN_App **app);

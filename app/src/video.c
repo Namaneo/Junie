@@ -48,6 +48,7 @@ struct JUN_Video {
 	MTY_EventFunc event;
 	MTY_Renderer *renderer;
 	MTY_Hash *assets;
+	void *opaque;
 
 	JUN_State *state;
 	JUN_Input *input;
@@ -86,7 +87,7 @@ static void window_motion(JUN_Video *this, int32_t id, bool relative, int32_t x,
 	evt.motion.x = x * JUN_InteropGetPixelRatio();
 	evt.motion.y = y * JUN_InteropGetPixelRatio();
 
-	this->event(&evt, NULL);
+	this->event(&evt, this->opaque);
 }
 
 static void window_button(JUN_Video *this, int32_t id, bool pressed, int32_t button, int32_t x, int32_t y)
@@ -106,7 +107,7 @@ static void window_button(JUN_Video *this, int32_t id, bool pressed, int32_t but
 	evt.button.x = x * JUN_InteropGetPixelRatio();
 	evt.button.y = y * JUN_InteropGetPixelRatio();
 
-	this->event(&evt, NULL);
+	this->event(&evt, this->opaque);
 }
 
 static void prepare_asset(JUN_Video *this, uint8_t id, const void *data, size_t size)
@@ -128,13 +129,14 @@ static void prepare_asset(JUN_Video *this, uint8_t id, const void *data, size_t 
 	rpng_free(png);
 }
 
-JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input, MTY_EventFunc event)
+JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input, MTY_EventFunc event, void *opaque)
 {
 	JUN_Video *this = MTY_Alloc(1, sizeof(JUN_Video));
 
 	this->event = event;
 	this->state = state;
 	this->input = input;
+	this->opaque = opaque;
 
 	gl_attach_events(this, window_motion, window_button);
 

@@ -352,11 +352,6 @@ bool JUN_CoreStartGame()
 	return CTX.initialized;
 }
 
-bool JUN_CoreHasStarted()
-{
-	return CTX.initialized;
-}
-
 void JUN_CoreRun(size_t count)
 {
 	for (int i = 0; i < count; ++i)
