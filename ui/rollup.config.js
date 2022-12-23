@@ -57,7 +57,7 @@ function html(outdir, html, sw) {
 export default {
     input: 'src/index.jsx',
     output: {
-        file: 'build/index.js',
+        file: 'build/index.html',
         format: 'es'
     },
     inlineDynamicImports: true,
