@@ -12,7 +12,7 @@ import copy from 'rollup-plugin-copy'
 import { terser } from 'rollup-plugin-terser'
 
 const build = process.env.BUILD || 'development';
-const version = process.env.VERSION;
+const version = process.env.VERSION || Date.now();
 
 function watcher(globs) {
     return {
@@ -27,25 +27,29 @@ function watcher(globs) {
     }
 };
 
-function html(input) {
+function html(outdir, html, sw) {
     return {
         name: 'html',
-        writeBundle(options, bundle) {
+        writeBundle(_, bundle) {
 			let code = bundle[Object.keys(bundle)[0]].code;
 			code = Buffer.from(code).toString('base64');
 
-			let template = readFileSync(input, 'utf-8');
+			let code_html = readFileSync(html, 'utf-8');
+			let code_sw = readFileSync(sw, 'utf-8');
 
-			template = template.replace(
+			code_html = code_html.replace(
 				'window.junie_build = null;',
 				`window.junie_build = '${version}';`
 			);
-			template = template.replace(
+			code_html = code_html.replace(
 				'const source = null;',
 				`const source = '${code}';`
 			);
 
-			writeFileSync(options.file, template);
+			code_sw = `// ${version}\n${code_sw}`;
+
+			writeFileSync(`${outdir}/${html}`, code_html);
+			writeFileSync(`${outdir}/${sw}`, code_sw);
         }
     };
 }
@@ -53,7 +57,7 @@ function html(input) {
 export default {
     input: 'src/index.jsx',
     output: {
-        file: 'build/index.html',
+        file: 'build/index.js',
         format: 'es'
     },
     inlineDynamicImports: true,
@@ -87,12 +91,11 @@ export default {
             presets: [['@babel/preset-react', { runtime: 'automatic' }]],
         }),
         (build == 'production') && terser(),
-        html('index.html'),
+        html('build', 'index.html', 'service-worker.js'),
 		copy({
 			hook: 'buildStart',
 			targets: [
 				{ src: 'manifest.json', dest: 'build' },
-				{ src: 'service-worker.js', dest: 'build' },
 				{ src: 'icons/*', dest: 'build/icons' },
 				{ src: '../app/build/*', dest: 'build/cores' }
 			]
