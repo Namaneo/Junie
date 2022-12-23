@@ -2,12 +2,16 @@
 
 #include "filesystem.h"
 #include "interop.h"
+#include "debug.h"
 
 #include "app.h"
 
 JUN_App *JUN_AppCreate(MTY_EventFunc event)
 {
 	JUN_App *this = MTY_Alloc(1, sizeof(JUN_App));
+
+	JUN_SetLogFunc();
+	JUN_FilesystemCreate();
 
 	this->state = JUN_StateCreate();
 	this->input = JUN_InputCreate(this->state);
@@ -158,6 +162,8 @@ void JUN_AppDestroy(JUN_App **app)
 	JUN_AudioDestroy(&this->audio);
 	JUN_InputDestroy(&this->input);
 	JUN_StateDestroy(&this->state);
+
+	JUN_FilesystemDestroy();
 
 	MTY_Free(this);
 	*app = NULL;

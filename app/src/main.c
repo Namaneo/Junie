@@ -67,13 +67,9 @@ void app_func()
 	JUN_VideoPresent(CTX.app->video);
 
 	if (JUN_StateShouldExit(CTX.app->state)) {
+		JUN_AppDestroy(&CTX.app);
+
 		emscripten_cancel_main_loop();
-
-		// TODO Useless in emscripten
-
-		// JUN_AppDestroy(&CTX.app);
-		// JUN_FilesystemDestroy();
-
 		JUN_InteropShowUI(true);
 		return;
 	}
@@ -138,20 +134,13 @@ char *get_settings()
 
 void start_game(const char *system, const char *rom, const char *settings)
 {
-	JUN_InteropShowUI(false);
-
-	JUN_SetLogFunc();
-	JUN_FilesystemCreate();
-
-
 	CTX.app = JUN_AppCreate(event_func);
-	JUN_VideoStart(CTX.app->video);
 
 	if (!prepare_game(system, rom, settings)) {
 		MTY_Log("Core for system '%s' failed to start rom '%s'", system, rom);
-		JUN_InteropShowUI(true);
 		return;
 	}
 
+	JUN_InteropShowUI(false);
 	emscripten_set_main_loop(app_func, 0, 0);
 }

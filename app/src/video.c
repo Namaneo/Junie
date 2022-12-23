@@ -109,6 +109,25 @@ static void window_button(JUN_Video *this, int32_t id, bool pressed, int32_t but
 	this->event(&evt, NULL);
 }
 
+static void prepare_asset(JUN_Video *this, uint8_t id, const void *data, size_t size)
+{
+	void *image = NULL;
+
+	struct jun_video_asset *asset = MTY_Alloc(1, sizeof(struct jun_video_asset));
+
+	rpng_t *png = rpng_alloc();
+	rpng_set_buf_ptr(png, (void *) data, size);
+	rpng_start(png);
+	while (rpng_iterate_image(png));
+	while (rpng_process_image(png, &image, size, &asset->width, &asset->height) == IMAGE_PROCESS_NEXT)
+
+	MTY_HashSetInt(this->assets, id, asset);
+	MTY_RendererSetUITexture(this->renderer, MTY_GFX_GL, NULL, NULL, id + 1, image, asset->width, asset->height);
+
+	MTY_Free(image);
+	rpng_free(png);
+}
+
 JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input, MTY_EventFunc event)
 {
 	JUN_Video *this = MTY_Alloc(1, sizeof(JUN_Video));
@@ -121,6 +140,28 @@ JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input, MTY_EventFunc eve
 
 	this->renderer = MTY_RendererCreate();
 	this->assets = MTY_HashCreate(0);
+
+	PREPARE(MENU_TOGGLE_AUDIO,   menu_toggle_audio);
+	PREPARE(MENU_TOGGLE_GAMEPAD, menu_toggle_gamepad);
+	PREPARE(MENU_SAVE_STATE,     menu_save_state);
+	PREPARE(MENU_RESTORE_STATE,  menu_restore_state);
+	PREPARE(MENU_FAST_FORWARD,   menu_fast_forward);
+	PREPARE(MENU_EXIT,           menu_exit);
+
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_UP,    joypad_up);
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_DOWN,  joypad_down);
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_LEFT,  joypad_left);
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_RIGHT, joypad_right);
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_L,     joypad_l);
+
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_X, joypad_x);
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_B, joypad_b);
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_A, joypad_a);
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_Y, joypad_y);
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_R, joypad_r);
+
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_START,  joypad_start_select);
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_SELECT, joypad_start_select);
 
 	return this;
 }
@@ -150,25 +191,6 @@ bool JUN_VideoSetPixelFormat(JUN_Video *this, enum retro_pixel_format *format)
 		default:
 			return false;
 	}
-}
-
-static void prepare_asset(JUN_Video *this, uint8_t id, const void *data, size_t size)
-{
-	void *image = NULL;
-
-	struct jun_video_asset *asset = MTY_Alloc(1, sizeof(struct jun_video_asset));
-
-	rpng_t *png = rpng_alloc();
-	rpng_set_buf_ptr(png, (void *) data, size);
-	rpng_start(png);
-	while (rpng_iterate_image(png));
-	while (rpng_process_image(png, &image, size, &asset->width, &asset->height) == IMAGE_PROCESS_NEXT)
-
-	MTY_HashSetInt(this->assets, id, asset);
-	MTY_RendererSetUITexture(this->renderer, MTY_GFX_GL, NULL, NULL, id + 1, image, asset->width, asset->height);
-
-	MTY_Free(image);
-	rpng_free(png);
 }
 
 static void draw_input(JUN_Video *this, uint8_t id, struct jun_draw_desc *desc)
@@ -245,31 +267,6 @@ static void update_ui_context(JUN_Video *this)
 
 	DRAW(RETRO_DEVICE_ID_JOYPAD_START,  CENTER(20),  BOTTOM(-40), RADIUS(20));
 	DRAW(RETRO_DEVICE_ID_JOYPAD_SELECT, CENTER(-20), BOTTOM(-40), RADIUS(20));
-}
-
-void JUN_VideoStart(JUN_Video *this)
-{
-	PREPARE(MENU_TOGGLE_AUDIO,   menu_toggle_audio);
-	PREPARE(MENU_TOGGLE_GAMEPAD, menu_toggle_gamepad);
-	PREPARE(MENU_SAVE_STATE,     menu_save_state);
-	PREPARE(MENU_RESTORE_STATE,  menu_restore_state);
-	PREPARE(MENU_FAST_FORWARD,   menu_fast_forward);
-	PREPARE(MENU_EXIT,           menu_exit);
-
-	PREPARE(RETRO_DEVICE_ID_JOYPAD_UP,    joypad_up);
-	PREPARE(RETRO_DEVICE_ID_JOYPAD_DOWN,  joypad_down);
-	PREPARE(RETRO_DEVICE_ID_JOYPAD_LEFT,  joypad_left);
-	PREPARE(RETRO_DEVICE_ID_JOYPAD_RIGHT, joypad_right);
-	PREPARE(RETRO_DEVICE_ID_JOYPAD_L,     joypad_l);
-
-	PREPARE(RETRO_DEVICE_ID_JOYPAD_X, joypad_x);
-	PREPARE(RETRO_DEVICE_ID_JOYPAD_B, joypad_b);
-	PREPARE(RETRO_DEVICE_ID_JOYPAD_A, joypad_a);
-	PREPARE(RETRO_DEVICE_ID_JOYPAD_Y, joypad_y);
-	PREPARE(RETRO_DEVICE_ID_JOYPAD_R, joypad_r);
-
-	PREPARE(RETRO_DEVICE_ID_JOYPAD_START,  joypad_start_select);
-	PREPARE(RETRO_DEVICE_ID_JOYPAD_SELECT, joypad_start_select);
 }
 
 void JUN_VideoUpdateContext(JUN_Video *this, unsigned width, unsigned height, size_t pitch)

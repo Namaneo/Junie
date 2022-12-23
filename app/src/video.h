@@ -5,7 +5,6 @@
 typedef struct JUN_Video JUN_Video;
 
 JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input, MTY_EventFunc event);
-void JUN_VideoStart(JUN_Video *this);
 bool JUN_VideoSetPixelFormat(JUN_Video *this, enum retro_pixel_format *format);
 void JUN_VideoPrepareAssets(JUN_Video *this);
 void JUN_VideoUpdateContext(JUN_Video *this, unsigned width, unsigned height, size_t pitch);
