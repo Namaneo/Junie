@@ -78,17 +78,17 @@ prepare:
 	@xxd -i $(RES_DIR)/menu/restore_state.png  >> $(INC_DIR)/res_inputs.h
 	@xxd -i $(RES_DIR)/menu/fast_forward.png   >> $(INC_DIR)/res_inputs.h
 	@xxd -i $(RES_DIR)/menu/exit.png           >> $(INC_DIR)/res_inputs.h
-	@xxd -i $(RES_DIR)/joypad/a.png            >> $(INC_DIR)/res_inputs.h
-	@xxd -i $(RES_DIR)/joypad/b.png            >> $(INC_DIR)/res_inputs.h
-	@xxd -i $(RES_DIR)/joypad/x.png            >> $(INC_DIR)/res_inputs.h
-	@xxd -i $(RES_DIR)/joypad/y.png            >> $(INC_DIR)/res_inputs.h
-	@xxd -i $(RES_DIR)/joypad/l.png            >> $(INC_DIR)/res_inputs.h
-	@xxd -i $(RES_DIR)/joypad/r.png            >> $(INC_DIR)/res_inputs.h
-	@xxd -i $(RES_DIR)/joypad/up.png           >> $(INC_DIR)/res_inputs.h
-	@xxd -i $(RES_DIR)/joypad/down.png         >> $(INC_DIR)/res_inputs.h
-	@xxd -i $(RES_DIR)/joypad/left.png         >> $(INC_DIR)/res_inputs.h
-	@xxd -i $(RES_DIR)/joypad/right.png        >> $(INC_DIR)/res_inputs.h
-	@xxd -i $(RES_DIR)/joypad/start_select.png >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/gamepad/a.png            >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/gamepad/b.png            >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/gamepad/x.png            >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/gamepad/y.png            >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/gamepad/l.png            >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/gamepad/r.png            >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/gamepad/up.png           >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/gamepad/down.png         >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/gamepad/left.png         >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/gamepad/right.png        >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/gamepad/start_select.png >> $(INC_DIR)/res_inputs.h
 
 $(LIB_DIR)/lib%.a:
 	@$(MAKE) -C $(LIB_DIR) name=$*
