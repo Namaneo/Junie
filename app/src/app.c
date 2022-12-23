@@ -21,25 +21,9 @@ JUN_App *JUN_AppCreate(MTY_EventFunc event)
 	return (JUN_App *) this;
 }
 
-static void jun_app_configure(JUN_App *this, const char *system, const char *json)
-{
-	MTY_JSON *settings = MTY_JSONParse(json);
-	JUN_Configuration *configuration = JUN_CoreGetConfiguration();
-
-	uint64_t iter = 0;
-	const char *key = NULL;
-	while (MTY_JSONObjGetNextKey(settings, &iter, &key)) {
-		const char *value = MTY_JSONObjGetStringPtr(settings, key);
-		JUN_ConfigurationOverride(configuration, key, value);
-	}
-
-	MTY_JSONDestroy(&settings);
-}
-
 void JUN_AppLoadCore(JUN_App *this, const char *system, const char *rom, const char *settings)
 {
-	JUN_CoreCreate(system, rom);
-	jun_app_configure(this, system, settings);
+	JUN_CoreCreate(system, rom, settings);
 }
 
 static void core_log(enum retro_log_level level, const char *fmt, ...)

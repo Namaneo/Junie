@@ -13,7 +13,7 @@ typedef struct {
 	retro_input_state_t input_state;
 } JUN_CoreCallbacks;
 
-void JUN_CoreCreate(const char *system, const char *rom);
+void JUN_CoreCreate(const char *system, const char *rom, const char *settings);
 const MTY_JSON *JUN_CoreGetDefaultConfiguration();
 JUN_Configuration *JUN_CoreGetConfiguration();
 void JUN_CoreSetCallbacks(JUN_CoreCallbacks *callbacks);

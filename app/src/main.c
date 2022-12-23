@@ -87,10 +87,22 @@ void app_func()
 	}
 }
 
+static void event_func(const MTY_Event *event, void *opaque)
+{
+	if (!CTX.app)
+		return;
+
+	JUN_InputSetStatus(CTX.app->input, event);
+
+	JUN_PrintEvent(event);
+
+	if (event->type == MTY_EVENT_CLOSE)
+		JUN_StateToggleExit(CTX.app->state);
+}
+
 static bool prepare_game(const char *system, const char *rom, const char *settings)
 {
-	char *path = NULL;
-	size_t length = 0;
+	CTX.app = JUN_AppCreate(event_func);
 
 	JUN_AppLoadCore(CTX.app, system, rom, settings);
 
@@ -114,19 +126,6 @@ static bool prepare_game(const char *system, const char *rom, const char *settin
 	return true;
 }
 
-static void event_func(const MTY_Event *event, void *opaque)
-{
-	if (!CTX.app)
-		return;
-
-	JUN_InputSetStatus(CTX.app->input, event);
-
-	JUN_PrintEvent(event);
-
-	if (event->type == MTY_EVENT_CLOSE)
-		JUN_StateToggleExit(CTX.app->state);
-}
-
 char *get_settings()
 {
 	return MTY_JSONSerialize(JUN_CoreGetDefaultConfiguration());
@@ -134,8 +133,6 @@ char *get_settings()
 
 void start_game(const char *system, const char *rom, const char *settings)
 {
-	CTX.app = JUN_AppCreate(event_func);
-
 	if (!prepare_game(system, rom, settings)) {
 		MTY_Log("Core for system '%s' failed to start rom '%s'", system, rom);
 		return;

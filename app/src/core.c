@@ -153,13 +153,10 @@ static char *remove_extension(const char *str)
 	return result;
 }
 
-void JUN_CoreCreate(const char *system, const char *rom)
+void JUN_CoreCreate(const char *system, const char *rom, const char *settings)
 {
-	CTX.configuration = JUN_ConfigurationCreate();
-
-	char *game = remove_extension(rom);
-
 	CTX.paths = MTY_HashCreate(0);
+	char *game = remove_extension(rom);
 
 	MTY_HashSetInt(CTX.paths, JUN_PATH_SYSTEM, MTY_SprintfD("%s",             system));
 	MTY_HashSetInt(CTX.paths, JUN_PATH_GAME,   MTY_SprintfD("%s/%s",          system, rom));
@@ -168,6 +165,18 @@ void JUN_CoreCreate(const char *system, const char *rom)
 	MTY_HashSetInt(CTX.paths, JUN_PATH_SRAM,   MTY_SprintfD("%s/%s/%s.srm",   system, game, game));
 	MTY_HashSetInt(CTX.paths, JUN_PATH_RTC,    MTY_SprintfD("%s/%s/%s.rtc",   system, game, game));
 	MTY_HashSetInt(CTX.paths, JUN_PATH_CHEATS, MTY_SprintfD("%s/%s/%s.cht",   system, game, game));
+
+	CTX.configuration = JUN_ConfigurationCreate();
+	MTY_JSON *overrides = MTY_JSONParse(settings);
+
+	uint64_t iter = 0;
+	const char *key = NULL;
+	while (MTY_JSONObjGetNextKey(overrides, &iter, &key)) {
+		const char *value = MTY_JSONObjGetStringPtr(overrides, key);
+		JUN_ConfigurationOverride(CTX.configuration, key, value);
+	}
+
+	MTY_JSONDestroy(&overrides);
 
 	initialize_symbols();
 }

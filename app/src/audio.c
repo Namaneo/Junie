@@ -37,7 +37,7 @@ void JUN_AudioSetSampleRate(JUN_Audio *this, double sample_rate)
 	this->sample_rate = sample_rate;
 }
 
-static void jun_unqueue_buffers(JUN_Audio *this, uint32_t *buffer)
+static void jun_unqueue_buffers(JUN_Audio *this)
 {
 	int32_t processed_len = 0;
 	alGetSourcei(this->source, AL_BUFFERS_PROCESSED, &processed_len);
@@ -45,30 +45,26 @@ static void jun_unqueue_buffers(JUN_Audio *this, uint32_t *buffer)
 	uint32_t processed[processed_len];
 	alSourceUnqueueBuffers(this->source, processed_len, processed);
 
-	size_t index = 0;
-
-	if (buffer && processed_len) {
-		*buffer = processed[index];
-		processed_len--;
-		index++;
-
-	} else if (buffer) {
-		alGenBuffers(1, buffer);
-	}
-
 	if (processed_len)
-		alDeleteBuffers(processed_len, &processed[index]);
+		alDeleteBuffers(processed_len, processed);
 }
 
 void JUN_AudioQueue(JUN_Audio *this, const int16_t *data, size_t frames)
 {
-	uint32_t buffer = 0;
-	jun_unqueue_buffers(this, &buffer);
+	jun_unqueue_buffers(this);
 
-	uint32_t data_size = sizeof(int16_t) * frames * 2;
-	uint32_t sample_rate = this->sample_rate * JUN_StateGetFastForward(this->state);
-	alBufferData(buffer, AL_FORMAT_STEREO16, data, data_size, sample_rate);
-	alSourceQueueBuffers(this->source, 1, &buffer);
+	int32_t queued_len = 0;
+	alGetSourcei(this->source, AL_BUFFERS_QUEUED, &queued_len);
+
+	if (queued_len < 5) {
+		uint32_t buffer = 0;
+		uint32_t data_size = sizeof(int16_t) * frames * 2;
+		uint32_t sample_rate = this->sample_rate * JUN_StateGetFastForward(this->state);
+
+		alGenBuffers(1, &buffer);
+		alBufferData(buffer, AL_FORMAT_STEREO16, data, data_size, sample_rate);
+		alSourceQueueBuffers(this->source, 1, &buffer);
+	}
 
 	int32_t state = 0;
 	alGetSourcei(this->source, AL_SOURCE_STATE, &state);
@@ -85,7 +81,7 @@ void JUN_AudioDestroy(JUN_Audio **audio)
 
 	alDeleteSources(1, &this->source);
 
-	jun_unqueue_buffers(this, NULL);
+	jun_unqueue_buffers(this);
 
 	alcMakeContextCurrent(NULL);
 	alcDestroyContext(this->context);
