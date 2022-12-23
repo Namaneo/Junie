@@ -4,13 +4,22 @@
 
 #include "libretro.h"
 
+typedef bool (*JUN_CoreEnvironmentFunc)(unsigned cmd, void *data, void *opaque);
+typedef void (*JUN_CoreVideoRefreshFunc)(const void *data, unsigned width, unsigned height, size_t pitch, void *opaque);
+typedef void (*JUN_CoreAudioSampleFunc)(int16_t left, int16_t right, void *opaque);
+typedef size_t (*JUN_CoreAudioSampleBatchFunc)(const int16_t *data, size_t frames, void *opaque);
+typedef void (*JUN_CoreInputPollFunc)(void *opaque);
+typedef int16_t (*JUN_CoreInputStateFunc)(unsigned port, unsigned device, unsigned index, unsigned id, void *opaque);
+
 typedef struct {
-	retro_environment_t environment;
-	retro_video_refresh_t video_refresh;
-	retro_audio_sample_t audio_sample;
-	retro_audio_sample_batch_t audio_sample_batch;
-	retro_input_poll_t input_poll;
-	retro_input_state_t input_state;
+	void *opaque;
+
+	JUN_CoreEnvironmentFunc environment;
+	JUN_CoreVideoRefreshFunc video_refresh;
+	JUN_CoreAudioSampleFunc audio_sample;
+	JUN_CoreAudioSampleBatchFunc audio_sample_batch;
+	JUN_CoreInputPollFunc input_poll;
+	JUN_CoreInputStateFunc input_state;
 } JUN_CoreCallbacks;
 
 void JUN_CoreCreate(const char *system, const char *rom, const char *settings);

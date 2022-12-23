@@ -19,7 +19,7 @@
 }
 
 #root .recent img {
-    max-width: 25%;
+    width: 25%;
 }
 
 #root .recent ion-label {
@@ -50,7 +50,7 @@
 }
 
 #root .games img {
-    max-width: 25%;
+    width: 25%;
 }
 
 #root .games ion-card-header {

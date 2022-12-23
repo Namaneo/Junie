@@ -56,6 +56,7 @@ static struct {
 	MTY_Hash *paths;
 	MTY_Time last_save;
 	JUN_Configuration *configuration;
+	JUN_CoreCallbacks callbacks;
 
 	struct retro_game_info game;
 	struct retro_system_info system;
@@ -305,12 +306,7 @@ const MTY_JSON *JUN_CoreGetDefaultConfiguration()
 
 void JUN_CoreSetCallbacks(JUN_CoreCallbacks *callbacks)
 {
-	CTX.sym.retro_set_environment(callbacks->environment);
-	CTX.sym.retro_set_video_refresh(callbacks->video_refresh);
-	CTX.sym.retro_set_input_poll(callbacks->input_poll);
-	CTX.sym.retro_set_input_state(callbacks->input_state);
-	CTX.sym.retro_set_audio_sample(callbacks->audio_sample);
-	CTX.sym.retro_set_audio_sample_batch(callbacks->audio_sample_batch);
+	CTX.callbacks = *callbacks;
 }
 
 double JUN_CoreGetSampleRate()
@@ -328,8 +324,45 @@ enum retro_pixel_format JUN_CoreGetFormat()
 	return CTX.format;
 }
 
+static bool environment(unsigned cmd, void *data)
+{
+	return CTX.callbacks.environment(cmd, data, CTX.callbacks.opaque);
+}
+
+static void video_refresh(const void *data, unsigned width, unsigned height, size_t pitch)
+{
+	CTX.callbacks.video_refresh(data, width, height, pitch, CTX.callbacks.opaque);
+}
+
+static void audio_sample(int16_t left, int16_t right)
+{
+	CTX.callbacks.audio_sample(left, right, CTX.callbacks.opaque);
+}
+
+static size_t audio_sample_batch(const int16_t *data, size_t frames)
+{
+	return CTX.callbacks.audio_sample_batch(data, frames, CTX.callbacks.opaque);
+}
+
+static void input_poll()
+{
+	CTX.callbacks.input_poll(CTX.callbacks.opaque);
+}
+
+static int16_t input_state(unsigned port, unsigned device, unsigned index, unsigned id)
+{
+	return CTX.callbacks.input_state(port, device, index, id, CTX.callbacks.opaque);
+}
+
 bool JUN_CoreStartGame()
 {
+	CTX.sym.retro_set_environment(environment);
+	CTX.sym.retro_set_video_refresh(video_refresh);
+	CTX.sym.retro_set_input_poll(input_poll);
+	CTX.sym.retro_set_input_state(input_state);
+	CTX.sym.retro_set_audio_sample(audio_sample);
+	CTX.sym.retro_set_audio_sample_batch(audio_sample_batch);
+
 	CTX.sym.retro_init();
 
 	CTX.sym.retro_get_system_info(&CTX.system);

@@ -11,15 +11,17 @@
 #include "app.h"
 
 
-static JUN_App *app = NULL;
-
-static bool environment(unsigned cmd, void *data)
+static bool environment(unsigned cmd, void *data, void *opaque)
 {
+	JUN_App *app = opaque;
+
 	return JUN_CoreEnvironment(cmd, data);
 }
 
-static void video_refresh(const void *data, unsigned width, unsigned height, size_t pitch)
+static void video_refresh(const void *data, unsigned width, unsigned height, size_t pitch, void *opaque)
 {
+	JUN_App *app = opaque;
+
 	enum retro_pixel_format format = JUN_CoreGetFormat();
 	JUN_VideoUpdateContext(app->video, format, width, height, pitch);
 
@@ -27,35 +29,43 @@ static void video_refresh(const void *data, unsigned width, unsigned height, siz
 	JUN_VideoDrawUI(app->video, JUN_StateHasGamepad(app->state));
 }
 
-static void input_poll()
+static void audio_sample(int16_t left, int16_t right, void *opaque)
 {
-	// TODO Store input snapshot
+	JUN_App *app = opaque;
+
+	if (JUN_StateHasAudio(app->state))
+		JUN_AudioQueue(app->audio, (int16_t[]) { left, right }, 1);
 }
 
-static int16_t input_state(unsigned port, unsigned device, unsigned index, unsigned id)
+static size_t audio_sample_batch(const int16_t *data, size_t frames, void *opaque)
 {
-	if (port != 0)
-		return 0;
+	JUN_App *app = opaque;
 
-	return JUN_InputGetStatus(app->input, id, device);
-}
-
-static size_t audio_sample_batch(const int16_t *data, size_t frames)
-{
 	if (JUN_StateHasAudio(app->state))
 		JUN_AudioQueue(app->audio, data, frames);
 
 	return frames;
 }
 
-static void audio_sample(int16_t left, int16_t right)
+static void input_poll(void *opaque)
 {
-	int16_t buf[2] = {left, right};
-	audio_sample_batch(buf, 1);
+	// TODO Store input snapshot
 }
 
-void main_loop()
+static int16_t input_state(unsigned port, unsigned device, unsigned index, unsigned id, void *opaque)
 {
+	JUN_App *app = opaque;
+
+	if (port != 0)
+		return 0;
+
+	return JUN_InputGetStatus(app->input, id, device);
+}
+
+void main_loop(void *opaque)
+{
+	JUN_App *app = opaque;
+
 	double frames_per_second = JUN_CoreGetFramesPerSecond();
 	uint32_t factor = JUN_VideoComputeFramerate(app->video, frames_per_second);
 	JUN_CoreRun(JUN_StateGetFastForward(app->state) * factor);
@@ -89,15 +99,16 @@ char *get_settings()
 
 void start_game(const char *system, const char *rom, const char *settings)
 {
-	app = JUN_AppCreate(system, rom, settings);
+	JUN_App *app = JUN_AppCreate(system, rom, settings);
 
 	JUN_CoreSetCallbacks(& (JUN_CoreCallbacks) {
-		environment,
-		video_refresh,
-		audio_sample,
-		audio_sample_batch,
-		input_poll,
-		input_state,
+		.opaque             = app,
+		.environment        = environment,
+		.video_refresh      = video_refresh,
+		.audio_sample       = audio_sample,
+		.audio_sample_batch = audio_sample_batch,
+		.input_poll         = input_poll,
+		.input_state        = input_state,
 	});
 
 	if (!JUN_CoreStartGame()) {
@@ -111,5 +122,5 @@ void start_game(const char *system, const char *rom, const char *settings)
 	JUN_CoreSetCheats();
 
 	JUN_InteropShowUI(false);
-	emscripten_set_main_loop(main_loop, 0, 0);
+	emscripten_set_main_loop_arg(main_loop, app, 0, 0);
 }
