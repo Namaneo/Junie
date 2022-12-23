@@ -12,6 +12,7 @@ const resources = [
 	'./cores/mgba.js',
 	'./cores/quicknes.js',
 	'./cores/snes9x.js',
+	'./cores/tools.js',
 ];
 
 const cacheResources = async () => {
