@@ -18,12 +18,13 @@ static struct {
 
 static bool environment(unsigned cmd, void *data)
 {
-	return JUN_AppEnvironment(CTX.app, cmd, data);
+	return JUN_CoreEnvironment(cmd, data);
 }
 
 static void video_refresh(const void *data, unsigned width, unsigned height, size_t pitch)
 {
-	JUN_VideoUpdateContext(CTX.app->video, width, height, pitch);
+	enum retro_pixel_format format = JUN_CoreGetFormat();
+	JUN_VideoUpdateContext(CTX.app->video, format, width, height, pitch);
 
 	JUN_VideoDrawFrame(CTX.app->video, data);
 	JUN_VideoDrawUI(CTX.app->video, JUN_StateHasGamepad(CTX.app->state));
@@ -102,9 +103,7 @@ static void event_func(const MTY_Event *event, void *opaque)
 
 static bool prepare_game(const char *system, const char *rom, const char *settings)
 {
-	CTX.app = JUN_AppCreate(event_func);
-
-	JUN_AppLoadCore(CTX.app, system, rom, settings);
+	CTX.app = JUN_AppCreate(event_func, system, rom, settings);
 
 	JUN_CoreSetCallbacks(& (JUN_CoreCallbacks) {
 		environment,

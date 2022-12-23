@@ -15,12 +15,11 @@ typedef struct {
 
 void JUN_CoreCreate(const char *system, const char *rom, const char *settings);
 const MTY_JSON *JUN_CoreGetDefaultConfiguration();
-JUN_Configuration *JUN_CoreGetConfiguration();
 void JUN_CoreSetCallbacks(JUN_CoreCallbacks *callbacks);
+bool JUN_CoreEnvironment(unsigned cmd, void *data);
 double JUN_CoreGetSampleRate();
 double JUN_CoreGetFramesPerSecond();
-const char *JUN_CoreGetSavesPath();
-const char *JUN_CoreGetSystemPath();
+enum retro_pixel_format JUN_CoreGetFormat();
 bool JUN_CoreStartGame();
 bool JUN_CoreHasStarted();
 void JUN_CoreRun(size_t count);

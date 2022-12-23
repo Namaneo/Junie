@@ -173,26 +173,6 @@ static void refresh_viewport_size(JUN_Video *this, uint32_t *view_width, uint32_
 	JUN_StateSetWindowMetrics(this->state, *view_width, *view_height);
 }
 
-bool JUN_VideoSetPixelFormat(JUN_Video *this, enum retro_pixel_format *format)
-{
-	switch (*format) {
-		case RETRO_PIXEL_FORMAT_0RGB1555:
-			this->pixel_format = MTY_COLOR_FORMAT_BGRA5551;
-			this->bits_per_pixel = sizeof(uint16_t);
-			return true;
-		case RETRO_PIXEL_FORMAT_XRGB8888:
-			this->pixel_format = MTY_COLOR_FORMAT_RGBA;
-			this->bits_per_pixel = sizeof(uint32_t);
-			return true;
-		case RETRO_PIXEL_FORMAT_RGB565:
-			this->pixel_format = MTY_COLOR_FORMAT_BGR565;
-			this->bits_per_pixel = sizeof(uint16_t);
-			return true;
-		default:
-			return false;
-	}
-}
-
 static void draw_input(JUN_Video *this, uint8_t id, struct jun_draw_desc *desc)
 {
 	struct jun_video_asset *asset = MTY_HashGetInt(this->assets, id);
@@ -269,8 +249,25 @@ static void update_ui_context(JUN_Video *this)
 	DRAW(RETRO_DEVICE_ID_JOYPAD_SELECT, CENTER(-20), BOTTOM(-40), RADIUS(20));
 }
 
-void JUN_VideoUpdateContext(JUN_Video *this, unsigned width, unsigned height, size_t pitch)
+void JUN_VideoUpdateContext(JUN_Video *this, enum retro_pixel_format format, unsigned width, unsigned height, size_t pitch)
 {
+	switch (format) {
+		case RETRO_PIXEL_FORMAT_0RGB1555:
+			this->pixel_format = MTY_COLOR_FORMAT_BGRA5551;
+			this->bits_per_pixel = sizeof(uint16_t);
+			break;
+		case RETRO_PIXEL_FORMAT_XRGB8888:
+			this->pixel_format = MTY_COLOR_FORMAT_RGBA;
+			this->bits_per_pixel = sizeof(uint32_t);
+			break;
+		case RETRO_PIXEL_FORMAT_RGB565:
+			this->pixel_format = MTY_COLOR_FORMAT_BGR565;
+			this->bits_per_pixel = sizeof(uint16_t);
+			break;
+		default:
+			break;
+	}
+
 	if (this->width != width || this->height != height || this->pitch != pitch) {
 		MTY_Log("%u x %u (%zu)", width, height, pitch);
 
