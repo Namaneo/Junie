@@ -38,7 +38,9 @@
 
 				try {
 					const origin = location.origin + location.pathname.replace(/\/$/, '');
-					const registration = await navigator.serviceWorker.register(origin + '/service-worker.js');
+					const sw = `${origin}/service-worker.js?version=${window.junie_build}`;
+
+					const registration = await navigator.serviceWorker.register(sw);
 
 					registration.update();
 				} catch (error) {
