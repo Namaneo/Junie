@@ -1,11 +1,9 @@
 #include <string.h>
 
-#include "formats/image.h"
-#include "formats/rpng.h"
-
 #include "filesystem.h"
 #include "texture.h"
 #include "interop.h"
+#include "image.h"
 
 #include "video.h"
 
@@ -112,21 +110,14 @@ static void window_button(JUN_Video *this, int32_t id, bool pressed, int32_t but
 
 static void prepare_asset(JUN_Video *this, uint8_t id, const void *data, size_t size)
 {
-	void *image = NULL;
-
 	struct jun_video_asset *asset = MTY_Alloc(1, sizeof(struct jun_video_asset));
 
-	rpng_t *png = rpng_alloc();
-	rpng_set_buf_ptr(png, (void *) data, size);
-	rpng_start(png);
-	while (rpng_iterate_image(png));
-	while (rpng_process_image(png, &image, size, &asset->width, &asset->height) == IMAGE_PROCESS_NEXT)
+	void *image = JUN_ImageReadPNG(data, size, &asset->width, &asset->height);
 
 	MTY_HashSetInt(this->assets, id, asset);
 	MTY_RendererSetUITexture(this->renderer, MTY_GFX_GL, NULL, NULL, id + 1, image, asset->width, asset->height);
 
 	MTY_Free(image);
-	rpng_free(png);
 }
 
 JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input, MTY_EventFunc event, void *opaque)

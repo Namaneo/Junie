@@ -7,7 +7,7 @@ RES_DIR   := res
 OUT_DIR  := build
 DIST_DIR := dist
 
-LIBS  := matoya retro z
+LIBS  := matoya retro
 CORES := genesis melonds mgba nestopia snes9x
 
 LIB_FILES  := $(LIBS:%=$(LIB_DIR)/lib%.a)
@@ -22,10 +22,15 @@ SRC := \
 	$(SRC_DIR)/audio.c \
 	$(SRC_DIR)/input.c \
 	$(SRC_DIR)/state.c \
+	$(SRC_DIR)/image.c \
 	$(SRC_DIR)/interop.c \
 	$(SRC_DIR)/texture.c \
 	$(SRC_DIR)/filesystem.c \
 	$(SRC_DIR)/configuration.c
+
+PORTS := \
+	-sUSE_ZLIB \
+	-sUSE_LIBPNG
 
 OPTIONS := \
 	-sMODULARIZE \
@@ -45,8 +50,8 @@ OPTIONS_GAME := $(OPTIONS) \
 OPTIONS_TOOLS := $(OPTIONS) \
 	-sEXPORTED_RUNTIME_METHODS=UTF8ToString,IDBStore
 
-CFLAGS  := -I$(SRC_DIR) -I$(INC_DIR) -Ilib/retro/include -fPIC
-LDFLAGS := -L$(LIB_DIR) $(LIBS:%=-l%) --no-entry --js-library res/library.js -Wno-limited-postlink-optimizations
+CFLAGS  := -I$(SRC_DIR) -I$(INC_DIR) $(PORTS) -Ilib/retro/include -fPIC
+LDFLAGS := -L$(LIB_DIR) $(LIBS:%=-l%) $(PORTS) --no-entry --js-library res/library.js -Wno-limited-postlink-optimizations
 
 ifeq ($(DEBUG), 1)
 SRC     += $(SRC_DIR)/debug.c
