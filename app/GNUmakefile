@@ -8,7 +8,7 @@ OUT_DIR  := build
 DIST_DIR := dist
 
 LIBS  := matoya retro z
-CORES := genesis melonds mgba quicknes snes9x
+CORES := genesis melonds mgba nestopia snes9x
 
 LIB_FILES  := $(LIBS:%=$(LIB_DIR)/lib%.a)
 CORE_FILES := $(CORES:%=$(CORES_DIR)/lib%.a)

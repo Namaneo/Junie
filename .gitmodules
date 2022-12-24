@@ -16,9 +16,9 @@
 [submodule "app/cores/genesis"]
 	path = app/cores/genesis
 	url = https://github.com/libretro/Genesis-Plus-GX.git
-[submodule "app/cores/quicknes"]
-	path = app/cores/quicknes
-	url = https://github.com/libretro/QuickNES_Core.git
 [submodule "app/cores/snes9x"]
 	path = app/cores/snes9x
 	url = https://github.com/libretro/snes9x2010.git
+[submodule "app/cores/nestopia"]
+	path = app/cores/nestopia
+	url = https://github.com/libretro/nestopia.git

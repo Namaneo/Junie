@@ -12,8 +12,8 @@ export default [
 	{
 		name: "NES",
 		full_name: "Nintendo - Nintendo Entertainment System",
-		core_name: "QuickNES",
-		lib_name: "quicknes",
+		core_name: "Nestopia",
+		lib_name: "nestopia",
 		extension: "nes",
 		cover: cover_nes,
 	},

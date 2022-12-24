@@ -54,7 +54,7 @@ export async function getSettings() {
 		createCore('genesis'),
 		createCore('melonds'),
 		createCore('mgba'),
-		createCore('quicknes'),
+		createCore('nestopia'),
 		createCore('snes9x'),
 	]);
 
@@ -62,14 +62,14 @@ export async function getSettings() {
 		'Genesis Plus GX': cores.genesis?.settings  || [],
 		'melonDS':         cores.melonds?.settings  || [],
 		'mGBA':            cores.mgba?.settings     || [],
-		'QuickNES':        cores.quicknes?.settings || [],
+		'Nestopia':        cores.nestopia?.settings || [],
 		'Snes9x':          cores.snes9x?.settings   || [],
 	};
 
 	delete cores.genesis;
 	delete cores.melonds;
 	delete cores.mgba;
-	delete cores.quicknes;
+	delete cores.nestopia;
 	delete cores.snes9x;
 
 	return tools.settings;

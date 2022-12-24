@@ -34,6 +34,7 @@ struct jun_core_sym {
 	void (*retro_set_input_state)(retro_input_state_t);
 	void (*retro_set_audio_sample)(retro_audio_sample_t);
 	void (*retro_set_audio_sample_batch)(retro_audio_sample_batch_t);
+	void (*retro_set_controller_port_device)(unsigned port, unsigned device);
 	size_t (*retro_get_memory_size)(unsigned type);
 	void *(*retro_get_memory_data)(unsigned type);
 	size_t (*retro_serialize_size)(void);
@@ -81,6 +82,7 @@ static void initialize_symbols()
 	MAP_SYMBOL(retro_set_input_state);
 	MAP_SYMBOL(retro_set_audio_sample);
 	MAP_SYMBOL(retro_set_audio_sample_batch);
+	MAP_SYMBOL(retro_set_controller_port_device);
 	MAP_SYMBOL(retro_get_memory_size);
 	MAP_SYMBOL(retro_get_memory_data);
 	MAP_SYMBOL(retro_serialize_size);
@@ -381,6 +383,8 @@ bool JUN_CoreStartGame()
 
 	if (CTX.initialized)
 		CTX.sym.retro_get_system_av_info(&CTX.av);
+
+	CTX.sym.retro_set_controller_port_device(0, RETRO_DEVICE_JOYPAD);
 
 	return CTX.initialized;
 }
