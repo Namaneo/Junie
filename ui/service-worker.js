@@ -1,3 +1,5 @@
+const version = null;
+
 const resources = [
 	'./',
 	'./manifest.json',
@@ -16,7 +18,7 @@ const resources = [
 ];
 
 const cacheResources = async () => {
-    const cache = await caches.open('v1');
+    const cache = await caches.open(version);
     await cache.addAll(resources);
 };
 
@@ -27,6 +29,10 @@ const fetchResource = async (request) => {
 
 self.addEventListener('install', (event) => {
     event.waitUntil(cacheResources());
+});
+
+self.addEventListener('activate', () => {
+	self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {

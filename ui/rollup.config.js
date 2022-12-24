@@ -46,7 +46,10 @@ function html(outdir, html, sw) {
 				`const source = '${code}';`
 			);
 
-			code_sw = `// ${version}\n${code_sw}`;
+			code_sw = code_sw.replace(
+				'const version = null;',
+				`const version = '${version}';`
+			);
 
 			writeFileSync(`${outdir}/${html}`, code_html);
 			writeFileSync(`${outdir}/${sw}`, code_sw);
