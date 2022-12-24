@@ -91,10 +91,10 @@ docker run \
 ## Cores
 
 - [mGBA](https://github.com/libretro/mgba) for Game Boy, Game Boy Color and Game Boy Advance emulation.
-- [Snes9x](https://github.com/libretro/snes9x) for SNES emulation.
+- [Snes9x](https://github.com/libretro/snes9x2010) for SNES emulation.
 - [melonDS](https://github.com/libretro/melonDS) for Nintendo DS emulation.
 - [Genesis Plus GX](https://github.com/libretro/Genesis-Plus-GX) for Mega Drive and Master System emulation.
-- [QuickNES](https://github.com/libretro/QuickNES_Core) for NES emulation.
+- [Nestopia](https://github.com/libretro/Nestopia) for NES emulation.
 
 ## Assets
 
