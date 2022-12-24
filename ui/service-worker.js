@@ -10,7 +10,7 @@ const resources = [
 	'./cores/genesis.js',
 	'./cores/melonds.js',
 	'./cores/mgba.js',
-	'./cores/quicknes.js',
+	'./cores/nestopia.js',
 	'./cores/snes9x.js',
 	'./cores/tools.js',
 ];
