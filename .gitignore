@@ -4,12 +4,10 @@
 /build
 
 app/build
-app/**/*.a
 app/**/*.so
 app/**/*.o
 app/**/*.tmp
 
-app/include/matoya.h
 app/include/res_inputs.h
 
 ui/build

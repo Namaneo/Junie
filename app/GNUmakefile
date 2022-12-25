@@ -1,14 +1,10 @@
 SRC_DIR   := src
-LIB_DIR   := lib
-CORES_DIR := cores
 INC_DIR   := include
 RES_DIR   := res
 OUT_DIR   := build
 
-LIBS  := matoya
-CORES := genesis melonds mgba nestopia snes9x
-
-LIB_FILES  := $(LIBS:%=$(LIB_DIR)/lib%.a)
+CORES      := genesis melonds mgba nestopia snes9x
+CORES_DIR  := cores
 CORE_FILES := $(CORES:%=$(CORES_DIR)/lib%.so)
 BIN_FILES  := $(CORES:%=$(OUT_DIR)/%.js) $(OUT_DIR)/tools.js
 
@@ -48,8 +44,8 @@ OPTIONS_GAME := $(OPTIONS) \
 OPTIONS_TOOLS := $(OPTIONS) \
 	-sEXPORTED_RUNTIME_METHODS=UTF8ToString,IDBStore
 
-CFLAGS  := -I$(SRC_DIR) -I$(INC_DIR) $(PORTS) -Ilib/retro/include -fPIC
-LDFLAGS := -L$(LIB_DIR) $(LIBS:%=-l%) $(PORTS) --no-entry --js-library res/library.js
+CFLAGS  := -I$(SRC_DIR) -I$(INC_DIR) $(PORTS) -fPIC
+LDFLAGS := $(PORTS) -Llib -lmatoya --no-entry --js-library res/library.js
 
 ifeq ($(DEBUG), 1)
 SRC     += $(SRC_DIR)/debug.c
@@ -67,14 +63,13 @@ MAKEFLAGS += --no-print-directory
 
 .SECONDARY: $(OBJ)
 
-all: clean prepare $(LIB_FILES) $(CORE_FILES)
+all: clean prepare $(CORE_FILES)
 	@echo Building objects...
 	@$(MAKE) -s $(OBJ)
 	@$(MAKE) -s $(BIN_FILES)
 
 prepare:
 	@mkdir -p $(OUT_DIR)
-	@cp $(LIB_DIR)/matoya/src/matoya.h $(INC_DIR)
 	@xxd -i $(RES_DIR)/menu/toggle_audio.png    >  $(INC_DIR)/res_inputs.h
 	@xxd -i $(RES_DIR)/menu/toggle_gamepad.png  >> $(INC_DIR)/res_inputs.h
 	@xxd -i $(RES_DIR)/menu/save_state.png      >> $(INC_DIR)/res_inputs.h
@@ -93,9 +88,6 @@ prepare:
 	@xxd -i $(RES_DIR)/gamepad/right.png        >> $(INC_DIR)/res_inputs.h
 	@xxd -i $(RES_DIR)/gamepad/start_select.png >> $(INC_DIR)/res_inputs.h
 
-$(LIB_DIR)/lib%.a:
-	@$(MAKE) -C $(LIB_DIR) name=$*
-
 $(CORES_DIR)/lib%.so:
 	@$(MAKE) -C $(CORES_DIR) name=$*
 
@@ -110,10 +102,7 @@ $(OUT_DIR)/tools.js:
 clean:
 	@rm -rf $(OBJ) $(OUT_DIR)
 
-clean-all: $(LIBS:%=clean-lib-%) $(CORES:%=clean-core-%) clean
-
-clean-lib-%:
-	@$(MAKE) -C $(LIB_DIR) name=$* clean
+clean-all: $(CORES:%=clean-core-%) clean
 
 clean-core-%:
 	@$(MAKE) -C $(CORES_DIR) name=$* clean
