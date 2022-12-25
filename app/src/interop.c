@@ -1,8 +1,11 @@
 #include <string.h>
-#include <emscripten.h>
 
 #include "matoya.h"
 #include "interop.h"
+
+#if defined(__EMSCRIPTEN__)
+
+#include <emscripten.h>
 
 double JUN_InteropGetPixelRatio()
 {
@@ -43,3 +46,27 @@ void JUN_InteropWriteFile(const char *path, void *data, int32_t length)
 
 	emscripten_idb_store("Junie", path, (void *) data, length, &error);
 }
+
+#else
+
+void *JUN_InteropReadFile(const char *path, int32_t *length)
+{
+	size_t size = 0;
+	void *data = MTY_ReadFile(MTY_SprintfDL("./games/%s", path), &size);
+
+	if (length)
+		*length = size;
+
+	return data;
+}
+
+void JUN_InteropWriteFile(const char *path, void *data, int32_t length)
+{
+	char *dir = (char *) MTY_SprintfDL("./games/%s", path);
+	strrchr(dir, '/')[0] = '\0';
+	MTY_Mkdir(dir);
+
+	MTY_WriteFile(MTY_SprintfDL("./games/%s", path), data, length);
+}
+
+#endif

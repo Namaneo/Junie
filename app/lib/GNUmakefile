@@ -3,6 +3,12 @@ TARGET := lib$(name).a
 # libmatoya.a
 ifeq ($(name), matoya)
 
+FLAGS := CC="$(CC)" AR="$(AR)"
+
+ifdef EMSCRIPTEN
+FLAGS += WASM=1
+endif
+
 BIN_PATH := matoya/bin/web/wasm32
 MAKEFLAGS += --no-print-directory
 QUIET := > /dev/null 2>&1

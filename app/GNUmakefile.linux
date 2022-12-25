@@ -1,0 +1,59 @@
+TARGET := junie
+
+SRC_DIR := src
+LIB_DIR := lib
+INC_DIR := include
+RES_DIR := res
+OUT_DIR := build
+
+LIBS  := matoya
+
+LIB_FILES  := $(LIBS:%=$(LIB_DIR)/lib%.a)
+
+SRC := \
+	$(SRC_DIR)/mainx.c \
+	$(SRC_DIR)/core.c \
+	$(SRC_DIR)/interop.c \
+	$(SRC_DIR)/filesystem.c \
+	$(SRC_DIR)/configuration.c
+
+CFLAGS  := -I$(SRC_DIR) -I$(INC_DIR) -D DYNAMIC -fPIC
+LDFLAGS := -L$(LIB_DIR) $(LIBS:%=-l%) -lm
+
+ifeq ($(DEBUG), 1)
+SRC     += $(SRC_DIR)/debug.c
+CFLAGS  += -O0 -D DEBUG
+LDFLAGS += -O0 -g
+else
+CFLAGS  += -O3
+LDFLAGS += -O3
+endif
+
+OBJ := $(SRC:.c=.o)
+
+QUIET := > /dev/null 2>&1
+MAKEFLAGS += --no-print-directory
+
+all: clean prepare $(LIB_FILES)
+	@echo Building objects...
+	@$(MAKE) -s $(OBJ)
+	@$(CC) -o $(TARGET) $ $(OBJ) $(LDFLAGS)
+
+prepare:
+	@mkdir -p $(INC_DIR) $(OUT_DIR)
+	@cp $(LIB_DIR)/matoya/src/matoya.h $(INC_DIR)
+	@cp $(LIB_DIR)/retro/include/libretro.h $(INC_DIR)
+
+$(LIB_DIR)/lib%.a:
+	@$(MAKE) -C $(LIB_DIR) name=$*
+
+clean:
+	@rm -rf $(OBJ) $(INC_DIR) $(OUT_DIR) $(DIST_DIR)
+
+clean-all: $(LIBS:%=clean-lib-%) clean
+
+clean-lib-%:
+	@$(MAKE) -C $(LIB_DIR) name=$* clean
+
+%.o: %.c
+	@$(CC) -c $(CFLAGS) -o $@ $^ $(QUIET)
