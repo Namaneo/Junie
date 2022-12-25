@@ -3,7 +3,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <emscripten.h>
 
 double JUN_InteropGetPixelRatio();
 void JUN_InteropShowUI(bool show);

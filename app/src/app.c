@@ -18,7 +18,7 @@ static void event_func(const MTY_Event *event, void *opaque)
 		JUN_StateToggleExit(app->state);
 }
 
-JUN_App *JUN_AppCreate(const char *system, const char *rom, const char *settings)
+JUN_App *JUN_AppCreate()
 {
 	JUN_App *this = MTY_Alloc(1, sizeof(JUN_App));
 
@@ -29,8 +29,6 @@ JUN_App *JUN_AppCreate(const char *system, const char *rom, const char *settings
 	this->input = JUN_InputCreate(this->state);
 	this->video = JUN_VideoCreate(this->state, this->input, event_func, this);
 
-	JUN_CoreCreate(system, rom, settings, NULL);
-
 	return (JUN_App *) this;
 }
 
@@ -40,8 +38,6 @@ void JUN_AppDestroy(JUN_App **app)
 		return;
 
 	JUN_App *this = *app;
-
-	JUN_CoreDestroy();
 
 	JUN_VideoDestroy(&this->video);
 	JUN_AudioDestroy(&this->audio);

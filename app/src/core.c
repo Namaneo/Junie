@@ -10,7 +10,7 @@
 
 #if defined(DYNAMIC)
 #define LOAD_LIBRARY(path)   CTX.sym.library = MTY_SOLoad(path);
-#define UNLOAD_LIBRARY()     CTX.sym.library = MTY_SOUnload(&CTX.sym.library);
+#define UNLOAD_LIBRARY()     MTY_SOUnload(&CTX.sym.library);
 #define MAP_SYMBOL(function) CTX.sym.function = MTY_SOGetSymbol(CTX.sym.library, #function);
 #else
 #define LOAD_LIBRARY(path)   {}

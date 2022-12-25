@@ -70,6 +70,8 @@ void main_loop(void *opaque)
 	JUN_VideoPresent(app->video);
 
 	if (JUN_StateShouldExit(app->state)) {
+		JUN_CoreDestroy();
+
 		JUN_AppDestroy(&app);
 
 		emscripten_cancel_main_loop();
@@ -97,7 +99,9 @@ char *get_settings()
 
 void start_game(const char *system, const char *rom, const char *settings)
 {
-	JUN_App *app = JUN_AppCreate(system, rom, settings);
+	JUN_App *app = JUN_AppCreate();
+
+	JUN_CoreCreate(system, rom, settings, NULL);
 
 	JUN_CoreSetCallbacks(& (JUN_CoreCallbacks) {
 		.opaque             = app,
