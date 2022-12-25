@@ -1,6 +1,6 @@
-SRC_DIR   := src
+SRC_DIR   := sources
 INC_DIR   := include
-RES_DIR   := res
+RES_DIR   := assets
 OUT_DIR   := build
 
 CORES      := genesis melonds mgba nestopia snes9x
@@ -45,7 +45,7 @@ OPTIONS_TOOLS := $(OPTIONS) \
 	-sEXPORTED_RUNTIME_METHODS=UTF8ToString,IDBStore
 
 CFLAGS  := -I$(SRC_DIR) -I$(INC_DIR) $(PORTS) -fPIC
-LDFLAGS := $(PORTS) -Llib -lmatoya --no-entry --js-library res/library.js
+LDFLAGS := $(PORTS) -Llibraries -lmatoya --no-entry --js-library res/library.js
 
 ifeq ($(DEBUG), 1)
 SRC     += $(SRC_DIR)/debug.c
