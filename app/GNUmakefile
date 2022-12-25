@@ -3,9 +3,7 @@ LIB_DIR   := lib
 CORES_DIR := cores
 INC_DIR   := include
 RES_DIR   := res
-
-OUT_DIR  := build
-DIST_DIR := dist
+OUT_DIR   := build
 
 LIBS  := matoya retro
 CORES := genesis melonds mgba nestopia snes9x
@@ -111,7 +109,7 @@ $(OUT_DIR)/tools.js:
 	@$(CXX) -o $(OUT_DIR)/tools.js $(OBJ) $(LDFLAGS) $(OPTIONS_TOOLS) -sEXPORT_NAME=tools $(QUIET)
 
 clean:
-	@rm -rf $(OBJ) $(INC_DIR) $(OUT_DIR) $(DIST_DIR)
+	@rm -rf $(OBJ) $(INC_DIR) $(OUT_DIR)
 
 clean-all: $(LIBS:%=clean-lib-%) $(CORES:%=clean-core-%) clean
 
