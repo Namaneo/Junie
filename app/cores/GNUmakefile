@@ -1,20 +1,28 @@
-TARGET := lib$(name).a
+TARGET := lib$(name).so
 
-BUILD_DIR   := $(TARGET:lib%.a=%)
-BUILD_FLAGS := TARGET=../$(TARGET)
+MAKEDIR  := $(name)
+MAKEFILE := Makefile
 
 ifeq ($(name), genesis)
-BUILD_FLAGS += -f Makefile.libretro LIBRETRO_COMM_DIR=../../lib/retro
+MAKEFILE := Makefile.libretro
 endif
 
 ifeq ($(name), nestopia)
-BUILD_DIR   := $(TARGET:lib%.a=%)/libretro
-BUILD_FLAGS := TARGET=../../$(TARGET)
+MAKEDIR := $(name)/libretro
 endif
 
-RANLIB ?= ranlib
+BUILD_FLAGS := \
+	-j 8 \
+	-C $(MAKEDIR) \
+	-f $(MAKEFILE) \
+	platform=emscripten \
+	SHARED=-shared \
+	TARGET=$(TARGET) \
+	STATIC_LINKING=0 \
+	STATIC_LINKING_LINK=0 \
+	fpic=-fPIC
 
-BUILD_FLAGS += -j 8 platform=emscripten STATIC_LINKING=1 STATIC_LINKING_LINK=1 fpic=-fPIC
+RANLIB ?= ranlib
 MAKEFLAGS += --no-print-directory
 QUIET := > /dev/null 2>&1
 
@@ -22,8 +30,11 @@ all: $(TARGET)
 
 $(TARGET):
 	@echo Building $(TARGET)...
-	@$(MAKE) -C $(BUILD_DIR) $(BUILD_FLAGS) $(QUIET)
-	@$(RANLIB) $(TARGET)
+	@$(MAKE) $(BUILD_FLAGS) $(QUIET)
+	@cp `find $(name) -name $(TARGET)` $(TARGET)
+	@rm `find $(name) -name $(TARGET)`
+	@rm `find $(name) -name lib$(name).wasm`
 
 clean:
-	@$(MAKE) -C $(BUILD_DIR) $(BUILD_FLAGS) clean $(QUIET)
+	@$(MAKE) $(BUILD_FLAGS) clean $(QUIET)
+	@rm -f $(TARGET)

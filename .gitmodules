@@ -1,12 +1,6 @@
 [submodule "app/lib/matoya"]
 	path = app/lib/matoya
 	url = https://github.com/Namaneo/libmatoya.git
-[submodule "app/lib/zlib"]
-	path = app/lib/zlib
-	url = https://github.com/madler/zlib.git
-[submodule "app/lib/retro"]
-	path = app/lib/retro
-	url = https://github.com/libretro/libretro-common.git
 [submodule "app/cores/mgba"]
 	path = app/cores/mgba
 	url = https://github.com/libretro/mgba.git

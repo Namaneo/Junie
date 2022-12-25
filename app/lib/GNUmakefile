@@ -4,7 +4,6 @@ TARGET := lib$(name).a
 ifeq ($(name), matoya)
 
 FLAGS := WASM=1 CC="$(CC)" AR="$(AR)"
-BIN_PATH := matoya/bin/web/wasm32
 MAKEFLAGS += --no-print-directory
 QUIET := > /dev/null 2>&1
 
@@ -13,11 +12,11 @@ all: $(TARGET)
 $(TARGET):
 	@echo Building $(TARGET)...
 	@$(MAKE) -C matoya $(FLAGS) $(QUIET)
-	@cp $(BIN_PATH)/$(TARGET) .
+	@cp `find $(name) -name $(TARGET)` $(TARGET)
 
 clean:
 	@$(MAKE) -C matoya $(FLAGS) clean $(QUIET)
-	@rm -f libmatoya.a
+	@rm -f $(TARGET)
 
 endif
 

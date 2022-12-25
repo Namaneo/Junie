@@ -3,15 +3,13 @@ LIB_DIR   := lib
 CORES_DIR := cores
 INC_DIR   := include
 RES_DIR   := res
+OUT_DIR   := build
 
-OUT_DIR  := build
-DIST_DIR := dist
-
-LIBS  := matoya retro
+LIBS  := matoya
 CORES := genesis melonds mgba nestopia snes9x
 
 LIB_FILES  := $(LIBS:%=$(LIB_DIR)/lib%.a)
-CORE_FILES := $(CORES:%=$(CORES_DIR)/lib%.a)
+CORE_FILES := $(CORES:%=$(CORES_DIR)/lib%.so)
 BIN_FILES  := $(CORES:%=$(OUT_DIR)/%.js) $(OUT_DIR)/tools.js
 
 SRC := \
@@ -51,7 +49,7 @@ OPTIONS_TOOLS := $(OPTIONS) \
 	-sEXPORTED_RUNTIME_METHODS=UTF8ToString,IDBStore
 
 CFLAGS  := -I$(SRC_DIR) -I$(INC_DIR) $(PORTS) -Ilib/retro/include -fPIC
-LDFLAGS := -L$(LIB_DIR) $(LIBS:%=-l%) $(PORTS) --no-entry --js-library res/library.js -Wno-limited-postlink-optimizations
+LDFLAGS := -L$(LIB_DIR) $(LIBS:%=-l%) $(PORTS) --no-entry --js-library res/library.js
 
 ifeq ($(DEBUG), 1)
 SRC     += $(SRC_DIR)/debug.c
@@ -75,15 +73,14 @@ all: clean prepare $(LIB_FILES) $(CORE_FILES)
 	@$(MAKE) -s $(BIN_FILES)
 
 prepare:
-	@mkdir -p $(INC_DIR) $(OUT_DIR)
+	@mkdir -p $(OUT_DIR)
 	@cp $(LIB_DIR)/matoya/src/matoya.h $(INC_DIR)
-	@cp $(LIB_DIR)/retro/include/libretro.h $(INC_DIR)
-	@xxd -i $(RES_DIR)/menu/toggle_audio.png   >  $(INC_DIR)/res_inputs.h
-	@xxd -i $(RES_DIR)/menu/toggle_gamepad.png >> $(INC_DIR)/res_inputs.h
-	@xxd -i $(RES_DIR)/menu/save_state.png     >> $(INC_DIR)/res_inputs.h
-	@xxd -i $(RES_DIR)/menu/restore_state.png  >> $(INC_DIR)/res_inputs.h
-	@xxd -i $(RES_DIR)/menu/fast_forward.png   >> $(INC_DIR)/res_inputs.h
-	@xxd -i $(RES_DIR)/menu/exit.png           >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/menu/toggle_audio.png    >  $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/menu/toggle_gamepad.png  >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/menu/save_state.png      >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/menu/restore_state.png   >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/menu/fast_forward.png    >> $(INC_DIR)/res_inputs.h
+	@xxd -i $(RES_DIR)/menu/exit.png            >> $(INC_DIR)/res_inputs.h
 	@xxd -i $(RES_DIR)/gamepad/a.png            >> $(INC_DIR)/res_inputs.h
 	@xxd -i $(RES_DIR)/gamepad/b.png            >> $(INC_DIR)/res_inputs.h
 	@xxd -i $(RES_DIR)/gamepad/x.png            >> $(INC_DIR)/res_inputs.h
@@ -99,7 +96,7 @@ prepare:
 $(LIB_DIR)/lib%.a:
 	@$(MAKE) -C $(LIB_DIR) name=$*
 
-$(CORES_DIR)/lib%.a:
+$(CORES_DIR)/lib%.so:
 	@$(MAKE) -C $(CORES_DIR) name=$*
 
 $(OUT_DIR)/%.js:
@@ -111,7 +108,7 @@ $(OUT_DIR)/tools.js:
 	@$(CXX) -o $(OUT_DIR)/tools.js $(OBJ) $(LDFLAGS) $(OPTIONS_TOOLS) -sEXPORT_NAME=tools $(QUIET)
 
 clean:
-	@rm -rf $(OBJ) $(INC_DIR) $(OUT_DIR) $(DIST_DIR)
+	@rm -rf $(OBJ) $(OUT_DIR)
 
 clean-all: $(LIBS:%=clean-lib-%) $(CORES:%=clean-core-%) clean
 
