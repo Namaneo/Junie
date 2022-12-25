@@ -31,9 +31,7 @@ all: $(TARGET)
 $(TARGET):
 	@echo Building $(TARGET)...
 	@$(MAKE) $(BUILD_FLAGS) $(QUIET)
-	@cp `find $(name) -name $(TARGET)` $(TARGET)
-	@rm `find $(name) -name $(TARGET)`
-	@rm `find $(name) -name lib$(name).wasm`
+	@mv `find $(name) -name $(TARGET)` $(TARGET)
 
 clean:
 	@$(MAKE) $(BUILD_FLAGS) clean $(QUIET)
