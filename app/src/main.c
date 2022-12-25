@@ -66,9 +66,7 @@ void main_loop(void *opaque)
 {
 	JUN_App *app = opaque;
 
-	double frames_per_second = JUN_CoreGetFramesPerSecond();
-	uint32_t factor = JUN_VideoComputeFramerate(app->video, frames_per_second);
-	JUN_CoreRun(JUN_StateGetFastForward(app->state) * factor);
+	JUN_CoreRun(JUN_StateGetFastForward(app->state));
 	JUN_VideoPresent(app->video);
 
 	if (JUN_StateShouldExit(app->state)) {

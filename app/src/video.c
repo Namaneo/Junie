@@ -63,10 +63,6 @@ struct JUN_Video {
 	unsigned view_height;
 
 	JUN_Texture *ui;
-
-	MTY_Time before_run;
-    MTY_Time after_run;
-    float remaining_frames;
 };
 
 typedef void (*motion_func)(JUN_Video *this, int32_t id, bool relative, int32_t x, int32_t y);
@@ -340,30 +336,8 @@ void JUN_VideoDrawUI(JUN_Video *this, bool has_gamepad)
 	MTY_RendererDrawUI(this->renderer, MTY_GFX_GL, NULL, NULL, draw_data, NULL);
 }
 
-uint32_t JUN_VideoComputeFramerate(JUN_Video *this, double frames_per_second)
-{
-	MTY_Time before_run = MTY_GetTime();
-
-    float total_loop = MTY_TimeDiff(this->before_run, before_run);
-    float time_run = MTY_TimeDiff(this->before_run, this->after_run);
-    float time_idle = MTY_TimeDiff(this->after_run, before_run);
-
-    this->before_run = before_run;
-
-    bool throttling = time_run > time_idle;
-	float framerate = 1000.0 / total_loop;
-
-	this->remaining_frames += frames_per_second / framerate;
-	uint32_t pending = (uint32_t) this->remaining_frames;
-	this->remaining_frames -= (float) pending;
-
-	return pending <= 20 && !throttling ? pending : 1;
-}
-
 void JUN_VideoPresent(JUN_Video *this)
 {
-	this->after_run = MTY_GetTime();
-
 	gl_flush();
 }
 

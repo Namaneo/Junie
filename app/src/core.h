@@ -30,7 +30,7 @@ double JUN_CoreGetSampleRate();
 double JUN_CoreGetFramesPerSecond();
 enum retro_pixel_format JUN_CoreGetFormat();
 bool JUN_CoreStartGame();
-void JUN_CoreRun(size_t count);
+void JUN_CoreRun(uint8_t fast_forward);
 void JUN_CoreSaveMemories();
 void JUN_CoreRestoreMemories();
 void JUN_CoreSetCheats();

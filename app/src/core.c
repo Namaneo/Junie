@@ -64,6 +64,10 @@ static struct {
 	struct retro_system_av_info av;
 	enum retro_pixel_format format;
 
+	MTY_Time before_run;
+    MTY_Time after_run;
+    float remaining_frames;
+
 	struct jun_core_sym sym;
 } CTX;
 
@@ -389,10 +393,36 @@ bool JUN_CoreStartGame()
 	return CTX.initialized;
 }
 
-void JUN_CoreRun(size_t count)
+static uint32_t compute_framerate()
 {
-	for (int i = 0; i < count; ++i)
-		CTX.sym.retro_run();
+	MTY_Time before_run = MTY_GetTime();
+
+    float total_loop = MTY_TimeDiff(CTX.before_run, before_run);
+    float time_run = MTY_TimeDiff(CTX.before_run, CTX.after_run);
+    float time_idle = MTY_TimeDiff(CTX.after_run, before_run);
+
+    CTX.before_run = before_run;
+
+    bool throttling = time_run > time_idle;
+	float framerate = 1000.0 / total_loop;
+
+	CTX.remaining_frames += CTX.av.timing.fps / framerate;
+	uint32_t pending = (uint32_t) CTX.remaining_frames;
+	CTX.remaining_frames -= (float) pending;
+
+	return pending <= 20 && !throttling ? pending : 1;
+}
+
+void JUN_CoreRun(uint8_t fast_forward)
+{
+	for (size_t i = 0; i < fast_forward; ++i) {
+		uint32_t count = compute_framerate();
+
+		for (size_t i = 0; i < count; ++i)
+			CTX.sym.retro_run();
+
+		CTX.after_run = MTY_GetTime();
+	}
 }
 
 void save_memory(uint32_t type, const char *path)
