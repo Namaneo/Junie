@@ -22,8 +22,8 @@ typedef struct {
 	JUN_CoreInputStateFunc input_state;
 } JUN_CoreCallbacks;
 
-void JUN_CoreCreate(const char *system, const char *rom, const char *settings);
-const MTY_JSON *JUN_CoreGetDefaultConfiguration();
+void JUN_CoreCreate(const char *system, const char *rom, const char *settings, const char *library);
+const MTY_JSON *JUN_CoreGetDefaultConfiguration(const char *library);
 void JUN_CoreSetCallbacks(JUN_CoreCallbacks *callbacks);
 bool JUN_CoreEnvironment(unsigned cmd, void *data);
 double JUN_CoreGetSampleRate();

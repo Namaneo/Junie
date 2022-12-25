@@ -8,7 +8,15 @@
 
 #include "core.h"
 
+#if defined(DYNAMIC)
+#define LOAD_LIBRARY(path)   CTX.sym.library = MTY_SOLoad(path);
+#define UNLOAD_LIBRARY()     CTX.sym.library = MTY_SOUnload(&CTX.sym.library);
+#define MAP_SYMBOL(function) CTX.sym.function = MTY_SOGetSymbol(CTX.sym.library, #function);
+#else
+#define LOAD_LIBRARY(path)   {}
+#define UNLOAD_LIBRARY()     {}
 #define MAP_SYMBOL(function) CTX.sym.function = function;
+#endif
 
 typedef enum {
 	JUN_PATH_GAME   = 1,
@@ -22,6 +30,7 @@ typedef enum {
 } JUN_PathType;
 
 struct jun_core_sym {
+	MTY_SO *library;
 	bool initialized;
 
 	void (*retro_init)(void);
@@ -50,12 +59,10 @@ struct jun_core_sym {
 
 static MTY_JSON *defaults;
 
-static struct {
-	void *handle;
+static struct CTX {
 	bool initialized;
 
 	MTY_Hash *paths;
-	MTY_Time last_save;
 	JUN_Configuration *configuration;
 	JUN_CoreCallbacks callbacks;
 
@@ -64,6 +71,7 @@ static struct {
 	struct retro_system_av_info av;
 	enum retro_pixel_format format;
 
+	MTY_Time last_save;
 	MTY_Time before_run;
     MTY_Time after_run;
     float remaining_frames;
@@ -71,10 +79,12 @@ static struct {
 	struct jun_core_sym sym;
 } CTX;
 
-static void initialize_symbols()
+static void initialize_symbols(const char *path)
 {
 	if (CTX.sym.initialized)
 		return;
+
+	LOAD_LIBRARY(path);
 
 	MAP_SYMBOL(retro_init);
 	MAP_SYMBOL(retro_load_game);
@@ -160,7 +170,7 @@ static char *remove_extension(const char *str)
 	return result;
 }
 
-void JUN_CoreCreate(const char *system, const char *rom, const char *settings)
+void JUN_CoreCreate(const char *system, const char *rom, const char *settings, const char *library)
 {
 	JUN_FilesystemCreate();
 
@@ -175,6 +185,8 @@ void JUN_CoreCreate(const char *system, const char *rom, const char *settings)
 	MTY_HashSetInt(CTX.paths, JUN_PATH_RTC,    MTY_SprintfD("%s/%s/%s.rtc",   system, game, game));
 	MTY_HashSetInt(CTX.paths, JUN_PATH_CHEATS, MTY_SprintfD("%s/%s/%s.cht",   system, game, game));
 
+	MTY_Free(game);
+
 	CTX.configuration = JUN_ConfigurationCreate();
 	MTY_JSON *overrides = MTY_JSONParse(settings);
 
@@ -187,7 +199,7 @@ void JUN_CoreCreate(const char *system, const char *rom, const char *settings)
 
 	MTY_JSONDestroy(&overrides);
 
-	initialize_symbols();
+	initialize_symbols(library);
 }
 
 static void core_log(enum retro_log_level level, const char *fmt, ...)
@@ -299,13 +311,14 @@ bool JUN_CoreEnvironment(unsigned cmd, void *data)
 	}
 }
 
-const MTY_JSON *JUN_CoreGetDefaultConfiguration()
+const MTY_JSON *JUN_CoreGetDefaultConfiguration(const char *library)
 {
-	initialize_symbols();
+	initialize_symbols(library);
 
 	CTX.sym.retro_set_environment(jun_core_environment);
 	CTX.sym.retro_init();
-	CTX.sym.retro_deinit();
+
+	JUN_CoreDestroy();
 
 	return defaults;
 }
@@ -548,13 +561,15 @@ void JUN_CoreRestoreState()
 
 void JUN_CoreDestroy()
 {
-	JUN_ConfigurationDestroy(&CTX.configuration);
-	MTY_HashDestroy(&CTX.paths, MTY_Free);
-
 	CTX.sym.retro_deinit();
 
-	if (CTX.game.data)
-		MTY_Free((void *) CTX.game.data);
+	JUN_ConfigurationDestroy(&CTX.configuration);
+	MTY_HashDestroy(&CTX.paths, MTY_Free);
+	MTY_Free((void *) CTX.game.data);
+
+	UNLOAD_LIBRARY();
+
+	CTX = (struct CTX) {0};
 
 	JUN_FilesystemDestroy();
 }

@@ -92,7 +92,7 @@ void main_loop(void *opaque)
 
 char *get_settings()
 {
-	return MTY_JSONSerialize(JUN_CoreGetDefaultConfiguration());
+	return MTY_JSONSerialize(JUN_CoreGetDefaultConfiguration(NULL));
 }
 
 void start_game(const char *system, const char *rom, const char *settings)

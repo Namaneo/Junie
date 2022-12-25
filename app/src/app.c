@@ -29,7 +29,7 @@ JUN_App *JUN_AppCreate(const char *system, const char *rom, const char *settings
 	this->input = JUN_InputCreate(this->state);
 	this->video = JUN_VideoCreate(this->state, this->input, event_func, this);
 
-	JUN_CoreCreate(system, rom, settings);
+	JUN_CoreCreate(system, rom, settings, NULL);
 
 	return (JUN_App *) this;
 }
