@@ -1,21 +1,15 @@
-//`yarn global bin`/emscripten-library-generator app/res/matoya.js > app/res/library.js
+function get_size(c_width, c_height) {
+	const rect = Module.canvas.getBoundingClientRect();
 
-function gl_flush () {
-	GLctx.flush();
-}
-
-function gl_get_size (c_width, c_height) {
-	const rect = GLctx.canvas.getBoundingClientRect();
-
-	GLctx.canvas.width = rect.width * window.devicePixelRatio;
-	GLctx.canvas.height = rect.height * window.devicePixelRatio;
+	Module.canvas.width = rect.width;
+	Module.canvas.height = rect.height;
 
 	const view = new DataView(wasmMemory.buffer);
-	view.setUint32(c_width, GLctx.drawingBufferWidth, true);
-	view.setUint32(c_height, GLctx.drawingBufferHeight, true);
+	view.setInt32(c_width, rect.width, true);
+	view.setInt32(c_height, rect.height, true);
 }
 
-function gl_attach_events (app, mouse_motion, mouse_button) {
+function attach_events(app, mouse_motion, mouse_button) {
 	const motion = wasmTable.get(mouse_motion);
 	const button = wasmTable.get(mouse_button);
 
@@ -72,46 +66,51 @@ function gl_attach_events (app, mouse_motion, mouse_button) {
 		}
 	};
 
-	GLctx.canvas.addEventListener('contextmenu', (ev) => {
+	Module.canvas.addEventListener('contextmenu', (ev) => {
 		ev.preventDefault();
 	});
 
-	GLctx.canvas.addEventListener('mousemove', (ev) => {
+	Module.canvas.addEventListener('mousemove', (ev) => {
 		motion(app, 0, false, ev.clientX, ev.clientY);
 	});
 
-	GLctx.canvas.addEventListener('mousedown', (ev) => {
+	Module.canvas.addEventListener('mousedown', (ev) => {
 		ev.preventDefault();
 		button(app, 0, true, ev.button, ev.clientX, ev.clientY);
 	});
 
-	GLctx.canvas.addEventListener('mouseup', (ev) => {
+	Module.canvas.addEventListener('mouseup', (ev) => {
 		ev.preventDefault();
 		button(app, 0, false, ev.button, ev.clientX, ev.clientY);
 	});
 
-	GLctx.canvas.addEventListener('touchstart', (ev) => {
+	Module.canvas.addEventListener('touchstart', (ev) => {
 		ev.preventDefault();
 		touch_started(ev);
 	});
 
-	GLctx.canvas.addEventListener('touchmove', (ev) => {
+	Module.canvas.addEventListener('touchmove', (ev) => {
 		ev.preventDefault();
 		touch_moved(ev);
 	});
 
-	GLctx.canvas.addEventListener('touchend', (ev) => {
+	Module.canvas.addEventListener('touchend', (ev) => {
 		ev.preventDefault();
 		touch_ended(ev);
 	});
 
-	GLctx.canvas.addEventListener('touchleave', (ev) => {
+	Module.canvas.addEventListener('touchleave', (ev) => {
 		ev.preventDefault();
 		touch_ended(ev);
 	});
 
-	GLctx.canvas.addEventListener('touchcancel', (ev) => {
+	Module.canvas.addEventListener('touchcancel', (ev) => {
 		ev.preventDefault();
 		touch_ended(ev);
 	});
 }
+
+mergeInto(LibraryManager.library, {
+	get_size: get_size,
+	attach_events: attach_events,
+});

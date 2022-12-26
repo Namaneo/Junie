@@ -15,6 +15,7 @@ function createGraphics() {
 	body.style.margin = 0;
 
 	const canvas = document.createElement('canvas');
+	canvas.id = 'canvas';
 	canvas.style.width = '100%';
 	canvas.style.height = '100%';
 	document.body.appendChild(canvas);
@@ -31,7 +32,7 @@ async function createTools() {
 	tools.module = await (await import(`${origin}/cores/tools.js`)).default();
 }
 
-async function createCore(name) {
+async function createCore(name, graphics) {
 	if (cores[name])
 		return;
 
@@ -40,7 +41,7 @@ async function createCore(name) {
 	const origin = location.origin + location.pathname.replace(/\/$/, '');
 
 	const core = {};
-	core.module = await (await import(`${origin}/cores/${name}.js`)).default();
+	core.module = await (await import(`${origin}/cores/${name}.js`)).default({ canvas: graphics });
 	core.settings = JSON.parse(core.module.UTF8ToString(core.module._get_settings()));
 
 	cores[name] = core;
@@ -76,16 +77,11 @@ export async function getSettings() {
 }
 
 export async function runCore(name, system, rom, settings) {
-	await createCore(name);
-
-	const module = cores[name].module;
 	const graphics = createGraphics();
 
-	module.createContext(graphics, true, true, {
-		depth: false,
-		antialias: false,
-		premultipliedAlpha: true,
-	});
+	await createCore(name, graphics);
+
+	const module = cores[name].module;
 
 	await module.ccall('start_game', null,
 		['string', 'string', 'string'],

@@ -4,11 +4,6 @@
 #include "matoya.h"
 #include "interop.h"
 
-double JUN_InteropGetPixelRatio()
-{
-	return emscripten_get_device_pixel_ratio();
-}
-
 void JUN_InteropShowUI(bool show)
 {
 	const char *script = show

@@ -1,13 +1,11 @@
 #include <string.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 #include "filesystem.h"
-#include "texture.h"
 #include "interop.h"
-#include "image.h"
 
 #include "video.h"
-
-#include "res_inputs.h"
 
 #define TOP(margin)    .pos_y = JUN_POSITION_TOP,    .margin_y = margin
 #define RIGHT(margin)  .pos_x = JUN_POSITION_RIGHT,  .margin_x = margin
@@ -17,8 +15,8 @@
 #define MIDDLE(margin) .pos_y = JUN_POSITION_MIDDLE, .margin_y = margin
 #define RADIUS(value)  .radius = value
 
-#define PREPARE(id, res) prepare_asset(this, id, res_##res##_png, res_##res##_png_len)
-#define DRAW(id, ...)    draw_input(this, id, & (struct jun_draw_desc) { __VA_ARGS__ } )
+#define PREPARE(id, cat, res) prepare_asset(this, id, "assets/" cat "/" res ".png", !strcmp(cat, "menu"))
+#define DRAW(id, ...) draw_input(this, id, & (struct jun_draw_desc) { __VA_ARGS__ } )
 
 enum jun_position {
 	JUN_POSITION_TOP,
@@ -38,39 +36,40 @@ struct jun_draw_desc {
 };
 
 struct jun_video_asset {
-	uint32_t width;
-	uint32_t height;
+	SDL_Surface *image;
+	SDL_Texture *texture;
+	SDL_Rect layout;
+	bool menu;
 };
 
 struct JUN_Video {
 	MTY_EventFunc event;
-	MTY_Renderer *renderer;
-	MTY_Hash *assets;
 	void *opaque;
+
+	SDL_Window *window;
+	SDL_Renderer *renderer;
+	MTY_Hash *assets;
 
 	JUN_State *state;
 	JUN_Input *input;
 
-	MTY_ColorFormat pixel_format;
-	unsigned bits_per_pixel;
-
 	void *buffer;
-	unsigned width;
-	unsigned height;
+	SDL_Texture *texture;
+	SDL_PixelFormatEnum pixel_format;
+	uint32_t bits_per_pixel;
+	uint32_t width;
+	uint32_t height;
 	size_t pitch;
 
-	unsigned view_width;
-	unsigned view_height;
-
-	JUN_Texture *ui;
+	int32_t view_width;
+	int32_t view_height;
 };
 
 typedef void (*motion_func)(JUN_Video *this, int32_t id, bool relative, int32_t x, int32_t y);
 typedef void (*button_func)(JUN_Video *this, int32_t id, bool pressed, int32_t button, int32_t x, int32_t y);
 
-void gl_attach_events(JUN_Video *this, motion_func motion, button_func button);
-void gl_get_size(uint32_t *width, uint32_t *height);
-void gl_flush();
+void attach_events(JUN_Video *this, motion_func motion, button_func button);
+void get_size(int32_t *width, int32_t *height);
 
 static void window_motion(JUN_Video *this, int32_t id, bool relative, int32_t x, int32_t y)
 {
@@ -78,8 +77,8 @@ static void window_motion(JUN_Video *this, int32_t id, bool relative, int32_t x,
 	evt.type = MTY_EVENT_MOTION;
 	evt.motion.id = id;
 	evt.motion.relative = relative;
-	evt.motion.x = x * JUN_InteropGetPixelRatio();
-	evt.motion.y = y * JUN_InteropGetPixelRatio();
+	evt.motion.x = x;
+	evt.motion.y = y;
 
 	this->event(&evt, this->opaque);
 }
@@ -98,22 +97,23 @@ static void window_button(JUN_Video *this, int32_t id, bool pressed, int32_t but
 		button == 4 ? MTY_BUTTON_X2 :
 		MTY_BUTTON_NONE;
 
-	evt.button.x = x * JUN_InteropGetPixelRatio();
-	evt.button.y = y * JUN_InteropGetPixelRatio();
+	evt.button.x = x;
+	evt.button.y = y;
 
 	this->event(&evt, this->opaque);
 }
 
-static void prepare_asset(JUN_Video *this, uint8_t id, const void *data, size_t size)
+static void prepare_asset(JUN_Video *this, uint8_t id, const char *path, bool menu)
 {
 	struct jun_video_asset *asset = MTY_Alloc(1, sizeof(struct jun_video_asset));
 
-	void *image = JUN_ImageReadPNG(data, size, &asset->width, &asset->height);
+	asset->image = IMG_Load(path);
+	asset->menu = menu;
+
+	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+	asset->texture = SDL_CreateTextureFromSurface(this->renderer, asset->image);
 
 	MTY_HashSetInt(this->assets, id, asset);
-	MTY_RendererSetUITexture(this->renderer, MTY_GFX_GL, NULL, NULL, id + 1, image, asset->width, asset->height);
-
-	MTY_Free(image);
 }
 
 JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input, MTY_EventFunc event, void *opaque)
@@ -125,49 +125,43 @@ JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input, MTY_EventFunc eve
 	this->input = input;
 	this->opaque = opaque;
 
-	gl_attach_events(this, window_motion, window_button);
+	attach_events(this, window_motion, window_button);
 
-	this->renderer = MTY_RendererCreate();
+	SDL_Init(SDL_INIT_VIDEO);
+	SDL_CreateWindowAndRenderer(600, 400, 0, &this->window, &this->renderer);
+
 	this->assets = MTY_HashCreate(0);
 
-	PREPARE(MENU_TOGGLE_AUDIO,   menu_toggle_audio);
-	PREPARE(MENU_TOGGLE_GAMEPAD, menu_toggle_gamepad);
-	PREPARE(MENU_SAVE_STATE,     menu_save_state);
-	PREPARE(MENU_RESTORE_STATE,  menu_restore_state);
-	PREPARE(MENU_FAST_FORWARD,   menu_fast_forward);
-	PREPARE(MENU_EXIT,           menu_exit);
+	PREPARE(MENU_TOGGLE_AUDIO,   "menu", "toggle_audio");
+	PREPARE(MENU_TOGGLE_GAMEPAD, "menu", "toggle_gamepad");
+	PREPARE(MENU_SAVE_STATE,     "menu", "save_state");
+	PREPARE(MENU_RESTORE_STATE,  "menu", "restore_state");
+	PREPARE(MENU_FAST_FORWARD,   "menu", "fast_forward");
+	PREPARE(MENU_EXIT,           "menu", "exit");
 
-	PREPARE(RETRO_DEVICE_ID_JOYPAD_UP,    gamepad_up);
-	PREPARE(RETRO_DEVICE_ID_JOYPAD_DOWN,  gamepad_down);
-	PREPARE(RETRO_DEVICE_ID_JOYPAD_LEFT,  gamepad_left);
-	PREPARE(RETRO_DEVICE_ID_JOYPAD_RIGHT, gamepad_right);
-	PREPARE(RETRO_DEVICE_ID_JOYPAD_L,     gamepad_l);
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_UP,    "gamepad", "up");
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_DOWN,  "gamepad", "down");
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_LEFT,  "gamepad", "left");
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_RIGHT, "gamepad", "right");
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_L,     "gamepad", "l");
 
-	PREPARE(RETRO_DEVICE_ID_JOYPAD_X, gamepad_x);
-	PREPARE(RETRO_DEVICE_ID_JOYPAD_B, gamepad_b);
-	PREPARE(RETRO_DEVICE_ID_JOYPAD_A, gamepad_a);
-	PREPARE(RETRO_DEVICE_ID_JOYPAD_Y, gamepad_y);
-	PREPARE(RETRO_DEVICE_ID_JOYPAD_R, gamepad_r);
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_X, "gamepad", "x");
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_B, "gamepad", "b");
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_A, "gamepad", "a");
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_Y, "gamepad", "y");
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_R, "gamepad", "r");
 
-	PREPARE(RETRO_DEVICE_ID_JOYPAD_START,  gamepad_start_select);
-	PREPARE(RETRO_DEVICE_ID_JOYPAD_SELECT, gamepad_start_select);
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_START,  "gamepad", "start");
+	PREPARE(RETRO_DEVICE_ID_JOYPAD_SELECT, "gamepad", "select");
 
 	return this;
 }
 
-static void refresh_viewport_size(JUN_Video *this, uint32_t *view_width, uint32_t *view_height)
-{
-	gl_get_size(view_width, view_height);
-
-	JUN_StateSetWindowMetrics(this->state, *view_width, *view_height);
-}
-
 static void draw_input(JUN_Video *this, uint8_t id, struct jun_draw_desc *desc)
 {
-	struct jun_video_asset *asset = MTY_HashGetInt(this->assets, id);
+	struct jun_video_asset *asset = (struct jun_video_asset *) MTY_HashGetInt(this->assets, id);
 
-	double pixel_ratio = JUN_InteropGetPixelRatio();
-	double aspect_ratio = (double) asset->width / (double) asset->height;
+	double aspect_ratio = (double) asset->image->w / (double) asset->image->h;
 
 	double reference_x =
 		desc->pos_x == JUN_POSITION_LEFT   ? 0 :
@@ -181,33 +175,21 @@ static void draw_input(JUN_Video *this, uint8_t id, struct jun_draw_desc *desc)
 		desc->pos_y == JUN_POSITION_MIDDLE ? this->view_height / 2.0 :
 		0;
 
-	double width = desc->radius * 2.0 * pixel_ratio;
+	double width = desc->radius * 2.0;
 	double height = width / aspect_ratio;
-	double x = reference_x + desc->margin_x * pixel_ratio;
-	double y = reference_y + desc->margin_y * pixel_ratio;
+	double x = reference_x + desc->margin_x;
+	double y = reference_y + desc->margin_y;
 
-	JUN_TextureData texture = {
-		.id = id,
-		.x = x - width / 2.0,
-		.y = y - height / 2.0,
-		.width = width,
-		.height = height,
-		.image_width =  asset->width,
-		.image_height = asset->height,
-	};
+	asset->layout.x = x - width / 2.0;
+	asset->layout.y = y - height / 2.0;
+	asset->layout.w = width;
+	asset->layout.h = height;
 
-	JUN_StateSetMetrics(this->state, &texture);
-    JUN_TextureDraw(this->ui, &texture);
-	JUN_InputMapTouch(this->input, id, x, y, desc->radius * pixel_ratio * 1.5);
+	JUN_InputMapTouch(this->input, id, x, y, desc->radius * 1.5);
 }
 
 static void update_ui_context(JUN_Video *this)
 {
-	if (this->ui)
-		JUN_TextureDestroy(&this->ui);
-
-	this->ui = JUN_TextureCreate(this->view_width, this->view_height);
-
 	JUN_InputSetCallback(this->input, MENU_TOGGLE_AUDIO,   JUN_StateToggleAudio);
 	JUN_InputSetCallback(this->input, MENU_TOGGLE_GAMEPAD, JUN_StateToggleGamepad);
 	JUN_InputSetCallback(this->input, MENU_SAVE_STATE,     JUN_StateToggleSaveState);
@@ -238,19 +220,25 @@ static void update_ui_context(JUN_Video *this)
 	DRAW(RETRO_DEVICE_ID_JOYPAD_SELECT, CENTER(-20), BOTTOM(-40), RADIUS(20));
 }
 
+void JUN_VideoClear(JUN_Video *this)
+{
+	SDL_SetRenderDrawColor(this->renderer, 0, 0, 0, 0);
+	SDL_RenderClear(this->renderer);
+}
+
 void JUN_VideoUpdateContext(JUN_Video *this, enum retro_pixel_format format, unsigned width, unsigned height, size_t pitch)
 {
 	switch (format) {
 		case RETRO_PIXEL_FORMAT_0RGB1555:
-			this->pixel_format = MTY_COLOR_FORMAT_BGRA5551;
+			this->pixel_format = SDL_PIXELFORMAT_ARGB1555;
 			this->bits_per_pixel = sizeof(uint16_t);
 			break;
 		case RETRO_PIXEL_FORMAT_XRGB8888:
-			this->pixel_format = MTY_COLOR_FORMAT_RGBA;
+			this->pixel_format = SDL_PIXELFORMAT_XRGB8888;
 			this->bits_per_pixel = sizeof(uint32_t);
 			break;
 		case RETRO_PIXEL_FORMAT_RGB565:
-			this->pixel_format = MTY_COLOR_FORMAT_BGR565;
+			this->pixel_format = SDL_PIXELFORMAT_RGB565;
 			this->bits_per_pixel = sizeof(uint16_t);
 			break;
 		default:
@@ -262,21 +250,29 @@ void JUN_VideoUpdateContext(JUN_Video *this, enum retro_pixel_format format, uns
 
 		if (this->buffer)
 			MTY_Free(this->buffer);
+		if (this->texture)
+			SDL_DestroyTexture(this->texture);
 
 		this->width = width;
 		this->height = height;
 		this->pitch = pitch;
 		this->buffer = MTY_Alloc(this->width * this->bits_per_pixel * this->height, 1);
 
+		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+		this->texture = SDL_CreateTexture(this->renderer, this->pixel_format, SDL_TEXTUREACCESS_STREAMING, width, height);
+
 		JUN_StateSetFrameMetrics(this->state, this->width, this->height);
 	}
 
-	uint32_t view_width, view_height;
-	refresh_viewport_size(this, &view_width, &view_height);
+	int32_t view_width = 0, view_height = 0;
+	get_size(&view_width, &view_height);
 
 	if (this->view_width != view_width || this->view_height != view_height) {
 		this->view_width = view_width;
 		this->view_height = view_height;
+
+		SDL_SetWindowSize(this->window, view_width, view_height);
+		JUN_StateSetWindowMetrics(this->state, view_width, view_height);
 
 		update_ui_context(this);
 	}
@@ -296,49 +292,59 @@ void JUN_VideoDrawFrame(JUN_Video *this, const void *data)
 		char *byte_array = this->buffer;
 
 		for (int i = 0; i < real_pitch * this->height; i += this->bits_per_pixel) {
-			char bak = byte_array[i + 0];
+			char tmp = byte_array[i + 0];
 			byte_array[i + 0] = byte_array[i + 2];
-			byte_array[i + 2] = bak;
+			byte_array[i + 2] = tmp;
 		}
 	}
 
-	// Initialize rendering descriptor
-	MTY_RenderDesc description = {0};
-	description.format = this->pixel_format;
-	description.cropWidth = this->width;
-	description.cropHeight = this->height;
-	description.clear = true;
-
-	refresh_viewport_size(this, &description.viewWidth, &description.viewHeight);
-	description.displayWidth = description.viewWidth;
-	description.displayHeight = description.viewHeight;
-
-	// Compute height offset to give some space to the menu
-	uint32_t offset = 50 * JUN_InteropGetPixelRatio();
+	// Height offset giving some space to the menu
+	uint32_t offset = 50;
 
 	// Position the frame on top of the screen based on the ratios
-	float scale_w = (float) description.viewWidth / (float) this->width;
-	float scale_h = (float) (description.viewHeight - offset) / (float) this->height;
-	description.position = MTY_POSITION_FIXED;
-	description.imageY = offset;
-	description.imageX = scale_w < scale_h ? 0 : (description.viewWidth - this->width * scale_h) / 2;
-	description.scale = scale_w < scale_h ? scale_w : scale_h;
+	float aspect_ratio = (float) this->width / (float) this->height;
+	float scale_w = (float) this->view_width / (float) this->width;
+	float scale_h = (float) (this->view_height - offset) / (float) this->height;
 
-	MTY_RendererDrawQuad(this->renderer, MTY_GFX_GL, NULL, NULL, this->buffer, &description, NULL);
+	// Update the texture and render it
+	SDL_Rect rect = {
+		.x = scale_w < scale_h ? 0 : (this->view_width - this->width * scale_h) / 2,
+		.y = offset,
+		.w = scale_w < scale_h ? this->view_width : this->width * scale_h,
+		.h = scale_w < scale_h ? this->view_width / aspect_ratio : this->view_height - offset,
+	};
+	SDL_UpdateTexture(this->texture, NULL, data, this->pitch);
+	SDL_RenderCopy(this->renderer, this->texture, NULL, &rect);
 }
 
-void JUN_VideoDrawUI(JUN_Video *this, bool has_gamepad)
+void JUN_VideoDrawUI(JUN_Video *this)
 {
-	// Produce drawing data
-	MTY_DrawData *draw_data = JUN_TextureProduce(this->ui, !has_gamepad ? 6 : 0);
+	bool gamepad = JUN_StateHasGamepad(this->state);
 
-	// Draw the controller
-	MTY_RendererDrawUI(this->renderer, MTY_GFX_GL, NULL, NULL, draw_data, NULL);
+	int64_t key = 0;
+	uint64_t iter = 0;
+
+	while (MTY_HashGetNextKeyInt(this->assets, &iter, &key)) {
+		struct jun_video_asset *asset = (struct jun_video_asset *) MTY_HashGetInt(this->assets, key);
+
+		if (!gamepad && !asset->menu)
+			continue;
+
+		SDL_RenderCopy(this->renderer, asset->texture, NULL, &asset->layout);
+	}
 }
 
 void JUN_VideoPresent(JUN_Video *this)
 {
-	gl_flush();
+	SDL_RenderPresent(this->renderer);
+}
+
+static void destroy_asset(void *ptr)
+{
+	struct jun_video_asset *asset = ptr;
+
+	SDL_DestroyTexture(asset->texture);
+	SDL_FreeSurface(asset->image);
 }
 
 void JUN_VideoDestroy(JUN_Video **video)
@@ -348,8 +354,15 @@ void JUN_VideoDestroy(JUN_Video **video)
 
 	JUN_Video *this = *video;
 
+	if (this->buffer)
+		MTY_Free(this->buffer);
+	if (this->texture)
+		SDL_DestroyTexture(this->texture);
+
 	MTY_HashDestroy(&this->assets, MTY_Free);
-	MTY_RendererDestroy(&this->renderer);
+
+	SDL_DestroyRenderer(this->renderer);
+	SDL_DestroyWindow(this->window);
 
 	MTY_Free(this);
 	*video = NULL;

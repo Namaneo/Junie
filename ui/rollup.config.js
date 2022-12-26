@@ -68,13 +68,10 @@ export default {
     plugins: [
         watcher([
             'index.html',
-            'src/**',
-            'res/**',
+            'sources/**',
             '../app/GNUmakefile*',
-            '../app/src/*.c',
-            '../app/src/*.h',
-            '../app/res/**',
-            '../app/web/**'
+            '../app/sources/*.c',
+            '../app/sources/*.h',
         ]),
         nodeResolve({
 			preferBuiltins: true,

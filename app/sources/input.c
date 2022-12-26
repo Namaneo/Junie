@@ -29,7 +29,6 @@ struct jun_input_status {
     double x;
     double y;
 	double radius;
-    JUN_TextureData *texture;
 
     struct jun_input_pointer *locked_by; // TODO remove that
     JUN_StateCallback callback;
@@ -72,7 +71,6 @@ void JUN_InputMapTouch(JUN_Input *ctx, uint8_t id, double x, double y, double ra
     input->x = x;
     input->y = y;
     input->radius = radius;
-    input->texture = JUN_StateGetMetrics(ctx->state, id);
 }
 
 void JUN_InputSetCallback(JUN_Input *ctx, uint8_t id, JUN_StateCallback callback)

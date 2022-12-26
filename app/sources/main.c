@@ -22,11 +22,13 @@ static void video_refresh(const void *data, unsigned width, unsigned height, siz
 {
 	JUN_App *app = opaque;
 
+	JUN_VideoClear(app->video);
+
 	enum retro_pixel_format format = JUN_CoreGetFormat();
 	JUN_VideoUpdateContext(app->video, format, width, height, pitch);
 
 	JUN_VideoDrawFrame(app->video, data);
-	JUN_VideoDrawUI(app->video, JUN_StateHasGamepad(app->state));
+	JUN_VideoDrawUI(app->video);
 }
 
 static void audio_sample(int16_t left, int16_t right, void *opaque)
@@ -118,10 +120,10 @@ void start_game(const char *system, const char *rom, const char *settings)
 		return;
 	}
 
-	JUN_AudioSetSampleRate(app->audio, JUN_CoreGetSampleRate());
-
 	JUN_CoreRestoreMemories();
 	JUN_CoreSetCheats();
+
+	JUN_AudioSetSampleRate(app->audio, JUN_CoreGetSampleRate());
 
 	JUN_InteropShowUI(false);
 	emscripten_set_main_loop_arg(main_loop, app, 0, 0);

@@ -428,14 +428,12 @@ static uint32_t compute_framerate()
 
 void JUN_CoreRun(uint8_t fast_forward)
 {
-	for (size_t i = 0; i < fast_forward; ++i) {
-		uint32_t count = compute_framerate();
+	uint32_t count = compute_framerate();
 
-		for (size_t i = 0; i < count; ++i)
-			CTX.sym.retro_run();
+	for (size_t i = 0; i < fast_forward * count; ++i)
+		CTX.sym.retro_run();
 
-		CTX.after_run = MTY_GetTime();
-	}
+	CTX.after_run = MTY_GetTime();
 }
 
 void save_memory(uint32_t type, const char *path)
