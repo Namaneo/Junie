@@ -58,7 +58,7 @@ function html(outdir, html, sw) {
 }
 
 export default {
-    input: 'src/index.jsx',
+    input: 'sources/index.jsx',
     output: {
         file: 'build/index.html',
         format: 'es'
@@ -75,7 +75,7 @@ export default {
         ]),
         nodeResolve({
 			preferBuiltins: true,
-            rootDir: path.join(process.cwd(), 'src'),
+            rootDir: path.join(process.cwd(), 'sources'),
             extensions: ['.js', '.jsx'],
         }),
         replace({
