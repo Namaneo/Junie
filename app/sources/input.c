@@ -1,4 +1,5 @@
 #include <math.h>
+#include <SDL2/SDL.h>
 
 #include "libretro.h"
 
@@ -156,49 +157,96 @@ static struct jun_input_pointer *get_pointer(JUN_Input *ctx, int32_t id)
 	return NULL;
 }
 
-void JUN_InputSetStatus(JUN_Input *ctx, const MTY_Event *event)
+static struct jun_input_pointer *window_motion(JUN_Input *ctx, int32_t id, int32_t x, int32_t y)
 {
-	struct jun_input_pointer *pointer = NULL;
-
-	if (event->type == MTY_EVENT_BUTTON) {
-		pointer = get_pointer(ctx, event->button.id);
-
-		if (!pointer)
-			return;
-
-		pointer->pressed = event->button.pressed;
-		pointer->x = event->button.x;
-		pointer->y = event->button.y;
-
-		set_mouse(ctx, pointer, MIN_MENU_INPUTS, MAX_MENU_INPUTS);
-	}
-
-	if (event->type == MTY_EVENT_MOTION) {
-		pointer = get_pointer(ctx, event->motion.id);
-
-		if (!pointer)
-			return;
-
-		pointer->x = event->motion.x;
-		pointer->y = event->motion.y;
-	}
+	struct jun_input_pointer *pointer = get_pointer(ctx, id);
 
 	if (!pointer)
-		return;
+		return NULL;
 
-	if (JUN_StateHasGamepad(ctx->state)) {
-		set_mouse(ctx, pointer, MIN_RETRO_INPUTS, MAX_RETRO_INPUTS);
+	pointer->x = x;
+	pointer->y = y;
 
-	} else {
-		set_touch(ctx, pointer);
+	return pointer;
+}
+
+static struct jun_input_pointer *window_button(JUN_Input *ctx, int32_t id, bool pressed, int32_t x, int32_t y)
+{
+	struct jun_input_pointer *pointer = get_pointer(ctx, id);
+
+	if (!pointer)
+		return NULL;
+
+	pointer->pressed = pressed;
+	pointer->x = x;
+	pointer->y = y;
+
+	set_mouse(ctx, pointer, MIN_MENU_INPUTS, MAX_MENU_INPUTS);
+
+	return pointer;
+}
+
+void JUN_InputPollEvents(JUN_Input *ctx)
+{
+	SDL_Event event = {0};
+
+    while (SDL_PollEvent(&event)) {
+		struct jun_input_pointer *pointer = NULL;
+
+		switch(event.type) {
+			case SDL_MOUSEMOTION: {
+				if (event.motion.which == SDL_TOUCH_MOUSEID)
+					break;
+
+				pointer = window_motion(ctx, 0, event.motion.x, event.motion.y);
+				break;
+			}
+			case SDL_MOUSEBUTTONDOWN:
+			case SDL_MOUSEBUTTONUP: {
+				if (event.button.which == SDL_TOUCH_MOUSEID)
+					break;
+
+				bool pressed = event.type == SDL_MOUSEBUTTONDOWN;
+				pointer = window_button(ctx, 0, pressed, event.button.x, event.button.y);
+				break;
+			}
+			case SDL_FINGERMOTION:
+			case SDL_FINGERDOWN:
+			case SDL_FINGERUP: {
+				float view_width = 0, view_height = 0;
+				JUN_StateGetWindowMetrics(ctx->state, &view_width, &view_height);
+
+				uint32_t x = view_width * event.tfinger.x;
+				uint32_t y = view_height * event.tfinger.y;
+
+				if (event.type == SDL_FINGERMOTION)
+					pointer = window_motion(ctx, event.tfinger.fingerId, x, y);
+				if (event.type == SDL_FINGERDOWN)
+					pointer = window_button(ctx, event.tfinger.fingerId, true, x, y);
+				if (event.type == SDL_FINGERUP)
+					pointer = window_button(ctx, event.tfinger.fingerId, false, x, y);
+				break;
+			}
+			default:
+				break;
+		}
+
+		if (!pointer)
+			continue;
+
+		if (JUN_StateHasGamepad(ctx->state)) {
+			set_mouse(ctx, pointer, MIN_RETRO_INPUTS, MAX_RETRO_INPUTS);
+
+		} else {
+			set_touch(ctx, pointer);
+		}
 	}
 }
 
 int16_t JUN_InputGetStatus(JUN_Input *ctx, uint8_t id, uint8_t device)
 {
-	if (device == RETRO_DEVICE_JOYPAD) {
+	if (device == RETRO_DEVICE_JOYPAD)
 		return ctx->inputs[id].pressed;
-	}
 
 	if (device == RETRO_DEVICE_POINTER && !JUN_StateHasGamepad(ctx->state)) {
 		switch (id) {

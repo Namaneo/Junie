@@ -6,18 +6,6 @@
 
 #include "app.h"
 
-static void event_func(const MTY_Event *event, void *opaque)
-{
-	JUN_App *app = opaque;
-
-	JUN_InputSetStatus(app->input, event);
-
-	JUN_PrintEvent(event);
-
-	if (event->type == MTY_EVENT_CLOSE)
-		JUN_StateToggleExit(app->state);
-}
-
 JUN_App *JUN_AppCreate()
 {
 	JUN_App *this = MTY_Alloc(1, sizeof(JUN_App));
@@ -27,7 +15,7 @@ JUN_App *JUN_AppCreate()
 	this->state = JUN_StateCreate();
 	this->audio = JUN_AudioCreate();
 	this->input = JUN_InputCreate(this->state);
-	this->video = JUN_VideoCreate(this->state, this->input, event_func, this);
+	this->video = JUN_VideoCreate(this->state, this->input, this);
 
 	return (JUN_App *) this;
 }

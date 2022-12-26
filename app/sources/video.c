@@ -43,9 +43,6 @@ struct jun_video_asset {
 };
 
 struct JUN_Video {
-	MTY_EventFunc event;
-	void *opaque;
-
 	SDL_Window *window;
 	SDL_Renderer *renderer;
 	MTY_Hash *assets;
@@ -80,14 +77,12 @@ static void prepare_asset(JUN_Video *this, uint8_t id, const char *path, bool me
 	MTY_HashSetInt(this->assets, id, asset);
 }
 
-JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input, MTY_EventFunc event, void *opaque)
+JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input)
 {
 	JUN_Video *this = MTY_Alloc(1, sizeof(JUN_Video));
 
-	this->event = event;
 	this->state = state;
 	this->input = input;
-	this->opaque = opaque;
 
 	SDL_Init(SDL_INIT_VIDEO);
 	SDL_CreateWindowAndRenderer(600, 400, 0, &this->window, &this->renderer);
@@ -237,71 +232,6 @@ void JUN_VideoUpdateContext(JUN_Video *this, enum retro_pixel_format format, uns
 		JUN_StateSetWindowMetrics(this->state, view_width, view_height);
 
 		update_ui_context(this);
-	}
-}
-
-static void window_motion(JUN_Video *this, int32_t id, int32_t x, int32_t y)
-{
-	MTY_Event evt = {0};
-	evt.type = MTY_EVENT_MOTION;
-	evt.motion.id = id;
-	evt.motion.x = x;
-	evt.motion.y = y;
-
-	this->event(&evt, this->opaque);
-}
-
-static void window_button(JUN_Video *this, int32_t id, bool pressed, int32_t x, int32_t y)
-{
-	MTY_Event evt = {0};
-	evt.type = MTY_EVENT_BUTTON;
-	evt.button.id = id;
-	evt.button.pressed = pressed;
-	evt.button.x = x;
-	evt.button.y = y;
-
-	this->event(&evt, this->opaque);
-}
-
-void JUN_VideoPollEvents(JUN_Video *this)
-{
-	SDL_Event event = {0};
-
-    while (SDL_PollEvent(&event)) {
-		switch(event.type) {
-			case SDL_MOUSEMOTION: {
-				if (event.motion.which == SDL_TOUCH_MOUSEID)
-					break;
-
-				window_motion(this, 0, event.motion.x, event.motion.y);
-				break;
-			}
-			case SDL_MOUSEBUTTONDOWN:
-			case SDL_MOUSEBUTTONUP: {
-				if (event.button.which == SDL_TOUCH_MOUSEID)
-					break;
-
-				bool pressed = event.type == SDL_MOUSEBUTTONDOWN;
-				window_button(this, 0, pressed, event.button.x, event.button.y);
-				break;
-			}
-			case SDL_FINGERMOTION:
-			case SDL_FINGERDOWN:
-			case SDL_FINGERUP: {
-				uint32_t x = this->view_width * event.tfinger.x;
-				uint32_t y = this->view_height * event.tfinger.y;
-
-				if (event.type == SDL_FINGERMOTION)
-					window_motion(this, event.tfinger.fingerId, x, y);
-				if (event.type == SDL_FINGERDOWN)
-					window_button(this, event.tfinger.fingerId, true, x, y);
-				if (event.type == SDL_FINGERUP)
-					window_button(this, event.tfinger.fingerId, false, x, y);
-				break;
-			}
-			default:
-				break;
-		}
 	}
 }
 

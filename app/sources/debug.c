@@ -16,8 +16,3 @@ void JUN_SetLogFunc()
 {
 	MTY_SetLogFunc(log_func, NULL);
 }
-
-void JUN_PrintEvent(const MTY_Event *evt)
-{
-	MTY_PrintEvent(evt);
-}

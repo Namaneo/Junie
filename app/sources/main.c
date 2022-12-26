@@ -53,7 +53,7 @@ static void input_poll(void *opaque)
 {
 	JUN_App *app = opaque;
 
-	JUN_VideoPollEvents(app->video);
+	JUN_InputPollEvents(app->input);
 }
 
 static int16_t input_state(unsigned port, unsigned device, unsigned index, unsigned id, void *opaque)
