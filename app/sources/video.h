@@ -8,6 +8,7 @@ JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input, MTY_EventFunc eve
 void JUN_VideoPrepareAssets(JUN_Video *this);
 void JUN_VideoClear(JUN_Video *this);
 void JUN_VideoUpdateContext(JUN_Video *this, enum retro_pixel_format format, unsigned width, unsigned height, size_t pitch);
+void JUN_VideoPollEvents(JUN_Video *this);
 void JUN_VideoDrawFrame(JUN_Video *this, const void *data);
 void JUN_VideoDrawUI(JUN_Video *this);
 void JUN_VideoPresent(JUN_Video *this);

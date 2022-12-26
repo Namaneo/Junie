@@ -52,8 +52,8 @@ LDFLAGS_GAME := $(LDFLAGS) \
 	--embed-file $(RES_DIR) \
 	--js-library library.js \
 	-sASYNCIFY \
-	-sSDL2_IMAGE_FORMATS=png \
 	-sINITIAL_MEMORY=32mb \
+	-sSDL2_IMAGE_FORMATS=png \
 	-sEXPORTED_FUNCTIONS=_start_game,_get_settings \
 	-sEXPORTED_RUNTIME_METHODS=ccall,UTF8ToString
 

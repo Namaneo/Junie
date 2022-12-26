@@ -51,7 +51,9 @@ static size_t audio_sample_batch(const int16_t *data, size_t frames, void *opaqu
 
 static void input_poll(void *opaque)
 {
-	// TODO Store input snapshot
+	JUN_App *app = opaque;
+
+	JUN_VideoPollEvents(app->video);
 }
 
 static int16_t input_state(unsigned port, unsigned device, unsigned index, unsigned id, void *opaque)
