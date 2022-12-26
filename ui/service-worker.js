@@ -18,11 +18,13 @@ const resources = [
 ];
 
 const cacheResources = async () => {
+	await self.skipWaiting();
     const cache = await caches.open(version);
     await cache.addAll(resources);
 };
 
 const clearCaches = async () => {
+	await clients.claim();
 	const keys = await caches.keys()
 	for (const key of keys.filter(key => key != version))
 		caches.delete(key);
@@ -40,7 +42,6 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
 	event.waitUntil(clearCaches());
-	self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
