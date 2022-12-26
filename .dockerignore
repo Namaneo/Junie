@@ -2,7 +2,6 @@
 games
 build
 
-app/include
 app/build
 
 ui/node_modules

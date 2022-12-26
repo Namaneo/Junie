@@ -4,22 +4,25 @@ FROM emscripten/emsdk AS build
 WORKDIR /junie
 
 RUN apt update
-RUN apt install -y xxd bsdmainutils
 RUN npm install -g yarn
 
 ADD GNUmakefile .
-ADD ./app ./app
-ADD ./ui ./ui
 
-ENV TERM=xterm
-RUN emmake make
+ADD ./ui/package.json ./ui/package.json
+RUN emmake make prepare
+
+ADD ./app ./app
+RUN emmake make app
+
+ADD ./ui ./ui
+RUN emmake make ui
 
 # Run
 FROM alpine AS run
 
 WORKDIR /junie
 
-RUN apk --no-cache add python3
+RUN apk add python3
 
 COPY --from=build /junie/ui/build .
 

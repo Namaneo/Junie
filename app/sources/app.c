@@ -15,7 +15,7 @@ JUN_App *JUN_AppCreate()
 	this->state = JUN_StateCreate();
 	this->audio = JUN_AudioCreate();
 	this->input = JUN_InputCreate(this->state);
-	this->video = JUN_VideoCreate(this->state, this->input, this);
+	this->video = JUN_VideoCreate(this->state, this->input);
 
 	return (JUN_App *) this;
 }

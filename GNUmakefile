@@ -18,10 +18,16 @@ UI_FLAGS := \
 	--environment BUILD:$(BUILD) \
 	--environment VERSION:$(VERSION)
 
+.PHONY: app ui
+
 # Build
 
-all: clean prepare
+all: clean prepare app ui
+
+app:
 	@$(MAKE) -C $(APP_DIR) DEBUG=$(DEBUG)
+
+ui:
 	@echo Building index.html...
 	@yarn --cwd $(UI_DIR) rollup -c $(UI_FLAGS) $(QUIET)
 
