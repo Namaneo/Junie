@@ -50,7 +50,6 @@ struct JUN_Video {
 	JUN_State *state;
 	JUN_Input *input;
 
-	void *buffer;
 	SDL_Texture *texture;
 	SDL_PixelFormatEnum pixel_format;
 	uint32_t bits_per_pixel;
@@ -205,15 +204,12 @@ void JUN_VideoUpdateContext(JUN_Video *this, enum retro_pixel_format format, uns
 	if (this->width != width || this->height != height || this->pitch != pitch) {
 		MTY_Log("%u x %u (%zu)", width, height, pitch);
 
-		if (this->buffer)
-			MTY_Free(this->buffer);
 		if (this->texture)
 			SDL_DestroyTexture(this->texture);
 
 		this->width = width;
 		this->height = height;
 		this->pitch = pitch;
-		this->buffer = MTY_Alloc(this->width * this->bits_per_pixel * this->height, 1);
 
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
 		this->texture = SDL_CreateTexture(this->renderer, this->pixel_format, SDL_TEXTUREACCESS_STREAMING, width, height);
@@ -237,24 +233,6 @@ void JUN_VideoUpdateContext(JUN_Video *this, enum retro_pixel_format format, uns
 
 void JUN_VideoDrawFrame(JUN_Video *this, const void *data)
 {
-	// Deduce the real pitch of the image
-	unsigned real_pitch = this->width * this->bits_per_pixel;
-
-	// Crop the image to its real size
-	for (int y = 0; y < this->height; ++y)
-		memcpy(this->buffer + y * real_pitch, data + y * this->pitch, real_pitch);
-
-	// In case of RGBA color format, manually swap R and B
-	if (this->pixel_format == MTY_COLOR_FORMAT_RGBA) {
-		char *byte_array = this->buffer;
-
-		for (int i = 0; i < real_pitch * this->height; i += this->bits_per_pixel) {
-			char tmp = byte_array[i + 0];
-			byte_array[i + 0] = byte_array[i + 2];
-			byte_array[i + 2] = tmp;
-		}
-	}
-
 	// Height offset giving some space to the menu
 	uint32_t offset = 50;
 
@@ -311,8 +289,6 @@ void JUN_VideoDestroy(JUN_Video **video)
 
 	JUN_Video *this = *video;
 
-	if (this->buffer)
-		MTY_Free(this->buffer);
 	if (this->texture)
 		SDL_DestroyTexture(this->texture);
 
