@@ -22,8 +22,15 @@ const cacheResources = async () => {
     await cache.addAll(resources);
 };
 
+const clearCaches = async () => {
+	const keys = await caches.keys()
+	for (const key of keys.filter(key => key != version))
+		caches.delete(key);
+}
+
 const fetchResource = async (request) => {
-    const resource = await caches.match(request);
+	const cache = await caches.open(version);
+	const resource = await cache.match(request);
     return resource ?? await fetch(request);
 }
 
@@ -31,7 +38,8 @@ self.addEventListener('install', (event) => {
     event.waitUntil(cacheResources());
 });
 
-self.addEventListener('activate', () => {
+self.addEventListener('activate', (event) => {
+	event.waitUntil(clearCaches());
 	self.clients.claim();
 });
 
