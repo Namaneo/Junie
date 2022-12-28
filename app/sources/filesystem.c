@@ -14,31 +14,31 @@ static JUN_File *files;
 
 /* V1 */
 
-static const char *get_path(JUN_File *stream);
-static JUN_File *open(const char *path, unsigned mode, unsigned hints);
-static int close(JUN_File *stream);
-static int64_t size(JUN_File *stream);
-static int64_t tell(JUN_File *stream);
-static int64_t seek(JUN_File *stream, int64_t offset, int seek_position);
-static int64_t read(JUN_File *stream, void *s, uint64_t len);
-static int64_t write(JUN_File *stream, const void *s, uint64_t len);
-static int flush(JUN_File *stream);
-static int remove(const char *path);
-static int rename(const char *old_path, const char *new_path);
+static const char *fs_get_path(JUN_File *stream);
+static JUN_File *fs_open(const char *path, unsigned mode, unsigned hints);
+static int fs_close(JUN_File *stream);
+static int64_t fs_size(JUN_File *stream);
+static int64_t fs_tell(JUN_File *stream);
+static int64_t fs_seek(JUN_File *stream, int64_t offset, int seek_position);
+static int64_t fs_read(JUN_File *stream, void *s, uint64_t len);
+static int64_t fs_write(JUN_File *stream, const void *s, uint64_t len);
+static int fs_flush(JUN_File *stream);
+static int fs_remove(const char *path);
+static int fs_rename(const char *old_path, const char *new_path);
 
 /* V2 */
 
-static int64_t truncate(JUN_File *stream, int64_t length);
+static int64_t fs_truncate(JUN_File *stream, int64_t length);
 
 /* V3 */
 
-static int stat(const char *path, int32_t *size);
-static int mkdir(const char *dir);
-static JUN_Directory *opendir(const char *dir, bool include_hidden);
-static bool readdir(JUN_Directory *dirstream);
-static const char *dirent_get_name(JUN_Directory *dirstream);
-static bool dirent_is_dir(JUN_Directory *dirstream);
-static int closedir(JUN_Directory *dirstream);
+static int fs_stat(const char *path, int32_t *size);
+static int fs_mkdir(const char *dir);
+static JUN_Directory *fs_opendir(const char *dir, bool include_hidden);
+static bool fs_readdir(JUN_Directory *dirstream);
+static const char *fs_dirent_get_name(JUN_Directory *dirstream);
+static bool fs_dirent_is_dir(JUN_Directory *dirstream);
+static int fs_closedir(JUN_Directory *dirstream);
 
 /* Public */
 
@@ -49,29 +49,29 @@ void JUN_FilesystemCreate()
 	interface = calloc(1, sizeof(JUN_Files));
 
 	/* V1 */
-	interface->get_path = get_path;
-	interface->open = open;
-	interface->close = close;
-	interface->size = size;
-	interface->tell = tell;
-	interface->seek = seek;
-	interface->read = read;
-	interface->write = write;
-	interface->flush = flush;
-	interface->remove = remove;
-	interface->rename = rename;
+	interface->get_path = fs_get_path;
+	interface->open = fs_open;
+	interface->close = fs_close;
+	interface->size = fs_size;
+	interface->tell = fs_tell;
+	interface->seek = fs_seek;
+	interface->read = fs_read;
+	interface->write = fs_write;
+	interface->flush = fs_flush;
+	interface->remove = fs_remove;
+	interface->rename = fs_rename;
 
 	/* V2 */
-	interface->truncate = truncate;
+	interface->truncate = fs_truncate;
 
 	/* V3 */
-	interface->stat = stat;
-	interface->mkdir = mkdir;
-	interface->opendir = opendir;
-	interface->readdir = readdir;
-	interface->dirent_get_name = dirent_get_name;
-	interface->dirent_is_dir = dirent_is_dir;
-	interface->closedir = closedir;
+	interface->stat = fs_stat;
+	interface->mkdir = fs_mkdir;
+	interface->opendir = fs_opendir;
+	interface->readdir = fs_readdir;
+	interface->dirent_get_name = fs_dirent_get_name;
+	interface->dirent_is_dir = fs_dirent_is_dir;
+	interface->closedir = fs_closedir;
 }
 
 JUN_Files *JUN_FilesystemGetInterface()
@@ -159,12 +159,12 @@ void JUN_FilesystemDestroy()
 
 /* V1 */
 
-static const char *get_path(JUN_File *stream)
+static const char *fs_get_path(JUN_File *stream)
 {
 	return stream->path;
 }
 
-static JUN_File *open(const char *path, unsigned mode, unsigned hints)
+static JUN_File *fs_open(const char *path, unsigned mode, unsigned hints)
 {
 	MTY_Log("%s (mode: %d)", path, mode);
 
@@ -187,24 +187,24 @@ static JUN_File *open(const char *path, unsigned mode, unsigned hints)
 	return file;
 }
 
-static int close(JUN_File *stream)
+static int fs_close(JUN_File *stream)
 {
 	stream->offset = 0;
 
 	return 0;
 }
 
-static int64_t size(JUN_File *stream)
+static int64_t fs_size(JUN_File *stream)
 {
 	return stream->size;
 }
 
-static int64_t tell(JUN_File *stream)
+static int64_t fs_tell(JUN_File *stream)
 {
 	return stream->offset;
 }
 
-static int64_t seek(JUN_File *stream, int64_t offset, int seek_position)
+static int64_t fs_seek(JUN_File *stream, int64_t offset, int seek_position)
 {
 	switch (seek_position)
 	{
@@ -222,7 +222,7 @@ static int64_t seek(JUN_File *stream, int64_t offset, int seek_position)
 	return stream->offset;
 }
 
-static int64_t read(JUN_File *stream, void *s, uint64_t len)
+static int64_t fs_read(JUN_File *stream, void *s, uint64_t len)
 {
 	uint64_t length = len > stream->size - stream->offset
 		? stream->size - stream->offset
@@ -235,7 +235,7 @@ static int64_t read(JUN_File *stream, void *s, uint64_t len)
 	return length;
 }
 
-static int64_t write(JUN_File *stream, const void *s, uint64_t len)
+static int64_t fs_write(JUN_File *stream, const void *s, uint64_t len)
 {
 	uint64_t total_size = stream->offset + len;
 	if (total_size > stream->size) {
@@ -252,12 +252,12 @@ static int64_t write(JUN_File *stream, const void *s, uint64_t len)
 	return 0;
 }
 
-static int flush(JUN_File *stream)
+static int fs_flush(JUN_File *stream)
 {
 	return 0;
 }
 
-static int remove(const char *path)
+static int fs_remove(const char *path)
 {
 	MTY_Log("%s", path);
 
@@ -279,7 +279,7 @@ static int remove(const char *path)
 	return 0;
 }
 
-static int rename(const char *old_path, const char *new_path)
+static int fs_rename(const char *old_path, const char *new_path)
 {
 	MTY_Log("%s -> %s", old_path, new_path);
 
@@ -295,7 +295,7 @@ static int rename(const char *old_path, const char *new_path)
 
 /* V2 */
 
-static int64_t truncate(JUN_File *stream, int64_t length)
+static int64_t fs_truncate(JUN_File *stream, int64_t length)
 {
 	if (!stream->buffer)
 		return -1;
@@ -308,37 +308,37 @@ static int64_t truncate(JUN_File *stream, int64_t length)
 
 /* V3 */
 
-static int stat(const char *path, int32_t *size)
+static int fs_stat(const char *path, int32_t *size)
 {
 	return -1;
 }
 
-static int mkdir(const char *dir)
+static int fs_mkdir(const char *dir)
 {
 	return -1;
 }
 
-static JUN_Directory *opendir(const char *dir, bool include_hidden)
+static JUN_Directory *fs_opendir(const char *dir, bool include_hidden)
 {
 	return NULL;
 }
 
-static bool readdir(JUN_Directory *dirstream)
+static bool fs_readdir(JUN_Directory *dirstream)
 {
 	return false;
 }
 
-static const char *dirent_get_name(JUN_Directory *dirstream)
+static const char *fs_dirent_get_name(JUN_Directory *dirstream)
 {
 	return NULL;
 }
 
-static bool dirent_is_dir(JUN_Directory *dirstream)
+static bool fs_dirent_is_dir(JUN_Directory *dirstream)
 {
 	return false;
 }
 
-static int closedir(JUN_Directory *dirstream)
+static int fs_closedir(JUN_Directory *dirstream)
 {
 	return -1;
 }
