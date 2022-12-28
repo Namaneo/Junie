@@ -1,6 +1,7 @@
 #include <string.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <emscripten.h>
 
 #include "filesystem.h"
 #include "interop.h"
@@ -217,8 +218,8 @@ void JUN_VideoUpdateContext(JUN_Video *this, enum retro_pixel_format format, uns
 		JUN_StateSetFrameMetrics(this->state, this->width, this->height);
 	}
 
-	int32_t view_width = 0, view_height = 0;
-	get_size(&view_width, &view_height);
+	int32_t view_width = emscripten_run_script_int("window.innerWidth");
+	int32_t view_height = emscripten_run_script_int("window.innerHeight");
 
 	if (this->view_width != view_width || this->view_height != view_height) {
 		this->view_width = view_width;

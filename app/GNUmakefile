@@ -51,7 +51,6 @@ endif
 
 LDFLAGS_GAME := $(LDFLAGS) \
 	--embed-file $(RES_DIR) \
-	--js-library library.js \
 	-sASYNCIFY \
 	-sINITIAL_MEMORY=32mb \
 	-sSDL2_IMAGE_FORMATS=png \
