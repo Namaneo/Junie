@@ -5,13 +5,31 @@
 #include "matoya.h"
 #include "interop.h"
 
-void JUN_InteropShowUI(bool show)
+static void interop_show_ui(bool show)
 {
 	const char *script = show
 		? "window.dispatchEvent(new CustomEvent('show_ui', { detail: true } ));"
 		: "window.dispatchEvent(new CustomEvent('show_ui', { detail: false } ));";
 
 	emscripten_run_script(script);
+}
+
+void JUN_InteropStartLoop(JUN_InteropLoopFunc func, void *opqaue)
+{
+	interop_show_ui(false);
+	emscripten_set_main_loop_arg(func, opqaue, 0, 0);
+}
+
+void JUN_InteropCancelLoop()
+{
+	emscripten_cancel_main_loop();
+	interop_show_ui(true);
+}
+
+void JUN_InteropGetSize(int32_t *width, int32_t *height)
+{
+	*width = emscripten_run_script_int("window.innerWidth");
+	*height = emscripten_run_script_int("window.innerHeight");
 }
 
 void *JUN_InteropReadFile(const char *path, int32_t *length)

@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <SDL2/SDL.h>
-#include <emscripten.h>
 
 #include "matoya.h"
 #include "filesystem.h"
@@ -81,8 +80,7 @@ void main_loop(void *opaque)
 
 		JUN_AppDestroy(&app);
 
-		emscripten_cancel_main_loop();
-		JUN_InteropShowUI(true);
+		JUN_InteropCancelLoop();
 		return;
 	}
 
@@ -128,6 +126,5 @@ void start_game(const char *system, const char *rom, const char *settings)
 	JUN_CoreRestoreMemories();
 	JUN_CoreSetCheats();
 
-	JUN_InteropShowUI(false);
-	emscripten_set_main_loop_arg(main_loop, app, 0, 0);
+	JUN_InteropStartLoop(main_loop, app);
 }

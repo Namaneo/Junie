@@ -1,7 +1,6 @@
 #include <string.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include <emscripten.h>
 
 #include "filesystem.h"
 #include "interop.h"
@@ -61,8 +60,6 @@ struct JUN_Video {
 	int32_t view_width;
 	int32_t view_height;
 };
-
-void get_size(int32_t *width, int32_t *height);
 
 static void prepare_asset(JUN_Video *this, uint8_t id, const char *path, bool menu)
 {
@@ -218,8 +215,8 @@ void JUN_VideoUpdateContext(JUN_Video *this, enum retro_pixel_format format, uns
 		JUN_StateSetFrameMetrics(this->state, this->width, this->height);
 	}
 
-	int32_t view_width = emscripten_run_script_int("window.innerWidth");
-	int32_t view_height = emscripten_run_script_int("window.innerHeight");
+	int32_t view_width = 0, view_height = 0;
+	JUN_InteropGetSize(&view_width, &view_height);
 
 	if (this->view_width != view_width || this->view_height != view_height) {
 		this->view_width = view_width;

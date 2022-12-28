@@ -4,6 +4,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-void JUN_InteropShowUI(bool show);
+typedef void (*JUN_InteropLoopFunc)(void *opaque);
+
+void JUN_InteropStartLoop(JUN_InteropLoopFunc func, void *opqaue);
+void JUN_InteropCancelLoop();
+void JUN_InteropGetSize(int32_t *width, int32_t *height);
 void *JUN_InteropReadFile(const char *path, int32_t *length);
 void JUN_InteropWriteFile(const char *path, void *data, int32_t length);
