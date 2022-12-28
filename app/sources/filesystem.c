@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <SDL2/SDL.h>
 
 #include "matoya.h"
 
@@ -94,7 +95,7 @@ JUN_File *JUN_FilesystemGetNewFile(const char *path)
 	for (int i = 0; i < MAX_FILES; ++i) {
 		if (!files[i].exists) {
 			files[i].exists = true;
-			files[i].path = MTY_Strdup(path);
+			files[i].path = SDL_strdup(path);
 
 			return &files[i];
 		}
@@ -166,7 +167,7 @@ static const char *fs_get_path(JUN_File *stream)
 
 static JUN_File *fs_open(const char *path, unsigned mode, unsigned hints)
 {
-	MTY_Log("%s (mode: %d)", path, mode);
+	SDL_LogInfo(0, "%s (mode: %d)", path, mode);
 
 	// XXX Skip melonDS firmware file to avoid conflicts between runs
 	if (strstr(path, "firmware.bin"))
@@ -259,7 +260,7 @@ static int fs_flush(JUN_File *stream)
 
 static int fs_remove(const char *path)
 {
-	MTY_Log("%s", path);
+	SDL_LogInfo(0, "%s", path);
 
 	JUN_File *file = JUN_FilesystemGetExistingFile(path);
 	if (!file)
@@ -281,14 +282,14 @@ static int fs_remove(const char *path)
 
 static int fs_rename(const char *old_path, const char *new_path)
 {
-	MTY_Log("%s -> %s", old_path, new_path);
+	SDL_LogInfo(0, "%s -> %s", old_path, new_path);
 
 	JUN_File *file = JUN_FilesystemGetExistingFile(old_path);
 	if (!file)
 		return -1;
 
 	free(file->path);
-	file->path = MTY_Strdup(new_path);
+	file->path = SDL_strdup(new_path);
 
 	return 0;
 }

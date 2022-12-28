@@ -202,7 +202,7 @@ void JUN_VideoUpdateContext(JUN_Video *this, enum retro_pixel_format format, uns
 	}
 
 	if (this->width != width || this->height != height || this->pitch != pitch) {
-		MTY_Log("%u x %u (%zu)", width, height, pitch);
+		SDL_LogInfo(0, "%u x %u (%zu)", width, height, pitch);
 
 		if (this->texture)
 			SDL_DestroyTexture(this->texture);
@@ -274,12 +274,14 @@ void JUN_VideoPresent(JUN_Video *this)
 	SDL_RenderPresent(this->renderer);
 }
 
-static void destroy_asset(void *ptr)
+static void free_asset(void *ptr)
 {
 	struct jun_video_asset *asset = ptr;
 
 	SDL_DestroyTexture(asset->texture);
 	SDL_FreeSurface(asset->image);
+
+	free(asset);
 }
 
 void JUN_VideoDestroy(JUN_Video **video)
@@ -292,7 +294,7 @@ void JUN_VideoDestroy(JUN_Video **video)
 	if (this->texture)
 		SDL_DestroyTexture(this->texture);
 
-	MTY_HashDestroy(&this->assets, free);
+	MTY_HashDestroy(&this->assets, free_asset);
 
 	SDL_DestroyRenderer(this->renderer);
 	SDL_DestroyWindow(this->window);

@@ -1,17 +1,29 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <SDL2/SDL.h>
 
 #include "filesystem.h"
 #include "interop.h"
-#include "debug.h"
 
 #include "app.h"
+
+static void log_func(void *userdata, int category, SDL_LogPriority priority, const char *message)
+{
+	if (message[strlen(message) - 1] != '\n')
+		printf("%s\n", message);
+	else
+		printf("%s", message);
+}
 
 JUN_App *JUN_AppCreate()
 {
 	JUN_App *this = calloc(1, sizeof(JUN_App));
 
-	JUN_SetLogFunc();
+	SDL_LogSetOutputFunction(log_func, NULL);
+
+#if !defined(DEBUG)
+	SDL_LogSetAllPriority(SDL_LOG_PRIORITY_CRITICAL);
+#endif
 
 	this->audio = JUN_AudioCreate();
 	this->state = JUN_StateCreate();

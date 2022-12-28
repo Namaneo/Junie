@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <SDL2/SDL.h>
 
 #include "configuration.h"
 
@@ -48,22 +49,22 @@ void JUN_ConfigurationSet(JUN_Configuration *this, const char *key, const char *
 {
 	JUN_ConfigurationElement *element = calloc(1, sizeof(JUN_ConfigurationElement));
 
-	char *content = MTY_Strdup(value);
+	char *content = SDL_strdup(value);
 
 	char *saveptr = NULL;
 
-	element->key = MTY_Strdup(key);
-	element->description = MTY_Strdup(MTY_Strtok(content, ";", &saveptr));
+	element->key = SDL_strdup(key);
+	element->description = SDL_strdup(SDL_strtokr(content, ";", &saveptr));
 	element->values = MTY_ListCreate();
 
 	char *options = saveptr + 1;
 	saveptr = NULL;
 
-	char *config = MTY_Strtok(options, "|", &saveptr);
+	char *config = SDL_strtokr(options, "|", &saveptr);
 	while (config) {
-		MTY_ListAppend(element->values, MTY_Strdup(config));
+		MTY_ListAppend(element->values, SDL_strdup(config));
 
-		config = MTY_Strtok(NULL, "|", &saveptr);
+		config = SDL_strtokr(NULL, "|", &saveptr);
 	}
 
 	MTY_HashSet(this->values, key, element);
@@ -73,7 +74,16 @@ void JUN_ConfigurationSet(JUN_Configuration *this, const char *key, const char *
 
 void JUN_ConfigurationOverride(JUN_Configuration *this, const char *key, const char *value)
 {
-	MTY_HashSet(this->overrides, MTY_Strdup(key), MTY_Strdup(value));
+	MTY_HashSet(this->overrides, SDL_strdup(key), SDL_strdup(value));
+}
+
+static void free_element(void *ptr)
+{
+	JUN_ConfigurationElement *element = ptr;
+
+	MTY_ListDestroy(&element->values, free);
+
+	free(element);
 }
 
 void JUN_ConfigurationDestroy(JUN_Configuration **configuration)
@@ -83,7 +93,7 @@ void JUN_ConfigurationDestroy(JUN_Configuration **configuration)
 
 	JUN_Configuration *this = *configuration;
 
-	MTY_HashDestroy(&this->values, free);
+	MTY_HashDestroy(&this->values, free_element);
 	MTY_HashDestroy(&this->overrides, free);
 
 	free(this);

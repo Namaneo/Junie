@@ -1,15 +1,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <SDL2/SDL.h>
 #include <emscripten.h>
 
 #include "matoya.h"
 #include "filesystem.h"
 #include "interop.h"
-#include "debug.h"
 
 #include "app.h"
-
 
 static bool environment(unsigned cmd, void *data, void *opaque)
 {
@@ -122,7 +121,7 @@ void start_game(const char *system, const char *rom, const char *settings)
 	});
 
 	if (!JUN_CoreStartGame()) {
-		MTY_Log("Core for system '%s' failed to start rom '%s'", system, rom);
+		SDL_LogInfo(0, "Core for system '%s' failed to start rom '%s'", system, rom);
 		return;
 	}
 

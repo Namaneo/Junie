@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 
 #include "libretro.h"
 
@@ -59,7 +59,7 @@ struct jun_core_sym {
 };
 
 static MTY_JSON *defaults;
-#include <dlfcn.h>
+
 static struct CTX {
 	bool initialized;
 
@@ -72,9 +72,9 @@ static struct CTX {
 	struct retro_system_av_info av;
 	enum retro_pixel_format format;
 
-	MTY_Time last_save;
-	MTY_Time before_run;
-    MTY_Time after_run;
+	uint32_t last_save;
+	uint32_t before_run;
+    uint32_t after_run;
     float remaining_frames;
 
 	struct jun_core_sym sym;
@@ -133,20 +133,20 @@ static bool jun_core_environment(unsigned cmd, void *data)
 		MTY_JSONObjSetString(item, "key", variable->key);
 
 		char *ptr = NULL;
-		char *value = MTY_Strdup(variable->value);
+		char *value = SDL_strdup(variable->value);
 
-		char *name = MTY_Strtok(value, ";", &ptr);
+		char *name = SDL_strtokr(value, ";", &ptr);
 		MTY_JSONObjSetString(item, "name", name);
 
 		ptr += 1;
-		char *element = MTY_Strtok(NULL, "|", &ptr);
+		char *element = SDL_strtokr(NULL, "|", &ptr);
 		MTY_JSONObjSetString(item, "default", element);
 
 		uint32_t i_option = 0;
 		MTY_JSON *options = MTY_JSONArrayCreate(100);
 		while (element) {
 			MTY_JSONArraySetString(options, i_option, element);
-			element = MTY_Strtok(NULL, "|", &ptr);
+			element = SDL_strtokr(NULL, "|", &ptr);
 			i_option++;
 		}
 		MTY_JSONObjSetItem(item, "options", options);
@@ -171,28 +171,49 @@ static char *remove_extension(const char *str)
 	return result;
 }
 
+static void create_paths(const char *system, const char *rom)
+{
+	char *path_system = NULL;
+	char *path_game = NULL;
+	char *path_saves = NULL;
+	char *path_state = NULL;
+	char *path_sram = NULL;
+	char *path_rtc = NULL;
+	char *path_cheats = NULL;
+
+	char *game = remove_extension(rom);
+
+	SDL_asprintf(&path_system, "%s",             system);
+	SDL_asprintf(&path_game,   "%s/%s",          system, rom);
+	SDL_asprintf(&path_saves,  "%s/%s",          system, game);
+	SDL_asprintf(&path_state,  "%s/%s/%s.state", system, game, game);
+	SDL_asprintf(&path_sram,   "%s/%s/%s.srm",   system, game, game);
+	SDL_asprintf(&path_rtc,    "%s/%s/%s.rtc",   system, game, game);
+	SDL_asprintf(&path_cheats, "%s/%s/%s.cht",   system, game, game);
+
+	free(game);
+
+	MTY_HashSetInt(CTX.paths, JUN_PATH_SYSTEM, path_system);
+	MTY_HashSetInt(CTX.paths, JUN_PATH_GAME,   path_game);
+	MTY_HashSetInt(CTX.paths, JUN_PATH_SAVES,  path_saves);
+	MTY_HashSetInt(CTX.paths, JUN_PATH_STATE,  path_state);
+	MTY_HashSetInt(CTX.paths, JUN_PATH_SRAM,   path_sram);
+	MTY_HashSetInt(CTX.paths, JUN_PATH_RTC,    path_rtc);
+	MTY_HashSetInt(CTX.paths, JUN_PATH_CHEATS, path_cheats);
+}
+
 void JUN_CoreCreate(const char *system, const char *rom, const char *settings, const char *library)
 {
 	JUN_FilesystemCreate();
 
 	CTX.paths = MTY_HashCreate(0);
-	char *game = remove_extension(rom);
-
-	MTY_HashSetInt(CTX.paths, JUN_PATH_SYSTEM, MTY_SprintfD("%s",             system));
-	MTY_HashSetInt(CTX.paths, JUN_PATH_GAME,   MTY_SprintfD("%s/%s",          system, rom));
-	MTY_HashSetInt(CTX.paths, JUN_PATH_SAVES,  MTY_SprintfD("%s/%s",          system, game));
-	MTY_HashSetInt(CTX.paths, JUN_PATH_STATE,  MTY_SprintfD("%s/%s/%s.state", system, game, game));
-	MTY_HashSetInt(CTX.paths, JUN_PATH_SRAM,   MTY_SprintfD("%s/%s/%s.srm",   system, game, game));
-	MTY_HashSetInt(CTX.paths, JUN_PATH_RTC,    MTY_SprintfD("%s/%s/%s.rtc",   system, game, game));
-	MTY_HashSetInt(CTX.paths, JUN_PATH_CHEATS, MTY_SprintfD("%s/%s/%s.cht",   system, game, game));
-
-	free(game);
-
 	CTX.configuration = JUN_ConfigurationCreate();
-	MTY_JSON *overrides = MTY_JSONParse(settings);
+
+	create_paths(system, rom);
 
 	uint64_t iter = 0;
 	const char *key = NULL;
+	MTY_JSON *overrides = MTY_JSONParse(settings);
 	while (MTY_JSONObjGetNextKey(overrides, &iter, &key)) {
 		const char *value = MTY_JSONObjGetStringPtr(overrides, key);
 		JUN_ConfigurationOverride(CTX.configuration, key, value);
@@ -212,7 +233,7 @@ static void core_log(enum retro_log_level level, const char *fmt, ...)
 	vsnprintf(buffer, sizeof(buffer), fmt, args);
 	va_end(args);
 
-	MTY_Log("%s", buffer);
+	SDL_LogInfo(0, "%s", buffer);
 }
 
 bool JUN_CoreEnvironment(unsigned cmd, void *data)
@@ -258,7 +279,7 @@ bool JUN_CoreEnvironment(unsigned cmd, void *data)
 		case RETRO_ENVIRONMENT_SET_MESSAGE: {
 			struct retro_message *message = data;
 
-			MTY_Log("%s", message->msg);
+			SDL_LogInfo(0, "%s", message->msg);
 
 			return true;
 		}
@@ -274,7 +295,7 @@ bool JUN_CoreEnvironment(unsigned cmd, void *data)
 
 				JUN_ConfigurationSet(CTX.configuration, variable->key, variable->value);
 
-				MTY_Log("SET -> %s: %s", variable->key, variable->value);
+				SDL_LogInfo(0, "SET -> %s: %s", variable->key, variable->value);
 			}
 
 			return true;
@@ -284,7 +305,7 @@ bool JUN_CoreEnvironment(unsigned cmd, void *data)
 
 			variable->value = JUN_ConfigurationGet(CTX.configuration, variable->key);
 
-			MTY_Log("GET -> %s: %s", variable->key, variable->value);
+			SDL_LogInfo(0, "GET -> %s: %s", variable->key, variable->value);
 
 			return variable->value != NULL;
 		}
@@ -305,7 +326,7 @@ bool JUN_CoreEnvironment(unsigned cmd, void *data)
 			return true;
 		}
 		default: {
-			MTY_Log("Unhandled command: %d", command);
+			SDL_LogInfo(0, "Unhandled command: %d", command);
 
 			return false;
 		}
@@ -409,11 +430,11 @@ bool JUN_CoreStartGame()
 
 static uint32_t compute_framerate()
 {
-	MTY_Time before_run = MTY_GetTime();
+	uint32_t before_run = SDL_GetTicks();
 
-    float total_loop = MTY_TimeDiff(CTX.before_run, before_run);
-    float time_run = MTY_TimeDiff(CTX.before_run, CTX.after_run);
-    float time_idle = MTY_TimeDiff(CTX.after_run, before_run);
+    float total_loop = before_run - CTX.before_run;
+    float time_run = CTX.after_run - CTX.before_run;
+    float time_idle = before_run - CTX.after_run;
 
     CTX.before_run = before_run;
 
@@ -434,7 +455,7 @@ void JUN_CoreRun(uint8_t fast_forward)
 	for (size_t i = 0; i < fast_forward * count; ++i)
 		CTX.sym.retro_run();
 
-	CTX.after_run = MTY_GetTime();
+	CTX.after_run = SDL_GetTicks();
 }
 
 void save_memory(uint32_t type, const char *path)
@@ -452,10 +473,10 @@ void save_memory(uint32_t type, const char *path)
 
 void JUN_CoreSaveMemories()
 {
-	if (MTY_TimeDiff(CTX.last_save, MTY_GetTime()) < 1000)
+	if (SDL_GetTicks() - CTX.last_save < 1000)
 		return;
 
-	CTX.last_save = MTY_GetTime();
+	CTX.last_save = SDL_GetTicks();
 
 	const char *sram_path = MTY_HashGetInt(CTX.paths, JUN_PATH_SRAM);
 	const char *rtc_path = MTY_HashGetInt(CTX.paths, JUN_PATH_RTC);

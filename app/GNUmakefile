@@ -1,5 +1,5 @@
 SRC_DIR := sources
-INC_DIR := include
+LIB_DIR := libraries
 RES_DIR := assets
 OUT_DIR := build
 
@@ -18,18 +18,22 @@ SRC := \
 	$(SRC_DIR)/state.c \
 	$(SRC_DIR)/interop.c \
 	$(SRC_DIR)/filesystem.c \
-	$(SRC_DIR)/configuration.c
+	$(SRC_DIR)/configuration.c \
+	$(LIB_DIR)/json.c \
+	$(LIB_DIR)/list.c \
+	$(LIB_DIR)/hash.c
+
+OBJ := $(SRC:.c=.o)
 
 PORTS := \
 	-sUSE_ZLIB \
 	-sUSE_SDL=2 \
 	-sUSE_SDL_IMAGE=2
 
-CFLAGS  := -I$(SRC_DIR) -I$(INC_DIR) $(PORTS) -fPIC
+CFLAGS  := -I$(SRC_DIR) -I$(LIB_DIR) $(PORTS) -fPIC -Wno-switch
 
 LDFLAGS := $(PORTS) \
 	--no-entry \
-	-Llibraries -lmatoya \
 	-sMODULARIZE \
 	-sEXPORT_ES6 \
 	-sSINGLE_FILE \
@@ -38,15 +42,12 @@ LDFLAGS := $(PORTS) \
 	-sLLD_REPORT_UNDEFINED \
 
 ifeq ($(DEBUG), 1)
-SRC     += $(SRC_DIR)/debug.c
 CFLAGS  += -O0 -D DEBUG
 LDFLAGS += -O0 -g -Wl,--error-limit=0
 else
 CFLAGS  += -O3
 LDFLAGS += -O3
 endif
-
-OBJ := $(SRC:.c=.o)
 
 LDFLAGS_GAME := $(LDFLAGS) \
 	--embed-file $(RES_DIR) \

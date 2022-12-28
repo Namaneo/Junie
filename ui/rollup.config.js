@@ -72,6 +72,8 @@ export default {
             '../app/GNUmakefile*',
             '../app/sources/*.c',
             '../app/sources/*.h',
+            '../app/libraries/*.c',
+            '../app/libraries/*.h',
         ]),
         nodeResolve({
 			preferBuiltins: true,
