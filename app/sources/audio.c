@@ -14,7 +14,7 @@ struct JUN_Audio
 
 JUN_Audio *JUN_AudioCreate()
 {
-	JUN_Audio *this = MTY_Alloc(1, sizeof(JUN_Audio));
+	JUN_Audio *this = calloc(1, sizeof(JUN_Audio));
 
 	SDL_InitSubSystem(SDL_INIT_AUDIO);
 
@@ -60,6 +60,6 @@ void JUN_AudioDestroy(JUN_Audio **audio)
 
 	SDL_QuitSubSystem(SDL_INIT_AUDIO);
 
-	MTY_Free(this);
+	free(this);
 	*audio = NULL;
 }

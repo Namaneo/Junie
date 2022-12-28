@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <string.h>
 #include <emscripten.h>
 
@@ -23,9 +24,9 @@ void *JUN_InteropReadFile(const char *path, int32_t *length)
 		*length = size;
 
 	} else if (data) {
-		void *tmp = MTY_Alloc(size + 1, 1);
+		void *tmp = calloc(size + 1, 1);
 		memcpy(tmp, data, size);
-		MTY_Free(data);
+		free(data);
 		data = tmp;
 	}
 

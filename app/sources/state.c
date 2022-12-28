@@ -22,7 +22,7 @@ struct JUN_State
 
 JUN_State *JUN_StateCreate()
 {
-	JUN_State *this = MTY_Alloc(1, sizeof(JUN_State));
+	JUN_State *this = calloc(1, sizeof(JUN_State));
 
 	this->has_gamepad = true;
 
@@ -118,6 +118,6 @@ bool JUN_StateShouldExit(JUN_State *this)
 
 void JUN_StateDestroy(JUN_State **this)
 {
-	MTY_Free(*this);
+	free(*this);
 	*this = NULL;
 }

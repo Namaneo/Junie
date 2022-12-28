@@ -65,7 +65,7 @@ void get_size(int32_t *width, int32_t *height);
 
 static void prepare_asset(JUN_Video *this, uint8_t id, const char *path, bool menu)
 {
-	struct jun_video_asset *asset = MTY_Alloc(1, sizeof(struct jun_video_asset));
+	struct jun_video_asset *asset = calloc(1, sizeof(struct jun_video_asset));
 
 	asset->image = IMG_Load(path);
 	asset->menu = menu;
@@ -78,7 +78,7 @@ static void prepare_asset(JUN_Video *this, uint8_t id, const char *path, bool me
 
 JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input)
 {
-	JUN_Video *this = MTY_Alloc(1, sizeof(JUN_Video));
+	JUN_Video *this = calloc(1, sizeof(JUN_Video));
 
 	this->state = state;
 	this->input = input;
@@ -292,12 +292,12 @@ void JUN_VideoDestroy(JUN_Video **video)
 	if (this->texture)
 		SDL_DestroyTexture(this->texture);
 
-	MTY_HashDestroy(&this->assets, MTY_Free);
+	MTY_HashDestroy(&this->assets, free);
 
 	SDL_DestroyRenderer(this->renderer);
 	SDL_DestroyWindow(this->window);
 	SDL_QuitSubSystem(SDL_INIT_VIDEO);
 
-	MTY_Free(this);
+	free(this);
 	*video = NULL;
 }

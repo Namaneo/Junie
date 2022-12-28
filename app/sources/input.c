@@ -44,7 +44,7 @@ struct JUN_Input {
 
 JUN_Input *JUN_InputCreate(JUN_State *state)
 {
-    JUN_Input *ctx = MTY_Alloc(1, sizeof(JUN_Input));
+    JUN_Input *ctx = calloc(1, sizeof(JUN_Input));
 
     float view_width = 0, view_height = 0;
 	JUN_StateGetWindowMetrics(state, &view_width, &view_height);
@@ -61,7 +61,7 @@ void JUN_InputDestroy(JUN_Input **input)
 
 	JUN_Input *ctx = *input;
 
-	MTY_Free(ctx);
+	free(ctx);
 	*input = NULL;
 }
 

@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "configuration.h"
 
 typedef struct JUN_ConfigurationElement JUN_ConfigurationElement;
@@ -17,7 +19,7 @@ struct JUN_ConfigurationElement
 
 JUN_Configuration *JUN_ConfigurationCreate()
 {
-	JUN_Configuration *this = MTY_Alloc(1, sizeof(JUN_Configuration));
+	JUN_Configuration *this = calloc(1, sizeof(JUN_Configuration));
 
 	this->values = MTY_HashCreate(0);
 	this->overrides = MTY_HashCreate(0);
@@ -44,7 +46,7 @@ char *JUN_ConfigurationGet(JUN_Configuration *this, const char *key)
 
 void JUN_ConfigurationSet(JUN_Configuration *this, const char *key, const char *value)
 {
-	JUN_ConfigurationElement *element = MTY_Alloc(1, sizeof(JUN_ConfigurationElement));
+	JUN_ConfigurationElement *element = calloc(1, sizeof(JUN_ConfigurationElement));
 
 	char *content = MTY_Strdup(value);
 
@@ -66,7 +68,7 @@ void JUN_ConfigurationSet(JUN_Configuration *this, const char *key, const char *
 
 	MTY_HashSet(this->values, key, element);
 
-	MTY_Free(content);
+	free(content);
 }
 
 void JUN_ConfigurationOverride(JUN_Configuration *this, const char *key, const char *value)
@@ -81,9 +83,9 @@ void JUN_ConfigurationDestroy(JUN_Configuration **configuration)
 
 	JUN_Configuration *this = *configuration;
 
-	MTY_HashDestroy(&this->values, MTY_Free);
-	MTY_HashDestroy(&this->overrides, MTY_Free);
+	MTY_HashDestroy(&this->values, free);
+	MTY_HashDestroy(&this->overrides, free);
 
-	MTY_Free(this);
+	free(this);
 	*configuration = NULL;
 }

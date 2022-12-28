@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <string.h>
 
 #include "matoya.h"
@@ -43,9 +44,9 @@ static int closedir(JUN_Directory *dirstream);
 
 void JUN_FilesystemCreate()
 {
-	files = MTY_Alloc(MAX_FILES, sizeof(JUN_File));
+	files = calloc(MAX_FILES, sizeof(JUN_File));
 
-	interface = MTY_Alloc(1, sizeof(JUN_Files));
+	interface = calloc(1, sizeof(JUN_Files));
 
 	/* V1 */
 	interface->get_path = get_path;
@@ -131,8 +132,8 @@ void JUN_FilesystemSaveFile(const char *path, const void *buffer, size_t length)
 
 	file->size = length;
 	file->buffer = file->buffer
-		? MTY_Realloc(file->buffer, file->size, 1)
-		: MTY_Alloc(file->size, 1);
+		? realloc(file->buffer, file->size)
+		: calloc(file->size, 1);
 
 	memcpy(file->buffer, buffer, file->size);
 
@@ -143,16 +144,16 @@ void JUN_FilesystemDestroy()
 {
 	for (int i = 0; files && i < MAX_FILES; ++i) {
 		if (files[i].path)
-			MTY_Free(files[i].path);
+			free(files[i].path);
 
 		if (files[i].buffer)
-			MTY_Free(files[i].buffer);
+			free(files[i].buffer);
 	}
 
-	MTY_Free(files);
+	free(files);
 	files = NULL;
 
-	MTY_Free(interface);
+	free(interface);
 	interface = NULL;
 }
 
@@ -239,7 +240,7 @@ static int64_t write(JUN_File *stream, const void *s, uint64_t len)
 	uint64_t total_size = stream->offset + len;
 	if (total_size > stream->size) {
 		stream->size = total_size;
-		stream->buffer = MTY_Realloc(stream->buffer, total_size, 1);
+		stream->buffer = realloc(stream->buffer, total_size);
 	}
 
 	memcpy(stream->buffer + stream->offset, s, len);
@@ -272,7 +273,7 @@ static int remove(const char *path)
 	file->offset = 0;
 
 	if (file->buffer)
-		MTY_Free(file->buffer);
+		free(file->buffer);
 	file->buffer = NULL;
 
 	return 0;
@@ -286,7 +287,7 @@ static int rename(const char *old_path, const char *new_path)
 	if (!file)
 		return -1;
 
-	MTY_Free(file->path);
+	free(file->path);
 	file->path = MTY_Strdup(new_path);
 
 	return 0;
@@ -300,7 +301,7 @@ static int64_t truncate(JUN_File *stream, int64_t length)
 		return -1;
 
 	stream->size = length;
-	stream->buffer = MTY_Realloc(stream->buffer, length, 1);
+	stream->buffer = realloc(stream->buffer, length);
 
 	return 0;
 }

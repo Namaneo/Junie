@@ -153,7 +153,7 @@ static bool jun_core_environment(unsigned cmd, void *data)
 
 		MTY_JSONArraySetItem(defaults, i_entry, item);
 
-		MTY_Free(value);
+		free(value);
 	}
 
 	return true;
@@ -165,7 +165,7 @@ static char *remove_extension(const char *str)
 		return NULL;
 
 	size_t length = (uint64_t) strrchr(str, '.') - (uint64_t) str;
-	char *result = MTY_Alloc(length + 1, 1);
+	char *result = calloc(length + 1, 1);
 	memcpy(result, str, length);
 
 	return result;
@@ -186,7 +186,7 @@ void JUN_CoreCreate(const char *system, const char *rom, const char *settings, c
 	MTY_HashSetInt(CTX.paths, JUN_PATH_RTC,    MTY_SprintfD("%s/%s/%s.rtc",   system, game, game));
 	MTY_HashSetInt(CTX.paths, JUN_PATH_CHEATS, MTY_SprintfD("%s/%s/%s.cht",   system, game, game));
 
-	MTY_Free(game);
+	free(game);
 
 	CTX.configuration = JUN_ConfigurationCreate();
 	MTY_JSON *overrides = MTY_JSONParse(settings);
@@ -393,7 +393,7 @@ bool JUN_CoreStartGame()
 	CTX.game.path = game->path;
 	CTX.game.size = game->size;
 	if (!CTX.system.need_fullpath) {
-		CTX.game.data = MTY_Alloc(CTX.game.size, 1);
+		CTX.game.data = calloc(CTX.game.size, 1);
 		memcpy((void *) CTX.game.data, game->buffer, CTX.game.size);
 	}
 
@@ -524,7 +524,7 @@ void JUN_CoreSetCheats()
 	}
 
 	MTY_JSONDestroy(&json);
-	MTY_Free(data);
+	free(data);
 }
 
 void JUN_CoreResetCheats()
@@ -536,14 +536,14 @@ void JUN_CoreSaveState()
 {
 	size_t size = CTX.sym.retro_serialize_size();
 
-	void *data = MTY_Alloc(size, 1);
+	void *data = calloc(size, 1);
 
 	CTX.sym.retro_serialize(data, size);
 
 	const char *state_path = MTY_HashGetInt(CTX.paths, JUN_PATH_STATE);
 	JUN_FilesystemSaveFile(state_path, data, size);
 
-	MTY_Free(data);
+	free(data);
 }
 
 void JUN_CoreRestoreState()
@@ -563,8 +563,8 @@ void JUN_CoreDestroy()
 	CTX.sym.retro_deinit();
 
 	JUN_ConfigurationDestroy(&CTX.configuration);
-	MTY_HashDestroy(&CTX.paths, MTY_Free);
-	MTY_Free((void *) CTX.game.data);
+	MTY_HashDestroy(&CTX.paths, free);
+	free((void *) CTX.game.data);
 
 	UNLOAD_LIBRARY();
 

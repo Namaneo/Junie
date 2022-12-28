@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "filesystem.h"
 #include "interop.h"
@@ -8,7 +9,7 @@
 
 JUN_App *JUN_AppCreate()
 {
-	JUN_App *this = MTY_Alloc(1, sizeof(JUN_App));
+	JUN_App *this = calloc(1, sizeof(JUN_App));
 
 	JUN_SetLogFunc();
 
@@ -32,6 +33,6 @@ void JUN_AppDestroy(JUN_App **app)
 	JUN_StateDestroy(&this->state);
 	JUN_AudioDestroy(&this->audio);
 
-	MTY_Free(this);
+	free(this);
 	*app = NULL;
 }
