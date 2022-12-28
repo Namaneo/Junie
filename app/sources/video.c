@@ -83,7 +83,7 @@ JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input)
 	this->state = state;
 	this->input = input;
 
-	SDL_Init(SDL_INIT_VIDEO);
+	SDL_InitSubSystem(SDL_INIT_VIDEO);
 	SDL_CreateWindowAndRenderer(600, 400, 0, &this->window, &this->renderer);
 
 	this->assets = MTY_HashCreate(0);
@@ -296,7 +296,7 @@ void JUN_VideoDestroy(JUN_Video **video)
 
 	SDL_DestroyRenderer(this->renderer);
 	SDL_DestroyWindow(this->window);
-	SDL_Quit();
+	SDL_QuitSubSystem(SDL_INIT_VIDEO);
 
 	MTY_Free(this);
 	*video = NULL;

@@ -18,7 +18,6 @@ const resources = [
 ];
 
 const cacheResources = async () => {
-	await self.skipWaiting();
     const cache = await caches.open(version);
     await cache.addAll(resources);
 };

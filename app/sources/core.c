@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <SDL/SDL.h>
 
 #include "libretro.h"
 
@@ -9,9 +10,9 @@
 #include "core.h"
 
 #if defined(DYNAMIC)
-#define LOAD_LIBRARY(path)   CTX.sym.library = MTY_SOLoad(path);
-#define UNLOAD_LIBRARY()     MTY_SOUnload(&CTX.sym.library);
-#define MAP_SYMBOL(function) CTX.sym.function = MTY_SOGetSymbol(CTX.sym.library, #function);
+#define LOAD_LIBRARY(path)   CTX.sym.library = SDL_LoadObject(path);
+#define UNLOAD_LIBRARY()     SDL_UnloadObject(CTX.sym.library);
+#define MAP_SYMBOL(function) CTX.sym.function = SDL_LoadFunction(CTX.sym.library, #function);
 #else
 #define LOAD_LIBRARY(path)   {}
 #define UNLOAD_LIBRARY()     {}
@@ -30,7 +31,7 @@ typedef enum {
 } JUN_PathType;
 
 struct jun_core_sym {
-	MTY_SO *library;
+	void *library;
 	bool initialized;
 
 	void (*retro_init)(void);
@@ -58,7 +59,7 @@ struct jun_core_sym {
 };
 
 static MTY_JSON *defaults;
-
+#include <dlfcn.h>
 static struct CTX {
 	bool initialized;
 

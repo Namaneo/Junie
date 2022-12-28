@@ -70,7 +70,11 @@ void main_loop(void *opaque)
 {
 	JUN_App *app = opaque;
 
-	JUN_CoreRun(JUN_StateGetFastForward(app->state));
+	uint32_t fast_forward = JUN_StateGetFastForward(app->state);
+	double sample_rate = JUN_CoreGetSampleRate() * fast_forward;
+
+	JUN_AudioSetSampleRate(app->audio, sample_rate);
+	JUN_CoreRun(fast_forward);
 	JUN_VideoPresent(app->video);
 
 	if (JUN_StateShouldExit(app->state)) {
@@ -124,8 +128,6 @@ void start_game(const char *system, const char *rom, const char *settings)
 
 	JUN_CoreRestoreMemories();
 	JUN_CoreSetCheats();
-
-	JUN_AudioSetSampleRate(app->audio, JUN_CoreGetSampleRate());
 
 	JUN_InteropShowUI(false);
 	emscripten_set_main_loop_arg(main_loop, app, 0, 0);

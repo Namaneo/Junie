@@ -1,6 +1,6 @@
+#include <stdio.h>
 #include <string.h>
-#include <AL/al.h>
-#include <AL/alc.h>
+#include <SDL2/SDL.h>
 
 #include "state.h"
 
@@ -9,63 +9,43 @@
 struct JUN_Audio
 {
 	double sample_rate;
-
-	ALCdevice *device;
-	ALCcontext *context;
-	uint32_t source;
+	SDL_AudioDeviceID device;
 };
 
 JUN_Audio *JUN_AudioCreate()
 {
 	JUN_Audio *this = MTY_Alloc(1, sizeof(JUN_Audio));
 
-	this->device = alcOpenDevice(NULL);
-	this->context = alcCreateContext(this->device, NULL);
-	alcMakeContextCurrent(this->context);
-
-	alGenSources(1, &this->source);
+	SDL_InitSubSystem(SDL_INIT_AUDIO);
 
 	return this;
 }
 
 void JUN_AudioSetSampleRate(JUN_Audio *this, double sample_rate)
 {
+	if (this->sample_rate == sample_rate)
+		return;
+
+	if (this->device)
+		SDL_CloseAudioDevice(this->device);
+
+	SDL_AudioSpec desired = {0};
+	SDL_AudioSpec obtained = {0};
+
+	desired.format = AUDIO_S16LSB;
+	desired.channels = 2;
+	desired.freq = sample_rate;
+	desired.samples = 512;
+
+	this->device = SDL_OpenAudioDevice(NULL, 0, &desired, &obtained, 0);
+	SDL_PauseAudioDevice(this->device, false);
+
 	this->sample_rate = sample_rate;
-}
-
-static void jun_unqueue_buffers(JUN_Audio *this)
-{
-	int32_t processed_len = 0;
-	alGetSourcei(this->source, AL_BUFFERS_PROCESSED, &processed_len);
-
-	uint32_t processed[processed_len];
-	alSourceUnqueueBuffers(this->source, processed_len, processed);
-
-	if (processed_len)
-		alDeleteBuffers(processed_len, processed);
 }
 
 void JUN_AudioQueue(JUN_Audio *this, const int16_t *data, size_t frames)
 {
-	jun_unqueue_buffers(this);
-
-	int32_t queued_len = 0;
-	alGetSourcei(this->source, AL_BUFFERS_QUEUED, &queued_len);
-
-	if (queued_len < 5) {
-		uint32_t buffer = 0;
-		uint32_t data_size = sizeof(int16_t) * frames * 2;
-		uint32_t sample_rate = this->sample_rate;
-
-		alGenBuffers(1, &buffer);
-		alBufferData(buffer, AL_FORMAT_STEREO16, data, data_size, sample_rate);
-		alSourceQueueBuffers(this->source, 1, &buffer);
-	}
-
-	int32_t state = 0;
-	alGetSourcei(this->source, AL_SOURCE_STATE, &state);
-	if (state != AL_PLAYING)
-		alSourcePlay(this->source);
+	SDL_QueueAudio(this->device, data, frames * 2 * sizeof(int16_t));
 }
 
 void JUN_AudioDestroy(JUN_Audio **audio)
@@ -75,13 +55,10 @@ void JUN_AudioDestroy(JUN_Audio **audio)
 
 	JUN_Audio *this = *audio;
 
-	alDeleteSources(1, &this->source);
+	if (this->device)
+		SDL_CloseAudioDevice(this->device);
 
-	jun_unqueue_buffers(this);
-
-	alcMakeContextCurrent(NULL);
-	alcDestroyContext(this->context);
-	alcCloseDevice(this->device);
+	SDL_QuitSubSystem(SDL_INIT_AUDIO);
 
 	MTY_Free(this);
 	*audio = NULL;
