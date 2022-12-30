@@ -1,7 +1,5 @@
 #pragma once
 
-#include "matoya.h"
-
 typedef struct JUN_Audio JUN_Audio;
 
 JUN_Audio *JUN_AudioCreate();

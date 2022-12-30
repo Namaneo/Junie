@@ -1,6 +1,5 @@
 #pragma once
 
-#include "matoya.h"
 #include "libretro.h"
 
 #define MAX_FILES 32

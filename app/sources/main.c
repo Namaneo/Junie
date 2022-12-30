@@ -3,7 +3,6 @@
 #include <string.h>
 #include <SDL2/SDL.h>
 
-#include "matoya.h"
 #include "filesystem.h"
 #include "interop.h"
 
@@ -99,7 +98,9 @@ void main_loop(void *opaque)
 
 char *get_settings()
 {
-	return MTY_JSONSerialize(JUN_CoreGetDefaultConfiguration(NULL));
+	SDL_LogSetAllPriority(SDL_LOG_PRIORITY_CRITICAL);
+
+	return JUN_CoreGetDefaultConfiguration(NULL);
 }
 
 void start_game(const char *system, const char *rom, const char *settings)

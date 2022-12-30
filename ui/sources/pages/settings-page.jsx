@@ -58,10 +58,10 @@ export const SettingsPage = () => {
     const openModal = (name) => {
         const data =  { name: name };
 
-        data.items = options[name].map(option => new Object({
-			key: option.key,
-			name: option.name,
-			options: option.options.map(value => new Object({
+        data.items = Object.keys(options[name]).map(key => new Object({
+			key: key,
+			name: options[name][key].name,
+			options: options[name][key].options.map(value => new Object({
 				key: value,
 				name: value
 			})),

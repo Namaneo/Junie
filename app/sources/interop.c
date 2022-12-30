@@ -2,7 +2,6 @@
 #include <string.h>
 #include <emscripten.h>
 
-#include "matoya.h"
 #include "interop.h"
 
 static void interop_show_ui(bool show)

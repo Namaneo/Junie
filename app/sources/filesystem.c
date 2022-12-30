@@ -2,8 +2,6 @@
 #include <string.h>
 #include <SDL2/SDL.h>
 
-#include "matoya.h"
-
 #include "interop.h"
 
 #include "filesystem.h"

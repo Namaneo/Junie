@@ -1,7 +1,5 @@
 #pragma once
 
-#include "configuration.h"
-
 #include "libretro.h"
 
 typedef bool (*JUN_CoreEnvironmentFunc)(unsigned cmd, void *data, void *opaque);
@@ -23,7 +21,7 @@ typedef struct {
 } JUN_CoreCallbacks;
 
 void JUN_CoreCreate(const char *system, const char *rom, const char *settings, const char *library);
-const MTY_JSON *JUN_CoreGetDefaultConfiguration(const char *library);
+char *JUN_CoreGetDefaultConfiguration(const char *library);
 void JUN_CoreSetCallbacks(JUN_CoreCallbacks *callbacks);
 bool JUN_CoreEnvironment(unsigned cmd, void *data);
 double JUN_CoreGetSampleRate();

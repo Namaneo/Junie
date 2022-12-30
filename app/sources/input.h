@@ -4,8 +4,6 @@
 
 #include "state.h"
 
-#include "matoya.h"
-
 #define JUN_MENU_MASK 0xF0
 
 typedef enum {

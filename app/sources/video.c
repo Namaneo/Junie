@@ -2,6 +2,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
+#include "stb_ds.h"
+
 #include "filesystem.h"
 #include "interop.h"
 
@@ -45,7 +47,7 @@ struct jun_video_asset {
 struct JUN_Video {
 	SDL_Window *window;
 	SDL_Renderer *renderer;
-	MTY_Hash *assets;
+	struct { uint32_t key; struct jun_video_asset *value; } *assets;
 
 	JUN_State *state;
 	JUN_Input *input;
@@ -71,7 +73,7 @@ static void prepare_asset(JUN_Video *this, uint8_t id, const char *path, bool me
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 	asset->texture = SDL_CreateTextureFromSurface(this->renderer, asset->image);
 
-	MTY_HashSetInt(this->assets, id, asset);
+	hmput(this->assets, id, asset);
 }
 
 JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input)
@@ -83,8 +85,6 @@ JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input)
 
 	SDL_InitSubSystem(SDL_INIT_VIDEO);
 	SDL_CreateWindowAndRenderer(600, 400, 0, &this->window, &this->renderer);
-
-	this->assets = MTY_HashCreate(0);
 
 	PREPARE(MENU_TOGGLE_AUDIO,   "menu", "toggle_audio");
 	PREPARE(MENU_TOGGLE_GAMEPAD, "menu", "toggle_gamepad");
@@ -113,7 +113,7 @@ JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input)
 
 static void draw_input(JUN_Video *this, uint8_t id, struct jun_draw_desc *desc)
 {
-	struct jun_video_asset *asset = (struct jun_video_asset *) MTY_HashGetInt(this->assets, id);
+	struct jun_video_asset *asset = hmget(this->assets, id);
 
 	double aspect_ratio = (double) asset->image->w / (double) asset->image->h;
 
@@ -257,8 +257,8 @@ void JUN_VideoDrawUI(JUN_Video *this)
 	int64_t key = 0;
 	uint64_t iter = 0;
 
-	while (MTY_HashGetNextKeyInt(this->assets, &iter, &key)) {
-		struct jun_video_asset *asset = (struct jun_video_asset *) MTY_HashGetInt(this->assets, key);
+	for (size_t i = 0; i < hmlen(this->assets); i++) {
+		struct jun_video_asset *asset = this->assets[i].value;
 
 		if (!gamepad && !asset->menu)
 			continue;
@@ -272,16 +272,6 @@ void JUN_VideoPresent(JUN_Video *this)
 	SDL_RenderPresent(this->renderer);
 }
 
-static void free_asset(void *ptr)
-{
-	struct jun_video_asset *asset = ptr;
-
-	SDL_DestroyTexture(asset->texture);
-	SDL_FreeSurface(asset->image);
-
-	free(asset);
-}
-
 void JUN_VideoDestroy(JUN_Video **video)
 {
 	if (!video || !*video)
@@ -292,7 +282,14 @@ void JUN_VideoDestroy(JUN_Video **video)
 	if (this->texture)
 		SDL_DestroyTexture(this->texture);
 
-	MTY_HashDestroy(&this->assets, free_asset);
+	for (size_t i = 0; i < hmlen(this->assets); i++) {
+		struct jun_video_asset *asset = this->assets[i].value;
+
+		SDL_DestroyTexture(asset->texture);
+		SDL_FreeSurface(asset->image);
+	}
+
+	hmfree(this->assets);
 
 	SDL_DestroyRenderer(this->renderer);
 	SDL_DestroyWindow(this->window);

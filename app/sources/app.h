@@ -1,7 +1,5 @@
 #pragma once
 
-#include "matoya.h"
-
 #include "core.h"
 #include "state.h"
 #include "input.h"

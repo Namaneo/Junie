@@ -1,7 +1,5 @@
 #include <stdlib.h>
 
-#include "matoya.h"
-
 #include "state.h"
 
 struct JUN_State

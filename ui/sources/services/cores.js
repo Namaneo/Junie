@@ -42,7 +42,6 @@ async function createCore(name, graphics) {
 
 	const core = {};
 	core.module = await (await import(`${origin}/cores/${name}.js`)).default({ canvas: graphics });
-	core.settings = JSON.parse(core.module.UTF8ToString(core.module._get_settings()));
 
 	cores[name] = core;
 }
@@ -59,12 +58,14 @@ export async function getSettings() {
 		createCore('snes9x'),
 	]);
 
+	const get = module => module ? JSON.parse(module.UTF8ToString(module._get_settings())) : [];
+
 	tools.settings = {
-		'Genesis Plus GX': cores.genesis?.settings  || [],
-		'melonDS':         cores.melonds?.settings  || [],
-		'mGBA':            cores.mgba?.settings     || [],
-		'Nestopia':        cores.nestopia?.settings || [],
-		'Snes9x':          cores.snes9x?.settings   || [],
+		'Genesis Plus GX': get(cores.genesis?.module),
+		'melonDS':         get(cores.melonds?.module),
+		'mGBA':            get(cores.mgba?.module),
+		'Nestopia':        get(cores.nestopia?.module),
+		'Snes9x':          get(cores.snes9x?.module),
 	};
 
 	delete cores.genesis;

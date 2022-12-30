@@ -18,10 +18,8 @@ SRC := \
 	$(SRC_DIR)/state.c \
 	$(SRC_DIR)/interop.c \
 	$(SRC_DIR)/filesystem.c \
-	$(SRC_DIR)/configuration.c \
-	$(LIB_DIR)/json.c \
-	$(LIB_DIR)/list.c \
-	$(LIB_DIR)/hash.c
+	$(LIB_DIR)/stb.c \
+	$(LIB_DIR)/parson.c
 
 OBJ := $(SRC:.c=.o)
 

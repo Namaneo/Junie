@@ -3,6 +3,8 @@
 #include <SDL2/SDL.h>
 
 #include "libretro.h"
+#include "stb_ds.h"
+#include "parson.h"
 
 #include "filesystem.h"
 #include "interop.h"
@@ -58,14 +60,14 @@ struct jun_core_sym {
 	void (*retro_deinit)(void);
 };
 
-static MTY_JSON *defaults;
-
 static struct CTX {
 	bool initialized;
 
-	MTY_Hash *paths;
-	JUN_Configuration *configuration;
+	struct { uint32_t key; char *value; } *paths;
 	JUN_CoreCallbacks callbacks;
+
+	JSON_Value *settings;
+	JSON_Value *overrides;
 
 	struct retro_game_info game;
 	struct retro_system_info system;
@@ -119,39 +121,38 @@ static bool jun_core_environment(unsigned cmd, void *data)
 	if (command != RETRO_ENVIRONMENT_SET_VARIABLES)
 		return false;
 
-	defaults = MTY_JSONArrayCreate(100);
+	CTX.settings = json_value_init_object();
 
 	const struct retro_variable *variables = data;
 
-	for (size_t i_entry = 0; i_entry < SIZE_MAX; i_entry++) {
-		const struct retro_variable *variable = &variables[i_entry];
+	for (size_t i = 0; i < SIZE_MAX; i++) {
+		const struct retro_variable *variable = &variables[i];
 
 		if (!variable->key || !variable->value)
 			break;
 
-		MTY_JSON *item = MTY_JSONObjCreate();
-		MTY_JSONObjSetString(item, "key", variable->key);
+		SDL_LogInfo(0, "SET -> %s: %s", variable->key, variable->value);
+
+		JSON_Value *item = json_value_init_object();
 
 		char *ptr = NULL;
 		char *value = SDL_strdup(variable->value);
 
 		char *name = SDL_strtokr(value, ";", &ptr);
-		MTY_JSONObjSetString(item, "name", name);
+		json_object_set_string(json_object(item), "name", name);
 
 		ptr += 1;
 		char *element = SDL_strtokr(NULL, "|", &ptr);
-		MTY_JSONObjSetString(item, "default", element);
+		json_object_set_string(json_object(item), "default", element);
 
-		uint32_t i_option = 0;
-		MTY_JSON *options = MTY_JSONArrayCreate(100);
+		JSON_Array *options = json_array(json_value_init_array());
 		while (element) {
-			MTY_JSONArraySetString(options, i_option, element);
+			json_array_append_string(options, element);
 			element = SDL_strtokr(NULL, "|", &ptr);
-			i_option++;
 		}
-		MTY_JSONObjSetItem(item, "options", options);
+		json_object_set_value(json_object(item), "options", json_array_get_wrapping_value(options));
 
-		MTY_JSONArraySetItem(defaults, i_entry, item);
+		json_object_set_value(json_object(CTX.settings), variable->key, item);
 
 		free(value);
 	}
@@ -193,34 +194,22 @@ static void create_paths(const char *system, const char *rom)
 
 	free(game);
 
-	MTY_HashSetInt(CTX.paths, JUN_PATH_SYSTEM, path_system);
-	MTY_HashSetInt(CTX.paths, JUN_PATH_GAME,   path_game);
-	MTY_HashSetInt(CTX.paths, JUN_PATH_SAVES,  path_saves);
-	MTY_HashSetInt(CTX.paths, JUN_PATH_STATE,  path_state);
-	MTY_HashSetInt(CTX.paths, JUN_PATH_SRAM,   path_sram);
-	MTY_HashSetInt(CTX.paths, JUN_PATH_RTC,    path_rtc);
-	MTY_HashSetInt(CTX.paths, JUN_PATH_CHEATS, path_cheats);
+	hmput(CTX.paths, JUN_PATH_SYSTEM, path_system);
+	hmput(CTX.paths, JUN_PATH_GAME,   path_game);
+	hmput(CTX.paths, JUN_PATH_SAVES,  path_saves);
+	hmput(CTX.paths, JUN_PATH_STATE,  path_state);
+	hmput(CTX.paths, JUN_PATH_SRAM,   path_sram);
+	hmput(CTX.paths, JUN_PATH_RTC,    path_rtc);
+	hmput(CTX.paths, JUN_PATH_CHEATS, path_cheats);
 }
 
 void JUN_CoreCreate(const char *system, const char *rom, const char *settings, const char *library)
 {
 	JUN_FilesystemCreate();
 
-	CTX.paths = MTY_HashCreate(0);
-	CTX.configuration = JUN_ConfigurationCreate();
+	CTX.overrides = json_parse_string(settings);
 
 	create_paths(system, rom);
-
-	uint64_t iter = 0;
-	const char *key = NULL;
-	MTY_JSON *overrides = MTY_JSONParse(settings);
-	while (MTY_JSONObjGetNextKey(overrides, &iter, &key)) {
-		const char *value = MTY_JSONObjGetStringPtr(overrides, key);
-		JUN_ConfigurationOverride(CTX.configuration, key, value);
-	}
-
-	MTY_JSONDestroy(&overrides);
-
 	initialize_symbols(library);
 }
 
@@ -257,14 +246,14 @@ bool JUN_CoreEnvironment(unsigned cmd, void *data)
 		case RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY: {
 			const char **system_directory = data;
 
-			*system_directory = MTY_HashGetInt(CTX.paths, JUN_PATH_SYSTEM);
+			*system_directory = hmget(CTX.paths, JUN_PATH_SYSTEM);
 
 			return true;
 		}
 		case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY: {
 			const char **save_directory = data;
 
-			*save_directory = MTY_HashGetInt(CTX.paths, JUN_PATH_SAVES);
+			*save_directory = hmget(CTX.paths, JUN_PATH_SAVES);
 
 			return true;
 		}
@@ -284,26 +273,23 @@ bool JUN_CoreEnvironment(unsigned cmd, void *data)
 			return true;
 		}
 		case RETRO_ENVIRONMENT_SET_VARIABLES: {
-			const struct retro_variable *variables = data;
-
-			for (uint32_t x = 0; x < UINT32_MAX; x++)
-			{
-				const struct retro_variable *variable = &variables[x];
-
-				if (!variable->key || !variable->value)
-					break;
-
-				JUN_ConfigurationSet(CTX.configuration, variable->key, variable->value);
-
-				SDL_LogInfo(0, "SET -> %s: %s", variable->key, variable->value);
-			}
+			jun_core_environment(cmd, data);
 
 			return true;
 		}
 		case RETRO_ENVIRONMENT_GET_VARIABLE: {
 			struct retro_variable *variable = data;
 
-			variable->value = JUN_ConfigurationGet(CTX.configuration, variable->key);
+			const char *override = json_object_get_string(json_object(CTX.overrides), variable->key);
+			if (override) {
+				variable->value = override;
+
+			} else {
+				const JSON_Value *setting = json_object_get_value(json_object(CTX.settings), variable->key);
+
+				if (setting)
+					variable->value = json_object_get_string(json_object(setting), "default");
+			}
 
 			SDL_LogInfo(0, "GET -> %s: %s", variable->key, variable->value);
 
@@ -333,16 +319,18 @@ bool JUN_CoreEnvironment(unsigned cmd, void *data)
 	}
 }
 
-const MTY_JSON *JUN_CoreGetDefaultConfiguration(const char *library)
+char *JUN_CoreGetDefaultConfiguration(const char *library)
 {
 	initialize_symbols(library);
 
 	CTX.sym.retro_set_environment(jun_core_environment);
 	CTX.sym.retro_init();
 
+	char *settings = json_serialize_to_string(CTX.settings);
+
 	JUN_CoreDestroy();
 
-	return defaults;
+	return settings;
 }
 
 void JUN_CoreSetCallbacks(JUN_CoreCallbacks *callbacks)
@@ -408,7 +396,7 @@ bool JUN_CoreStartGame()
 
 	CTX.sym.retro_get_system_info(&CTX.system);
 
-	const char *game_path = MTY_HashGetInt(CTX.paths, JUN_PATH_GAME);
+	const char *game_path = hmget(CTX.paths, JUN_PATH_GAME);
 	JUN_File *game = JUN_FilesystemGetExistingFile(game_path);
 
 	CTX.game.path = game->path;
@@ -478,8 +466,8 @@ void JUN_CoreSaveMemories()
 
 	CTX.last_save = SDL_GetTicks();
 
-	const char *sram_path = MTY_HashGetInt(CTX.paths, JUN_PATH_SRAM);
-	const char *rtc_path = MTY_HashGetInt(CTX.paths, JUN_PATH_RTC);
+	const char *sram_path = hmget(CTX.paths, JUN_PATH_SRAM);
+	const char *rtc_path = hmget(CTX.paths, JUN_PATH_RTC);
 
 	save_memory(RETRO_MEMORY_SAVE_RAM, sram_path);
 	save_memory(RETRO_MEMORY_RTC, rtc_path);
@@ -504,8 +492,8 @@ static void restore_memory(uint32_t type, const char *path)
 
 void JUN_CoreRestoreMemories()
 {
-	const char *sram_path = MTY_HashGetInt(CTX.paths, JUN_PATH_SRAM);
-	const char *rtc_path = MTY_HashGetInt(CTX.paths, JUN_PATH_RTC);
+	const char *sram_path = hmget(CTX.paths, JUN_PATH_SRAM);
+	const char *rtc_path = hmget(CTX.paths, JUN_PATH_RTC);
 
 	restore_memory(RETRO_MEMORY_SAVE_RAM, sram_path);
 	restore_memory(RETRO_MEMORY_RTC, rtc_path);
@@ -516,35 +504,31 @@ void JUN_CoreSetCheats()
 	char *path = NULL;
 	size_t index = 0;
 
-	const char *cheats_path = MTY_HashGetInt(CTX.paths, JUN_PATH_CHEATS);
+	const char *cheats_path = hmget(CTX.paths, JUN_PATH_CHEATS);
 
 	char *data = JUN_InteropReadFile(cheats_path, NULL);
 	if (!data)
 		return;
 
-	MTY_JSON *json = MTY_JSONParse(data);
-	for (size_t i = 0; i < MTY_JSONArrayGetLength(json); ++i) {
-		const MTY_JSON *cheat = MTY_JSONArrayGetItem(json, i);
+	JSON_Value *json = json_parse_string(data);
+	for (size_t i = 0; i < json_array_get_count(json_array(json)); i++) {
+		const JSON_Value *cheat = json_array_get_value(json_array(json), i);
 
-		bool enabled = false;
-		MTY_JSONObjGetBool(cheat, "enabled", &enabled);
+		bool enabled = json_object_get_boolean(json_object(cheat), "enabled");
 		if (!enabled)
 			continue;
 
-		int32_t order = 0;
-		MTY_JSONObjGetInt(cheat, "order", &order);
+		int32_t order = json_object_get_number(json_object(cheat), "order");
 
-		char value[1024] = {0};
-		MTY_JSONObjGetString(cheat, "value", value, 1024);
-		for (size_t i = 0; i < strlen(value); i++) {
+		char *value = SDL_strdup(json_object_get_string(json_object(cheat), "value"));
+		for (size_t i = 0; i < strlen(value); i++)
 			if (value[i] == ' ' || value[i] == '\n')
 				value[i] = '+';
-		}
 
 		CTX.sym.retro_cheat_set(order, enabled, value);
 	}
 
-	MTY_JSONDestroy(&json);
+	json_value_free(json);
 	free(data);
 }
 
@@ -561,7 +545,7 @@ void JUN_CoreSaveState()
 
 	CTX.sym.retro_serialize(data, size);
 
-	const char *state_path = MTY_HashGetInt(CTX.paths, JUN_PATH_STATE);
+	const char *state_path = hmget(CTX.paths, JUN_PATH_STATE);
 	JUN_FilesystemSaveFile(state_path, data, size);
 
 	free(data);
@@ -571,7 +555,7 @@ void JUN_CoreRestoreState()
 {
 	size_t size = CTX.sym.retro_serialize_size();
 
-	const char *state_path = MTY_HashGetInt(CTX.paths, JUN_PATH_STATE);
+	const char *state_path = hmget(CTX.paths, JUN_PATH_STATE);
 	JUN_File *file = JUN_FilesystemGetExistingFile(state_path);
 	if (!file)
 		return;
@@ -583,8 +567,13 @@ void JUN_CoreDestroy()
 {
 	CTX.sym.retro_deinit();
 
-	JUN_ConfigurationDestroy(&CTX.configuration);
-	MTY_HashDestroy(&CTX.paths, free);
+	json_value_free(CTX.settings);
+	json_value_free(CTX.overrides);
+
+	for (size_t i = 0; i < hmlen(CTX.paths); i++)
+		free(CTX.paths[i].value);
+	hmfree(CTX.paths);
+
 	free((void *) CTX.game.data);
 
 	UNLOAD_LIBRARY();
