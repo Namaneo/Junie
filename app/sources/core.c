@@ -3,7 +3,6 @@
 #include <SDL2/SDL.h>
 
 #include "libretro.h"
-#include "stb_ds.h"
 #include "parson.h"
 
 #include "filesystem.h"
@@ -22,14 +21,14 @@
 #endif
 
 typedef enum {
-	JUN_PATH_GAME   = 1,
-	JUN_PATH_STATE  = 2,
-	JUN_PATH_SRAM   = 3,
-	JUN_PATH_RTC    = 4,
-	JUN_PATH_CHEATS = 7,
+	JUN_PATH_GAME   = 0,
+	JUN_PATH_STATE  = 1,
+	JUN_PATH_SRAM   = 2,
+	JUN_PATH_RTC    = 3,
+	JUN_PATH_CHEATS = 4,
 	JUN_PATH_SAVES  = 5,
 	JUN_PATH_SYSTEM = 6,
-	JUN_PATH_MAKE64 = UINT64_MAX
+	JUN_PATH_MAX    = 7,
 } JUN_PathType;
 
 struct jun_core_sym {
@@ -63,7 +62,7 @@ struct jun_core_sym {
 static struct CTX {
 	bool initialized;
 
-	struct { uint32_t key; char *value; } *paths;
+	char *paths[JUN_PATH_MAX];
 	JUN_CoreCallbacks callbacks;
 
 	JSON_Value *settings;
@@ -194,13 +193,13 @@ static void create_paths(const char *system, const char *rom)
 
 	free(game);
 
-	hmput(CTX.paths, JUN_PATH_SYSTEM, path_system);
-	hmput(CTX.paths, JUN_PATH_GAME,   path_game);
-	hmput(CTX.paths, JUN_PATH_SAVES,  path_saves);
-	hmput(CTX.paths, JUN_PATH_STATE,  path_state);
-	hmput(CTX.paths, JUN_PATH_SRAM,   path_sram);
-	hmput(CTX.paths, JUN_PATH_RTC,    path_rtc);
-	hmput(CTX.paths, JUN_PATH_CHEATS, path_cheats);
+	CTX.paths[JUN_PATH_SYSTEM] = path_system;
+	CTX.paths[JUN_PATH_GAME]   = path_game;
+	CTX.paths[JUN_PATH_SAVES]  = path_saves;
+	CTX.paths[JUN_PATH_STATE]  = path_state;
+	CTX.paths[JUN_PATH_SRAM]   = path_sram;
+	CTX.paths[JUN_PATH_RTC]    = path_rtc;
+	CTX.paths[JUN_PATH_CHEATS] = path_cheats;
 }
 
 void JUN_CoreCreate(const char *system, const char *rom, const char *settings, const char *library)
@@ -246,14 +245,14 @@ bool JUN_CoreEnvironment(unsigned cmd, void *data)
 		case RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY: {
 			const char **system_directory = data;
 
-			*system_directory = hmget(CTX.paths, JUN_PATH_SYSTEM);
+			*system_directory = CTX.paths[JUN_PATH_SYSTEM];
 
 			return true;
 		}
 		case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY: {
 			const char **save_directory = data;
 
-			*save_directory = hmget(CTX.paths, JUN_PATH_SAVES);
+			*save_directory = CTX.paths[JUN_PATH_SAVES];
 
 			return true;
 		}
@@ -396,7 +395,7 @@ bool JUN_CoreStartGame()
 
 	CTX.sym.retro_get_system_info(&CTX.system);
 
-	const char *game_path = hmget(CTX.paths, JUN_PATH_GAME);
+	const char *game_path = CTX.paths[JUN_PATH_GAME];
 	JUN_File *game = JUN_FilesystemGetExistingFile(game_path);
 
 	CTX.game.path = game->path;
@@ -466,8 +465,8 @@ void JUN_CoreSaveMemories()
 
 	CTX.last_save = SDL_GetTicks();
 
-	const char *sram_path = hmget(CTX.paths, JUN_PATH_SRAM);
-	const char *rtc_path = hmget(CTX.paths, JUN_PATH_RTC);
+	const char *sram_path = CTX.paths[JUN_PATH_SRAM];
+	const char *rtc_path = CTX.paths[JUN_PATH_RTC];
 
 	save_memory(RETRO_MEMORY_SAVE_RAM, sram_path);
 	save_memory(RETRO_MEMORY_RTC, rtc_path);
@@ -492,8 +491,8 @@ static void restore_memory(uint32_t type, const char *path)
 
 void JUN_CoreRestoreMemories()
 {
-	const char *sram_path = hmget(CTX.paths, JUN_PATH_SRAM);
-	const char *rtc_path = hmget(CTX.paths, JUN_PATH_RTC);
+	const char *sram_path = CTX.paths[JUN_PATH_SRAM];
+	const char *rtc_path = CTX.paths[JUN_PATH_RTC];
 
 	restore_memory(RETRO_MEMORY_SAVE_RAM, sram_path);
 	restore_memory(RETRO_MEMORY_RTC, rtc_path);
@@ -504,7 +503,7 @@ void JUN_CoreSetCheats()
 	char *path = NULL;
 	size_t index = 0;
 
-	const char *cheats_path = hmget(CTX.paths, JUN_PATH_CHEATS);
+	const char *cheats_path = CTX.paths[JUN_PATH_CHEATS];
 
 	char *data = JUN_InteropReadFile(cheats_path, NULL);
 	if (!data)
@@ -545,7 +544,7 @@ void JUN_CoreSaveState()
 
 	CTX.sym.retro_serialize(data, size);
 
-	const char *state_path = hmget(CTX.paths, JUN_PATH_STATE);
+	const char *state_path = CTX.paths[JUN_PATH_STATE];
 	JUN_FilesystemSaveFile(state_path, data, size);
 
 	free(data);
@@ -555,7 +554,7 @@ void JUN_CoreRestoreState()
 {
 	size_t size = CTX.sym.retro_serialize_size();
 
-	const char *state_path = hmget(CTX.paths, JUN_PATH_STATE);
+	const char *state_path = CTX.paths[JUN_PATH_STATE];
 	JUN_File *file = JUN_FilesystemGetExistingFile(state_path);
 	if (!file)
 		return;
@@ -570,9 +569,8 @@ void JUN_CoreDestroy()
 	json_value_free(CTX.settings);
 	json_value_free(CTX.overrides);
 
-	for (size_t i = 0; i < hmlen(CTX.paths); i++)
-		free(CTX.paths[i].value);
-	hmfree(CTX.paths);
+	for (size_t i = 0; i < JUN_PATH_MAX; i++)
+		free(CTX.paths[i]);
 
 	free((void *) CTX.game.data);
 

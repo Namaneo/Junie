@@ -2,8 +2,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
-#include "stb_ds.h"
-
 #include "filesystem.h"
 #include "interop.h"
 
@@ -47,7 +45,7 @@ struct jun_video_asset {
 struct JUN_Video {
 	SDL_Window *window;
 	SDL_Renderer *renderer;
-	struct { uint32_t key; struct jun_video_asset *value; } *assets;
+	struct jun_video_asset *assets[JUN_MENU_MAX];
 
 	JUN_State *state;
 	JUN_Input *input;
@@ -73,7 +71,7 @@ static void prepare_asset(JUN_Video *this, uint8_t id, const char *path, bool me
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 	asset->texture = SDL_CreateTextureFromSurface(this->renderer, asset->image);
 
-	hmput(this->assets, id, asset);
+	this->assets[id] = asset;
 }
 
 JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input)
@@ -86,12 +84,12 @@ JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input)
 	SDL_InitSubSystem(SDL_INIT_VIDEO);
 	SDL_CreateWindowAndRenderer(600, 400, 0, &this->window, &this->renderer);
 
-	PREPARE(MENU_TOGGLE_AUDIO,   "menu", "toggle_audio");
-	PREPARE(MENU_TOGGLE_GAMEPAD, "menu", "toggle_gamepad");
-	PREPARE(MENU_SAVE_STATE,     "menu", "save_state");
-	PREPARE(MENU_RESTORE_STATE,  "menu", "restore_state");
-	PREPARE(MENU_FAST_FORWARD,   "menu", "fast_forward");
-	PREPARE(MENU_EXIT,           "menu", "exit");
+	PREPARE(JUN_MENU_TOGGLE_AUDIO,   "menu", "toggle_audio");
+	PREPARE(JUN_MENU_TOGGLE_GAMEPAD, "menu", "toggle_gamepad");
+	PREPARE(JUN_MENU_SAVE_STATE,     "menu", "save_state");
+	PREPARE(JUN_MENU_RESTORE_STATE,  "menu", "restore_state");
+	PREPARE(JUN_MENU_FAST_FORWARD,   "menu", "fast_forward");
+	PREPARE(JUN_MENU_EXIT,           "menu", "exit");
 
 	PREPARE(RETRO_DEVICE_ID_JOYPAD_UP,    "gamepad", "up");
 	PREPARE(RETRO_DEVICE_ID_JOYPAD_DOWN,  "gamepad", "down");
@@ -113,7 +111,7 @@ JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input)
 
 static void draw_input(JUN_Video *this, uint8_t id, struct jun_draw_desc *desc)
 {
-	struct jun_video_asset *asset = hmget(this->assets, id);
+	struct jun_video_asset *asset = this->assets[id];
 
 	double aspect_ratio = (double) asset->image->w / (double) asset->image->h;
 
@@ -144,19 +142,19 @@ static void draw_input(JUN_Video *this, uint8_t id, struct jun_draw_desc *desc)
 
 static void update_ui_context(JUN_Video *this)
 {
-	JUN_InputSetCallback(this->input, MENU_TOGGLE_AUDIO,   JUN_StateToggleAudio);
-	JUN_InputSetCallback(this->input, MENU_TOGGLE_GAMEPAD, JUN_StateToggleGamepad);
-	JUN_InputSetCallback(this->input, MENU_SAVE_STATE,     JUN_StateToggleSaveState);
-	JUN_InputSetCallback(this->input, MENU_RESTORE_STATE,  JUN_StateToggleRestoreState);
-	JUN_InputSetCallback(this->input, MENU_FAST_FORWARD,   JUN_StateToggleFastForward);
-	JUN_InputSetCallback(this->input, MENU_EXIT,           JUN_StateToggleExit);
+	JUN_InputSetCallback(this->input, JUN_MENU_TOGGLE_AUDIO,   JUN_StateToggleAudio);
+	JUN_InputSetCallback(this->input, JUN_MENU_TOGGLE_GAMEPAD, JUN_StateToggleGamepad);
+	JUN_InputSetCallback(this->input, JUN_MENU_SAVE_STATE,     JUN_StateToggleSaveState);
+	JUN_InputSetCallback(this->input, JUN_MENU_RESTORE_STATE,  JUN_StateToggleRestoreState);
+	JUN_InputSetCallback(this->input, JUN_MENU_FAST_FORWARD,   JUN_StateToggleFastForward);
+	JUN_InputSetCallback(this->input, JUN_MENU_EXIT,           JUN_StateToggleExit);
 
-	DRAW(MENU_TOGGLE_AUDIO,   CENTER(-150), TOP(25), RADIUS(20));
-	DRAW(MENU_TOGGLE_GAMEPAD, CENTER(-90),  TOP(25), RADIUS(20));
-	DRAW(MENU_SAVE_STATE,     CENTER(-30),  TOP(25), RADIUS(20));
-	DRAW(MENU_RESTORE_STATE,  CENTER(30),   TOP(25), RADIUS(20));
-	DRAW(MENU_FAST_FORWARD,   CENTER(90),   TOP(25), RADIUS(20));
-	DRAW(MENU_EXIT,           CENTER(150),  TOP(25), RADIUS(20));
+	DRAW(JUN_MENU_TOGGLE_AUDIO,   CENTER(-150), TOP(25), RADIUS(20));
+	DRAW(JUN_MENU_TOGGLE_GAMEPAD, CENTER(-90),  TOP(25), RADIUS(20));
+	DRAW(JUN_MENU_SAVE_STATE,     CENTER(-30),  TOP(25), RADIUS(20));
+	DRAW(JUN_MENU_RESTORE_STATE,  CENTER(30),   TOP(25), RADIUS(20));
+	DRAW(JUN_MENU_FAST_FORWARD,   CENTER(90),   TOP(25), RADIUS(20));
+	DRAW(JUN_MENU_EXIT,           CENTER(150),  TOP(25), RADIUS(20));
 
 	DRAW(RETRO_DEVICE_ID_JOYPAD_UP,    LEFT(100), BOTTOM(-200), RADIUS(30));
 	DRAW(RETRO_DEVICE_ID_JOYPAD_DOWN,  LEFT(100), BOTTOM(-100), RADIUS(30));
@@ -257,8 +255,8 @@ void JUN_VideoDrawUI(JUN_Video *this)
 	int64_t key = 0;
 	uint64_t iter = 0;
 
-	for (size_t i = 0; i < hmlen(this->assets); i++) {
-		struct jun_video_asset *asset = this->assets[i].value;
+	for (size_t i = 0; i < JUN_MENU_MAX; i++) {
+		struct jun_video_asset *asset = this->assets[i];
 
 		if (!gamepad && !asset->menu)
 			continue;
@@ -282,14 +280,12 @@ void JUN_VideoDestroy(JUN_Video **video)
 	if (this->texture)
 		SDL_DestroyTexture(this->texture);
 
-	for (size_t i = 0; i < hmlen(this->assets); i++) {
-		struct jun_video_asset *asset = this->assets[i].value;
+	for (size_t i = 0; i < JUN_MENU_MAX; i++) {
+		struct jun_video_asset *asset = this->assets[i];
 
 		SDL_DestroyTexture(asset->texture);
 		SDL_FreeSurface(asset->image);
 	}
-
-	hmfree(this->assets);
 
 	SDL_DestroyRenderer(this->renderer);
 	SDL_DestroyWindow(this->window);
