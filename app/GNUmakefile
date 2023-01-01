@@ -18,7 +18,6 @@ SRC := \
 	$(SRC_DIR)/state.c \
 	$(SRC_DIR)/interop.c \
 	$(SRC_DIR)/filesystem.c \
-	$(LIB_DIR)/stb.c \
 	$(LIB_DIR)/parson.c
 
 OBJ := $(SRC:.c=.o)
