@@ -1,5 +1,4 @@
 SRC_DIR := sources
-LIB_DIR := libraries
 RES_DIR := assets
 OUT_DIR := build
 
@@ -18,7 +17,7 @@ SRC := \
 	$(SRC_DIR)/state.c \
 	$(SRC_DIR)/interop.c \
 	$(SRC_DIR)/filesystem.c \
-	$(LIB_DIR)/parson.c
+	$(SRC_DIR)/parson.c
 
 OBJ := $(SRC:.c=.o)
 
@@ -27,7 +26,7 @@ PORTS := \
 	-sUSE_SDL=2 \
 	-sUSE_SDL_IMAGE=2
 
-CFLAGS  := -I$(SRC_DIR) -I$(LIB_DIR) $(PORTS) -fPIC -Wno-switch
+CFLAGS  := -I$(SRC_DIR) $(PORTS) -fPIC -Wno-switch
 
 LDFLAGS := $(PORTS) \
 	--no-entry \
