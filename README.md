@@ -6,7 +6,9 @@ Junie is a [Libretro](https://www.libretro.com/index.php/home-2/) frontend that 
 * Wide range of supported/compatible cores (... soon).
 * Progressive Web Application fully accessible offline.
 
-Junie currently runs on most recent browsers, but your experience will probably be better on Chrome and Safari. [Try it here!](https://namaneo.github.io/Junie/)
+Junie currently runs on most recent browsers, but your experience will probably be better on Chrome and Safari.
+
+[Try it here!](https://namaneo.github.io/Junie/)
 
 ***Disclaimer**: development is still in progress. I'll try my best not to break anything between releases (especially regarding local save files), but it's probably a good idea for you to backup your saves before each update.*
 
