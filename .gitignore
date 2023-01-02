@@ -3,8 +3,9 @@
 /data
 /build
 
+cores/**/*.so
+
 app/build
-app/**/*.so
 app/**/*.o
 app/**/*.tmp
 

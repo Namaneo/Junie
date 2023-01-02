@@ -3,7 +3,7 @@ RES_DIR := assets
 OUT_DIR := build
 
 CORES      := genesis melonds mgba nestopia snes9x
-CORES_DIR  := cores
+CORES_DIR  := ../cores
 CORE_FILES := $(CORES:%=$(CORES_DIR)/lib%.so)
 BIN_FILES  := $(CORES:%=$(OUT_DIR)/%.js) $(OUT_DIR)/tools.js
 
