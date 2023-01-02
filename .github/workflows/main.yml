@@ -1,0 +1,43 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches:
+      - 'emscripten'
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          push: true
+          tags: namaneo/junie:emscripten
+
+  upload:
+    needs: docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract binaries
+        run: docker run --rm -v `pwd`/build:/build junie cp -R /junie /build
+      - name: Upload Pages artifacts
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: build/junie/
+
+  deploy:
+    needs: upload
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
