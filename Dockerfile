@@ -11,6 +11,7 @@ ADD GNUmakefile .
 ADD ./ui/package.json ./ui/package.json
 RUN emmake make prepare
 
+ADD ./cores ./cores
 ADD ./app ./app
 RUN emmake make app
 
