@@ -1,8 +1,8 @@
-import { getFS } from './cores'
+import { getFS } from './cores';
 import { Save } from '../entities/save';
 import { CheatList } from '../entities/cheat';
 import { Game } from '../entities/game';
-import library from '../config/library'
+import library from '../config/library';
 
 export async function read(path) {
 	return await getFS().get(path);

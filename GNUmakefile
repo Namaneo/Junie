@@ -56,7 +56,7 @@ prepare:
 # Pack
 
 pack: all
-	@echo Packing Junie $(BUILD)...
+	@echo Packing Junie $(VERSION)...
 	@mkdir $(OUT_DIR)
 	@( cd $(UI_DIR)/$(OUT_DIR) && zip -r ../../$(OUT_DIR)/$(TARGET)-$(VERSION).zip `ls -I games` $(QUIET) )
 
