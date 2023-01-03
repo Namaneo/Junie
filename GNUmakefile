@@ -7,9 +7,10 @@ else
 BUILD := production
 endif
 
-UI_DIR  := ui
-APP_DIR := app
-OUT_DIR := build
+CORES_DIR := cores
+APP_DIR   := app
+UI_DIR    := ui
+OUT_DIR   := build
 
 QUIET := > /dev/null 2>&1
 MAKEFLAGS += --no-print-directory
@@ -18,11 +19,14 @@ UI_FLAGS := \
 	--environment BUILD:$(BUILD) \
 	--environment VERSION:$(VERSION)
 
-.PHONY: app ui
+.PHONY: cores app ui
 
 # Build
 
-all: clean prepare app ui
+all: clean prepare cores app ui
+
+cores:
+	@$(MAKE) -C $(CORES_DIR) DEBUG=$(DEBUG)
 
 app:
 	@$(MAKE) -C $(APP_DIR) DEBUG=$(DEBUG)
@@ -59,7 +63,8 @@ pack: all
 # Clean
 
 clean:
+	@$(MAKE) -C $(APP_DIR) clean
 	@rm -rf $(OUT_DIR) $(APP_DIR)/$(OUT_DIR) $(UI_DIR)/$(OUT_DIR)
 
 clean-all: clean
-	@$(MAKE) -C app clean-all
+	@$(MAKE) -C $(CORES_DIR) clean

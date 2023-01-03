@@ -1,38 +1,29 @@
-TARGET := lib$(name).so
-
-MAKEDIR  := $(name)
-MAKEFILE := Makefile
-
-ifeq ($(name), genesis)
-MAKEFILE := Makefile.libretro
-endif
-
-ifeq ($(name), nestopia)
-MAKEDIR := $(name)/libretro
-endif
+LIBRARIES := $(shell jq -r 'keys[]' cores.json)
 
 BUILD_FLAGS := \
 	-j 8 \
-	-C $(MAKEDIR) \
-	-f $(MAKEFILE) \
 	platform=emscripten \
 	SHARED=-shared \
-	TARGET=$(TARGET) \
 	STATIC_LINKING=0 \
 	STATIC_LINKING_LINK=0 \
 	fpic=-fPIC
 
-RANLIB ?= ranlib
 MAKEFLAGS += --no-print-directory
 QUIET := > /dev/null 2>&1
 
-all: $(TARGET)
+all: $(LIBRARIES:%=build-%)
 
-$(TARGET):
-	@echo Building $(TARGET)...
-	@$(MAKE) $(BUILD_FLAGS) $(QUIET)
-	@mv `find $(name) -name $(TARGET)` $(TARGET)
+build-%.so:
+	@echo Building $*.so...
+	@target=`pwd`/$*.so && \
+	makedir=`jq -r '."$*.so".directory' cores.json` && \
+	makefile=`jq -r '."$*.so".makefile' cores.json` && \
+	$(MAKE) -C $$makedir -f $$makefile TARGET=$$target $(BUILD_FLAGS) $(QUIET)
 
-clean:
-	@$(MAKE) $(BUILD_FLAGS) clean $(QUIET)
-	@rm -f $(TARGET)
+clean: $(LIBRARIES:%=clean-%)
+
+clean-%.so:
+	@target=`pwd`/$*.so && \
+	makedir=`jq -r '."$*.so".directory' cores.json` && \
+	makefile=`jq -r '."$*.so".makefile' cores.json` && \
+	$(MAKE) -C $$makedir -f $$makefile clean TARGET=$$target $(BUILD_FLAGS) $(QUIET)

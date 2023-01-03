@@ -1,0 +1,22 @@
+{
+    "libgenesis.so": {
+        "directory": "genesis",
+        "makefile": "Makefile.libretro"
+    },
+    "libmelonds.so": {
+        "directory": "melonds",
+        "makefile": "Makefile"
+    },
+    "libmgba.so": {
+        "directory": "mgba",
+        "makefile": "Makefile"
+    },
+    "libnestopia.so": {
+        "directory": "nestopia/libretro",
+        "makefile": "Makefile"
+    },
+    "libsnes9x.so": {
+        "directory": "snes9x",
+        "makefile": "Makefile"
+    }
+}

@@ -2,10 +2,9 @@ SRC_DIR := sources
 RES_DIR := assets
 OUT_DIR := build
 
-CORES      := genesis melonds mgba nestopia snes9x
-CORES_DIR  := ../cores
-CORE_FILES := $(CORES:%=$(CORES_DIR)/lib%.so)
-BIN_FILES  := $(CORES:%=$(OUT_DIR)/%.js) $(OUT_DIR)/tools.js
+CORES_DIR := ../cores
+LIBRARIES := $(shell jq -r 'keys[]' $(CORES_DIR)/cores.json)
+BINARIES  := $(LIBRARIES:%.so=$(OUT_DIR)/%.js) $(OUT_DIR)/tools.js
 
 SRC := \
 	$(SRC_DIR)/main.c \
@@ -61,19 +60,16 @@ MAKEFLAGS += --no-print-directory
 
 .SECONDARY: $(OBJ)
 
-all: clean prepare $(CORE_FILES)
+all: clean prepare
 	@echo Building objects...
 	@$(MAKE) -s $(OBJ)
-	@$(MAKE) -s $(BIN_FILES)
+	@$(MAKE) -s $(BINARIES)
 
 prepare:
 	@mkdir -p $(OUT_DIR)
 
-$(CORES_DIR)/lib%.so:
-	@$(MAKE) -C $(CORES_DIR) name=$*
-
-$(OUT_DIR)/%.js:
-	@echo Building $*.js...
+$(OUT_DIR)/lib%.js:
+	@echo Building lib$*.js...
 	@$(CXX) -o $(OUT_DIR)/$*.js $(OBJ) -L$(CORES_DIR) -l$* $(LDFLAGS_GAME) -sEXPORT_NAME=$* $(QUIET)
 
 $(OUT_DIR)/tools.js:
@@ -82,11 +78,6 @@ $(OUT_DIR)/tools.js:
 
 clean:
 	@rm -rf $(OBJ) $(OUT_DIR)
-
-clean-all: $(CORES:%=clean-core-%) clean
-
-clean-core-%:
-	@$(MAKE) -C $(CORES_DIR) name=$* clean
 
 %.o: %.c
 	@$(CC) -c $(CFLAGS) -o $@ $^ $(QUIET)

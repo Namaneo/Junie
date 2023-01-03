@@ -4,6 +4,7 @@ FROM emscripten/emsdk AS build
 WORKDIR /junie
 
 RUN apt update
+RUN apt install -y jq
 RUN npm install -g yarn
 
 ADD GNUmakefile .
@@ -12,6 +13,8 @@ ADD ./ui/package.json ./ui/package.json
 RUN emmake make prepare
 
 ADD ./cores ./cores
+RUN emmake make cores
+
 ADD ./app ./app
 RUN emmake make app
 
