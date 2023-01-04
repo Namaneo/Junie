@@ -14,8 +14,7 @@ const modules = null;
 
 const cacheResources = async () => {
     const cache = await caches.open(version);
-    await cache.addAll(resources);
-    await cache.addAll(modules);
+    await cache.addAll([...resources, ...modules]);
 };
 
 const clearCaches = async () => {
