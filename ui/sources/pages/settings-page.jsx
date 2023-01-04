@@ -55,13 +55,15 @@ export const SettingsPage = () => {
         setSettings({ ...settings });
 	}
 
-    const openModal = (name) => {
+    const openModal = async (name) => {
         const data =  { name: name };
 
-        data.items = Object.keys(options[name]).map(key => new Object({
+		const core_settings = await options[name]();
+
+        data.items = Object.keys(core_settings).map(key => new Object({
 			key: key,
-			name: options[name][key].name,
-			options: options[name][key].options.map(value => new Object({
+			name: core_settings[key].name,
+			options: core_settings[key].options.map(value => new Object({
 				key: value,
 				name: value
 			})),
@@ -79,7 +81,7 @@ export const SettingsPage = () => {
     }
 
 	useIonViewWillEnter(async () => {
-		setOptions({ ...options, ...await Cores.getSettings() });
+		setOptions({ ...options, ...Cores.getSettings() });
 		setSettings({ ...settings, ...await Database.getSettings() });
 	});
 

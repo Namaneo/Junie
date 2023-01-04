@@ -1,3 +1,5 @@
+import library from '../config/library';
+
 const cores = {};
 const tools = {};
 
@@ -46,35 +48,31 @@ async function createCore(name, graphics) {
 	cores[name] = core;
 }
 
-export async function getSettings() {
-	if (tools.settings)
-		return tools.settings;
+async function getCoreSettings(name) {
+	if (!tools.settings)
+		tools.settings = {};
 
-	await Promise.allSettled([
-		createCore('genesis'),
-		createCore('melonds'),
-		createCore('mgba'),
-		createCore('nestopia'),
-		createCore('snes9x'),
-	]);
+	if (tools.settings[name])
+		return tools.settings[name];
 
-	const get = module => module ? JSON.parse(module.UTF8ToString(module._get_settings())) : [];
+	await createCore(name);
 
-	tools.settings = {
-		'Genesis Plus GX': get(cores.genesis?.module),
-		'melonDS':         get(cores.melonds?.module),
-		'mGBA':            get(cores.mgba?.module),
-		'Nestopia':        get(cores.nestopia?.module),
-		'Snes9x':          get(cores.snes9x?.module),
-	};
+	const module = cores[name] ? cores[name].module : null;
 
-	delete cores.genesis;
-	delete cores.melonds;
-	delete cores.mgba;
-	delete cores.nestopia;
-	delete cores.snes9x;
+	tools.settings[name] = module
+		? JSON.parse(module.UTF8ToString(module._get_settings()))
+		: [];
 
-	return tools.settings;
+	delete cores[name];
+
+	return tools.settings[name];
+}
+
+export function getSettings() {
+	return library.reduce((systems, system) => {
+		systems[system.name] = () => getCoreSettings(system.lib_name);
+		return systems;
+	}, {});
 }
 
 export async function runCore(name, system, rom, settings) {
