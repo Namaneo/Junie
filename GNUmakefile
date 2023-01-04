@@ -50,7 +50,7 @@ watch-end:
 # Common
 
 prepare:
-	@echo Fetching dependencies...
+	@echo Fetching UI dependencies...
 	@yarn --cwd $(UI_DIR) install $(QUIET)
 
 # Pack
