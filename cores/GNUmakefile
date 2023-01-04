@@ -23,7 +23,7 @@ build-%.so: fetch-%.so
 	@target=`pwd`/$*.so && \
 	name=`jq -r '."$*.so".name' cores.json` && \
 	makedir=`jq -r '."$*.so".directory // ""' cores.json` && \
-	makefile=`jq -r '."$*.so".makefile' cores.json` && \
+	makefile=`jq -r '."$*.so".makefile // "Makefile"' cores.json` && \
 	echo Building $*.so... && \
 	$(MAKE) -C $$name/$$makedir -f $$makefile TARGET=$$target $(BUILD_FLAGS) $(QUIET)
 
@@ -33,5 +33,5 @@ clean-%.so:
 	@target=`pwd`/$*.so && \
 	name=`jq -r '."$*.so".name' cores.json` && \
 	makedir=`jq -r '."$*.so".directory // ""' cores.json` && \
-	makefile=`jq -r '."$*.so".makefile' cores.json` && \
+	makefile=`jq -r '."$*.so".makefile // "Makefile"' cores.json` && \
 	$(MAKE) -C $$name/$$makedir -f $$makefile clean TARGET=$$target $(BUILD_FLAGS) $(QUIET)

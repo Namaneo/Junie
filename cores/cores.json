@@ -4,20 +4,16 @@
         "makefile": "Makefile.libretro"
     },
     "libmelonds.so": {
-		"name": "melonDS",
-        "makefile": "Makefile"
+		"name": "melonDS"
     },
     "libmgba.so": {
-		"name": "mgba",
-        "makefile": "Makefile"
+		"name": "mgba"
     },
     "libnestopia.so": {
 		"name": "nestopia",
-        "makefile": "Makefile",
         "directory": "libretro"
     },
     "libsnes9x.so": {
-		"name": "snes9x2010",
-        "makefile": "Makefile"
+		"name": "snes9x2010"
     }
 }
