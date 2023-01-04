@@ -37,7 +37,7 @@ ui:
 
 # Watch
 
-watch: clean prepare
+watch: clean prepare cores
 	@bash -c "trap '$(MAKE) watch-end' EXIT; $(MAKE) watch-start;"
 
 watch-start:

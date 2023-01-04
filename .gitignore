@@ -3,7 +3,8 @@
 /data
 /build
 
-cores/**/*.so
+cores/*.so
+cores/**/
 
 app/build
 app/**/*.o

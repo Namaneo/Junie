@@ -13,17 +13,25 @@ QUIET := > /dev/null 2>&1
 
 all: $(LIBRARIES:%=build-%)
 
-build-%.so:
-	@echo Building $*.so...
+fetch-%.so:
 	@target=`pwd`/$*.so && \
-	makedir=`jq -r '."$*.so".directory' cores.json` && \
+	name=`jq -r '."$*.so".name' cores.json` && \
+	echo Fetching $$name... && \
+	git -C $$name pull $(QUIET) || git clone https://github.com/libretro/$$name.git $(QUIET)
+
+build-%.so: fetch-%.so
+	@target=`pwd`/$*.so && \
+	name=`jq -r '."$*.so".name' cores.json` && \
+	makedir=`jq -r '."$*.so".directory // ""' cores.json` && \
 	makefile=`jq -r '."$*.so".makefile' cores.json` && \
-	$(MAKE) -C $$makedir -f $$makefile TARGET=$$target $(BUILD_FLAGS) $(QUIET)
+	echo Building $*.so... && \
+	$(MAKE) -C $$name/$$makedir -f $$makefile TARGET=$$target $(BUILD_FLAGS) $(QUIET)
 
 clean: $(LIBRARIES:%=clean-%)
 
 clean-%.so:
 	@target=`pwd`/$*.so && \
-	makedir=`jq -r '."$*.so".directory' cores.json` && \
+	name=`jq -r '."$*.so".name' cores.json` && \
+	makedir=`jq -r '."$*.so".directory // ""' cores.json` && \
 	makefile=`jq -r '."$*.so".makefile' cores.json` && \
-	$(MAKE) -C $$makedir -f $$makefile clean TARGET=$$target $(BUILD_FLAGS) $(QUIET)
+	$(MAKE) -C $$name/$$makedir -f $$makefile clean TARGET=$$target $(BUILD_FLAGS) $(QUIET)
