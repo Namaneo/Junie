@@ -8,18 +8,14 @@ const resources = [
 	'./icons/icon-512.png',
 	'./icons/icon-apple.png',
 	'./icons/favicon.png',
-
-	'./cores/genesis.js',
-	'./cores/melonds.js',
-	'./cores/mgba.js',
-	'./cores/nestopia.js',
-	'./cores/snes9x.js',
-	'./cores/tools.js',
 ];
+
+const modules = null;
 
 const cacheResources = async () => {
     const cache = await caches.open(version);
     await cache.addAll(resources);
+    await cache.addAll(modules);
 };
 
 const clearCaches = async () => {

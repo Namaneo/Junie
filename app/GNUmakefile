@@ -23,7 +23,8 @@ OBJ := $(SRC:.c=.o)
 PORTS := \
 	-sUSE_ZLIB \
 	-sUSE_SDL=2 \
-	-sUSE_SDL_IMAGE=2
+	-sUSE_SDL_IMAGE=2 \
+	-sSDL2_IMAGE_FORMATS=png
 
 CFLAGS  := -I$(SRC_DIR) $(PORTS) -fPIC -Wno-switch
 
@@ -48,12 +49,11 @@ LDFLAGS_GAME := $(LDFLAGS) \
 	--embed-file $(RES_DIR) \
 	-sASYNCIFY \
 	-sINITIAL_MEMORY=32mb \
-	-sSDL2_IMAGE_FORMATS=png \
 	-sEXPORTED_FUNCTIONS=_start_game,_get_settings \
 	-sEXPORTED_RUNTIME_METHODS=ccall,UTF8ToString
 
 LDFLAGS_TOOLS := $(LDFLAGS) \
-	-sEXPORTED_RUNTIME_METHODS=UTF8ToString,IDBStore
+	-sEXPORTED_RUNTIME_METHODS=IDBStore
 
 QUIET := > /dev/null 2>&1
 MAKEFLAGS += --no-print-directory

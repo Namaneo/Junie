@@ -32,6 +32,9 @@ async function createTools() {
 	const origin = location.origin + location.pathname.replace(/\/$/, '');
 
 	tools.module = await (await import(`${origin}/cores/tools.js`)).default();
+
+	tools.settings = {};
+	tools.store = tools.module.IDBStore;
 }
 
 async function createCore(name, graphics) {
@@ -49,8 +52,7 @@ async function createCore(name, graphics) {
 }
 
 async function getCoreSettings(name) {
-	if (!tools.settings)
-		tools.settings = {};
+	await createTools();
 
 	if (tools.settings[name])
 		return tools.settings[name];
@@ -109,10 +111,9 @@ export async function runCore(name, system, rom, settings) {
 
 async function keysFile(db) {
 	await createTools();
-	const store = tools.module.IDBStore;
 
 	return new Promise(resolve => {
-		store.getStore(db, 'readwrite', (_, store) => {
+		tools.store.getStore(db, 'readwrite', (_, store) => {
 			const request = store.getAllKeys();
 			request.onsuccess = (event) => resolve(event.target.result);
 		});
@@ -121,28 +122,25 @@ async function keysFile(db) {
 
 async function loadFile(db, id) {
 	await createTools();
-	const store = tools.module.IDBStore;
 
 	return new Promise(resolve => {
-		store.getFile(db, id, (_, data) => resolve(data));
+		tools.store.getFile(db, id, (_, data) => resolve(data));
 	});
 }
 
 async function storeFile(db, id, data) {
 	await createTools();
-	const store = tools.module.IDBStore;
 
 	return new Promise(resolve => {
-		store.setFile(db, id, data, () => resolve());
+		tools.store.setFile(db, id, data, () => resolve());
 	});
 }
 
 async function removeFile(db, id) {
 	await createTools();
-	const store = tools.module.IDBStore;
 
 	return new Promise(resolve => {
-		store.deleteFile(db, id, () => resolve());
+		tools.store.deleteFile(db, id, () => resolve());
 	});
 }
 

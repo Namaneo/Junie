@@ -34,6 +34,9 @@ function html(outdir, html, sw) {
 			let code = bundle[Object.keys(bundle)[0]].code;
 			code = Buffer.from(code).toString('base64');
 
+			// TODO should be configurable
+			const modules = glob.sync('../app/build/*').map(x => x.replace('../app/build', './cores'));
+
 			let code_html = readFileSync(html, 'utf-8');
 			let code_sw = readFileSync(sw, 'utf-8');
 
@@ -49,6 +52,10 @@ function html(outdir, html, sw) {
 			code_sw = code_sw.replace(
 				'const version = null;',
 				`const version = '${version}';`
+			);
+			code_sw = code_sw.replace(
+				'const modules = null;',
+				`const modules = ${JSON.stringify(modules)};`
 			);
 
 			writeFileSync(`${outdir}/${html}`, code_html);
@@ -99,7 +106,7 @@ export default {
 			targets: [
 				{ src: 'manifest.json', dest: 'build' },
 				{ src: 'icons/*', dest: 'build/icons' },
-				{ src: '../app/build/*', dest: 'build/cores' }
+				{ src: '../app/build/*', dest: 'build/cores' },
 			]
 		}),
     ]
