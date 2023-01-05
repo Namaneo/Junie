@@ -45,7 +45,7 @@ struct jun_video_asset {
 struct JUN_Video {
 	SDL_Window *window;
 	SDL_Renderer *renderer;
-	struct jun_video_asset *assets[JUN_MENU_MAX];
+	struct jun_video_asset assets[JUN_MENU_MAX];
 
 	JUN_State *state;
 	JUN_Input *input;
@@ -63,15 +63,13 @@ struct JUN_Video {
 
 static void prepare_asset(JUN_Video *this, uint8_t id, const char *path, bool menu)
 {
-	struct jun_video_asset *asset = calloc(1, sizeof(struct jun_video_asset));
+	struct jun_video_asset *asset = &this->assets[id];
 
 	asset->image = IMG_Load(path);
 	asset->menu = menu;
 
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 	asset->texture = SDL_CreateTextureFromSurface(this->renderer, asset->image);
-
-	this->assets[id] = asset;
 }
 
 JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input)
@@ -111,7 +109,7 @@ JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input)
 
 static void draw_input(JUN_Video *this, uint8_t id, struct jun_draw_desc *desc)
 {
-	struct jun_video_asset *asset = this->assets[id];
+	struct jun_video_asset *asset = &this->assets[id];
 
 	double aspect_ratio = (double) asset->image->w / (double) asset->image->h;
 
@@ -256,7 +254,7 @@ void JUN_VideoDrawUI(JUN_Video *this)
 	uint64_t iter = 0;
 
 	for (size_t i = 0; i < JUN_MENU_MAX; i++) {
-		struct jun_video_asset *asset = this->assets[i];
+		struct jun_video_asset *asset = &this->assets[i];
 
 		if (!gamepad && !asset->menu)
 			continue;
@@ -281,7 +279,7 @@ void JUN_VideoDestroy(JUN_Video **video)
 		SDL_DestroyTexture(this->texture);
 
 	for (size_t i = 0; i < JUN_MENU_MAX; i++) {
-		struct jun_video_asset *asset = this->assets[i];
+		struct jun_video_asset *asset = &this->assets[i];
 
 		SDL_DestroyTexture(asset->texture);
 		SDL_FreeSurface(asset->image);
