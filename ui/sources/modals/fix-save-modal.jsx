@@ -1,5 +1,5 @@
-import { IonButton, IonButtons, IonContent, IonHeader, IonItem, IonLabel, IonList, IonSelect, IonSelectOption, IonTitle, IonToolbar } from "@ionic/react";
-import { useState } from "react";
+import { IonButton, IonButtons, IonContent, IonHeader, IonItem, IonLabel, IonList, IonSelect, IonSelectOption, IonTitle, IonToolbar } from '@ionic/react';
+import { useState } from 'react';
 
 export const FixSaveModal = ({ systems, dismiss, apply }) => {
 

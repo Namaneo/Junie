@@ -1,7 +1,7 @@
 import { IonButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonIcon, IonLoading, IonPage, IonTitle, IonToolbar, useIonAlert, useIonViewWillEnter } from '@ionic/react';
 import { useState } from 'react';
 import { refreshOutline } from 'ionicons/icons';
-import { useOnline } from '../hooks/online'
+import { useOnline } from '../hooks/online';
 import * as Requests from '../services/requests';
 
 export const SystemsPage = () => {

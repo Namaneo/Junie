@@ -1,11 +1,11 @@
-import { IonBackButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonLoading, IonPage, IonTitle, IonToolbar, useIonAlert, useIonViewWillEnter } from "@ionic/react";
-import { useState } from "react";
+import { IonBackButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonLoading, IonPage, IonTitle, IonToolbar, useIonAlert, useIonViewWillEnter } from '@ionic/react';
+import { useState } from 'react';
 import { useToast } from '../hooks/toast';
-import { Game } from "../entities/game";
-import { JunImg } from "../components/jun-img";
-import * as Requests from "../services/requests";
-import * as Database from "../services/database";
-import * as Helpers from "../services/helpers";
+import { Game } from '../entities/game';
+import { JunImg } from '../components/jun-img';
+import * as Requests from '../services/requests';
+import * as Database from '../services/database';
+import * as Helpers from '../services/helpers';
 
 export const GamesPage = ({ match }) => {
 

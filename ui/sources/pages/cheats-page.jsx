@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { CheatList } from '../entities/cheat';
 import { EditCheatModal } from '../modals/edit-cheat-modal';
 import * as Requests from '../services/requests';
-import * as Database from "../services/database";
+import * as Database from '../services/database';
 
 export const CheatsPage = () => {
 

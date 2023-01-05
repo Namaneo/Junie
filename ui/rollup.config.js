@@ -1,15 +1,15 @@
-import { readFileSync, writeFileSync } from 'fs'
-import path from 'path'
+import { readFileSync, writeFileSync } from 'fs';
+import path from 'path';
 import glob from 'glob';
 
-import nodeResolve from '@rollup/plugin-node-resolve'
-import babel from '@rollup/plugin-babel'
-import replace from '@rollup/plugin-replace'
-import url from '@rollup/plugin-url'
-import commonjs from '@rollup/plugin-commonjs'
-import styles from 'rollup-plugin-styles'
-import copy from 'rollup-plugin-copy'
-import { terser } from 'rollup-plugin-terser'
+import nodeResolve from '@rollup/plugin-node-resolve';
+import babel from '@rollup/plugin-babel';
+import replace from '@rollup/plugin-replace';
+import url from '@rollup/plugin-url';
+import commonjs from '@rollup/plugin-commonjs';
+import styles from 'rollup-plugin-styles';
+import copy from 'rollup-plugin-copy';
+import { terser } from 'rollup-plugin-terser';
 
 const build = process.env.BUILD || 'development';
 const version = process.env.VERSION || Date.now();
@@ -34,8 +34,8 @@ function html(outdir, html, sw) {
 			let code = bundle[Object.keys(bundle)[0]].code;
 			code = Buffer.from(code).toString('base64');
 
-			const modules = glob.sync('./build/modules/**/*.js').map(x => x.replace('build/', ''));
-			const assets = glob.sync('./build/assets/**/*.png').map(x => x.replace('build/', ''));
+			const modules = glob.sync(`./${outdir}/modules/**/*.js`).map(x => x.replace(`${outdir}/`, ''));
+			const assets = glob.sync(`./${outdir}/assets/**/*.png`).map(x => x.replace(`${outdir}/`, ''));
 
 			let code_html = readFileSync(html, 'utf-8');
 			let code_sw = readFileSync(sw, 'utf-8');

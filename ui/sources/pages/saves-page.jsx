@@ -3,8 +3,8 @@ import { checkmarkCircleOutline, closeCircleOutline, cloudDownload, cloudUpload,
 import { useRef, useState } from 'react';
 import { FixSaveModal } from '../modals/fix-save-modal';
 import * as Requests from '../services/requests';
-import * as Database from "../services/database";
-import * as Helpers from "../services/helpers";
+import * as Database from '../services/database';
+import * as Helpers from '../services/helpers';
 
 export const SavesPage = () => {
 
