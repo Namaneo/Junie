@@ -52,11 +52,8 @@ export async function remove(path) {
 }
 
 export async function getLibrary(force) {
-	if (!force) {
-		const file = await read_json('library.json');
-		if (file)
-			return JSON.parse(JSON.stringify(file));
-	}
+	if (!force)
+		return await read_json('library.json') ?? [];
 
 	const cores = await fetch('cores.json').then(res => res.json());
 

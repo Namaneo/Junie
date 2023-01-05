@@ -57,15 +57,20 @@ export async function requestDataURL(url) {
 	if (!url)
 		return null;
 
-	const response = await fetch(url);
-	if (response.status != 200)
+	try {
+		const response = await fetch(url);
+		if (response.status != 200)
+			return null;
+
+		const buffer = await response.arrayBuffer();
+		const cover = From.ArrayBuffer(buffer);
+		const contentType = response.headers.get("Content-Type");
+
+		return To.DataURL(cover, contentType);
+	} catch (e) {
+		console.error(e);
 		return null;
-
-	const buffer = await response.arrayBuffer();
-	const cover = From.ArrayBuffer(buffer);
-	const contentType = response.headers.get("Content-Type");
-
-	return To.DataURL(cover, contentType);
+	}
 }
 
 export const From = {
