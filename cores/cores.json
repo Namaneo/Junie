@@ -1,19 +1,74 @@
 {
-    "libgenesis.so": {
-		"name": "Genesis-Plus-GX",
-        "makefile": "Makefile.libretro"
+    "genesis": {
+		"name": "Genesis Plus GX",
+		"repository": "Genesis-Plus-GX",
+        "makefile": "Makefile.libretro",
+		"systems": [
+			{
+				"name": "Master System",
+				"full_name": "Sega - Master System - Mark III",
+				"extension": "sms"
+			},
+			{
+				"name": "Mega Drive",
+				"full_name": "Sega - Mega Drive - Genesis",
+				"extension": "md"
+			}
+		]
     },
-    "libmelonds.so": {
-		"name": "melonDS"
+    "melonds": {
+		"name": "MelonDS",
+		"repository": "melonDS",
+		"systems": [
+			{
+				"name": "Nintendo DS",
+				"full_name": "Nintendo - Nintendo DS",
+				"extension": "nds"
+			}
+		]
     },
-    "libmgba.so": {
-		"name": "mgba"
+    "mgba": {
+		"name": "mGBA",
+		"repository": "mgba",
+		"systems": [
+			{
+				"name": "Game Boy",
+				"full_name": "Nintendo - Game Boy",
+				"extension": "gb"
+			},
+			{
+				"name": "Game Boy Color",
+				"full_name": "Nintendo - Game Boy Color",
+				"extension": "gbc"
+			},
+			{
+				"name": "Game Boy Advance",
+				"full_name": "Nintendo - Game Boy Advance",
+				"extension": "gba"
+			}
+		]
     },
-    "libnestopia.so": {
-		"name": "nestopia",
-        "directory": "libretro"
+    "nestopia": {
+		"name": "Nestopia",
+		"repository": "nestopia",
+        "directory": "libretro",
+		"systems": [
+			{
+				"name": "NES",
+				"full_name": "Nintendo - Nintendo Entertainment System",
+				"extension": "nes"
+			}
+		]
     },
-    "libsnes9x.so": {
-		"name": "snes9x2010"
+    "snes9x": {
+		"name": "Snes9x",
+		"repository": "snes9x2010",
+		"systems": [
+			{
+				"name": "SNES",
+				"full_name": "Nintendo - Super Nintendo Entertainment System",
+				"extension": "smc"
+			}
+		]
     }
 }

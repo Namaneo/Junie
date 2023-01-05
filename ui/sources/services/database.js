@@ -2,7 +2,7 @@ import { getFS } from './cores';
 import { Save } from '../entities/save';
 import { CheatList } from '../entities/cheat';
 import { Game } from '../entities/game';
-import library from '../config/library';
+import * as Helpers from '../services/helpers';
 
 export async function read(path) {
 	return await getFS().get(path);
@@ -58,7 +58,22 @@ export async function getLibrary(force) {
 			return JSON.parse(JSON.stringify(file));
 	}
 
-	return JSON.parse(JSON.stringify(library));
+	const cores = await fetch('cores.json').then(res => res.json());
+
+	const library = [];
+	for (const core of Object.keys(cores)) {
+		for (const system of cores[core].systems) {
+			library.push({
+				...system,
+				lib_name: core,
+				core_name: cores[core].name,
+				cover: await Helpers.requestDataURL(`./assets/covers/${system.name}.png`),
+				coverDark: await Helpers.requestDataURL(`./assets/covers/${system.name}.dark.png`),
+			});
+		}
+	}
+
+	return library;
 };
 
 export async function updateLibrary(library) {

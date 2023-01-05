@@ -53,13 +53,28 @@ export async function unzip(content) {
 	return files;
 }
 
+export async function requestDataURL(url) {
+	if (!url)
+		return null;
+
+	const response = await fetch(url);
+	if (response.status != 200)
+		return null;
+
+	const buffer = await response.arrayBuffer();
+	const cover = From.ArrayBuffer(buffer);
+	const contentType = response.headers.get("Content-Type");
+
+	return To.DataURL(cover, contentType);
+}
+
 export const From = {
     DataURL: (data) => {
         const regex = /^data:(.+);base64,(.*)$/;
         const matches = data.match(regex);
         if (!matches)
             return [null, null];
-        return [atob(matches[2]), matches[1]];
+        return [window.atob(matches[2]), matches[1]];
     },
     ArrayBuffer: (buffer) => {
         return From.Uint8Array(new Uint8Array(buffer));
@@ -75,7 +90,7 @@ export const From = {
 
 export const To = {
     DataURL: (binary, contentType) => {
-        return `data:${contentType};base64,${btoa(binary)}`;
+        return `data:${contentType};base64,${window.btoa(binary)}`;
     },
     ArrayBuffer: (binary) => {
         return To.Uint8Array(binary).buffer;

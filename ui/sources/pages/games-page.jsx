@@ -30,13 +30,7 @@ export const GamesPage = ({ match }) => {
 			return;
 		}
 
-		if (game.cover) {
-			const response = await fetch(game.cover);
-			const buffer = await response.arrayBuffer();
-			const cover = Helpers.From.ArrayBuffer(buffer);
-			const contentType = response.headers.get("Content-Type");
-			game.cover = Helpers.To.DataURL(cover, contentType);
-		}
+		game.cover = await Helpers.requestDataURL(game.cover);
 
 		await Database.addGame(new Game(system, game), data);
 

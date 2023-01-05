@@ -3,18 +3,15 @@ const version = null;
 const resources = [
 	'./',
 	'./manifest.json',
-
-	'./icons/icon-192.png',
-	'./icons/icon-512.png',
-	'./icons/icon-apple.png',
-	'./icons/favicon.png',
+	'./cores.json',
 ];
 
 const modules = null;
+const assets = null;
 
 const cacheResources = async () => {
     const cache = await caches.open(version);
-    await cache.addAll([...resources, ...modules]);
+    await cache.addAll([...resources, ...modules, ...assets]);
 };
 
 const clearCaches = async () => {

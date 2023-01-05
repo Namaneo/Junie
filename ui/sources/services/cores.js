@@ -1,5 +1,3 @@
-import library from '../config/library';
-
 const cores = {};
 const tools = {};
 
@@ -31,7 +29,7 @@ async function createTools() {
 
 	const origin = location.origin + location.pathname.replace(/\/$/, '');
 
-	tools.module = await (await import(`${origin}/cores/tools.js`)).default();
+	tools.module = await (await import(`${origin}/modules/tools.js`)).default();
 
 	tools.settings = {};
 	tools.store = tools.module.IDBStore;
@@ -46,7 +44,7 @@ async function createCore(name, graphics) {
 	const origin = location.origin + location.pathname.replace(/\/$/, '');
 
 	const core = {};
-	core.module = await (await import(`${origin}/cores/${name}.js`)).default({ canvas: graphics });
+	core.module = await (await import(`${origin}/modules/${name}.js`)).default({ canvas: graphics });
 
 	cores[name] = core;
 }
@@ -70,10 +68,12 @@ async function getCoreSettings(name) {
 	return tools.settings[name];
 }
 
-export function getSettings() {
-	return library.reduce((systems, system) => {
-		systems[system.name] = () => getCoreSettings(system.lib_name);
-		return systems;
+export async function getSettings() {
+	const cores = await fetch('cores.json').then(res => res.json());
+
+	return Object.keys(cores).reduce((library, key) => {
+		library[cores[key].name] = () => getCoreSettings(key);
+		return library;
 	}, {});
 }
 

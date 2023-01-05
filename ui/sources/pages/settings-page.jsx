@@ -81,7 +81,7 @@ export const SettingsPage = () => {
     }
 
 	useIonViewWillEnter(async () => {
-		setOptions({ ...options, ...Cores.getSettings() });
+		setOptions({ ...options, ...await Cores.getSettings() });
 		setSettings({ ...settings, ...await Database.getSettings() });
 	});
 

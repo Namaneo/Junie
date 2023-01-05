@@ -4,7 +4,7 @@ OUT_DIR := build
 
 CORES_DIR := ../cores
 LIBRARIES := $(shell jq -r 'keys[]' $(CORES_DIR)/cores.json)
-BINARIES  := $(LIBRARIES:%.so=$(OUT_DIR)/%.js) $(OUT_DIR)/tools.js
+BINARIES  := $(LIBRARIES:%=$(OUT_DIR)/%.js) $(OUT_DIR)/tools.js
 
 SRC := \
 	$(SRC_DIR)/main.c \
@@ -68,8 +68,8 @@ all: clean prepare
 prepare:
 	@mkdir -p $(OUT_DIR)
 
-$(OUT_DIR)/lib%.js:
-	@echo Building lib$*.js...
+$(OUT_DIR)/%.js:
+	@echo Building $*.js...
 	@$(CXX) -o $(OUT_DIR)/$*.js $(OBJ) -L$(CORES_DIR) -l$* $(LDFLAGS_GAME) -sEXPORT_NAME=$* $(QUIET)
 
 $(OUT_DIR)/tools.js:

@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import * as Requests from '../services/requests'
 import * as Helpers from '../services/helpers'
-import cover_placeholder from '../../images/placeholder.png'
+import cover_placeholder from '../../assets/placeholder.png'
 
 const placeholder_url = Helpers.createObjectUrl(cover_placeholder);
 

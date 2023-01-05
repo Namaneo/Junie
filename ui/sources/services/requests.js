@@ -1,4 +1,4 @@
-import * as Database from './database'
+import * as Database from './database';
 
 async function fetchGames(system) {
 	const path = `${location.origin}/games/${system.name}/`;

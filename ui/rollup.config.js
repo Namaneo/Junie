@@ -34,8 +34,8 @@ function html(outdir, html, sw) {
 			let code = bundle[Object.keys(bundle)[0]].code;
 			code = Buffer.from(code).toString('base64');
 
-			// TODO should be configurable
-			const modules = glob.sync('../app/build/*').map(x => x.replace('../app/build', './cores'));
+			const modules = glob.sync('./build/modules/**/*.js').map(x => x.replace('build/', ''));
+			const assets = glob.sync('./build/assets/**/*.png').map(x => x.replace('build/', ''));
 
 			let code_html = readFileSync(html, 'utf-8');
 			let code_sw = readFileSync(sw, 'utf-8');
@@ -56,6 +56,10 @@ function html(outdir, html, sw) {
 			code_sw = code_sw.replace(
 				'const modules = null;',
 				`const modules = ${JSON.stringify(modules)};`
+			);
+			code_sw = code_sw.replace(
+				'const assets = null;',
+				`const assets = ${JSON.stringify(assets)};`
 			);
 
 			writeFileSync(`${outdir}/${html}`, code_html);
@@ -105,8 +109,9 @@ export default {
 			hook: 'buildStart',
 			targets: [
 				{ src: 'manifest.json', dest: 'build' },
-				{ src: 'icons/*', dest: 'build/icons' },
-				{ src: '../app/build/*', dest: 'build/cores' },
+				{ src: 'assets/*', dest: 'build/assets' },
+				{ src: '../cores/cores.json', dest: 'build' },
+				{ src: '../app/build/*', dest: 'build/modules' },
 			]
 		}),
     ]
