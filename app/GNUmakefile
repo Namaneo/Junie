@@ -35,10 +35,10 @@ LDFLAGS := $(PORTS) \
 	-sSINGLE_FILE \
 	-sWASM_BIGINT \
 	-sALLOW_MEMORY_GROWTH \
-	-sLLD_REPORT_UNDEFINED \
+	-sLLD_REPORT_UNDEFINED
 
 ifeq ($(DEBUG), 1)
-CFLAGS  += -O0 -D DEBUG
+CFLAGS  += -O0 -ferror-limit=0 -D DEBUG
 LDFLAGS += -O0 -g -Wl,--error-limit=0
 else
 CFLAGS  += -O3

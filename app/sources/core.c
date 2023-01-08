@@ -407,9 +407,10 @@ bool JUN_CoreStartGame()
 
 	CTX.initialized = CTX.sym.retro_load_game(&CTX.game);
 
-	if (CTX.initialized)
-		CTX.sym.retro_get_system_av_info(&CTX.av);
+	if (!CTX.initialized)
+		return CTX.initialized;
 
+	CTX.sym.retro_get_system_av_info(&CTX.av);
 	CTX.sym.retro_set_controller_port_device(0, RETRO_DEVICE_JOYPAD);
 
 	return CTX.initialized;
