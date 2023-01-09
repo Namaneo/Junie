@@ -8,24 +8,24 @@
 
 #include "app.h"
 
-static bool environment(unsigned cmd, void *data, void *opaque)
+static bool environment(uint32_t cmd, void *data, void *opaque)
 {
 	JUN_App *app = opaque;
 
 	return JUN_CoreEnvironment(cmd, data);
 }
 
-static void video_refresh(const void *data, unsigned width, unsigned height, size_t pitch, void *opaque)
+static void video_refresh(const void *data, uint32_t width, uint32_t height, size_t pitch, void *opaque)
 {
 	JUN_App *app = opaque;
-
-	JUN_VideoClear(app->video);
 
 	enum retro_pixel_format format = JUN_CoreGetFormat();
 	JUN_VideoUpdateContext(app->video, format, width, height, pitch);
 
+	JUN_VideoClear(app->video);
 	JUN_VideoDrawFrame(app->video, data);
 	JUN_VideoDrawUI(app->video);
+	JUN_VideoPresent(app->video);
 }
 
 static void audio_sample(int16_t left, int16_t right, void *opaque)
@@ -53,7 +53,7 @@ static void input_poll(void *opaque)
 	JUN_InputPollEvents(app->input);
 }
 
-static int16_t input_state(unsigned port, unsigned device, unsigned index, unsigned id, void *opaque)
+static int16_t input_state(uint32_t port, uint32_t device, uint32_t index, uint32_t id, void *opaque)
 {
 	JUN_App *app = opaque;
 
@@ -67,19 +67,18 @@ void main_loop(void *opaque)
 {
 	JUN_App *app = opaque;
 
+	if (!JUN_AppReady(app))
+		return;
+
 	uint32_t fast_forward = JUN_StateGetFastForward(app->state);
 	double sample_rate = JUN_CoreGetSampleRate() * fast_forward;
 
 	JUN_AudioSetSampleRate(app->audio, sample_rate);
 	JUN_CoreRun(fast_forward);
-	JUN_VideoPresent(app->video);
 
 	if (JUN_StateShouldExit(app->state)) {
 		JUN_CoreDestroy();
-
 		JUN_AppDestroy(&app);
-
-		JUN_InteropCancelLoop();
 		return;
 	}
 
@@ -105,7 +104,7 @@ char *get_settings()
 
 void start_game(const char *system, const char *rom, const char *settings)
 {
-	JUN_App *app = JUN_AppCreate();
+	JUN_App *app = JUN_AppCreate(main_loop);
 
 	JUN_CoreCreate(system, rom, settings, NULL);
 
@@ -126,6 +125,4 @@ void start_game(const char *system, const char *rom, const char *settings)
 
 	JUN_CoreRestoreMemories();
 	JUN_CoreSetCheats();
-
-	JUN_InteropStartLoop(main_loop, app);
 }

@@ -34,8 +34,12 @@ function html(outdir, html, sw) {
 			let code = bundle[Object.keys(bundle)[0]].code;
 			code = Buffer.from(code).toString('base64');
 
-			const modules = glob.sync(`./${outdir}/modules/**/*.js`).map(x => x.replace(`${outdir}/`, ''));
-			const assets = glob.sync(`./${outdir}/assets/**/*.png`).map(x => x.replace(`${outdir}/`, ''));
+			const resources = [
+				'./', './manifest.json', './cores.json',
+				...glob.sync(`./${outdir}/modules/**/*.js`).map(x => x.replace(`${outdir}/`, '')),
+				...glob.sync(`./${outdir}/modules/**/*.wasm`).map(x => x.replace(`${outdir}/`, '')),
+				...glob.sync(`./${outdir}/assets/**/*.png`).map(x => x.replace(`${outdir}/`, ''))
+			];
 
 			let code_html = readFileSync(html, 'utf-8');
 			let code_sw = readFileSync(sw, 'utf-8');
@@ -54,12 +58,8 @@ function html(outdir, html, sw) {
 				`const version = '${version}';`
 			);
 			code_sw = code_sw.replace(
-				'const modules = null;',
-				`const modules = ${JSON.stringify(modules)};`
-			);
-			code_sw = code_sw.replace(
-				'const assets = null;',
-				`const assets = ${JSON.stringify(assets)};`
+				'const resources = null;',
+				`const resources = ${JSON.stringify(resources)};`
 			);
 
 			writeFileSync(`${outdir}/${html}`, code_html);

@@ -30,10 +30,11 @@ CFLAGS  := -I$(SRC_DIR) $(PORTS) -fPIC -Wno-switch
 
 LDFLAGS := $(PORTS) \
 	--no-entry \
+	-sLZ4 \
 	-sMODULARIZE \
 	-sEXPORT_ES6 \
-	-sSINGLE_FILE \
 	-sWASM_BIGINT \
+	-sENVIRONMENT=web \
 	-sALLOW_MEMORY_GROWTH \
 	-sLLD_REPORT_UNDEFINED
 

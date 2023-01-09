@@ -79,8 +79,11 @@ JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input)
 	this->state = state;
 	this->input = input;
 
+	SDL_Rect size = {0};
+	SDL_GetDisplayUsableBounds(0, &size);
+
 	SDL_InitSubSystem(SDL_INIT_VIDEO);
-	SDL_CreateWindowAndRenderer(600, 400, 0, &this->window, &this->renderer);
+	SDL_CreateWindowAndRenderer(size.w, size.h, SDL_WINDOW_OPENGL, &this->window, &this->renderer);
 
 	PREPARE(JUN_MENU_TOGGLE_AUDIO,   "menu", "toggle_audio");
 	PREPARE(JUN_MENU_TOGGLE_GAMEPAD, "menu", "toggle_gamepad");
@@ -211,15 +214,15 @@ void JUN_VideoUpdateContext(JUN_Video *this, enum retro_pixel_format format, uns
 		JUN_StateSetFrameMetrics(this->state, this->width, this->height);
 	}
 
-	int32_t view_width = 0, view_height = 0;
-	JUN_InteropGetSize(&view_width, &view_height);
+	SDL_Rect size = {0};
+	SDL_GetDisplayUsableBounds(0, &size);
 
-	if (this->view_width != view_width || this->view_height != view_height) {
-		this->view_width = view_width;
-		this->view_height = view_height;
+	if (this->view_width != size.w || this->view_height != size.h) {
+		this->view_width = size.w;
+		this->view_height = size.h;
 
-		SDL_SetWindowSize(this->window, view_width, view_height);
-		JUN_StateSetWindowMetrics(this->state, view_width, view_height);
+		SDL_SetWindowSize(this->window, size.w, size.h);
+		JUN_StateSetWindowMetrics(this->state, size.w, size.h);
 
 		update_ui_context(this);
 	}

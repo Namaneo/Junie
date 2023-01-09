@@ -25,12 +25,6 @@ void JUN_InteropCancelLoop()
 	interop_show_ui(true);
 }
 
-void JUN_InteropGetSize(int32_t *width, int32_t *height)
-{
-	*width = emscripten_run_script_int("window.innerWidth");
-	*height = emscripten_run_script_int("window.innerHeight");
-}
-
 void *JUN_InteropReadFile(const char *path, int32_t *length)
 {
 	void *data = NULL;

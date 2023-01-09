@@ -1,17 +1,9 @@
 const version = null;
-
-const resources = [
-	'./',
-	'./manifest.json',
-	'./cores.json',
-];
-
-const modules = null;
-const assets = null;
+const resources = null;
 
 const cacheResources = async () => {
     const cache = await caches.open(version);
-    await cache.addAll([...resources, ...modules, ...assets]);
+    await cache.addAll(resources);
 };
 
 const clearCaches = async () => {
