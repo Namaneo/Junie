@@ -3,9 +3,9 @@
 #include "libretro.h"
 
 typedef bool (*JUN_CoreEnvironmentFunc)(unsigned cmd, void *data, void *opaque);
-typedef void (*JUN_CoreVideoRefreshFunc)(const void *data, unsigned width, unsigned height, size_t pitch, void *opaque);
-typedef void (*JUN_CoreAudioSampleFunc)(int16_t left, int16_t right, void *opaque);
-typedef size_t (*JUN_CoreAudioSampleBatchFunc)(const int16_t *data, size_t frames, void *opaque);
+typedef void (*JUN_CoreVideoRefreshFunc)(const void *data, unsigned width, unsigned height, size_t pitch, bool fast_forward, void *opaque);
+typedef void (*JUN_CoreAudioSampleFunc)(int16_t left, int16_t right, bool fast_forward, void *opaque);
+typedef size_t (*JUN_CoreAudioSampleBatchFunc)(const int16_t *data, size_t frames, bool fast_forward, void *opaque);
 typedef void (*JUN_CoreInputPollFunc)(void *opaque);
 typedef int16_t (*JUN_CoreInputStateFunc)(unsigned port, unsigned device, unsigned index, unsigned id, void *opaque);
 

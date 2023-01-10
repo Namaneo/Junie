@@ -15,9 +15,12 @@ static bool environment(uint32_t cmd, void *data, void *opaque)
 	return JUN_CoreEnvironment(cmd, data);
 }
 
-static void video_refresh(const void *data, uint32_t width, uint32_t height, size_t pitch, void *opaque)
+static void video_refresh(const void *data, uint32_t width, uint32_t height, size_t pitch, bool fast_forward, void *opaque)
 {
 	JUN_App *app = opaque;
+
+	if (fast_forward)
+		return;
 
 	enum retro_pixel_format format = JUN_CoreGetFormat();
 	JUN_VideoUpdateContext(app->video, format, width, height, pitch);
@@ -28,19 +31,19 @@ static void video_refresh(const void *data, uint32_t width, uint32_t height, siz
 	JUN_VideoPresent(app->video);
 }
 
-static void audio_sample(int16_t left, int16_t right, void *opaque)
+static void audio_sample(int16_t left, int16_t right, bool fast_forward, void *opaque)
 {
 	JUN_App *app = opaque;
 
-	if (JUN_StateHasAudio(app->state))
+	if (!fast_forward && JUN_StateHasAudio(app->state))
 		JUN_AudioQueue(app->audio, (int16_t[]) { left, right }, 1);
 }
 
-static size_t audio_sample_batch(const int16_t *data, size_t frames, void *opaque)
+static size_t audio_sample_batch(const int16_t *data, size_t frames, bool fast_forward, void *opaque)
 {
 	JUN_App *app = opaque;
 
-	if (JUN_StateHasAudio(app->state))
+	if (!fast_forward && JUN_StateHasAudio(app->state))
 		JUN_AudioQueue(app->audio, data, frames);
 
 	return frames;
@@ -70,11 +73,7 @@ void main_loop(void *opaque)
 	if (!JUN_AppReady(app))
 		return;
 
-	uint32_t fast_forward = JUN_StateGetFastForward(app->state);
-	double sample_rate = JUN_CoreGetSampleRate() * fast_forward;
-
-	JUN_AudioSetSampleRate(app->audio, sample_rate);
-	JUN_CoreRun(fast_forward);
+	JUN_CoreRun(JUN_StateGetFastForward(app->state));
 
 	if (JUN_StateShouldExit(app->state)) {
 		JUN_CoreDestroy();
@@ -125,4 +124,6 @@ void start_game(const char *system, const char *rom, const char *settings)
 
 	JUN_CoreRestoreMemories();
 	JUN_CoreSetCheats();
+
+	JUN_AudioSetSampleRate(app->audio, JUN_CoreGetSampleRate());
 }
