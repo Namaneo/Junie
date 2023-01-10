@@ -1,6 +1,7 @@
 #include <string.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <emscripten/html5_webgl.h>
 
 #include "filesystem.h"
 #include "interop.h"
@@ -59,6 +60,9 @@ struct JUN_Video {
 
 	int32_t view_width;
 	int32_t view_height;
+
+	int32_t hardware;
+	int32_t graphics;
 };
 
 static void prepare_asset(JUN_Video *this, uint8_t id, const char *path, bool menu)
@@ -85,6 +89,10 @@ JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input)
 	SDL_SetHint(SDL_HINT_RENDER_VSYNC, "true");
 	SDL_SetHint(SDL_HINT_EMSCRIPTEN_ASYNCIFY, "true");
 	SDL_InitSubSystem(SDL_INIT_VIDEO);
+
+	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 1);
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 1);
+	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 1);
 	SDL_CreateWindowAndRenderer(size.w, size.h, SDL_WINDOW_OPENGL, &this->window, &this->renderer);
 
 	PREPARE(JUN_MENU_TOGGLE_AUDIO,   "menu", "toggle_audio");
@@ -108,6 +116,13 @@ JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input)
 
 	PREPARE(RETRO_DEVICE_ID_JOYPAD_START,  "gamepad", "start");
 	PREPARE(RETRO_DEVICE_ID_JOYPAD_SELECT, "gamepad", "select");
+
+	EmscriptenWebGLContextAttributes attributes = {0};
+	emscripten_webgl_init_context_attributes(&attributes);
+	this->hardware = emscripten_webgl_create_context("#hardware", &attributes);
+	this->graphics = emscripten_webgl_get_current_context();
+
+	emscripten_webgl_make_context_current(this->hardware);
 
 	return this;
 }
@@ -183,6 +198,8 @@ void JUN_VideoClear(JUN_Video *this)
 
 void JUN_VideoUpdateContext(JUN_Video *this, enum retro_pixel_format format, unsigned width, unsigned height, size_t pitch)
 {
+	emscripten_webgl_make_context_current(this->graphics);
+
 	switch (format) {
 		case RETRO_PIXEL_FORMAT_0RGB1555:
 			this->pixel_format = SDL_PIXELFORMAT_ARGB1555;
@@ -211,7 +228,7 @@ void JUN_VideoUpdateContext(JUN_Video *this, enum retro_pixel_format format, uns
 		this->pitch = pitch ? pitch : width * this->bits_per_pixel;
 
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
-		this->texture = SDL_CreateTexture(this->renderer, this->pixel_format, SDL_TEXTUREACCESS_STREAMING, width, height);
+		this->texture = SDL_CreateTexture(this->renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, width, height);
 
 		JUN_StateSetFrameMetrics(this->state, this->width, this->height);
 	}
@@ -271,6 +288,8 @@ void JUN_VideoDrawUI(JUN_Video *this)
 void JUN_VideoPresent(JUN_Video *this)
 {
 	SDL_RenderPresent(this->renderer);
+
+	emscripten_webgl_make_context_current(this->hardware);
 }
 
 void JUN_VideoDestroy(JUN_Video **video)

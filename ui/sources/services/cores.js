@@ -1,7 +1,7 @@
 const cores = {};
 const tools = {};
 
-function createGraphics() {
+function createGraphics(id) {
 	const html = document.querySelector('html');
 	html.style.width = '100%';
 	html.style.height = '100%';
@@ -15,7 +15,7 @@ function createGraphics() {
 	body.style.margin = 0;
 
 	const canvas = document.createElement('canvas');
-	canvas.id = 'canvas';
+	canvas.id = id;
 	canvas.style.width = '100%';
 	canvas.style.height = '100%';
 	document.body.appendChild(canvas);
@@ -78,7 +78,8 @@ export async function getSettings() {
 }
 
 export async function runCore(name, system, rom, settings) {
-	const graphics = createGraphics();
+	const graphics = createGraphics('canvas');
+	const hardware = createGraphics('hardware');
 
 	await createCore(name, graphics);
 
@@ -100,6 +101,8 @@ export async function runCore(name, system, rom, settings) {
 			window.removeEventListener('show_ui', show_ui);
 
 			graphics.remove();
+			hardware.remove();
+
 			delete cores[name];
 
 			resolve();

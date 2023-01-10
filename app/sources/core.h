@@ -23,6 +23,7 @@ typedef struct {
 void JUN_CoreCreate(const char *system, const char *rom, const char *settings, const char *library);
 char *JUN_CoreGetDefaultConfiguration(const char *library);
 void JUN_CoreSetCallbacks(JUN_CoreCallbacks *callbacks);
+const void *JUN_CoreGetFrame(int32_t width, int32_t height);
 bool JUN_CoreEnvironment(unsigned cmd, void *data);
 double JUN_CoreGetSampleRate();
 double JUN_CoreGetFramesPerSecond();

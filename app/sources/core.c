@@ -2,6 +2,10 @@
 #include <string.h>
 #include <SDL2/SDL.h>
 
+#define GL_GLEXT_PROTOTYPES
+#include <GL/gl.h>
+#include <GLES3/gl32.h>
+
 #include "libretro.h"
 #include "parson.h"
 
@@ -71,6 +75,7 @@ static struct CTX {
 	struct retro_game_info game;
 	struct retro_system_info system;
 	struct retro_system_av_info av;
+	struct retro_hw_render_callback *hw;
 	enum retro_pixel_format format;
 
 	uint32_t last_save;
@@ -225,6 +230,54 @@ static void core_log(enum retro_log_level level, const char *fmt, ...)
 	SDL_LogInfo(0, "%s", buffer);
 }
 
+static struct {
+	bool initialized;
+
+	void *data;
+	GLuint renderbuffer;
+	GLuint framebuffer;
+} HW;
+
+retro_proc_address_t hw_get_proc_address(const char *sym)
+{
+	return (retro_proc_address_t) SDL_GL_GetProcAddress(sym);
+}
+
+uintptr_t hw_get_current_framebuffer()
+{
+	if (!HW.initialized) {
+		uint32_t width = CTX.av.geometry.max_width;
+		uint32_t height = CTX.av.geometry.max_height;
+
+		HW.data = calloc(width * height, 4);
+
+		glGenRenderbuffers(1, &HW.renderbuffer);
+		glBindRenderbuffer(GL_RENDERBUFFER, HW.renderbuffer);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, width, height);
+
+		glGenFramebuffers(1, &HW.framebuffer);
+		glBindFramebuffer(GL_FRAMEBUFFER, HW.framebuffer);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, HW.renderbuffer);
+
+		glBindRenderbuffer(GL_RENDERBUFFER, 0);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		HW.initialized = true;
+	}
+
+	return HW.framebuffer;
+}
+
+const void *JUN_CoreGetFrame(int32_t width, int32_t height)
+{
+	glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, HW.framebuffer);
+	glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, HW.data);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	return HW.data;
+}
+
 bool JUN_CoreEnvironment(unsigned cmd, void *data)
 {
 	unsigned command = cmd & ~RETRO_ENVIRONMENT_EXPERIMENTAL;
@@ -308,6 +361,14 @@ bool JUN_CoreEnvironment(unsigned cmd, void *data)
 			*status = 0;     // Reset
 			*status |= 0b01; // Enable video
 			*status |= 0b10; // Enable audio
+
+			return true;
+		}
+		case RETRO_ENVIRONMENT_SET_HW_RENDER: {
+			CTX.hw = data;
+
+			CTX.hw->get_proc_address = hw_get_proc_address;
+			CTX.hw->get_current_framebuffer = hw_get_current_framebuffer;
 
 			return true;
 		}
@@ -413,6 +474,9 @@ bool JUN_CoreStartGame()
 
 	CTX.sym.retro_get_system_av_info(&CTX.av);
 	CTX.sym.retro_set_controller_port_device(0, RETRO_DEVICE_JOYPAD);
+
+	if (CTX.hw)
+		CTX.hw->context_reset();
 
 	return CTX.initialized;
 }

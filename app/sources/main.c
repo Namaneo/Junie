@@ -22,11 +22,15 @@ static void video_refresh(const void *data, uint32_t width, uint32_t height, siz
 	if (fast_forward)
 		return;
 
+	const void *frame = !data || data == RETRO_HW_FRAME_BUFFER_VALID
+		? JUN_CoreGetFrame(width, height)
+		: data;
+
 	enum retro_pixel_format format = JUN_CoreGetFormat();
 	JUN_VideoUpdateContext(app->video, format, width, height, pitch);
 
 	JUN_VideoClear(app->video);
-	JUN_VideoDrawFrame(app->video, data);
+	JUN_VideoDrawFrame(app->video, frame);
 	JUN_VideoDrawUI(app->video);
 	JUN_VideoPresent(app->video);
 }
