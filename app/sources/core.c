@@ -441,8 +441,8 @@ void JUN_CoreRun(uint8_t fast_forward)
 {
 	uint32_t count = compute_framerate();
 
-	for (size_t i = 0; i < fast_forward * count; ++i) {
-		CTX.fast_forward = fast_forward - i;
+	for (size_t i = 0; i < fast_forward * count; i++) {
+		CTX.fast_forward = fast_forward - (i % fast_forward);
 		CTX.sym.retro_run();
 	}
 
