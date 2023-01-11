@@ -9,6 +9,7 @@
 struct JUN_Audio
 {
 	double sample_rate;
+	uint8_t fast_forward;
 	SDL_AudioDeviceID device;
 };
 
@@ -21,9 +22,9 @@ JUN_Audio *JUN_AudioCreate()
 	return this;
 }
 
-void JUN_AudioSetSampleRate(JUN_Audio *this, double sample_rate)
+void JUN_AudioSetSampleRate(JUN_Audio *this, double sample_rate, uint8_t fast_forward)
 {
-	if (this->sample_rate == sample_rate)
+	if (this->sample_rate == sample_rate && this->fast_forward == fast_forward)
 		return;
 
 	if (this->device)
@@ -34,13 +35,14 @@ void JUN_AudioSetSampleRate(JUN_Audio *this, double sample_rate)
 
 	desired.format = AUDIO_S16LSB;
 	desired.channels = 2;
-	desired.freq = sample_rate;
-	desired.samples = 512;
+	desired.freq = sample_rate * fast_forward;
+	desired.samples = 512 * fast_forward;
 
 	this->device = SDL_OpenAudioDevice(NULL, 0, &desired, &obtained, 0);
 	SDL_PauseAudioDevice(this->device, false);
 
 	this->sample_rate = sample_rate;
+	this->fast_forward = fast_forward;
 }
 
 void JUN_AudioQueue(JUN_Audio *this, const int16_t *data, size_t frames)

@@ -76,7 +76,6 @@ static struct CTX {
 	uint32_t last_save;
 	uint32_t before_run;
     uint32_t after_run;
-	uint32_t fast_forward;
     float remaining_frames;
 
 	struct jun_core_sym sym;
@@ -360,17 +359,17 @@ static bool environment(unsigned cmd, void *data)
 
 static void video_refresh(const void *data, unsigned width, unsigned height, size_t pitch)
 {
-	CTX.callbacks.video_refresh(data, width, height, pitch, CTX.fast_forward != 1, CTX.callbacks.opaque);
+	CTX.callbacks.video_refresh(data, width, height, pitch, CTX.callbacks.opaque);
 }
 
 static void audio_sample(int16_t left, int16_t right)
 {
-	CTX.callbacks.audio_sample(left, right, CTX.fast_forward != 1, CTX.callbacks.opaque);
+	CTX.callbacks.audio_sample(left, right, CTX.callbacks.opaque);
 }
 
 static size_t audio_sample_batch(const int16_t *data, size_t frames)
 {
-	return CTX.callbacks.audio_sample_batch(data, frames, CTX.fast_forward != 1, CTX.callbacks.opaque);
+	return CTX.callbacks.audio_sample_batch(data, frames, CTX.callbacks.opaque);
 }
 
 static void input_poll()
@@ -441,10 +440,8 @@ void JUN_CoreRun(uint8_t fast_forward)
 {
 	uint32_t count = compute_framerate();
 
-	for (size_t i = 0; i < fast_forward * count; i++) {
-		CTX.fast_forward = fast_forward - (i % fast_forward);
+	for (size_t i = 0; i < fast_forward * count; i++)
 		CTX.sym.retro_run();
-	}
 
 	CTX.after_run = SDL_GetTicks();
 }
