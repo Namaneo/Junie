@@ -26,8 +26,6 @@ static void video_refresh(const void *data, uint32_t width, uint32_t height, siz
 	JUN_VideoDrawFrame(app->video, data);
 	JUN_VideoDrawUI(app->video);
 	JUN_VideoPresent(app->video);
-
-	JUN_AudioFlush(app->audio);
 }
 
 static void audio_sample(int16_t left, int16_t right, void *opaque)

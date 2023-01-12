@@ -35,7 +35,7 @@ void JUN_AudioSetSampleRate(JUN_Audio *this, double sample_rate, uint8_t fast_fo
 		desired.format = AUDIO_S16LSB;
 		desired.channels = 2;
 		desired.freq = sample_rate;
-		desired.samples = 512;
+		desired.samples = sample_rate / 100;
 
 		this->device = SDL_OpenAudioDevice(NULL, 0, &desired, &obtained, 0);
 		SDL_PauseAudioDevice(this->device, false);
@@ -55,10 +55,6 @@ void JUN_AudioSetSampleRate(JUN_Audio *this, double sample_rate, uint8_t fast_fo
 void JUN_AudioQueue(JUN_Audio *this, const int16_t *data, size_t frames)
 {
 	SDL_AudioStreamPut(this->stream, data, frames * sizeof(int16_t) * 2);
-}
-
-void JUN_AudioFlush(JUN_Audio *this)
-{
 	SDL_AudioStreamFlush(this->stream);
 
 	int32_t length = SDL_AudioStreamAvailable(this->stream);
