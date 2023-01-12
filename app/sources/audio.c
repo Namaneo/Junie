@@ -55,7 +55,6 @@ void JUN_AudioSetSampleRate(JUN_Audio *this, double sample_rate, uint8_t fast_fo
 void JUN_AudioQueue(JUN_Audio *this, const int16_t *data, size_t frames)
 {
 	SDL_AudioStreamPut(this->stream, data, frames * sizeof(int16_t) * 2);
-	SDL_AudioStreamFlush(this->stream);
 
 	int32_t length = SDL_AudioStreamAvailable(this->stream);
 
