@@ -1,16 +1,23 @@
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 #include <SDL2/SDL.h>
 
 #include "state.h"
 
 #include "audio.h"
 
+#define LENGHT(size) size * 2 * sizeof(int16_t)
+
+#define SAMPLES_LEN 512
+#define BUFFER_LEN  1024
+
 struct JUN_Audio
 {
 	double sample_rate;
 	uint8_t fast_forward;
 	SDL_AudioDeviceID device;
+	SDL_AudioStream *stream;
 };
 
 JUN_Audio *JUN_AudioCreate()
@@ -24,22 +31,28 @@ JUN_Audio *JUN_AudioCreate()
 
 void JUN_AudioSetSampleRate(JUN_Audio *this, double sample_rate, uint8_t fast_forward)
 {
+	sample_rate = ceil(sample_rate);
+
 	if (this->sample_rate == sample_rate && this->fast_forward == fast_forward)
 		return;
 
-	if (this->device)
-		SDL_CloseAudioDevice(this->device);
+	if (!this->device) {
+		SDL_AudioSpec desired = {0};
+		SDL_AudioSpec obtained = {0};
 
-	SDL_AudioSpec desired = {0};
-	SDL_AudioSpec obtained = {0};
+		desired.format = AUDIO_S16LSB;
+		desired.channels = 2;
+		desired.freq = sample_rate;
+		desired.samples = SAMPLES_LEN;
 
-	desired.format = AUDIO_S16LSB;
-	desired.channels = 2;
-	desired.freq = sample_rate * fast_forward;
-	desired.samples = 512 * fast_forward;
+		this->device = SDL_OpenAudioDevice(NULL, 0, &desired, &obtained, 0);
+		SDL_PauseAudioDevice(this->device, false);
+	}
 
-	this->device = SDL_OpenAudioDevice(NULL, 0, &desired, &obtained, 0);
-	SDL_PauseAudioDevice(this->device, false);
+	if (this->stream)
+		SDL_FreeAudioStream(this->stream);
+
+	this->stream = SDL_NewAudioStream(AUDIO_S16LSB, 2, sample_rate * fast_forward, AUDIO_S16LSB, 2, sample_rate);
 
 	this->sample_rate = sample_rate;
 	this->fast_forward = fast_forward;
@@ -47,7 +60,16 @@ void JUN_AudioSetSampleRate(JUN_Audio *this, double sample_rate, uint8_t fast_fo
 
 void JUN_AudioQueue(JUN_Audio *this, const int16_t *data, size_t frames)
 {
-	SDL_QueueAudio(this->device, data, frames * 2 * sizeof(int16_t));
+	SDL_AudioStreamPut(this->stream, data, LENGHT(frames));
+}
+
+void JUN_AudioFlush(JUN_Audio *this)
+{
+	char bytes[LENGHT(BUFFER_LEN)] = {0};
+	int32_t length = SDL_AudioStreamGet(this->stream, bytes, LENGHT(BUFFER_LEN));
+
+	if (length > 0)
+		SDL_QueueAudio(this->device, bytes, length);
 }
 
 void JUN_AudioDestroy(JUN_Audio **audio)
@@ -56,6 +78,9 @@ void JUN_AudioDestroy(JUN_Audio **audio)
 		return;
 
 	JUN_Audio *this = *audio;
+
+	if (this->stream)
+		SDL_FreeAudioStream(this->stream);
 
 	if (this->device)
 		SDL_CloseAudioDevice(this->device);
