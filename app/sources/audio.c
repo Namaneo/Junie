@@ -1,16 +1,10 @@
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
 #include <SDL2/SDL.h>
 
 #include "state.h"
 
 #include "audio.h"
-
-#define LENGHT(size) size * 2 * sizeof(int16_t)
-
-#define SAMPLES_LEN 512
-#define BUFFER_LEN  1024
 
 struct JUN_Audio
 {
@@ -31,8 +25,6 @@ JUN_Audio *JUN_AudioCreate()
 
 void JUN_AudioSetSampleRate(JUN_Audio *this, double sample_rate, uint8_t fast_forward)
 {
-	sample_rate = ceil(sample_rate);
-
 	if (this->sample_rate == sample_rate && this->fast_forward == fast_forward)
 		return;
 
@@ -43,14 +35,16 @@ void JUN_AudioSetSampleRate(JUN_Audio *this, double sample_rate, uint8_t fast_fo
 		desired.format = AUDIO_S16LSB;
 		desired.channels = 2;
 		desired.freq = sample_rate;
-		desired.samples = SAMPLES_LEN;
+		desired.samples = 512;
 
 		this->device = SDL_OpenAudioDevice(NULL, 0, &desired, &obtained, 0);
 		SDL_PauseAudioDevice(this->device, false);
 	}
 
-	if (this->stream)
+	if (this->stream) {
+		SDL_ClearQueuedAudio(this->device);
 		SDL_FreeAudioStream(this->stream);
+	}
 
 	this->stream = SDL_NewAudioStream(AUDIO_S16LSB, 2, sample_rate * fast_forward, AUDIO_S16LSB, 2, sample_rate);
 
@@ -60,16 +54,22 @@ void JUN_AudioSetSampleRate(JUN_Audio *this, double sample_rate, uint8_t fast_fo
 
 void JUN_AudioQueue(JUN_Audio *this, const int16_t *data, size_t frames)
 {
-	SDL_AudioStreamPut(this->stream, data, LENGHT(frames));
+	SDL_AudioStreamPut(this->stream, data, frames * sizeof(int16_t) * 2);
 }
 
 void JUN_AudioFlush(JUN_Audio *this)
 {
-	char bytes[LENGHT(BUFFER_LEN)] = {0};
-	int32_t length = SDL_AudioStreamGet(this->stream, bytes, LENGHT(BUFFER_LEN));
+	SDL_AudioStreamFlush(this->stream);
 
-	if (length > 0)
-		SDL_QueueAudio(this->device, bytes, length);
+	int32_t length = SDL_AudioStreamAvailable(this->stream);
+
+	if (length > 0) {
+		char bytes[length];
+		length = SDL_AudioStreamGet(this->stream, bytes, length);
+
+		if (length > 0)
+			SDL_QueueAudio(this->device, bytes, length);
+	}
 }
 
 void JUN_AudioDestroy(JUN_Audio **audio)
