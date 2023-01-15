@@ -73,10 +73,10 @@ static struct CTX {
 	struct retro_system_av_info av;
 	enum retro_pixel_format format;
 
-	uint32_t last_save;
-	uint32_t before_run;
-    uint32_t after_run;
-    float remaining_frames;
+	uint64_t last_save;
+	uint64_t before_run;
+    uint64_t after_run;
+    double remaining_frames;
 
 	struct jun_core_sym sym;
 } CTX;
@@ -342,11 +342,6 @@ double JUN_CoreGetSampleRate()
 	return CTX.av.timing.sample_rate;
 }
 
-double JUN_CoreGetFramesPerSecond()
-{
-	return CTX.av.timing.fps;
-}
-
 enum retro_pixel_format JUN_CoreGetFormat()
 {
 	return CTX.format;
@@ -418,32 +413,34 @@ bool JUN_CoreStartGame()
 
 static uint32_t compute_framerate()
 {
-	uint32_t before_run = SDL_GetTicks();
+	uint64_t before_run = SDL_GetTicks64();
 
-    float total_loop = before_run - CTX.before_run;
-    float time_run = CTX.after_run - CTX.before_run;
-    float time_idle = before_run - CTX.after_run;
+    double total_loop = before_run - CTX.before_run;
+    double time_run = CTX.after_run - CTX.before_run;
+    double time_idle = before_run - CTX.after_run;
 
     CTX.before_run = before_run;
 
     bool throttling = time_run > time_idle;
-	float framerate = 1000.0 / total_loop;
+	double framerate = 1000.0 / total_loop;
 
 	CTX.remaining_frames += CTX.av.timing.fps / framerate;
 	uint32_t pending = (uint32_t) CTX.remaining_frames;
-	CTX.remaining_frames -= (float) pending;
+	CTX.remaining_frames -= (double) pending;
 
 	return pending <= 20 && !throttling ? pending : 1;
 }
 
 void JUN_CoreRun(uint8_t fast_forward)
 {
-	uint32_t count = compute_framerate();
+	for (size_t i = 0; i < fast_forward; i++) {
+		uint32_t count = compute_framerate();
 
-	for (size_t i = 0; i < fast_forward * count; i++)
-		CTX.sym.retro_run();
+		for (size_t j = 0; j < count; j++)
+			CTX.sym.retro_run();
 
-	CTX.after_run = SDL_GetTicks();
+		CTX.after_run = SDL_GetTicks64();
+	}
 }
 
 void save_memory(uint32_t type, const char *path)
@@ -461,10 +458,10 @@ void save_memory(uint32_t type, const char *path)
 
 void JUN_CoreSaveMemories()
 {
-	if (SDL_GetTicks() - CTX.last_save < 1000)
+	if (SDL_GetTicks64() - CTX.last_save < 1000)
 		return;
 
-	CTX.last_save = SDL_GetTicks();
+	CTX.last_save = SDL_GetTicks64();
 
 	const char *sram_path = CTX.paths[JUN_PATH_SRAM];
 	const char *rtc_path = CTX.paths[JUN_PATH_RTC];
