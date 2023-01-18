@@ -75,6 +75,7 @@ void main_loop(void *opaque)
 
 	JUN_AudioSetSampleRate(app->audio, sample_rate, fast_forward);
 	JUN_CoreRun(fast_forward);
+	JUN_AudioFlush(app->audio);
 
 	if (JUN_StateShouldExit(app->state)) {
 		JUN_CoreDestroy();

@@ -13,10 +13,10 @@ static void interop_show_ui(bool show)
 	emscripten_run_script(script);
 }
 
-void JUN_InteropStartLoop(JUN_InteropLoopFunc func, void *opqaue)
+void JUN_InteropStartLoop(JUN_InteropLoopFunc func, void *opaque)
 {
 	interop_show_ui(false);
-	emscripten_set_main_loop_arg(func, opqaue, 0, 0);
+	emscripten_set_main_loop_arg(func, opaque, 0, 0);
 }
 
 void JUN_InteropCancelLoop()
