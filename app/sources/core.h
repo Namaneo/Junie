@@ -27,7 +27,7 @@ bool JUN_CoreEnvironment(unsigned cmd, void *data);
 double JUN_CoreGetSampleRate();
 enum retro_pixel_format JUN_CoreGetFormat();
 bool JUN_CoreStartGame();
-void JUN_CoreRun(uint8_t fast_forward);
+void JUN_CoreRun();
 void JUN_CoreSaveMemories();
 void JUN_CoreRestoreMemories();
 void JUN_CoreSetCheats();

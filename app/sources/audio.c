@@ -39,7 +39,7 @@ JUN_Audio *JUN_AudioCreate()
 	return this;
 }
 
-void JUN_AudioSetSampleRate(JUN_Audio *this, double sample_rate, uint8_t fast_forward)
+void JUN_AudioUpdate(JUN_Audio *this, double sample_rate, uint8_t fast_forward)
 {
 	if (this->sample_rate == sample_rate && this->fast_forward == fast_forward)
 		return;

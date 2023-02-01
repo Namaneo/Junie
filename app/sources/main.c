@@ -73,8 +73,11 @@ void main_loop(void *opaque)
 	double sample_rate = JUN_CoreGetSampleRate();
 	uint8_t fast_forward = JUN_StateGetFastForward(app->state);
 
-	JUN_AudioSetSampleRate(app->audio, sample_rate, fast_forward);
-	JUN_CoreRun(fast_forward);
+	JUN_AudioUpdate(app->audio, sample_rate, fast_forward);
+
+	for (size_t i = 0; i < fast_forward; i++)
+		JUN_CoreRun();
+
 	JUN_AudioFlush(app->audio);
 
 	if (JUN_StateShouldExit(app->state)) {
