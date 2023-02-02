@@ -14,6 +14,7 @@
 struct JUN_Audio
 {
 	double sample_rate;
+	double buffer_size;
 	uint8_t fast_forward;
 	SDL_AudioDeviceID device;
 	SDL_AudioStream *stream;
@@ -56,6 +57,7 @@ void JUN_AudioUpdate(JUN_Audio *this, double sample_rate, uint8_t fast_forward)
 
 	this->sample_rate = sample_rate;
 	this->fast_forward = fast_forward;
+	this->buffer_size = sample_rate * fast_forward;
 }
 
 void JUN_AudioQueue(JUN_Audio *this, const int16_t *data, size_t frames)
@@ -69,10 +71,13 @@ void JUN_AudioFlush(JUN_Audio *this)
 	if (length <= 0)
 		return;
 
-	char bytes[length];
+	char *bytes = calloc(length, 1);
 	SDL_AudioStreamGet(this->stream, bytes, length);
 
-	SDL_QueueAudio(this->device, bytes, length);
+	double available = this->buffer_size - SDL_GetQueuedAudioSize(this->device);
+	SDL_QueueAudio(this->device, bytes, SDL_min(length, available));
+
+	free(bytes);
 }
 
 void JUN_AudioDestroy(JUN_Audio **audio)
