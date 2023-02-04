@@ -14,6 +14,7 @@ SRC := \
 	$(SRC_DIR)/audio.c \
 	$(SRC_DIR)/input.c \
 	$(SRC_DIR)/state.c \
+	$(SRC_DIR)/buffer.c \
 	$(SRC_DIR)/interop.c \
 	$(SRC_DIR)/filesystem.c \
 	$(SRC_DIR)/parson.c

@@ -70,15 +70,12 @@ void main_loop(void *opaque)
 	if (!JUN_AppReady(app))
 		return;
 
-	double sample_rate = JUN_CoreGetSampleRate();
 	uint8_t fast_forward = JUN_StateGetFastForward(app->state);
 
-	JUN_AudioUpdate(app->audio, sample_rate, fast_forward);
+	JUN_AudioUpdate(app->audio, fast_forward);
 
 	for (size_t i = 0; i < fast_forward; i++)
 		JUN_CoreRun();
-
-	JUN_AudioFlush(app->audio);
 
 	if (JUN_StateShouldExit(app->state)) {
 		JUN_CoreDestroy();
@@ -129,4 +126,8 @@ void start_game(const char *system, const char *rom, const char *settings)
 
 	JUN_CoreRestoreMemories();
 	JUN_CoreSetCheats();
+
+	double sample_rate = JUN_CoreGetSampleRate();
+	double frames_per_second = JUN_CoreGetFramesPerSecond();
+	JUN_AudioOpen(app->audio, sample_rate, frames_per_second);
 }

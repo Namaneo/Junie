@@ -339,6 +339,11 @@ double JUN_CoreGetSampleRate()
 	return CTX.av.timing.sample_rate;
 }
 
+double JUN_CoreGetFramesPerSecond()
+{
+	return CTX.av.timing.fps;
+}
+
 enum retro_pixel_format JUN_CoreGetFormat()
 {
 	return CTX.format;
