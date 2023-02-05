@@ -78,7 +78,7 @@ export async function updateLibrary(library) {
 }
 
 export async function getSettings() {
-	return await read_json('settings.json');
+	return await read_json('settings.json') ?? {};
 };
 
 export async function updateSettings(settings) {

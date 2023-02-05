@@ -63,7 +63,7 @@ static int16_t input_state(uint32_t port, uint32_t device, uint32_t index, uint3
 	return JUN_InputGetStatus(app->input, id, device);
 }
 
-void main_loop(void *opaque)
+void main_run_game(void *opaque)
 {
 	JUN_App *app = opaque;
 
@@ -76,12 +76,6 @@ void main_loop(void *opaque)
 
 	for (size_t i = 0; i < fast_forward; i++)
 		JUN_CoreRun();
-
-	if (JUN_StateShouldExit(app->state)) {
-		JUN_CoreDestroy();
-		JUN_AppDestroy(&app);
-		return;
-	}
 
 	JUN_CoreSaveMemories();
 
@@ -103,9 +97,13 @@ char *get_settings()
 	return JUN_CoreGetDefaultConfiguration(NULL);
 }
 
-void start_game(const char *system, const char *rom, const char *settings)
+int main(int argc, const char *argv[])
 {
-	JUN_App *app = JUN_AppCreate(main_loop);
+	const char *system = argv[1];
+	const char *rom = argv[2];
+	const char *settings = argv[3];
+
+	JUN_App *app = JUN_AppCreate();
 
 	JUN_CoreCreate(system, rom, settings, NULL);
 
@@ -121,7 +119,7 @@ void start_game(const char *system, const char *rom, const char *settings)
 
 	if (!JUN_CoreStartGame()) {
 		SDL_LogInfo(0, "Core for system '%s' failed to start rom '%s'", system, rom);
-		return;
+		return 1;
 	}
 
 	JUN_CoreRestoreMemories();
@@ -129,5 +127,19 @@ void start_game(const char *system, const char *rom, const char *settings)
 
 	double sample_rate = JUN_CoreGetSampleRate();
 	double frames_per_second = JUN_CoreGetFramesPerSecond();
+	double iteration_time = 1000.0 / frames_per_second;
+
 	JUN_AudioOpen(app->audio, sample_rate, frames_per_second);
+
+	while (!JUN_StateShouldExit(app->state)) {
+		uint64_t before = SDL_GetTicks64();
+		main_run_game(app);
+		uint64_t after = SDL_GetTicks64();
+		SDL_Delay(SDL_max(iteration_time - (before - after), 0));
+	}
+
+	JUN_CoreDestroy();
+	JUN_AppDestroy(&app);
+
+	return 0;
 }

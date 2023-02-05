@@ -4,27 +4,6 @@
 
 #include "interop.h"
 
-static void interop_show_ui(bool show)
-{
-	const char *script = show
-		? "window.dispatchEvent(new CustomEvent('show_ui', { detail: true } ));"
-		: "window.dispatchEvent(new CustomEvent('show_ui', { detail: false } ));";
-
-	emscripten_run_script(script);
-}
-
-void JUN_InteropStartLoop(JUN_InteropLoopFunc func, void *opaque)
-{
-	interop_show_ui(false);
-	emscripten_set_main_loop_arg(func, opaque, 0, 0);
-}
-
-void JUN_InteropCancelLoop()
-{
-	emscripten_cancel_main_loop();
-	interop_show_ui(true);
-}
-
 void *JUN_InteropReadFile(const char *path, int32_t *length)
 {
 	void *data = NULL;

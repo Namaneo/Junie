@@ -37,14 +37,12 @@ export const RecentPage = () => {
 	}
 
 	const startGame = async (played) => {
-		document.getElementById('root').hidden = true;
 		await runCore(
 			played.system.lib_name,
 			played.system.name,
 			played.game.rom,
 			await Database.getSettings(),
 		);
-		document.getElementById('root').hidden = false;
 	};
 
 	useIonViewWillEnter(async () => {

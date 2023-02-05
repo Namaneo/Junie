@@ -78,35 +78,20 @@ export async function getSettings() {
 }
 
 export async function runCore(name, system, rom, settings) {
+	document.getElementById('root').hidden = true;
+
 	const graphics = createGraphics();
-
 	await createCore(name, graphics);
-
 	const module = cores[name].module;
 
-	await module.ccall('start_game', null,
-		['string', 'string', 'string'],
-		[system, rom, JSON.stringify(settings)],
-		{ async: true }
-	);
+	module['onExit'] = async () => {
+		graphics.remove();
+		delete cores[name];
 
-	return new Promise(resolve => {
-		const show_ui = (ev) => {
-			document.getElementById('root').hidden = !ev.detail;
+		document.getElementById('root').hidden = false;
+	}
 
-			if (!ev.detail)
-				return;
-
-			window.removeEventListener('show_ui', show_ui);
-
-			graphics.remove();
-			delete cores[name];
-
-			resolve();
-		}
-
-		window.addEventListener('show_ui', show_ui);
-	});
+	await module.callMain([system, rom, JSON.stringify(settings)]);
 }
 
 async function keysFile(db) {

@@ -82,8 +82,6 @@ JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input)
 	SDL_Rect size = {0};
 	SDL_GetDisplayUsableBounds(0, &size);
 
-	SDL_SetHint(SDL_HINT_RENDER_VSYNC, "true");
-	SDL_SetHint(SDL_HINT_EMSCRIPTEN_ASYNCIFY, "true");
 	SDL_InitSubSystem(SDL_INIT_VIDEO);
 	SDL_CreateWindowAndRenderer(size.w, size.h, SDL_WINDOW_OPENGL, &this->window, &this->renderer);
 

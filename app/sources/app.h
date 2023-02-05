@@ -13,6 +13,6 @@ typedef struct {
 	JUN_Video *video;
 } JUN_App;
 
-JUN_App *JUN_AppCreate(JUN_InteropLoopFunc loop);
+JUN_App *JUN_AppCreate();
 bool JUN_AppReady(JUN_App *this);
 void JUN_AppDestroy(JUN_App **app);
