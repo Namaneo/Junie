@@ -6,6 +6,7 @@
 struct JUN_Buffer
 {
 	uint32_t length;
+	uint32_t available;
 	void *buffer;
 	void *read_pos;
 	void *write_pos;
@@ -44,6 +45,11 @@ static void write(JUN_Buffer *this, const void **position, int32_t length)
 
 void JUN_BufferWrite(JUN_Buffer *this, const void *data, int32_t length)
 {
+	if (length > this->length)
+		length = this->length;
+
+	this->available += length;
+
 	const void *position = data;
 
 	int32_t count = 0;
@@ -64,8 +70,10 @@ void JUN_BufferRead(JUN_Buffer *this, void *data, int32_t length)
 {
 	memset(data, 0, length);
 
-	if (length > this->length)
-		length = this->length;
+	if (length > this->available)
+		length = this->available;
+
+	this->available -= length;
 
 	void *position = data;
 
