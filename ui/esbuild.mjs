@@ -1,5 +1,5 @@
 
-import { readFileSync, unlinkSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, symlinkSync, unlinkSync, writeFileSync } from 'fs';
 import { parseArgs } from '@pkgjs/parseargs';
 import { spawnSync } from 'child_process';
 import { exit } from 'process';
@@ -70,6 +70,11 @@ function plugin_html(html, sw) {
 				writeFileSync(`${outdir}/${html}`, code_html);
 				writeFileSync(`${outdir}/${sw}`, code_sw);
 
+				if (existsSync(`${outdir}/games`))
+					unlinkSync(`${outdir}/games`);
+				if (existsSync('../games'))
+					symlinkSync('../../games', `${outdir}/games`);
+
 				unlinkSync(path.join(outdir, "index.css"));
 				unlinkSync(path.join(outdir, "index.js"));
 			});
@@ -105,14 +110,14 @@ if (!options.watch) {
 	exit(0);
 }
 
+const { host, port } = await context.serve({ servedir: 'build' });
+
 const watched = [
 	'index.html',
 	'sources/**',
 	'../app/GNUmakefile*',
 	'../app/sources/*.c',
 	'../app/sources/*.h',
-	'../app/libraries/*.c',
-	'../app/libraries/*.h',
 ];
 
 let rebuilding = false;
@@ -129,7 +134,7 @@ async function rebuild() {
 
 	await context.rebuild();
 
-	console.log('\nBuild finished, serving on http://localhost:8000/...');
+	console.log(`\nBuild finished, serving on 'http://${host}:${port}/'...`);
 
 	rebuilding = false;
 }
@@ -137,5 +142,3 @@ async function rebuild() {
 chokidar.watch(watched, { ignoreInitial: true })
 	.once('ready', rebuild)
 	.on('all', rebuild);
-
-context.serve({ servedir: 'build' });

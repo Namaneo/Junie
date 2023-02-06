@@ -64,14 +64,13 @@ void JUN_BufferRead(JUN_Buffer *this, void *data, int32_t length)
 {
 	memset(data, 0, length);
 
-	void *position = data;
-
 	if (length > this->length)
 		length = this->length;
 
+	void *position = data;
+
 	uint32_t remaining = (this->buffer + this->length) - this->read_pos;
 	memcpy(position, this->read_pos, length < remaining ? length : remaining);
-	memset(this->read_pos, 0, length < remaining ? length : remaining);
 
 	this->read_pos = length < remaining
 		? this->read_pos + length
@@ -84,10 +83,7 @@ void JUN_BufferRead(JUN_Buffer *this, void *data, int32_t length)
 		return;
 
 	memcpy(position, this->read_pos, length);
-	memset(this->read_pos, 0, length);
 	this->read_pos += length;
-
-	return;
 }
 
 void JUN_BufferDestroy(JUN_Buffer **buffer)

@@ -10,7 +10,7 @@
 #define JUN_AUDIO_FORMAT    AUDIO_F32
 #define JUN_AUDIO_FREQUENCY 48000.0
 #define JUN_AUDIO_CHANNELS  2.0
-#define JUN_AUDIO_SAMPLES   512.0
+#define JUN_AUDIO_SAMPLES   1024.0
 
 struct JUN_Audio
 {
@@ -45,7 +45,7 @@ JUN_Audio *JUN_AudioCreate()
 	return this;
 }
 
-void JUN_AudioOpen(JUN_Audio *this, double sample_rate, double frames_per_second)
+void JUN_AudioOpen(JUN_Audio *this, double sample_rate)
 {
 	this->sample_rate = sample_rate;
 
@@ -62,8 +62,7 @@ void JUN_AudioOpen(JUN_Audio *this, double sample_rate, double frames_per_second
 	this->device = SDL_OpenAudioDevice(NULL, 0, &desired, &obtained, 0);
 	SDL_PauseAudioDevice(this->device, false);
 
-	uint32_t samples_per_frame = (sample_rate / frames_per_second) * 2;
-	this->buffer = JUN_BufferCreate(samples_per_frame * sizeof(float) * 10);
+	this->buffer = JUN_BufferCreate(JUN_AUDIO_FREQUENCY);
 }
 
 void JUN_AudioUpdate(JUN_Audio *this, uint8_t fast_forward)

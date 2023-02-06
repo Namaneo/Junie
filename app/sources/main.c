@@ -3,6 +3,7 @@
 #include <string.h>
 #include <SDL2/SDL.h>
 
+#include "framerate.h"
 #include "filesystem.h"
 #include "interop.h"
 
@@ -125,18 +126,16 @@ int main(int argc, const char *argv[])
 	JUN_CoreRestoreMemories();
 	JUN_CoreSetCheats();
 
-	double sample_rate = JUN_CoreGetSampleRate();
-	double frames_per_second = JUN_CoreGetFramesPerSecond();
-	double iteration_time = 1000.0 / frames_per_second;
+	JUN_AudioOpen(app->audio, JUN_CoreGetSampleRate());
 
-	JUN_AudioOpen(app->audio, sample_rate, frames_per_second);
-
+	JUN_Framerate *framerate = JUN_FramerateCreate(JUN_CoreGetFramesPerSecond());
 	while (!JUN_StateShouldExit(app->state)) {
-		uint64_t before = SDL_GetTicks64();
+		if (JUN_FramerateDelay(framerate))
+			continue;
+
 		main_run_game(app);
-		uint64_t after = SDL_GetTicks64();
-		SDL_Delay(SDL_max(iteration_time - (before - after), 0));
 	}
+	JUN_FramerateDestroy(&framerate);
 
 	JUN_CoreDestroy();
 	JUN_AppDestroy(&app);
