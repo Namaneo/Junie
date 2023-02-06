@@ -3,24 +3,20 @@
   "version": "0.0.0",
   "license": "MIT",
   "devDependencies": {
-    "@babel/core": "^7.17.10",
-    "@babel/preset-react": "^7.16.7",
     "@ionic/react": "^6.1.4",
     "@ionic/react-router": "^6.1.4",
-    "@rollup/plugin-babel": "^5.3.1",
-    "@rollup/plugin-commonjs": "^22.0.0",
-    "@rollup/plugin-node-resolve": "^13.3.0",
-    "@rollup/plugin-replace": "^4.0.0",
-    "@rollup/plugin-url": "^7.0.0",
+    "chokidar": "^3.5.3",
+    "esbuild": "^0.17.5",
+    "esbuild-plugin-copy": "^2.0.2",
+    "glob": "^8.1.0",
     "jszip": "^3.10.1",
-    "playwright": "^1.21.1",
+    "playwright": "^1.30.0",
     "react": "^17.0.0",
     "react-dom": "^17.0.0",
     "react-router": "^5.0.1",
-    "react-router-dom": "^5.0.1",
-    "rollup": "^2.72.1",
-    "rollup-plugin-copy": "^3.4.0",
-    "rollup-plugin-styles": "^4.0.0",
-    "rollup-plugin-terser": "^7.0.2"
+    "react-router-dom": "^5.0.1"
+  },
+  "dependencies": {
+    "@pkgjs/parseargs": "^0.11.0"
   }
 }

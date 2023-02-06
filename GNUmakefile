@@ -15,9 +15,10 @@ OUT_DIR   := build
 QUIET := > /dev/null 2>&1
 MAKEFLAGS += --no-print-directory
 
-UI_FLAGS := \
-	--environment BUILD:$(BUILD) \
-	--environment VERSION:$(VERSION)
+UI_FLAGS := --version $(VERSION)
+ifeq ($(DEBUG), 1)
+UI_FLAGS += --debug
+endif
 
 .PHONY: cores app ui
 
@@ -33,19 +34,12 @@ app:
 
 ui:
 	@echo Building index.html...
-	@yarn --cwd $(UI_DIR) rollup -c $(UI_FLAGS) $(QUIET)
+	@( cd ui && node esbuild.mjs $(UI_FLAGS) $(QUIET) )
 
 # Watch
 
 watch: clean prepare cores
-	@bash -c "trap '$(MAKE) watch-end' EXIT; $(MAKE) watch-start;"
-
-watch-start:
-	@screen -S $(TARGET) -d -m python3 -m http.server -d $(UI_DIR)/build/ 8000
-	@yarn --cwd $(UI_DIR) rollup -c $(UI_FLAGS) -w --watch.onStart "$(MAKE) -C ../$(APP_DIR) DEBUG=$(DEBUG)"
-
-watch-end:
-	@screen -S $(TARGET) -X quit
+	@( cd ui && node esbuild.mjs --watch "$(MAKE) -C ../$(APP_DIR) DEBUG=$(DEBUG)" $(UI_FLAGS) )
 
 # Common
 

@@ -51,7 +51,13 @@
 		</script>
 
         <script>
+			const css = null;
             const source = null;
+
+			const stylesheet = document.createElement('link');
+			stylesheet.href = URL.createObjectURL(new Blob([atob(css)]));
+			stylesheet.rel = 'stylesheet';
+			document.head.appendChild(stylesheet);
 
             const script = document.createElement('script');
 			script.type = 'module';
