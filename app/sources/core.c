@@ -73,6 +73,7 @@ static struct CTX {
 	struct retro_system_av_info av;
 	enum retro_pixel_format format;
 
+	bool fast_forward;
 	uint64_t last_save;
 
 	struct jun_core_sym sym;
@@ -356,17 +357,20 @@ static bool environment(unsigned cmd, void *data)
 
 static void video_refresh(const void *data, unsigned width, unsigned height, size_t pitch)
 {
+	if (CTX.fast_forward)
+		return;
+
 	CTX.callbacks.video_refresh(data, width, height, pitch, CTX.callbacks.opaque);
 }
 
 static void audio_sample(int16_t left, int16_t right)
 {
-	CTX.callbacks.audio_sample(left, right, CTX.callbacks.opaque);
+	CTX.callbacks.audio_sample((int16_t[]) { left, right }, 1, CTX.callbacks.opaque);
 }
 
 static size_t audio_sample_batch(const int16_t *data, size_t frames)
 {
-	return CTX.callbacks.audio_sample_batch(data, frames, CTX.callbacks.opaque);
+	return CTX.callbacks.audio_sample(data, frames, CTX.callbacks.opaque);
 }
 
 static void input_poll()
@@ -413,8 +417,15 @@ bool JUN_CoreStartGame()
 	return CTX.initialized;
 }
 
-void JUN_CoreRun()
+void JUN_CoreRun(uint8_t fast_forward)
 {
+	CTX.fast_forward = true;
+
+	for (size_t i = 0; i < fast_forward - 1; i++)
+		CTX.sym.retro_run();
+
+	CTX.fast_forward = false;
+
 	CTX.sym.retro_run();
 }
 

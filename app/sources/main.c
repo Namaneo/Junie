@@ -29,15 +29,7 @@ static void video_refresh(const void *data, uint32_t width, uint32_t height, siz
 	JUN_VideoPresent(app->video);
 }
 
-static void audio_sample(int16_t left, int16_t right, void *opaque)
-{
-	JUN_App *app = opaque;
-
-	if (JUN_StateHasAudio(app->state))
-		JUN_AudioQueue(app->audio, (int16_t[]) { left, right }, 1);
-}
-
-static size_t audio_sample_batch(const int16_t *data, size_t frames, void *opaque)
+static size_t audio_sample(const int16_t *data, size_t frames, void *opaque)
 {
 	JUN_App *app = opaque;
 
@@ -74,9 +66,7 @@ void main_run_game(void *opaque)
 	uint8_t fast_forward = JUN_StateGetFastForward(app->state);
 
 	JUN_AudioUpdate(app->audio, fast_forward);
-
-	for (size_t i = 0; i < fast_forward; i++)
-		JUN_CoreRun();
+	JUN_CoreRun(fast_forward);
 
 	JUN_CoreSaveMemories();
 
@@ -113,7 +103,6 @@ int main(int argc, const char *argv[])
 		.environment        = environment,
 		.video_refresh      = video_refresh,
 		.audio_sample       = audio_sample,
-		.audio_sample_batch = audio_sample_batch,
 		.input_poll         = input_poll,
 		.input_state        = input_state,
 	});
