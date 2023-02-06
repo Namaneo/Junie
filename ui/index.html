@@ -55,8 +55,8 @@
             const source = null;
 
 			const stylesheet = document.createElement('link');
-			stylesheet.href = URL.createObjectURL(new Blob([atob(css)]));
 			stylesheet.rel = 'stylesheet';
+			stylesheet.href = URL.createObjectURL(new Blob([atob(css)]));
 			document.head.appendChild(stylesheet);
 
             const script = document.createElement('script');

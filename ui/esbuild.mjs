@@ -2,8 +2,8 @@
 import { readFileSync, unlinkSync, writeFileSync } from 'fs';
 import { parseArgs } from '@pkgjs/parseargs';
 import { spawnSync } from 'child_process';
-import { context } from 'esbuild';
 import { exit } from 'process';
+import esbuild from 'esbuild';
 import chokidar from 'chokidar';
 import copy from 'esbuild-plugin-copy';
 import path from 'path';
@@ -77,7 +77,7 @@ function plugin_html(html, sw) {
 	};
 }
 
-const ctx = await context({
+const context = await esbuild.context({
 	entryPoints: ['sources/index.jsx'],
 	outdir: 'build',
 	bundle: true,
@@ -100,8 +100,8 @@ const ctx = await context({
 });
 
 if (!options.watch) {
-	await ctx.rebuild();
-	await ctx.dispose();
+	await context.rebuild();
+	await context.dispose();
 	exit(0);
 }
 
@@ -115,20 +115,27 @@ const watched = [
 	'../app/libraries/*.h',
 ];
 
+let rebuilding = false;
 async function rebuild() {
+	if (rebuilding)
+		return;
+	rebuilding = true;
+
 	console.clear();
 
 	const command = options.watch.split(' ')[0];
 	const parameters = options.watch.split(' ').slice(1);
 	spawnSync(command, parameters, { stdio: 'inherit' });
 
-	await ctx.rebuild();
+	await context.rebuild();
 
 	console.log('\nBuild finished, serving on http://localhost:8000/...');
+
+	rebuilding = false;
 }
 
 chokidar.watch(watched, { ignoreInitial: true })
 	.once('ready', rebuild)
 	.on('all', rebuild);
 
-ctx.serve({ servedir: 'build' });
+context.serve({ servedir: 'build' });
