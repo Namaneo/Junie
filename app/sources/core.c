@@ -51,7 +51,6 @@ struct jun_core_sym {
 	size_t (*retro_serialize_size)(void);
 	bool (*retro_serialize)(void *data, size_t size);
 	bool (*retro_unserialize)(const void *data, size_t size);
-	void (*retro_cheat_reset)(void);
 	void (*retro_cheat_set)(unsigned index, bool enabled, const char *code);
 	void (*retro_run)(void);
 	void (*retro_reset)(void);
@@ -102,7 +101,6 @@ static void initialize_symbols(const char *path)
 	MAP_SYMBOL(retro_serialize_size);
 	MAP_SYMBOL(retro_serialize);
 	MAP_SYMBOL(retro_unserialize);
-	MAP_SYMBOL(retro_cheat_reset);
 	MAP_SYMBOL(retro_cheat_set);
 	MAP_SYMBOL(retro_run);
 	MAP_SYMBOL(retro_reset);
@@ -383,53 +381,7 @@ static int16_t input_state(unsigned port, unsigned device, unsigned index, unsig
 	return CTX.callbacks.input_state(port, device, index, id, CTX.callbacks.opaque);
 }
 
-bool JUN_CoreStartGame()
-{
-	CTX.sym.retro_set_environment(environment);
-	CTX.sym.retro_set_video_refresh(video_refresh);
-	CTX.sym.retro_set_input_poll(input_poll);
-	CTX.sym.retro_set_input_state(input_state);
-	CTX.sym.retro_set_audio_sample(audio_sample);
-	CTX.sym.retro_set_audio_sample_batch(audio_sample_batch);
-
-	CTX.sym.retro_init();
-
-	CTX.sym.retro_get_system_info(&CTX.system);
-
-	const char *game_path = CTX.paths[JUN_PATH_GAME];
-	JUN_File *game = JUN_FilesystemGetExistingFile(game_path);
-
-	CTX.game.path = game->path;
-	CTX.game.size = game->size;
-	if (!CTX.system.need_fullpath) {
-		CTX.game.data = calloc(CTX.game.size, 1);
-		memcpy((void *) CTX.game.data, game->buffer, CTX.game.size);
-	}
-
-	CTX.initialized = CTX.sym.retro_load_game(&CTX.game);
-
-	if (!CTX.initialized)
-		return CTX.initialized;
-
-	CTX.sym.retro_get_system_av_info(&CTX.av);
-	CTX.sym.retro_set_controller_port_device(0, RETRO_DEVICE_JOYPAD);
-
-	return CTX.initialized;
-}
-
-void JUN_CoreRun(uint8_t fast_forward)
-{
-	CTX.fast_forward = true;
-
-	for (size_t i = 0; i < fast_forward - 1; i++)
-		CTX.sym.retro_run();
-
-	CTX.fast_forward = false;
-
-	CTX.sym.retro_run();
-}
-
-void save_memory(uint32_t type, const char *path)
+static void save_memory(uint32_t type, const char *path)
 {
 	void *buffer = CTX.sym.retro_get_memory_data(type);
 	if (!buffer)
@@ -442,7 +394,7 @@ void save_memory(uint32_t type, const char *path)
 	JUN_FilesystemSaveFile(path, buffer, size);
 }
 
-void JUN_CoreSaveMemories()
+static void save_memories()
 {
 	if (SDL_GetTicks64() - CTX.last_save < 1000)
 		return;
@@ -473,7 +425,7 @@ static void restore_memory(uint32_t type, const char *path)
 	memcpy(buffer, file->buffer, file->size);
 }
 
-void JUN_CoreRestoreMemories()
+static void restore_memories()
 {
 	const char *sram_path = CTX.paths[JUN_PATH_SRAM];
 	const char *rtc_path = CTX.paths[JUN_PATH_RTC];
@@ -482,7 +434,7 @@ void JUN_CoreRestoreMemories()
 	restore_memory(RETRO_MEMORY_RTC, rtc_path);
 }
 
-void JUN_CoreSetCheats()
+static void set_cheats()
 {
 	char *path = NULL;
 	size_t index = 0;
@@ -515,9 +467,55 @@ void JUN_CoreSetCheats()
 	free(data);
 }
 
-void JUN_CoreResetCheats()
+bool JUN_CoreStartGame()
 {
-	CTX.sym.retro_cheat_reset();
+	CTX.sym.retro_set_environment(environment);
+	CTX.sym.retro_set_video_refresh(video_refresh);
+	CTX.sym.retro_set_input_poll(input_poll);
+	CTX.sym.retro_set_input_state(input_state);
+	CTX.sym.retro_set_audio_sample(audio_sample);
+	CTX.sym.retro_set_audio_sample_batch(audio_sample_batch);
+
+	CTX.sym.retro_init();
+
+	CTX.sym.retro_get_system_info(&CTX.system);
+
+	const char *game_path = CTX.paths[JUN_PATH_GAME];
+	JUN_File *game = JUN_FilesystemGetExistingFile(game_path);
+
+	CTX.game.path = game->path;
+	CTX.game.size = game->size;
+	if (!CTX.system.need_fullpath) {
+		CTX.game.data = calloc(CTX.game.size, 1);
+		memcpy((void *) CTX.game.data, game->buffer, CTX.game.size);
+	}
+
+	CTX.initialized = CTX.sym.retro_load_game(&CTX.game);
+
+	if (!CTX.initialized)
+		return CTX.initialized;
+
+	CTX.sym.retro_get_system_av_info(&CTX.av);
+	CTX.sym.retro_set_controller_port_device(0, RETRO_DEVICE_JOYPAD);
+
+	restore_memories();
+	set_cheats();
+
+	return CTX.initialized;
+}
+
+void JUN_CoreRun(uint8_t fast_forward)
+{
+	CTX.fast_forward = true;
+
+	for (size_t i = 0; i < fast_forward - 1; i++)
+		CTX.sym.retro_run();
+
+	CTX.fast_forward = false;
+
+	CTX.sym.retro_run();
+
+	save_memories();
 }
 
 void JUN_CoreSaveState()

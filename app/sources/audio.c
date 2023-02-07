@@ -1,19 +1,16 @@
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 #include <SDL2/SDL.h>
 
 #include "state.h"
 
 #include "audio.h"
 
-#define JUN_AUDIO_FORMAT    AUDIO_F32
-#define JUN_AUDIO_FREQUENCY 48000
-#define JUN_AUDIO_CHANNELS  2
-#define JUN_AUDIO_SAMPLES   1024
-
 struct JUN_Audio
 {
 	double sample_rate;
+	double frames_per_second;
 	uint8_t fast_forward;
 	SDL_AudioDeviceID device;
 	SDL_AudioStream *stream;
@@ -28,17 +25,18 @@ JUN_Audio *JUN_AudioCreate()
 	return this;
 }
 
-void JUN_AudioOpen(JUN_Audio *this, double sample_rate)
+void JUN_AudioOpen(JUN_Audio *this, double sample_rate, double frames_per_second)
 {
 	this->sample_rate = sample_rate;
+	this->frames_per_second = frames_per_second;
 
 	SDL_AudioSpec desired = {0};
 	SDL_AudioSpec obtained = {0};
 
-	desired.format = JUN_AUDIO_FORMAT;
-	desired.freq = JUN_AUDIO_FREQUENCY;
-	desired.channels = JUN_AUDIO_CHANNELS;
-	desired.samples = JUN_AUDIO_SAMPLES;
+	desired.format = AUDIO_S16LSB;
+	desired.freq = this->sample_rate;
+	desired.channels = 2;
+	desired.samples = lrint(this->sample_rate / this->frames_per_second);
 
 	this->device = SDL_OpenAudioDevice(NULL, 0, &desired, &obtained, 0);
 	SDL_PauseAudioDevice(this->device, false);
@@ -54,11 +52,12 @@ void JUN_AudioUpdate(JUN_Audio *this, uint8_t fast_forward)
 	if (this->stream) {
 		SDL_ClearQueuedAudio(this->device);
 		SDL_FreeAudioStream(this->stream);
+		this->stream = NULL;
 	}
 
 	this->stream = SDL_NewAudioStream(
 		AUDIO_S16LSB, 2, this->sample_rate * this->fast_forward,
-		JUN_AUDIO_FORMAT, JUN_AUDIO_CHANNELS, JUN_AUDIO_FREQUENCY
+		AUDIO_S16LSB, 2, this->sample_rate
 	);
 }
 

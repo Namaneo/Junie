@@ -56,29 +56,35 @@ static int16_t input_state(uint32_t port, uint32_t device, uint32_t index, uint3
 	return JUN_InputGetStatus(app->input, id, device);
 }
 
-void main_run_game(void *opaque)
+static void run_game(JUN_App *app)
 {
-	JUN_App *app = opaque;
+	double sample_rate = JUN_CoreGetSampleRate();
+	double frames_per_second = JUN_CoreGetFramesPerSecond();
 
-	if (!JUN_AppReady(app))
-		return;
+	JUN_AudioOpen(app->audio, sample_rate, frames_per_second);
+	JUN_Framerate *framerate = JUN_FramerateCreate(frames_per_second);
 
-	uint8_t fast_forward = JUN_StateGetFastForward(app->state);
+	while (!JUN_StateShouldExit(app->state)) {
+		if (JUN_FramerateDelay(framerate))
+			continue;
 
-	JUN_AudioUpdate(app->audio, fast_forward);
-	JUN_CoreRun(fast_forward);
+		uint8_t fast_forward = JUN_StateGetFastForward(app->state);
 
-	JUN_CoreSaveMemories();
+		JUN_AudioUpdate(app->audio, fast_forward);
+		JUN_CoreRun(fast_forward);
 
-	if (JUN_StateShouldSaveState(app->state)) {
-		JUN_CoreSaveState();
-		JUN_StateToggleSaveState(app->state);
+		if (JUN_StateShouldSaveState(app->state)) {
+			JUN_CoreSaveState();
+			JUN_StateToggleSaveState(app->state);
+		}
+
+		if (JUN_StateShouldRestoreState(app->state)) {
+			JUN_CoreRestoreState();
+			JUN_StateToggleRestoreState(app->state);
+		}
 	}
 
-	if (JUN_StateShouldRestoreState(app->state)) {
-		JUN_CoreRestoreState();
-		JUN_StateToggleRestoreState(app->state);
-	}
+	JUN_FramerateDestroy(&framerate);
 }
 
 char *get_settings()
@@ -112,19 +118,7 @@ int main(int argc, const char *argv[])
 		return 1;
 	}
 
-	JUN_CoreRestoreMemories();
-	JUN_CoreSetCheats();
-
-	JUN_AudioOpen(app->audio, JUN_CoreGetSampleRate());
-
-	JUN_Framerate *framerate = JUN_FramerateCreate(JUN_CoreGetFramesPerSecond());
-	while (!JUN_StateShouldExit(app->state)) {
-		if (JUN_FramerateDelay(framerate))
-			continue;
-
-		main_run_game(app);
-	}
-	JUN_FramerateDestroy(&framerate);
+	run_game(app);
 
 	JUN_CoreDestroy();
 	JUN_AppDestroy(&app);

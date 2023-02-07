@@ -14,5 +14,4 @@ typedef struct {
 } JUN_App;
 
 JUN_App *JUN_AppCreate();
-bool JUN_AppReady(JUN_App *this);
 void JUN_AppDestroy(JUN_App **app);

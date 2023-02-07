@@ -33,11 +33,6 @@ JUN_App *JUN_AppCreate()
 	return (JUN_App *) this;
 }
 
-bool JUN_AppReady(JUN_App *this)
-{
-	return this->audio && this->state && this->input && this->video;
-}
-
 void JUN_AppDestroy(JUN_App **app)
 {
 	if (!app || !*app)
