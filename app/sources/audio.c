@@ -3,14 +3,13 @@
 #include <SDL2/SDL.h>
 
 #include "state.h"
-#include "buffer.h"
 
 #include "audio.h"
 
 #define JUN_AUDIO_FORMAT    AUDIO_F32
-#define JUN_AUDIO_FREQUENCY 48000.0
-#define JUN_AUDIO_CHANNELS  2.0
-#define JUN_AUDIO_SAMPLES   1024.0
+#define JUN_AUDIO_FREQUENCY 48000
+#define JUN_AUDIO_CHANNELS  2
+#define JUN_AUDIO_SAMPLES   1024
 
 struct JUN_Audio
 {
@@ -18,23 +17,7 @@ struct JUN_Audio
 	uint8_t fast_forward;
 	SDL_AudioDeviceID device;
 	SDL_AudioStream *stream;
-	JUN_Buffer *buffer;
 };
-
-void audio_callback(void *opaque, uint8_t *stream, int32_t length)
-{
-	JUN_Audio *this = opaque;
-
-	int32_t available = SDL_AudioStreamAvailable(this->stream);
-	if (available > 0) {
-		void *data = calloc(available, 1);
-		SDL_AudioStreamGet(this->stream, data, available);
-		JUN_BufferWrite(this->buffer, data, available);
-		free(data);
-	}
-
-	JUN_BufferRead(this->buffer, stream, length);
-}
 
 JUN_Audio *JUN_AudioCreate()
 {
@@ -56,13 +39,9 @@ void JUN_AudioOpen(JUN_Audio *this, double sample_rate)
 	desired.freq = JUN_AUDIO_FREQUENCY;
 	desired.channels = JUN_AUDIO_CHANNELS;
 	desired.samples = JUN_AUDIO_SAMPLES;
-	desired.callback = audio_callback;
-	desired.userdata = this;
 
 	this->device = SDL_OpenAudioDevice(NULL, 0, &desired, &obtained, 0);
 	SDL_PauseAudioDevice(this->device, false);
-
-	this->buffer = JUN_BufferCreate(JUN_AUDIO_SAMPLES * JUN_AUDIO_CHANNELS * sizeof(float) * 5);
 }
 
 void JUN_AudioUpdate(JUN_Audio *this, uint8_t fast_forward)
@@ -86,6 +65,15 @@ void JUN_AudioUpdate(JUN_Audio *this, uint8_t fast_forward)
 void JUN_AudioQueue(JUN_Audio *this, const int16_t *data, size_t frames)
 {
 	SDL_AudioStreamPut(this->stream, data, frames * sizeof(int16_t) * 2);
+
+	int32_t length = SDL_AudioStreamAvailable(this->stream);
+	if (length <= 0)
+		return;
+
+	void *available = calloc(length, 1);
+	SDL_AudioStreamGet(this->stream, available, length);
+	SDL_QueueAudio(this->device, available, length);
+	free(available);
 }
 
 void JUN_AudioDestroy(JUN_Audio **audio)
@@ -100,8 +88,6 @@ void JUN_AudioDestroy(JUN_Audio **audio)
 
 	if (this->device)
 		SDL_CloseAudioDevice(this->device);
-
-	JUN_BufferDestroy(&this->buffer);
 
 	SDL_QuitSubSystem(SDL_INIT_AUDIO);
 
