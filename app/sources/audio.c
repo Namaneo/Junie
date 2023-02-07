@@ -12,6 +12,10 @@ struct JUN_Audio
 	double sample_rate;
 	double frames_per_second;
 	uint8_t fast_forward;
+
+	int16_t last_left;
+	int16_t last_right;
+
 	SDL_AudioDeviceID device;
 	SDL_AudioStream *stream;
 };
@@ -25,6 +29,28 @@ JUN_Audio *JUN_AudioCreate()
 	return this;
 }
 
+void audio_callback(void *opaque, int16_t *stream, uint32_t length)
+{
+	JUN_Audio *this = opaque;
+
+	memset(stream, 0, length);
+
+	int32_t available = SDL_AudioStreamGet(this->stream, stream, length);
+
+	if (available >= sizeof(int16_t) * 2) {
+		this->last_left  = stream[available - 2];
+		this->last_right = stream[available - 1];
+	}
+
+	if (available == 0 || available >= length)
+		return;
+
+	for (size_t i = available; i < length; i += sizeof(int16_t) * 2) {
+		stream[i + 0] = this->last_left;
+		stream[i + 1] = this->last_right;
+	}
+}
+
 void JUN_AudioOpen(JUN_Audio *this, double sample_rate, double frames_per_second)
 {
 	this->sample_rate = sample_rate;
@@ -36,7 +62,9 @@ void JUN_AudioOpen(JUN_Audio *this, double sample_rate, double frames_per_second
 	desired.format = AUDIO_S16LSB;
 	desired.freq = this->sample_rate;
 	desired.channels = 2;
-	desired.samples = lrint(this->sample_rate / this->frames_per_second);
+	desired.samples = this->sample_rate / this->frames_per_second;
+	desired.callback = (SDL_AudioCallback) audio_callback;
+	desired.userdata = this;
 
 	this->device = SDL_OpenAudioDevice(NULL, 0, &desired, &obtained, 0);
 	SDL_PauseAudioDevice(this->device, false);
@@ -64,15 +92,6 @@ void JUN_AudioUpdate(JUN_Audio *this, uint8_t fast_forward)
 void JUN_AudioQueue(JUN_Audio *this, const int16_t *data, size_t frames)
 {
 	SDL_AudioStreamPut(this->stream, data, frames * sizeof(int16_t) * 2);
-
-	int32_t length = SDL_AudioStreamAvailable(this->stream);
-	if (length <= 0)
-		return;
-
-	void *available = calloc(length, 1);
-	SDL_AudioStreamGet(this->stream, available, length);
-	SDL_QueueAudio(this->device, available, length);
-	free(available);
 }
 
 void JUN_AudioDestroy(JUN_Audio **audio)
