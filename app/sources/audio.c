@@ -62,7 +62,7 @@ void JUN_AudioOpen(JUN_Audio *this, double sample_rate)
 	this->device = SDL_OpenAudioDevice(NULL, 0, &desired, &obtained, 0);
 	SDL_PauseAudioDevice(this->device, false);
 
-	this->buffer = JUN_BufferCreate(JUN_AUDIO_FREQUENCY);
+	this->buffer = JUN_BufferCreate(JUN_AUDIO_SAMPLES * JUN_AUDIO_CHANNELS * sizeof(float) * 5);
 }
 
 void JUN_AudioUpdate(JUN_Audio *this, uint8_t fast_forward)

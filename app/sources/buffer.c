@@ -71,7 +71,7 @@ void JUN_BufferRead(JUN_Buffer *this, void *data, int32_t length)
 	memset(data, 0, length);
 
 	if (length > this->available)
-		length = this->available;
+		return;
 
 	this->available -= length;
 
