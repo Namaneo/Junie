@@ -36,13 +36,15 @@ uint32_t JUN_FramerateGetFPS(JUN_Framerate *this)
 	return this->frames_current;
 }
 
-bool JUN_FramerateDelay(JUN_Framerate *this)
+void JUN_FramerateDelay(JUN_Framerate *this)
 {
 	double now = get_timestamp(this);
-	double delta = now - this->last_delay;
+	double delta = 0;
 
-	if (delta < this->framerate)
-		return true;
+	while (delta < this->framerate) {
+		now = get_timestamp(this);
+		delta = now - this->last_delay;
+	}
 
 	this->last_delay = now;
 
@@ -52,8 +54,6 @@ bool JUN_FramerateDelay(JUN_Framerate *this)
 		this->frames_current = this->frames_pending;
 		this->frames_pending = 0;
 	}
-
-	return false;
 }
 
 void JUN_FramerateDestroy(JUN_Framerate **framerate)

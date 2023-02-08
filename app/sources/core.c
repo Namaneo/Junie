@@ -5,6 +5,7 @@
 #include "libretro.h"
 #include "parson.h"
 
+#include "framerate.h"
 #include "filesystem.h"
 #include "interop.h"
 
@@ -63,6 +64,7 @@ static struct CTX {
 
 	char *paths[JUN_PATH_MAX];
 	JUN_CoreCallbacks callbacks;
+	JUN_Framerate *framerate;
 
 	JSON_Value *settings;
 	JSON_Value *overrides;
@@ -501,11 +503,15 @@ bool JUN_CoreStartGame()
 	restore_memories();
 	set_cheats();
 
+	CTX.framerate = JUN_FramerateCreate(CTX.av.timing.fps);
+
 	return CTX.initialized;
 }
 
 void JUN_CoreRun(uint8_t fast_forward)
 {
+	JUN_FramerateDelay(CTX.framerate);
+
 	CTX.fast_forward = true;
 
 	for (size_t i = 0; i < fast_forward - 1; i++)
@@ -547,6 +553,8 @@ void JUN_CoreRestoreState()
 void JUN_CoreDestroy()
 {
 	CTX.sym.retro_deinit();
+
+	JUN_FramerateDestroy(&CTX.framerate);
 
 	json_value_free(CTX.settings);
 	json_value_free(CTX.overrides);

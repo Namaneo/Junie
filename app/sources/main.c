@@ -3,10 +3,6 @@
 #include <string.h>
 #include <SDL2/SDL.h>
 
-#include "framerate.h"
-#include "filesystem.h"
-#include "interop.h"
-
 #include "app.h"
 
 static bool environment(uint32_t cmd, void *data, void *opaque)
@@ -60,14 +56,9 @@ static void run_game(JUN_App *app)
 {
 	double sample_rate = JUN_CoreGetSampleRate();
 	double frames_per_second = JUN_CoreGetFramesPerSecond();
-
 	JUN_AudioOpen(app->audio, sample_rate, frames_per_second);
-	JUN_Framerate *framerate = JUN_FramerateCreate(frames_per_second);
 
 	while (!JUN_StateShouldExit(app->state)) {
-		if (JUN_FramerateDelay(framerate))
-			continue;
-
 		uint8_t fast_forward = JUN_StateGetFastForward(app->state);
 
 		JUN_AudioUpdate(app->audio, fast_forward);
@@ -83,8 +74,6 @@ static void run_game(JUN_App *app)
 			JUN_StateToggleRestoreState(app->state);
 		}
 	}
-
-	JUN_FramerateDestroy(&framerate);
 }
 
 char *get_settings()
