@@ -1,8 +1,7 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <SDL2/SDL.h>
-
-#include "interop.h"
 
 #include "filesystem.h"
 
@@ -101,6 +100,34 @@ JUN_File *JUN_FilesystemGetNewFile(const char *path)
 	return NULL;
 }
 
+static void *read_file(const char *path, int32_t *length)
+{
+	FILE *file = fopen(path, "r");
+	if (!file)
+		return NULL;
+
+	fseek(file, 0, SEEK_END);
+	int32_t size = ftell(file);
+	fseek(file, 0, SEEK_SET);
+
+	void *data = calloc(size, 1);
+	fread(data, 1, size, file);
+
+	if (length)
+		*length = size;
+
+	return data;
+}
+
+static void write_file(const char *path, const void *data, int32_t length)
+{
+	FILE *file = fopen(path, "w+");
+	if (!file)
+		return;
+
+	fwrite(data, 1, length, file);
+}
+
 JUN_File *JUN_FilesystemGetExistingFile(const char *path)
 {
 	for (int i = 0; i < MAX_FILES; ++i)
@@ -108,7 +135,7 @@ JUN_File *JUN_FilesystemGetExistingFile(const char *path)
 			return &files[i];
 
 	int32_t size = 0;
-	void *buffer = JUN_InteropReadFile(path, &size);
+	void *buffer = read_file(path, &size);
 
 	if (buffer) {
 		JUN_File *file = JUN_FilesystemGetNewFile(path);
@@ -136,7 +163,7 @@ void JUN_FilesystemSaveFile(const char *path, const void *buffer, size_t length)
 
 	memcpy(file->buffer, buffer, file->size);
 
-	JUN_InteropWriteFile(file->path, file->buffer, file->size);
+	write_file(file->path, file->buffer, file->size);
 }
 
 void JUN_FilesystemDestroy()

@@ -15,7 +15,6 @@ SRC := \
 	$(SRC_DIR)/audio.c \
 	$(SRC_DIR)/input.c \
 	$(SRC_DIR)/state.c \
-	$(SRC_DIR)/interop.c \
 	$(SRC_DIR)/framerate.c \
 	$(SRC_DIR)/filesystem.c \
 	$(LIB_DIR)/parson.c
@@ -55,7 +54,7 @@ LDFLAGS_GAME := $(LDFLAGS) \
 	-sASYNCIFY \
 	-sINITIAL_MEMORY=32mb \
 	-sEXPORTED_FUNCTIONS=_main,_get_settings \
-	-sEXPORTED_RUNTIME_METHODS=callMain,UTF8ToString
+	-sEXPORTED_RUNTIME_METHODS=callMain,FS,UTF8ToString
 
 LDFLAGS_TOOLS := $(LDFLAGS) \
 	-sEXPORTED_RUNTIME_METHODS=IDBStore

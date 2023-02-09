@@ -3,7 +3,6 @@
 #include <SDL2/SDL.h>
 
 #include "filesystem.h"
-#include "interop.h"
 
 #include "app.h"
 

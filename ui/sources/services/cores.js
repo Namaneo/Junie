@@ -84,11 +84,29 @@ export async function runCore(name, system, rom, settings) {
 	await createCore(name, graphics);
 	const module = cores[name].module;
 
+	const game = rom.replace(/\.[^/.]+$/, '');
+
 	module['onExit'] = async () => {
 		graphics.remove();
+
+		for (const name of module.FS.readdir(`${system}/${game}`)) {
+			const path = `${system}/${game}/${name}`;
+			if (name != '.' && name != '..')
+				await getFS().put(path, module.FS.readFile(path));
+		}
+
 		delete cores[name];
 
 		document.getElementById('root').hidden = false;
+	}
+
+	module.FS.mkdir(`${system}`);
+	module.FS.mkdir(`${system}/${game}`);
+	module.FS.writeFile(`${system}/${rom}`, await getFS().get(`${system}/${rom}`));
+
+	for (const path of await getFS().keys(`${system}/${game}`)) {
+		const file = await getFS().get(path);
+		if (file) module.FS.writeFile(path, file);
 	}
 
 	await module.callMain([system, rom, JSON.stringify(settings)]);
@@ -131,7 +149,7 @@ async function removeFile(db, id) {
 
 export function getFS() {
 	return {
-		keys: () => keysFile('Junie'),
+		keys: async (path) => (await keysFile('Junie')).filter(x => !path || x.startsWith(path)),
 		get: (path) => loadFile('Junie', path),
 		put: (path, data) => storeFile('Junie', path, data),
 		delete: (path) => removeFile('Junie', path),

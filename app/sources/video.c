@@ -3,7 +3,6 @@
 #include <SDL2/SDL_image.h>
 
 #include "filesystem.h"
-#include "interop.h"
 
 #include "video.h"
 

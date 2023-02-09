@@ -7,7 +7,6 @@
 
 #include "framerate.h"
 #include "filesystem.h"
-#include "interop.h"
 
 #include "core.h"
 
@@ -442,12 +441,11 @@ static void set_cheats()
 	size_t index = 0;
 
 	const char *cheats_path = CTX.paths[JUN_PATH_CHEATS];
-
-	char *data = JUN_InteropReadFile(cheats_path, NULL);
-	if (!data)
+	JUN_File *file = JUN_FilesystemGetExistingFile(cheats_path);
+	if (!file)
 		return;
 
-	JSON_Value *json = json_parse_string(data);
+	JSON_Value *json = json_parse_string(file->buffer);
 	for (size_t i = 0; i < json_array_get_count(json_array(json)); i++) {
 		const JSON_Value *cheat = json_array_get_value(json_array(json), i);
 
@@ -466,7 +464,6 @@ static void set_cheats()
 	}
 
 	json_value_free(json);
-	free(data);
 }
 
 bool JUN_CoreStartGame()
