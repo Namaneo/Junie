@@ -86,28 +86,37 @@ export async function runCore(name, system, rom, settings) {
 
 	const game = rom.replace(/\.[^/.]+$/, '');
 
-	module['onExit'] = async () => {
-		graphics.remove();
+	module.setupfs = async () => {
+		module.FS.mkdir(`${system}`);
+		module.FS.mkdir(`${system}/${game}`);
+		module.FS.writeFile(`${system}/${rom}`, await getFS().get(`${system}/${rom}`));
 
+		for (const path of await getFS().keys(`${system}/${game}`)) {
+			const file = await getFS().get(path);
+			if (file) module.FS.writeFile(path, file);
+		}
+	};
+
+	module.syncfs = async () => {
 		for (const name of module.FS.readdir(`${system}/${game}`)) {
 			const path = `${system}/${game}/${name}`;
 			if (name != '.' && name != '..')
 				await getFS().put(path, module.FS.readFile(path));
 		}
+	};
 
+	module['onExit'] = async () => {
+		clearInterval(module.sync_id);
+		await module.syncfs();
+
+		graphics.remove();
 		delete cores[name];
 
 		document.getElementById('root').hidden = false;
 	}
 
-	module.FS.mkdir(`${system}`);
-	module.FS.mkdir(`${system}/${game}`);
-	module.FS.writeFile(`${system}/${rom}`, await getFS().get(`${system}/${rom}`));
-
-	for (const path of await getFS().keys(`${system}/${game}`)) {
-		const file = await getFS().get(path);
-		if (file) module.FS.writeFile(path, file);
-	}
+	await module.setupfs();
+	module.sync_id = setInterval(module.syncfs, 1000);
 
 	await module.callMain([system, rom, JSON.stringify(settings)]);
 }
