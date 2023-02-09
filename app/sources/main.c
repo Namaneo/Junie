@@ -5,6 +5,15 @@
 
 #include "app.h"
 
+#if !defined(__EMSCRIPTEN__)
+#define run_game(app) while (!JUN_StateShouldExit(app->state) && run_iteration(app))
+#define stop_game()
+#else
+#include <emscripten.h>
+#define run_game(app) emscripten_set_main_loop_arg((em_arg_callback_func) run_iteration, app, 1000, 1)
+#define stop_game()   emscripten_cancel_main_loop()
+#endif
+
 static bool environment(uint32_t cmd, void *data, void *opaque)
 {
 	JUN_App *app = opaque;
@@ -52,28 +61,31 @@ static int16_t input_state(uint32_t port, uint32_t device, uint32_t index, uint3
 	return JUN_InputGetStatus(app->input, id, device);
 }
 
-static void run_game(JUN_App *app)
+static bool run_iteration(void *opaque)
 {
-	double sample_rate = JUN_CoreGetSampleRate();
-	double frames_per_second = JUN_CoreGetFramesPerSecond();
-	JUN_AudioOpen(app->audio, sample_rate, frames_per_second);
+	JUN_App *app = opaque;
 
-	while (!JUN_StateShouldExit(app->state)) {
-		uint8_t fast_forward = JUN_StateGetFastForward(app->state);
+	uint8_t fast_forward = JUN_StateGetFastForward(app->state);
 
-		JUN_AudioUpdate(app->audio, fast_forward);
-		JUN_CoreRun(fast_forward);
+	JUN_AudioUpdate(app->audio, fast_forward);
+	JUN_CoreRun(fast_forward);
 
-		if (JUN_StateShouldSaveState(app->state)) {
-			JUN_CoreSaveState();
-			JUN_StateToggleSaveState(app->state);
-		}
-
-		if (JUN_StateShouldRestoreState(app->state)) {
-			JUN_CoreRestoreState();
-			JUN_StateToggleRestoreState(app->state);
-		}
+	if (JUN_StateShouldSaveState(app->state)) {
+		JUN_CoreSaveState();
+		JUN_StateToggleSaveState(app->state);
 	}
+
+	if (JUN_StateShouldRestoreState(app->state)) {
+		JUN_CoreRestoreState();
+		JUN_StateToggleRestoreState(app->state);
+	}
+
+	if (JUN_StateShouldExit(app->state)) {
+		stop_game();
+		return false;
+	}
+
+	return true;
 }
 
 char *get_settings()
@@ -106,6 +118,10 @@ int main(int argc, const char *argv[])
 		SDL_LogInfo(0, "Core for system '%s' failed to start rom '%s'", system, rom);
 		return 1;
 	}
+
+	double sample_rate = JUN_CoreGetSampleRate();
+	double frames_per_second = JUN_CoreGetFramesPerSecond();
+	JUN_AudioOpen(app->audio, sample_rate, frames_per_second);
 
 	run_game(app);
 
