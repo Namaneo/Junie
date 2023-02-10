@@ -81,7 +81,7 @@ JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input)
 	SDL_InitSubSystem(SDL_INIT_VIDEO);
 
 	SDL_Rect size = {0};
-	SDL_GetDisplayUsableBounds(SDL_GetPrimaryDisplay(), &size);
+	SDL_GetDisplayUsableBounds(0, &size);
 
 	SDL_CreateWindowAndRenderer(size.w, size.h, SDL_WINDOW_OPENGL, &this->window, &this->renderer);
 
@@ -215,7 +215,7 @@ void JUN_VideoUpdateContext(JUN_Video *this, enum retro_pixel_format format, uns
 	}
 
 	SDL_Rect size = {0};
-	SDL_GetDisplayUsableBounds(SDL_GetPrimaryDisplay(), &size);
+	SDL_GetDisplayUsableBounds(0, &size);
 
 	if (this->view_width != size.w || this->view_height != size.h) {
 		this->view_width = size.w;
