@@ -1,6 +1,7 @@
-#include "framerate.h"
-
+#include <stdlib.h>
 #include <SDL2/SDL.h>
+
+#include "framerate.h"
 
 struct JUN_Framerate
 {
