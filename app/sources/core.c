@@ -1,25 +1,20 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
-#include <SDL2/SDL.h>
 
 #include "libretro.h"
 #include "parson.h"
 
+#include "tools.h"
 #include "framerate.h"
 #include "filesystem.h"
 
 #include "core.h"
 
-#if defined(DYNAMIC)
-#define LOAD_LIBRARY(path)   CTX.sym.library = SDL_LoadObject(path);
-#define UNLOAD_LIBRARY()     SDL_UnloadObject(CTX.sym.library);
-#define MAP_SYMBOL(function) CTX.sym.function = SDL_LoadFunction(CTX.sym.library, #function);
-#else
 #define LOAD_LIBRARY(path)   {}
 #define UNLOAD_LIBRARY()     {}
 #define MAP_SYMBOL(function) CTX.sym.function = function;
-#endif
 
 typedef enum {
 	JUN_PATH_GAME   = 0,
@@ -128,24 +123,24 @@ static bool jun_core_environment(unsigned cmd, void *data)
 		if (!variable->key || !variable->value)
 			break;
 
-		SDL_LogInfo(0, "SET -> %s: %s", variable->key, variable->value);
+		JUN_Log("SET -> %s: %s", variable->key, variable->value);
 
 		JSON_Value *item = json_value_init_object();
 
 		char *ptr = NULL;
-		char *value = SDL_strdup(variable->value);
+		char *value = JUN_Strdup(variable->value);
 
-		char *name = SDL_strtokr(value, ";", &ptr);
+		char *name = strtok_r(value, ";", &ptr);
 		json_object_set_string(json_object(item), "name", name);
 
 		ptr += 1;
-		char *element = SDL_strtokr(NULL, "|", &ptr);
+		char *element = strtok_r(NULL, "|", &ptr);
 		json_object_set_string(json_object(item), "default", element);
 
 		JSON_Array *options = json_array(json_value_init_array());
 		while (element) {
 			json_array_append_string(options, element);
-			element = SDL_strtokr(NULL, "|", &ptr);
+			element = strtok_r(NULL, "|", &ptr);
 		}
 		json_object_set_value(json_object(item), "options", json_array_get_wrapping_value(options));
 
@@ -171,33 +166,17 @@ static char *remove_extension(const char *str)
 
 static void create_paths(const char *system, const char *rom)
 {
-	char *path_system = NULL;
-	char *path_game = NULL;
-	char *path_saves = NULL;
-	char *path_state = NULL;
-	char *path_sram = NULL;
-	char *path_rtc = NULL;
-	char *path_cheats = NULL;
-
 	char *game = remove_extension(rom);
 
-	SDL_asprintf(&path_system, "%s",             system);
-	SDL_asprintf(&path_game,   "%s/%s",          system, rom);
-	SDL_asprintf(&path_saves,  "%s/%s",          system, game);
-	SDL_asprintf(&path_state,  "%s/%s/%s.state", system, game, game);
-	SDL_asprintf(&path_sram,   "%s/%s/%s.srm",   system, game, game);
-	SDL_asprintf(&path_rtc,    "%s/%s/%s.rtc",   system, game, game);
-	SDL_asprintf(&path_cheats, "%s/%s/%s.cht",   system, game, game);
+	CTX.paths[JUN_PATH_SYSTEM] = JUN_Strfmt("%s",             system);
+	CTX.paths[JUN_PATH_GAME] =   JUN_Strfmt("%s/%s",          system, rom);
+	CTX.paths[JUN_PATH_SAVES] =  JUN_Strfmt("%s/%s",          system, game);
+	CTX.paths[JUN_PATH_STATE] =  JUN_Strfmt("%s/%s/%s.state", system, game, game);
+	CTX.paths[JUN_PATH_SRAM] =   JUN_Strfmt("%s/%s/%s.srm",   system, game, game);
+	CTX.paths[JUN_PATH_RTC] =    JUN_Strfmt("%s/%s/%s.rtc",   system, game, game);
+	CTX.paths[JUN_PATH_CHEATS] = JUN_Strfmt("%s/%s/%s.cht",   system, game, game);
 
 	free(game);
-
-	CTX.paths[JUN_PATH_SYSTEM] = path_system;
-	CTX.paths[JUN_PATH_GAME]   = path_game;
-	CTX.paths[JUN_PATH_SAVES]  = path_saves;
-	CTX.paths[JUN_PATH_STATE]  = path_state;
-	CTX.paths[JUN_PATH_SRAM]   = path_sram;
-	CTX.paths[JUN_PATH_RTC]    = path_rtc;
-	CTX.paths[JUN_PATH_CHEATS] = path_cheats;
 }
 
 void JUN_CoreCreate(const char *system, const char *rom, const char *settings, const char *library)
@@ -219,7 +198,7 @@ static void core_log(enum retro_log_level level, const char *fmt, ...)
 	vsnprintf(buffer, sizeof(buffer), fmt, args);
 	va_end(args);
 
-	SDL_LogInfo(0, "%s", buffer);
+	JUN_Log("%s", buffer);
 }
 
 bool JUN_CoreEnvironment(unsigned cmd, void *data)
@@ -265,7 +244,7 @@ bool JUN_CoreEnvironment(unsigned cmd, void *data)
 		case RETRO_ENVIRONMENT_SET_MESSAGE: {
 			struct retro_message *message = data;
 
-			SDL_LogInfo(0, "%s", message->msg);
+			JUN_Log("%s", message->msg);
 
 			return true;
 		}
@@ -288,7 +267,7 @@ bool JUN_CoreEnvironment(unsigned cmd, void *data)
 					variable->value = json_object_get_string(json_object(setting), "default");
 			}
 
-			SDL_LogInfo(0, "GET -> %s: %s", variable->key, variable->value);
+			JUN_Log("GET -> %s: %s", variable->key, variable->value);
 
 			return variable->value != NULL;
 		}
@@ -309,7 +288,7 @@ bool JUN_CoreEnvironment(unsigned cmd, void *data)
 			return true;
 		}
 		default: {
-			SDL_LogInfo(0, "Unhandled command: %d", command);
+			JUN_Log("Unhandled command: %d", command);
 
 			return false;
 		}
@@ -398,10 +377,10 @@ static void save_memory(uint32_t type, const char *path)
 
 static void save_memories()
 {
-	if (SDL_GetTicks64() - CTX.last_save < 1000)
+	if (JUN_GetTicks() - CTX.last_save < 1000)
 		return;
 
-	CTX.last_save = SDL_GetTicks64();
+	CTX.last_save = JUN_GetTicks();
 
 	const char *sram_path = CTX.paths[JUN_PATH_SRAM];
 	const char *rtc_path = CTX.paths[JUN_PATH_RTC];
@@ -456,7 +435,7 @@ static void set_cheats()
 
 		int32_t order = json_object_get_number(json_object(cheat), "order");
 
-		char *value = SDL_strdup(json_object_get_string(json_object(cheat), "value"));
+		char *value = JUN_Strdup(json_object_get_string(json_object(cheat), "value"));
 		for (size_t i = 0; i < strlen(value); i++)
 			if (value[i] == ' ' || value[i] == '\n')
 				value[i] = '+';

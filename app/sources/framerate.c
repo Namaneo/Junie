@@ -1,13 +1,13 @@
 #include <stdlib.h>
-#include <SDL2/SDL.h>
+#include <time.h>
+
+#include "tools.h"
 
 #include "framerate.h"
 
 struct JUN_Framerate
 {
 	double framerate;
-	double frequency;
-
 	double last_delay;
 	double last_second;
 
@@ -15,18 +15,12 @@ struct JUN_Framerate
 	uint32_t frames_pending;
 };
 
-static double get_timestamp(JUN_Framerate *this)
-{
-	return (SDL_GetPerformanceCounter() * 1000.0) / SDL_GetPerformanceFrequency();
-}
-
 JUN_Framerate *JUN_FramerateCreate(double framerate)
 {
 	JUN_Framerate *this = calloc(1, sizeof(JUN_Framerate));
 
 	this->framerate = 1000.0 / framerate;
-	this->frequency = SDL_GetPerformanceFrequency();
-	this->last_delay = get_timestamp(this);
+	this->last_delay = JUN_GetTicks();
 	this->last_second = this->last_delay;
 
 	return this;
@@ -39,11 +33,11 @@ uint32_t JUN_FramerateGetFPS(JUN_Framerate *this)
 
 void JUN_FramerateDelay(JUN_Framerate *this)
 {
-	double now = get_timestamp(this);
+	double now = JUN_GetTicks();
 	double delta = 0;
 
 	while (delta < this->framerate) {
-		now = get_timestamp(this);
+		now = JUN_GetTicks();
 		delta = now - this->last_delay;
 	}
 

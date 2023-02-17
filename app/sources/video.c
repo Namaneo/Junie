@@ -2,6 +2,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
+#include "tools.h"
 #include "filesystem.h"
 
 #include "video.h"
@@ -199,7 +200,7 @@ void JUN_VideoUpdateContext(JUN_Video *this, enum retro_pixel_format format, uns
 	}
 
 	if (this->width != width || this->height != height || this->pitch != pitch) {
-		SDL_LogInfo(0, "%u x %u (%zu)", width, height, pitch);
+		JUN_Log("%u x %u (%zu)", width, height, pitch);
 
 		if (this->texture)
 			SDL_DestroyTexture(this->texture);

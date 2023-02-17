@@ -11,6 +11,7 @@ SRC := \
 	$(SRC_DIR)/main.c \
 	$(SRC_DIR)/app.c \
 	$(SRC_DIR)/core.c \
+	$(SRC_DIR)/tools.c \
 	$(SRC_DIR)/video.c \
 	$(SRC_DIR)/audio.c \
 	$(SRC_DIR)/input.c \

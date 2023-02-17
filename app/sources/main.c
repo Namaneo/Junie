@@ -1,7 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <SDL2/SDL.h>
+
+#include "tools.h"
 
 #include "app.h"
 
@@ -90,8 +91,6 @@ static bool run_iteration(void *opaque)
 
 char *get_settings()
 {
-	SDL_LogSetAllPriority(SDL_LOG_PRIORITY_CRITICAL);
-
 	return JUN_CoreGetDefaultConfiguration(NULL);
 }
 
@@ -115,7 +114,7 @@ int main(int argc, const char *argv[])
 	});
 
 	if (!JUN_CoreStartGame()) {
-		SDL_LogInfo(0, "Core for system '%s' failed to start rom '%s'", system, rom);
+		JUN_Log("Core for system '%s' failed to start rom '%s'", system, rom);
 		return 1;
 	}
 
