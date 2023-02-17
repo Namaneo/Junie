@@ -12,9 +12,23 @@
 
 #include "core.h"
 
+#if defined(DYNAMIC)
+#if defined(_WIN32)
+#include <windows.h>
+#define LOAD_LIBRARY(path)   CTX.sym.library = LoadLibrary(path)
+#define UNLOAD_LIBRARY()     FreeLibrary((HMODULE) CTX.sym.library)
+#define MAP_SYMBOL(function) CTX.sym.function = GetProcAddress((HMODULE) CTX.sym.library, #function)
+#else
+#include <dlfcn.h>
+#define LOAD_LIBRARY(path)   CTX.sym.library = dlopen(path, RTLD_LAZY)
+#define UNLOAD_LIBRARY()     dlclose(CTX.sym.library)
+#define MAP_SYMBOL(function) CTX.sym.function = dlsym(CTX.sym.library, #function)
+#endif
+#else
 #define LOAD_LIBRARY(path)   {}
 #define UNLOAD_LIBRARY()     {}
-#define MAP_SYMBOL(function) CTX.sym.function = function;
+#define MAP_SYMBOL(function) CTX.sym.function = function
+#endif
 
 typedef enum {
 	JUN_PATH_GAME   = 0,
