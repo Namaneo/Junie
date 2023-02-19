@@ -22,12 +22,11 @@ static bool environment(uint32_t cmd, void *data, void *opaque)
 	return JUN_CoreEnvironment(cmd, data);
 }
 
-static void video_refresh(const void *data, uint32_t width, uint32_t height, size_t pitch, void *opaque)
+static void video_refresh(const void *data, uint32_t width, uint32_t height, void *opaque)
 {
 	JUN_App *app = opaque;
 
-	enum retro_pixel_format format = JUN_CoreGetFormat();
-	JUN_VideoUpdateContext(app->video, format, width, height, pitch);
+	JUN_VideoUpdateContext(app->video, width, height);
 
 	JUN_VideoClear(app->video);
 	JUN_VideoDrawFrame(app->video, data);

@@ -338,11 +338,6 @@ double JUN_CoreGetFramesPerSecond()
 	return CTX.av.timing.fps;
 }
 
-enum retro_pixel_format JUN_CoreGetFormat()
-{
-	return CTX.format;
-}
-
 static bool environment(unsigned cmd, void *data)
 {
 	return CTX.callbacks.environment(cmd, data, CTX.callbacks.opaque);
@@ -353,7 +348,16 @@ static void video_refresh(const void *data, unsigned width, unsigned height, siz
 	if (CTX.fast_forward)
 		return;
 
-	CTX.callbacks.video_refresh(data, width, height, pitch, CTX.callbacks.opaque);
+	void *image =
+		CTX.format == RETRO_PIXEL_FORMAT_0RGB1555 ? JUN_ConvertARGB1555(data, width, height, pitch) :
+		CTX.format == RETRO_PIXEL_FORMAT_XRGB8888 ? JUN_CopyARGB8888(data, width, height, pitch)    :
+		CTX.format == RETRO_PIXEL_FORMAT_RGB565   ? JUN_ConvertRGB565(data, width, height, pitch)   :
+		NULL;
+
+	if (image)
+		CTX.callbacks.video_refresh(image, width, height, CTX.callbacks.opaque);
+
+	free(image);
 }
 
 static void audio_sample(int16_t left, int16_t right)

@@ -3,7 +3,7 @@
 #include "libretro.h"
 
 typedef bool (*JUN_CoreEnvironmentFunc)(unsigned cmd, void *data, void *opaque);
-typedef void (*JUN_CoreVideoRefreshFunc)(const void *data, unsigned width, unsigned height, size_t pitch, void *opaque);
+typedef void (*JUN_CoreVideoRefreshFunc)(const void *data, unsigned width, unsigned height, void *opaque);
 typedef size_t (*JUN_CoreAudioSampleFunc)(const int16_t *data, size_t frames, void *opaque);
 typedef void (*JUN_CoreInputPollFunc)(void *opaque);
 typedef int16_t (*JUN_CoreInputStateFunc)(unsigned port, unsigned device, unsigned index, unsigned id, void *opaque);
@@ -24,7 +24,6 @@ void JUN_CoreSetCallbacks(JUN_CoreCallbacks *callbacks);
 bool JUN_CoreEnvironment(unsigned cmd, void *data);
 double JUN_CoreGetSampleRate();
 double JUN_CoreGetFramesPerSecond();
-enum retro_pixel_format JUN_CoreGetFormat();
 bool JUN_CoreStartGame();
 void JUN_CoreRun(uint8_t fast_forward);
 void JUN_CoreSaveState();

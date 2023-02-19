@@ -25,7 +25,7 @@ void JUN_Log(const char *fmt, ...)
 	va_end(args);
 #endif
 }
-#include <SDL2/SDL.h>
+
 uint64_t JUN_GetTicks()
 {
 	struct timespec now = {0};
@@ -50,4 +50,66 @@ char *JUN_Strfmt(const char *fmt, ...)
 	va_end(args);
 
 	return str;
+}
+
+void *JUN_ConvertARGB1555(const void *data, uint32_t width, uint32_t height, size_t pitch)
+{
+	if (!data)
+		return NULL;
+
+	uint32_t *rgba = calloc(width * height, sizeof(uint32_t));
+
+	for (size_t x = 0; x < width; x++) {
+		for (size_t y = 0; y < height; y++) {
+			uint32_t color = ((uint16_t *) data)[x + y * (pitch / sizeof(uint16_t))];
+
+			uint32_t a = color & 0b1000000000000000 ? 0xFF : 0x00;
+			uint32_t r = ((color & 0b0111110000000000) >> 10) << 19;
+			uint32_t g = ((color & 0b0000001111100000) >> 5 ) << 11;
+			uint32_t b = ((color & 0b0000000000011111) >> 0 ) << 3;
+
+			rgba[x + y * width] = a | r | g | b;
+		}
+	}
+
+	return rgba;
+}
+
+void *JUN_ConvertRGB565(const void *data, uint32_t width, uint32_t height, size_t pitch)
+{
+	if (!data)
+		return NULL;
+
+	uint32_t *rgba = calloc(width * height, sizeof(uint32_t));
+
+	for (size_t x = 0; x < width; x++) {
+		for (size_t y = 0; y < height; y++) {
+			uint32_t color = ((uint16_t *) data)[x + y * (pitch / sizeof(uint16_t))];
+
+			uint32_t r = ((color & 0b1111100000000000) >> 11) << 19;
+			uint32_t g = ((color & 0b0000011111100000) >> 5 ) << 10;
+			uint32_t b = ((color & 0b0000000000011111) >> 0 ) << 3;
+
+			rgba[x + y * width] = r | g | b;
+		}
+	}
+
+	return rgba;
+}
+
+void *JUN_CopyARGB8888(const void *data, uint32_t width, uint32_t height, size_t pitch)
+{
+	if (!data)
+		return NULL;
+
+	uint32_t *rgba = calloc(width * height, sizeof(uint32_t));
+
+	for (size_t x = 0; x < width; x++) {
+		for (size_t y = 0; y < height; y++) {
+			uint32_t color = ((uint32_t *) data)[x + y * (pitch / sizeof(uint32_t))];
+			rgba[x + y * width] = color;
+		}
+	}
+
+	return rgba;
 }

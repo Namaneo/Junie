@@ -51,11 +51,8 @@ struct JUN_Video {
 	JUN_Input *input;
 
 	SDL_Texture *texture;
-	SDL_PixelFormatEnum pixel_format;
-	uint32_t bits_per_pixel;
 	uint32_t width;
 	uint32_t height;
-	size_t pitch;
 
 	int32_t view_width;
 	int32_t view_height;
@@ -180,37 +177,19 @@ void JUN_VideoClear(JUN_Video *this)
 	SDL_RenderClear(this->renderer);
 }
 
-void JUN_VideoUpdateContext(JUN_Video *this, enum retro_pixel_format format, unsigned width, unsigned height, size_t pitch)
+void JUN_VideoUpdateContext(JUN_Video *this, unsigned width, unsigned height)
 {
-	switch (format) {
-		case RETRO_PIXEL_FORMAT_0RGB1555:
-			this->pixel_format = SDL_PIXELFORMAT_ARGB1555;
-			this->bits_per_pixel = sizeof(uint16_t);
-			break;
-		case RETRO_PIXEL_FORMAT_XRGB8888:
-			this->pixel_format = SDL_PIXELFORMAT_XRGB8888;
-			this->bits_per_pixel = sizeof(uint32_t);
-			break;
-		case RETRO_PIXEL_FORMAT_RGB565:
-			this->pixel_format = SDL_PIXELFORMAT_RGB565;
-			this->bits_per_pixel = sizeof(uint16_t);
-			break;
-		default:
-			break;
-	}
-
-	if (this->width != width || this->height != height || this->pitch != pitch) {
-		JUN_Log("%u x %u (%zu)", width, height, pitch);
+	if (this->width != width || this->height != height) {
+		JUN_Log("[AV] %u x %u", width, height);
 
 		if (this->texture)
 			SDL_DestroyTexture(this->texture);
 
 		this->width = width;
 		this->height = height;
-		this->pitch = pitch ? pitch : width * this->bits_per_pixel;
 
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
-		this->texture = SDL_CreateTexture(this->renderer, this->pixel_format, SDL_TEXTUREACCESS_STREAMING, width, height);
+		this->texture = SDL_CreateTexture(this->renderer, SDL_PIXELFORMAT_XRGB8888, SDL_TEXTUREACCESS_STREAMING, width, height);
 
 		JUN_StateSetFrameMetrics(this->state, this->width, this->height);
 	}
@@ -246,7 +225,7 @@ void JUN_VideoDrawFrame(JUN_Video *this, const void *data)
 		.w = scale_w < scale_h ? this->view_width : this->width * scale_h,
 		.h = scale_w < scale_h ? this->view_width / aspect_ratio : this->view_height - offset,
 	};
-	SDL_UpdateTexture(this->texture, NULL, data, this->pitch);
+	SDL_UpdateTexture(this->texture, NULL, data, this->width * sizeof(uint32_t));
 	SDL_RenderCopy(this->renderer, this->texture, NULL, &rect);
 }
 
