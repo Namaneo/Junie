@@ -93,7 +93,7 @@ JUN_File *JUN_FilesystemGetNewFile(const char *path)
 	for (int i = 0; i < MAX_FILES; ++i) {
 		if (!files[i].exists) {
 			files[i].exists = true;
-			files[i].path = JUN_Strdup(path);
+			files[i].path = strdup(path);
 
 			return &files[i];
 		}
@@ -315,7 +315,7 @@ static int fs_rename(const char *old_path, const char *new_path)
 		return -1;
 
 	free(file->path);
-	file->path = JUN_Strdup(new_path);
+	file->path = strdup(new_path);
 
 	return 0;
 }

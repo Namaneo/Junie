@@ -142,7 +142,7 @@ static bool jun_core_environment(unsigned cmd, void *data)
 		JSON_Value *item = json_value_init_object();
 
 		char *ptr = NULL;
-		char *value = JUN_Strdup(variable->value);
+		char *value = strdup(variable->value);
 
 		char *name = strtok_r(value, ";", &ptr);
 		json_object_set_string(json_object(item), "name", name);
@@ -206,13 +206,13 @@ void JUN_CoreCreate(const char *system, const char *rom, const char *settings, c
 static void core_log(enum retro_log_level level, const char *fmt, ...)
 {
 	va_list args;
-	char buffer[4096] = {0};
-
 	va_start(args, fmt);
-	vsnprintf(buffer, sizeof(buffer), fmt, args);
-	va_end(args);
 
+	char buffer[4096] = {0};
+	vsnprintf(buffer, sizeof(buffer), fmt, args);
 	JUN_Log("%s", buffer);
+
+	va_end(args);
 }
 
 bool JUN_CoreEnvironment(unsigned cmd, void *data)
@@ -449,7 +449,7 @@ static void set_cheats()
 
 		int32_t order = json_object_get_number(json_object(cheat), "order");
 
-		char *value = JUN_Strdup(json_object_get_string(json_object(cheat), "value"));
+		char *value = strdup(json_object_get_string(json_object(cheat), "value"));
 		for (size_t i = 0; i < strlen(value); i++)
 			if (value[i] == ' ' || value[i] == '\n')
 				value[i] = '+';
