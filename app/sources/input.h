@@ -23,5 +23,5 @@ void JUN_InputDestroy(JUN_Input **input);
 void JUN_InputMapTouch(JUN_Input *ctx, uint8_t id, double x, double y, double radius);
 void JUN_InputSetCallback(JUN_Input *ctx, uint8_t id, JUN_StateCallback callback);
 void JUN_InputPollEvents(JUN_Input *ctx);
-int16_t JUN_InputGetStatus(JUN_Input *ctx, uint8_t id, uint8_t device);
+int16_t JUN_InputGetStatus(JUN_Input *ctx, uint8_t device, uint8_t id);
 void JUN_InputReset(JUN_Input *ctx);

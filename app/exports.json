@@ -1,0 +1,17 @@
+[
+	"_JUN_CoreCreate",
+	"_JUN_CoreGetDefaults",
+	"_JUN_CoreStartGame",
+	"_JUN_CoreGetSampleRate",
+	"_JUN_CoreGetFPS",
+	"_JUN_CoreSetInput",
+	"_JUN_CoreRun",
+	"_JUN_CoreGetFrameData",
+	"_JUN_CoreGetFrameWidth",
+	"_JUN_CoreGetFrameHeight",
+	"_JUN_CoreGetAudioData",
+	"_JUN_CoreGetAudioFrames",
+	"_JUN_CoreSaveState",
+	"_JUN_CoreRestoreState",
+	"_JUN_CoreDestroy"
+]

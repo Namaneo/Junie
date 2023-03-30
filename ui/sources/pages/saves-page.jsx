@@ -2,9 +2,9 @@ import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem
 import { checkmarkCircleOutline, closeCircleOutline, cloudDownload, cloudUpload, buildOutline } from 'ionicons/icons';
 import { useRef, useState } from 'react';
 import { FixSaveModal } from '../modals/fix-save-modal';
-import * as Requests from '../services/requests';
-import * as Database from '../services/database';
-import * as Helpers from '../services/helpers';
+import Requests from '../services/requests';
+import Helpers from '../services/helpers';
+import Files from '../services/files';
 
 export const SavesPage = () => {
 
@@ -22,9 +22,9 @@ export const SavesPage = () => {
 	}
 
 	const deleteSave = async (save) => {
-		await Database.removeSave(save);
+		await Files.Saves.remove(save);
 
-		setSaves(await Database.getSaves());
+		setSaves(await Files.Saves.get());
 	};
 
 	const backupSave = async () => {
@@ -57,15 +57,15 @@ export const SavesPage = () => {
 		fileUpload.current.value = '';
 
 		for (const file of files)
-			await Database.write(file.path, file.data);
+			await Files.write(file.path, file.data);
 
-		setSaves(await Database.getSaves());
+		setSaves(await Files.Saves.get());
 	}
 
 	const apply = async (system, game) => {
-		await Database.fixSave(current, system, game);
+		await Files.Saves.fix(current, system, game);
 
-		setSaves(await Database.getSaves());
+		setSaves(await Files.Saves.get());
 		setModal(false);
 	};
 
@@ -75,7 +75,7 @@ export const SavesPage = () => {
 
 	useIonViewWillEnter(async () => {
 		setSystems(await Requests.getSystems());
-		setSaves(await Database.getSaves());
+		setSaves(await Files.Saves.get());
 	});
 
 	const fileUpload = useRef(null);

@@ -1,30 +1,50 @@
+#include "app.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <emscripten.h>
+
+#include "libretro.h"
 
 #include "tools.h"
 
-#include "app.h"
-
-#if !defined(__EMSCRIPTEN__)
-#define run_game(app) while (!JUN_StateShouldExit(app->state) && run_iteration(app))
-#define stop_game()
-#else
-#include <emscripten.h>
-#define run_game(app) emscripten_set_main_loop_arg((em_arg_callback_func) run_iteration, app, 1000, 1)
-#define stop_game()   emscripten_cancel_main_loop()
-#endif
-
-static bool environment(uint32_t cmd, void *data, void *opaque)
+static void update_inputs(JUN_App *app)
 {
-	JUN_App *app = opaque;
+	JUN_InputPollEvents(app->input);
 
-	return JUN_CoreEnvironment(cmd, data);
+	#define SET_INPUT(device, id) JUN_CoreSetInput(device, id, JUN_InputGetStatus(app->input, device, id))
+
+	SET_INPUT(RETRO_DEVICE_POINTER, RETRO_DEVICE_ID_POINTER_PRESSED);
+	SET_INPUT(RETRO_DEVICE_POINTER, RETRO_DEVICE_ID_POINTER_X);
+	SET_INPUT(RETRO_DEVICE_POINTER, RETRO_DEVICE_ID_POINTER_Y);
+
+	if (JUN_StateHasGamepad(app->state)) {
+		SET_INPUT(RETRO_DEVICE_JOYPAD, RETRO_DEVICE_ID_JOYPAD_UP);
+		SET_INPUT(RETRO_DEVICE_JOYPAD, RETRO_DEVICE_ID_JOYPAD_UP);
+		SET_INPUT(RETRO_DEVICE_JOYPAD, RETRO_DEVICE_ID_JOYPAD_DOWN);
+		SET_INPUT(RETRO_DEVICE_JOYPAD, RETRO_DEVICE_ID_JOYPAD_LEFT);
+		SET_INPUT(RETRO_DEVICE_JOYPAD, RETRO_DEVICE_ID_JOYPAD_RIGHT);
+		SET_INPUT(RETRO_DEVICE_JOYPAD, RETRO_DEVICE_ID_JOYPAD_L);
+
+		SET_INPUT(RETRO_DEVICE_JOYPAD, RETRO_DEVICE_ID_JOYPAD_X);
+		SET_INPUT(RETRO_DEVICE_JOYPAD, RETRO_DEVICE_ID_JOYPAD_B);
+		SET_INPUT(RETRO_DEVICE_JOYPAD, RETRO_DEVICE_ID_JOYPAD_A);
+		SET_INPUT(RETRO_DEVICE_JOYPAD, RETRO_DEVICE_ID_JOYPAD_Y);
+		SET_INPUT(RETRO_DEVICE_JOYPAD, RETRO_DEVICE_ID_JOYPAD_R);
+
+		SET_INPUT(RETRO_DEVICE_JOYPAD, RETRO_DEVICE_ID_JOYPAD_START);
+		SET_INPUT(RETRO_DEVICE_JOYPAD, RETRO_DEVICE_ID_JOYPAD_SELECT);
+	}
+
+	#undef SET_INPUT
 }
 
-static void video_refresh(const void *data, uint32_t width, uint32_t height, void *opaque)
+static void update_video(JUN_App *app)
 {
-	JUN_App *app = opaque;
+	const void *data = JUN_CoreGetFrameData();
+	uint32_t width = JUN_CoreGetFrameWidth();
+	uint32_t height = JUN_CoreGetFrameHeight();
 
 	JUN_VideoUpdateContext(app->video, width, height);
 
@@ -32,44 +52,20 @@ static void video_refresh(const void *data, uint32_t width, uint32_t height, voi
 	JUN_VideoDrawFrame(app->video, data);
 	JUN_VideoDrawUI(app->video);
 	JUN_VideoPresent(app->video);
+
 }
 
-static size_t audio_sample(const int16_t *data, size_t frames, void *opaque)
+static void update_audio(JUN_App *app)
 {
-	JUN_App *app = opaque;
+	const void *data = JUN_CoreGetAudioData();
+	uint32_t frames = JUN_CoreGetAudioFrames();
 
 	if (JUN_StateHasAudio(app->state))
 		JUN_AudioQueue(app->audio, data, frames);
-
-	return frames;
 }
 
-static void input_poll(void *opaque)
+static void update_state(JUN_App *app)
 {
-	JUN_App *app = opaque;
-
-	JUN_InputPollEvents(app->input);
-}
-
-static int16_t input_state(uint32_t port, uint32_t device, uint32_t index, uint32_t id, void *opaque)
-{
-	JUN_App *app = opaque;
-
-	if (port != 0)
-		return 0;
-
-	return JUN_InputGetStatus(app->input, id, device);
-}
-
-static bool run_iteration(void *opaque)
-{
-	JUN_App *app = opaque;
-
-	uint8_t fast_forward = JUN_StateGetFastForward(app->state);
-
-	JUN_AudioUpdate(app->audio, fast_forward);
-	JUN_CoreRun(fast_forward);
-
 	if (JUN_StateShouldSaveState(app->state)) {
 		JUN_CoreSaveState();
 		JUN_StateToggleSaveState(app->state);
@@ -79,18 +75,25 @@ static bool run_iteration(void *opaque)
 		JUN_CoreRestoreState();
 		JUN_StateToggleRestoreState(app->state);
 	}
-
-	if (JUN_StateShouldExit(app->state)) {
-		stop_game();
-		return false;
-	}
-
-	return true;
 }
 
-char *get_settings()
+static void run_iteration(void *opaque)
 {
-	return JUN_CoreGetDefaultConfiguration(NULL);
+	JUN_App *app = opaque;
+
+	uint8_t fast_forward = JUN_StateGetFastForward(app->state);
+
+	update_inputs(app);
+
+	JUN_AudioUpdate(app->audio, fast_forward);
+	JUN_CoreRun(fast_forward);
+
+	update_video(app);
+	update_audio(app);
+	update_state(app);
+
+	if (JUN_StateShouldExit(app->state))
+		emscripten_cancel_main_loop();
 }
 
 int main(int argc, const char *argv[])
@@ -101,16 +104,7 @@ int main(int argc, const char *argv[])
 
 	JUN_App *app = JUN_AppCreate();
 
-	JUN_CoreCreate(system, rom, settings, NULL);
-
-	JUN_CoreSetCallbacks(& (JUN_CoreCallbacks) {
-		.opaque             = app,
-		.environment        = environment,
-		.video_refresh      = video_refresh,
-		.audio_sample       = audio_sample,
-		.input_poll         = input_poll,
-		.input_state        = input_state,
-	});
+	JUN_CoreCreate(system, rom, settings);
 
 	if (!JUN_CoreStartGame()) {
 		JUN_Log("Core for system '%s' failed to start rom '%s'", system, rom);
@@ -118,10 +112,10 @@ int main(int argc, const char *argv[])
 	}
 
 	double sample_rate = JUN_CoreGetSampleRate();
-	double frames_per_second = JUN_CoreGetFramesPerSecond();
+	double frames_per_second = JUN_CoreGetFPS();
 	JUN_AudioOpen(app->audio, sample_rate, frames_per_second);
 
-	run_game(app);
+	emscripten_set_main_loop_arg(run_iteration, app, 1000, 1);
 
 	JUN_CoreDestroy();
 	JUN_AppDestroy(&app);

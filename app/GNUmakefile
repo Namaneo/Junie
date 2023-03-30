@@ -5,41 +5,25 @@ OUT_DIR := build
 
 CORES_DIR := ../cores
 LIBRARIES := $(shell jq -r 'keys[]' $(CORES_DIR)/cores.json)
-BINARIES  := $(LIBRARIES:%=$(OUT_DIR)/%.js) $(OUT_DIR)/tools.js
+BINARIES  := $(LIBRARIES:%=$(OUT_DIR)/lib%.js) $(OUT_DIR)/tools.js
 
 SRC := \
-	$(SRC_DIR)/main.c \
-	$(SRC_DIR)/app.c \
 	$(SRC_DIR)/core.c \
 	$(SRC_DIR)/tools.c \
-	$(SRC_DIR)/video.c \
-	$(SRC_DIR)/audio.c \
-	$(SRC_DIR)/input.c \
-	$(SRC_DIR)/state.c \
 	$(SRC_DIR)/framerate.c \
 	$(SRC_DIR)/filesystem.c \
 	$(LIB_DIR)/parson.c
 
 OBJ := $(SRC:.c=.o)
 
-PORTS := \
-	-sUSE_ZLIB \
-	-sUSE_SDL=2 \
-	-sUSE_SDL_IMAGE=2 \
-	-sSDL2_IMAGE_FORMATS=png
+CFLAGS  := \
+	-I$(SRC_DIR) -I$(LIB_DIR) \
+	-msimd128 -fPIC -Wno-switch
 
-CFLAGS  := -I$(SRC_DIR) -I$(LIB_DIR) $(PORTS) -fPIC -Wno-switch
-
-LDFLAGS := $(PORTS) \
-	--no-entry \
-	-sLZ4 \
-	-sMODULARIZE \
-	-sEXPORT_ES6 \
-	-sINVOKE_RUN=0 \
-	-sEXIT_RUNTIME \
-	-sENVIRONMENT=web \
-	-sALLOW_MEMORY_GROWTH \
-	-sLLD_REPORT_UNDEFINED
+LDFLAGS := \
+	--no-entry -sENVIRONMENT=web \
+	-sMODULARIZE -sEXPORT_ES6 \
+	-sINVOKE_RUN=0 -sEXIT_RUNTIME
 
 ifeq ($(DEBUG), 1)
 CFLAGS  += -O0 -ferror-limit=0 -D DEBUG
@@ -51,9 +35,10 @@ endif
 
 LDFLAGS_GAME := $(LDFLAGS) \
 	--embed-file $(RES_DIR) \
-	-sINITIAL_MEMORY=32mb \
-	-sEXPORTED_FUNCTIONS=_main,_get_settings \
-	-sEXPORTED_RUNTIME_METHODS=callMain,FS,UTF8ToString
+	-fwasm-exceptions -sMAIN_MODULE=2 \
+	-sINITIAL_MEMORY=32mb -sALLOW_MEMORY_GROWTH \
+	-sEXPORTED_FUNCTIONS=@exports.json \
+	-sEXPORTED_RUNTIME_METHODS=ccall,cwrap,FS
 
 LDFLAGS_TOOLS := $(LDFLAGS) \
 	-sEXPORTED_RUNTIME_METHODS=IDBStore
@@ -71,9 +56,9 @@ all: clean prepare
 prepare:
 	@mkdir -p $(OUT_DIR)
 
-$(OUT_DIR)/%.js:
-	@echo Building $*.js...
-	@$(CXX) -o $(OUT_DIR)/$*.js $(OBJ) -L$(CORES_DIR) -l$* $(LDFLAGS_GAME) -sEXPORT_NAME=$* $(QUIET)
+$(OUT_DIR)/lib%.js:
+	@echo Building lib$*.js...
+	@$(CXX) -o $(OUT_DIR)/lib$*.js $(OBJ) -L$(CORES_DIR) -l$* $(LDFLAGS_GAME) -sEXPORT_NAME=lib$* $(QUIET)
 
 $(OUT_DIR)/tools.js:
 	@echo Building tools.js...

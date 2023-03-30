@@ -3,9 +3,9 @@ import { useRef, useState } from 'react';
 import { add, playOutline } from 'ionicons/icons';
 import { Game } from '../entities/game';
 import { JunImg } from '../components/jun-img';
-import * as Requests from '../services/requests';
-import * as Database from '../services/database';
-import { runCore } from '../services/cores';
+import Audio from '../services/audio';
+import Requests from '../services/requests';
+import Files from '../services/files';
 
 export const RecentPage = () => {
 
@@ -25,28 +25,27 @@ export const RecentPage = () => {
 			rom: file.name
 		});
 
-		await Database.addGame(game, data);
+		await Files.Games.add(game, data);
 
-		setPlayed(await Database.getGames());
+		setPlayed(await Files.Games.get());
 	}
 
 	const deleteGame = async (game) => {
-		await Database.removeGame(game);
+		await Files.Games.remove(game);
 
-		setPlayed(await Database.getGames());
+		setPlayed(await Files.Games.get());
 	}
 
-	const startGame = async (played) => {
-		await runCore(
-			played.system.lib_name,
-			played.system.name,
-			played.game.rom,
-			await Database.getSettings(),
-		);
+	const gameURL = (played) => {
+		return '/recent'
+			+ `/${played.system.lib_name}`
+			+ `/${played.system.name}`
+			+ `/${played.game.rom}`;
 	};
 
 	useIonViewWillEnter(async () => {
-		setPlayed(await Database.getGames());
+		Audio.unlock();
+		setPlayed(await Files.Games.get());
 	});
 
 	const fileInput = useRef(null);
@@ -77,7 +76,7 @@ export const RecentPage = () => {
 										<h2>{played.game.name.replaceAll(/ \(.*\).*/g, '')}</h2>
 										<h3>{played.system.name}</h3>
 									</IonLabel>
-									<IonButton onClick={() => startGame(played)} fill="clear">
+									<IonButton routerLink={gameURL(played)} fill="clear">
 										<IonIcon slot="icon-only" icon={playOutline} />
 									</IonButton>
 								</IonItem>

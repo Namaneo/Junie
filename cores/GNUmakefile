@@ -6,7 +6,7 @@ BUILD_FLAGS := \
 	SHARED=-shared \
 	STATIC_LINKING=0 \
 	STATIC_LINKING_LINK=0 \
-	fpic=-fPIC
+	fpic="-fPIC -fwasm-exceptions -msimd128"
 
 MAKEFLAGS += --no-print-directory
 QUIET := > /dev/null 2>&1

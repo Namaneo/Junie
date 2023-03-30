@@ -1,7 +1,7 @@
 import { IonButton, IonButtons, IonContent, IonHeader, IonItem, IonLabel, IonList, IonModal, IonPage, IonSelect, IonSelectOption, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
 import { useState } from 'react';
-import * as Cores from '../services/cores';
-import * as Database from '../services/database';
+import Core from '../services/core';
+import Files from '../services/files';
 
 const EditModal = ({ open, dismiss, data }) => {
 
@@ -50,7 +50,7 @@ export const SettingsPage = () => {
         if (!value)
             delete settings[item];
 
-        await Database.updateSettings(settings);
+        await Files.Settings.update(settings);
 
         setSettings({ ...settings });
 	}
@@ -58,12 +58,12 @@ export const SettingsPage = () => {
     const openModal = async (name) => {
         const data =  { name: name };
 
-		const core_settings = await options[name]();
+		const core = await options[name]();
 
-        data.items = Object.keys(core_settings).map(key => new Object({
+        data.items = Object.keys(core.settings).map(key => new Object({
 			key: key,
-			name: core_settings[key].name,
-			options: core_settings[key].options.map(value => new Object({
+			name: core.settings[key].name,
+			options: core.settings[key].options.map(value => new Object({
 				key: value,
 				name: value
 			})),
@@ -81,8 +81,8 @@ export const SettingsPage = () => {
     }
 
 	useIonViewWillEnter(async () => {
-		setOptions({ ...options, ...await Cores.getSettings() });
-		setSettings({ ...settings, ...await Database.getSettings() });
+		setOptions({ ...options, ...await Core.factory() });
+		setSettings({ ...settings, ...await Files.Settings.get() });
 	});
 
 	return (

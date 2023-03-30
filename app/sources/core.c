@@ -12,24 +12,6 @@
 
 #include "core.h"
 
-#if defined(DYNAMIC)
-#if defined(_WIN32)
-#include <windows.h>
-#define LOAD_LIBRARY(path)   CTX.sym.library = LoadLibrary(path)
-#define UNLOAD_LIBRARY()     FreeLibrary((HMODULE) CTX.sym.library)
-#define MAP_SYMBOL(function) CTX.sym.function = GetProcAddress((HMODULE) CTX.sym.library, #function)
-#else
-#include <dlfcn.h>
-#define LOAD_LIBRARY(path)   CTX.sym.library = dlopen(path, RTLD_LAZY)
-#define UNLOAD_LIBRARY()     dlclose(CTX.sym.library)
-#define MAP_SYMBOL(function) CTX.sym.function = dlsym(CTX.sym.library, #function)
-#endif
-#else
-#define LOAD_LIBRARY(path)   {}
-#define UNLOAD_LIBRARY()     {}
-#define MAP_SYMBOL(function) CTX.sym.function = function
-#endif
-
 typedef enum {
 	JUN_PATH_GAME   = 0,
 	JUN_PATH_STATE  = 1,
@@ -72,7 +54,6 @@ static struct CTX {
 	bool initialized;
 
 	char *paths[JUN_PATH_MAX];
-	JUN_CoreCallbacks callbacks;
 	JUN_Framerate *framerate;
 
 	JSON_Value *settings;
@@ -86,42 +67,41 @@ static struct CTX {
 	bool fast_forward;
 	uint64_t last_save;
 
+	bool inputs[UINT8_MAX];
+
+	struct {
+		void *data;
+		uint32_t width;
+		uint32_t height;
+	} frame;
+
+	struct {
+		void *data;
+		size_t frames;
+	} audio;
+
+	struct {
+		bool pressed;
+		double x;
+		double y;
+	} pointer;
+
 	struct jun_core_sym sym;
 } CTX;
 
-static void initialize_symbols(const char *path)
+static void core_log(enum retro_log_level level, const char *fmt, ...)
 {
-	if (CTX.sym.initialized)
-		return;
+	va_list args;
+	va_start(args, fmt);
 
-	LOAD_LIBRARY(path);
+	char buffer[4096] = {0};
+	vsnprintf(buffer, sizeof(buffer), fmt, args);
+	JUN_Log("%s", buffer);
 
-	MAP_SYMBOL(retro_init);
-	MAP_SYMBOL(retro_load_game);
-	MAP_SYMBOL(retro_get_system_info);
-	MAP_SYMBOL(retro_get_system_av_info);
-	MAP_SYMBOL(retro_set_environment);
-	MAP_SYMBOL(retro_set_video_refresh);
-	MAP_SYMBOL(retro_set_input_poll);
-	MAP_SYMBOL(retro_set_input_state);
-	MAP_SYMBOL(retro_set_audio_sample);
-	MAP_SYMBOL(retro_set_audio_sample_batch);
-	MAP_SYMBOL(retro_set_controller_port_device);
-	MAP_SYMBOL(retro_get_memory_size);
-	MAP_SYMBOL(retro_get_memory_data);
-	MAP_SYMBOL(retro_serialize_size);
-	MAP_SYMBOL(retro_serialize);
-	MAP_SYMBOL(retro_unserialize);
-	MAP_SYMBOL(retro_cheat_set);
-	MAP_SYMBOL(retro_run);
-	MAP_SYMBOL(retro_reset);
-	MAP_SYMBOL(retro_unload_game);
-	MAP_SYMBOL(retro_deinit);
-
-	CTX.sym.initialized = true;
+	va_end(args);
 }
 
-static bool jun_core_environment(unsigned cmd, void *data)
+static bool core_environment_variables(unsigned cmd, void *data)
 {
 	unsigned command = cmd & ~RETRO_ENVIRONMENT_EXPERIMENTAL;
 	if (command != RETRO_ENVIRONMENT_SET_VARIABLES)
@@ -166,56 +146,7 @@ static bool jun_core_environment(unsigned cmd, void *data)
 	return true;
 }
 
-static char *remove_extension(const char *str)
-{
-	if (!str)
-		return NULL;
-
-	size_t length = (uint64_t) strrchr(str, '.') - (uint64_t) str;
-	char *result = calloc(length + 1, 1);
-	memcpy(result, str, length);
-
-	return result;
-}
-
-static void create_paths(const char *system, const char *rom)
-{
-	char *game = remove_extension(rom);
-
-	CTX.paths[JUN_PATH_SYSTEM] = JUN_Strfmt("%s",             system);
-	CTX.paths[JUN_PATH_GAME] =   JUN_Strfmt("%s/%s",          system, rom);
-	CTX.paths[JUN_PATH_SAVES] =  JUN_Strfmt("%s/%s",          system, game);
-	CTX.paths[JUN_PATH_STATE] =  JUN_Strfmt("%s/%s/%s.state", system, game, game);
-	CTX.paths[JUN_PATH_SRAM] =   JUN_Strfmt("%s/%s/%s.srm",   system, game, game);
-	CTX.paths[JUN_PATH_RTC] =    JUN_Strfmt("%s/%s/%s.rtc",   system, game, game);
-	CTX.paths[JUN_PATH_CHEATS] = JUN_Strfmt("%s/%s/%s.cht",   system, game, game);
-
-	free(game);
-}
-
-void JUN_CoreCreate(const char *system, const char *rom, const char *settings, const char *library)
-{
-	JUN_FilesystemCreate();
-
-	CTX.overrides = json_parse_string(settings);
-
-	create_paths(system, rom);
-	initialize_symbols(library);
-}
-
-static void core_log(enum retro_log_level level, const char *fmt, ...)
-{
-	va_list args;
-	va_start(args, fmt);
-
-	char buffer[4096] = {0};
-	vsnprintf(buffer, sizeof(buffer), fmt, args);
-	JUN_Log("%s", buffer);
-
-	va_end(args);
-}
-
-bool JUN_CoreEnvironment(unsigned cmd, void *data)
+static bool environment(unsigned cmd, void *data)
 {
 	unsigned command = cmd & ~RETRO_ENVIRONMENT_EXPERIMENTAL;
 	switch (command) {
@@ -263,7 +194,7 @@ bool JUN_CoreEnvironment(unsigned cmd, void *data)
 			return true;
 		}
 		case RETRO_ENVIRONMENT_SET_VARIABLES: {
-			jun_core_environment(cmd, data);
+			core_environment_variables(cmd, data);
 
 			return true;
 		}
@@ -309,75 +240,60 @@ bool JUN_CoreEnvironment(unsigned cmd, void *data)
 	}
 }
 
-char *JUN_CoreGetDefaultConfiguration(const char *library)
-{
-	initialize_symbols(library);
-
-	CTX.sym.retro_set_environment(jun_core_environment);
-	CTX.sym.retro_init();
-
-	char *settings = json_serialize_to_string(CTX.settings);
-
-	JUN_CoreDestroy();
-
-	return settings;
-}
-
-void JUN_CoreSetCallbacks(JUN_CoreCallbacks *callbacks)
-{
-	CTX.callbacks = *callbacks;
-}
-
-double JUN_CoreGetSampleRate()
-{
-	return CTX.av.timing.sample_rate;
-}
-
-double JUN_CoreGetFramesPerSecond()
-{
-	return CTX.av.timing.fps;
-}
-
-static bool environment(unsigned cmd, void *data)
-{
-	return CTX.callbacks.environment(cmd, data, CTX.callbacks.opaque);
-}
-
 static void video_refresh(const void *data, unsigned width, unsigned height, size_t pitch)
 {
 	if (CTX.fast_forward)
 		return;
 
-	void *image =
+	free(CTX.frame.data);
+
+	CTX.frame.data =
 		CTX.format == RETRO_PIXEL_FORMAT_0RGB1555 ? JUN_ConvertARGB1555(data, width, height, pitch) :
-		CTX.format == RETRO_PIXEL_FORMAT_XRGB8888 ? JUN_CopyARGB8888(data, width, height, pitch)    :
+		CTX.format == RETRO_PIXEL_FORMAT_XRGB8888 ? JUN_ConvertARGB8888(data, width, height, pitch) :
 		CTX.format == RETRO_PIXEL_FORMAT_RGB565   ? JUN_ConvertRGB565(data, width, height, pitch)   :
 		NULL;
 
-	if (image)
-		CTX.callbacks.video_refresh(image, width, height, CTX.callbacks.opaque);
-
-	free(image);
-}
-
-static void audio_sample(int16_t left, int16_t right)
-{
-	CTX.callbacks.audio_sample((int16_t[]) { left, right }, 1, CTX.callbacks.opaque);
+	CTX.frame.width = CTX.frame.data ? width : 0;
+	CTX.frame.height = CTX.frame.data ? height : 0;
 }
 
 static size_t audio_sample_batch(const int16_t *data, size_t frames)
 {
-	return CTX.callbacks.audio_sample(data, frames, CTX.callbacks.opaque);
+	free(CTX.audio.data);
+
+	CTX.audio.data = JUN_ConvertPCM16(data, frames);
+	CTX.audio.frames = frames;
+
+	return frames;
+}
+
+static void audio_sample(int16_t left, int16_t right)
+{
+	audio_sample_batch((int16_t[]) { left, right }, 1);
 }
 
 static void input_poll()
 {
-	CTX.callbacks.input_poll(CTX.callbacks.opaque);
+	// NOOP
 }
 
 static int16_t input_state(unsigned port, unsigned device, unsigned index, unsigned id)
 {
-	return CTX.callbacks.input_state(port, device, index, id, CTX.callbacks.opaque);
+	if (device == RETRO_DEVICE_JOYPAD)
+		return CTX.inputs[id];
+
+	if (device == RETRO_DEVICE_POINTER) {
+		switch (id) {
+			case RETRO_DEVICE_ID_POINTER_PRESSED:
+				return CTX.pointer.pressed;
+			case RETRO_DEVICE_ID_POINTER_X:
+				return CTX.pointer.x;
+			case RETRO_DEVICE_ID_POINTER_Y:
+				return CTX.pointer.y;
+		}
+	}
+
+	return 0;
 }
 
 static void save_memory(uint32_t type, const char *path)
@@ -464,7 +380,92 @@ static void set_cheats()
 	json_value_free(json);
 }
 
-bool JUN_CoreStartGame()
+static void initialize_symbols()
+{
+	if (CTX.sym.initialized)
+		return;
+
+	#define MAP_SYMBOL(function) CTX.sym.function = function
+
+	MAP_SYMBOL(retro_init);
+	MAP_SYMBOL(retro_load_game);
+	MAP_SYMBOL(retro_get_system_info);
+	MAP_SYMBOL(retro_get_system_av_info);
+	MAP_SYMBOL(retro_set_environment);
+	MAP_SYMBOL(retro_set_video_refresh);
+	MAP_SYMBOL(retro_set_input_poll);
+	MAP_SYMBOL(retro_set_input_state);
+	MAP_SYMBOL(retro_set_audio_sample);
+	MAP_SYMBOL(retro_set_audio_sample_batch);
+	MAP_SYMBOL(retro_set_controller_port_device);
+	MAP_SYMBOL(retro_get_memory_size);
+	MAP_SYMBOL(retro_get_memory_data);
+	MAP_SYMBOL(retro_serialize_size);
+	MAP_SYMBOL(retro_serialize);
+	MAP_SYMBOL(retro_unserialize);
+	MAP_SYMBOL(retro_cheat_set);
+	MAP_SYMBOL(retro_run);
+	MAP_SYMBOL(retro_reset);
+	MAP_SYMBOL(retro_unload_game);
+	MAP_SYMBOL(retro_deinit);
+
+	#undef MAP_SYMBOL
+
+	CTX.sym.initialized = true;
+}
+
+static char *remove_extension(const char *str)
+{
+	if (!str)
+		return NULL;
+
+	size_t length = (uint64_t) strrchr(str, '.') - (uint64_t) str;
+	char *result = calloc(length + 1, 1);
+	memcpy(result, str, length);
+
+	return result;
+}
+
+static void create_paths(const char *system, const char *rom)
+{
+	char *game = remove_extension(rom);
+
+	CTX.paths[JUN_PATH_SYSTEM] = JUN_Strfmt("%s",             system);
+	CTX.paths[JUN_PATH_GAME] =   JUN_Strfmt("%s/%s",          system, rom);
+	CTX.paths[JUN_PATH_SAVES] =  JUN_Strfmt("%s/%s",          system, game);
+	CTX.paths[JUN_PATH_STATE] =  JUN_Strfmt("%s/%s/%s.state", system, game, game);
+	CTX.paths[JUN_PATH_SRAM] =   JUN_Strfmt("%s/%s/%s.srm",   system, game, game);
+	CTX.paths[JUN_PATH_RTC] =    JUN_Strfmt("%s/%s/%s.rtc",   system, game, game);
+	CTX.paths[JUN_PATH_CHEATS] = JUN_Strfmt("%s/%s/%s.cht",   system, game, game);
+
+	free(game);
+}
+
+void JUN_CoreCreate(const char *system, const char *rom, const char *settings)
+{
+	JUN_FilesystemCreate();
+
+	CTX.overrides = json_parse_string(settings);
+
+	create_paths(system, rom);
+	initialize_symbols();
+}
+
+char *JUN_CoreGetDefaults()
+{
+	initialize_symbols();
+
+	CTX.sym.retro_set_environment(core_environment_variables);
+	CTX.sym.retro_init();
+
+	char *settings = json_serialize_to_string(CTX.settings);
+
+	JUN_CoreDestroy();
+
+	return settings;
+}
+
+uint8_t JUN_CoreStartGame()
 {
 	CTX.sym.retro_set_environment(environment);
 	CTX.sym.retro_set_video_refresh(video_refresh);
@@ -503,9 +504,39 @@ bool JUN_CoreStartGame()
 	return CTX.initialized;
 }
 
+double JUN_CoreGetSampleRate()
+{
+	return CTX.av.timing.sample_rate;
+}
+
+double JUN_CoreGetFPS()
+{
+	return CTX.av.timing.fps;
+}
+
+void JUN_CoreSetInput(uint8_t device, uint8_t id, int16_t value)
+{
+	if (device == RETRO_DEVICE_JOYPAD)
+		CTX.inputs[id] = value;
+
+	if (device == RETRO_DEVICE_POINTER) {
+		switch (id) {
+			case RETRO_DEVICE_ID_POINTER_PRESSED:
+				CTX.pointer.pressed = value;
+				break;
+			case RETRO_DEVICE_ID_POINTER_X:
+				CTX.pointer.x = value;
+				break;
+			case RETRO_DEVICE_ID_POINTER_Y:
+				CTX.pointer.y = value;
+				break;
+		}
+	}
+}
+
 void JUN_CoreRun(uint8_t fast_forward)
 {
-	JUN_FramerateDelay(CTX.framerate);
+	// JUN_FramerateDelay(CTX.framerate);
 
 	CTX.fast_forward = true;
 
@@ -517,6 +548,31 @@ void JUN_CoreRun(uint8_t fast_forward)
 	CTX.sym.retro_run();
 
 	save_memories();
+}
+
+const void *JUN_CoreGetFrameData()
+{
+	return CTX.frame.data;
+}
+
+uint32_t JUN_CoreGetFrameWidth()
+{
+	return CTX.frame.width;
+}
+
+uint32_t JUN_CoreGetFrameHeight()
+{
+	return CTX.frame.height;
+}
+
+const int16_t *JUN_CoreGetAudioData()
+{
+	return CTX.audio.data;
+}
+
+uint32_t JUN_CoreGetAudioFrames()
+{
+	return CTX.audio.frames;
 }
 
 void JUN_CoreSaveState()
@@ -558,8 +614,6 @@ void JUN_CoreDestroy()
 		free(CTX.paths[i]);
 
 	free((void *) CTX.game.data);
-
-	UNLOAD_LIBRARY();
 
 	CTX = (struct CTX) {0};
 

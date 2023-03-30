@@ -3,9 +3,9 @@ import { useState } from 'react';
 import { useToast } from '../hooks/toast';
 import { Game } from '../entities/game';
 import { JunImg } from '../components/jun-img';
-import * as Requests from '../services/requests';
-import * as Database from '../services/database';
-import * as Helpers from '../services/helpers';
+import Requests from '../services/requests';
+import Helpers from '../services/helpers';
+import Files from '../services/files';
 
 export const GamesPage = ({ match }) => {
 
@@ -32,7 +32,7 @@ export const GamesPage = ({ match }) => {
 
 		game.cover = await Helpers.requestDataURL(game.cover);
 
-		await Database.addGame(new Game(system, game), data);
+		await Files.Games.add(new Game(system, game), data);
 
 		system.games = system.games.filter(x => x.rom != game.rom);
 		setSystem({ ...system });

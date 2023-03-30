@@ -243,7 +243,7 @@ void JUN_InputPollEvents(JUN_Input *ctx)
 	}
 }
 
-int16_t JUN_InputGetStatus(JUN_Input *ctx, uint8_t id, uint8_t device)
+int16_t JUN_InputGetStatus(JUN_Input *ctx, uint8_t device, uint8_t id)
 {
 	if (device == RETRO_DEVICE_JOYPAD)
 		return ctx->inputs[id].pressed;

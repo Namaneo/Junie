@@ -11,6 +11,7 @@ import { GamesPage } from './pages/games-page';
 import { SavesPage } from './pages/saves-page';
 import { CheatsPage } from './pages/cheats-page';
 import { SettingsPage } from './pages/settings-page';
+import { CorePage } from './pages/core-page';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -34,7 +35,9 @@ import './styles/index.css';
 
 function Junie() {
 
-	setupIonicReact();
+	setupIonicReact({
+		swipeBackEnabled: false,
+	});
 
     return (
         <IonApp>
@@ -42,6 +45,7 @@ function Junie() {
                 <IonTabs>
                     <IonRouterOutlet>
                         <Route exact path="/recent" component={RecentPage} />
+                        <Route exact path="/recent/:lib/:system/:game" component={CorePage} />
                         <Route exact path="/games" component={SystemsPage} />
 						<Route exact path="/games/:system" component={GamesPage} />
                         <Route exact path="/saves"  component={SavesPage}  />

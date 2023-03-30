@@ -86,7 +86,7 @@ const context = await esbuild.context({
 	entryPoints: ['sources/index.jsx'],
 	outdir: 'build',
 	bundle: true,
-	format: 'iife',
+	format: 'esm',
 	loader: { '.png': 'dataurl' },
 	jsx: 'automatic',
 	minify: !options.debug,

@@ -2,7 +2,7 @@ import { IonButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonCont
 import { useState } from 'react';
 import { refreshOutline } from 'ionicons/icons';
 import { useOnline } from '../hooks/online';
-import * as Requests from '../services/requests';
+import Requests from '../services/requests';
 
 export const SystemsPage = () => {
 

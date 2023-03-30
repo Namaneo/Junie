@@ -28,6 +28,36 @@
 
 
 /*
+ * Core
+ */
+#root .core {
+	--overflow: hidden;
+}
+
+#root .core canvas {
+	width: 100%;
+	height: calc(100% - 4px);
+	object-fit: contain;
+	object-position: 50% 0;
+	image-rendering: pixelated;
+}
+
+#root .core button {
+	position: absolute;
+}
+
+#root .core button.generic {
+	width: 12vw;
+    height: 12vw;
+    font-size: 5vw;
+	padding: 0;
+	color: white;
+    background: transparent;
+    border: 2px solid white;
+    border-radius: 50%;
+}
+
+/*
  * Systems
  */
 #root .systems ion-card {

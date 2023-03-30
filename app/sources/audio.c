@@ -90,7 +90,7 @@ void JUN_AudioUpdate(JUN_Audio *this, uint8_t fast_forward)
 	);
 }
 
-void JUN_AudioQueue(JUN_Audio *this, const int16_t *data, size_t frames)
+void JUN_AudioQueue(JUN_Audio *this, const int16_t *data, uint32_t frames)
 {
 	SDL_AudioStreamPut(this->stream, data, frames * sizeof(int16_t) * 2);
 }

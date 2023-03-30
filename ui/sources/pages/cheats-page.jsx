@@ -3,8 +3,8 @@ import { add, checkmarkCircleOutline, closeCircleOutline, buildOutline } from 'i
 import { useState } from 'react';
 import { CheatList } from '../entities/cheat';
 import { EditCheatModal } from '../modals/edit-cheat-modal';
-import * as Requests from '../services/requests';
-import * as Database from '../services/database';
+import Files from '../services/files';
+import Requests from '../services/requests';
 
 export const CheatsPage = () => {
 
@@ -25,13 +25,13 @@ export const CheatsPage = () => {
 		list.cheats = list.cheats.filter(x => x != cheat);
 
 		if (list.cheats.length) {
-			await Database.updateCheat(list);
+			await Files.Cheats.update(list);
 
 		} else {
-			await Database.removeCheat(list);
+			await Files.Cheats.remove(list);
 		}
 
-		setLists(await Database.getCheats());
+		setLists(await Files.Cheats.get());
 	};
 
 	const apply = async (cheat, system, game) => {
@@ -42,9 +42,9 @@ export const CheatsPage = () => {
 		if (cheat != currentCheat)
 			list.cheats.push(cheat);
 
-		await Database.updateCheat(list);
+		await Files.Cheats.update(list);
 
-		setLists(await Database.getCheats());
+		setLists(await Files.Cheats.get());
 		setModal(false);
 	};
 
@@ -53,7 +53,7 @@ export const CheatsPage = () => {
 	}
 
 	useIonViewWillEnter(async () => {
-		setLists(await Database.getCheats());
+		setLists(await Files.Cheats.get());
 		setSystems(await Requests.getSystems());
 	});
 

@@ -1,7 +1,7 @@
 #include <string.h>
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
 
+#include "stb_image.h"
 #include "tools.h"
 #include "filesystem.h"
 
@@ -62,11 +62,16 @@ static void prepare_asset(JUN_Video *this, uint8_t id, const char *path, bool me
 {
 	struct jun_video_asset *asset = &this->assets[id];
 
-	asset->image = IMG_Load(path);
+	int32_t width = 0, height = 0, channels = 0;
+	void *image = stbi_load(path, &width, &height, &channels, STBI_rgb_alpha);
+
+	asset->image = SDL_CreateRGBSurfaceWithFormatFrom(image, width, height, 32, width * 4, SDL_PIXELFORMAT_ARGB8888);
 	asset->menu = menu;
 
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 	asset->texture = SDL_CreateTextureFromSurface(this->renderer, asset->image);
+
+	stbi_image_free(image);
 }
 
 JUN_Video *JUN_VideoCreate(JUN_State *state, JUN_Input *input)
