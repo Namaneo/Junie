@@ -31,12 +31,11 @@
  * Core
  */
 #root .core {
+	text-align: center;
 	--overflow: hidden;
 }
 
 #root .core canvas {
-	width: 100%;
-	height: calc(100% - 4px);
 	object-fit: contain;
 	object-position: 50% 0;
 	image-rendering: pixelated;
@@ -44,17 +43,44 @@
 
 #root .core button {
 	position: absolute;
-}
-
-#root .core button.generic {
-	width: 12vw;
-    height: 12vw;
-    font-size: 5vw;
+    font-size: min(5vw, 5 * 10px);
 	padding: 0;
 	color: white;
     background: transparent;
     border: 2px solid white;
+}
+
+#root .core button:active {
+	background: rgba(255, 255, 255, 0.1)
+}
+
+#root .core button.generic {
+	width: min(12vw, 12 * 10px);
+    height: min(12vw, 12 * 10px);
     border-radius: 50%;
+}
+
+#root .core button.arrow {
+	width: min(12vw, 12 * 10px);
+    height: min(12vw, 12 * 10px);
+	border-radius: 10%;
+}
+
+#root .core button.shoulder {
+	width: min(12vw, 12 * 10px);
+    height: min(8vw, 8 * 10px);
+    border-radius: 20%;
+}
+
+#root .core button.special {
+	width: min(8vw, 8 * 10px);
+    height: min(8vw, 8 * 10px);
+    border-radius: 50%;
+}
+
+#root .core-settings ion-button {
+	flex: 1;
+	height: 80%;
 }
 
 /*

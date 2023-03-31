@@ -4,25 +4,32 @@ import Database from './database'
 export default class Core {
 	static #cores = [];
 
-	name = null;
-	module = null;
-	settings = null;
-	sync_id = 0;
+	#name = null;
+	#module = null;
+	#settings = null;
 
-	system = null;
-	game = null;
-	rom = null;
+	#state = {
+		system: null,
+		game: null,
+		rom: null,
 
-	constructor(name) {
-		this.name = name;
+		started: false,
+		sync_id: 0,
+		audio: true,
 	}
 
+	constructor(name) {
+		this.#name = name;
+	}
+
+	get settings() { return this.#settings; }
+
 	async init() {
-		if (this.module)
+		if (this.#module)
 			return;
 
 		const origin = location.origin + location.pathname.replace(/\/$/, '');
-		const module = await (await import(`${origin}/modules/lib${this.name}.js`)).default();
+		const module = await (await import(`${origin}/modules/lib${this.#name}.js`)).default();
 
 		module.JUN_CoreCreate =         module.cwrap('JUN_CoreCreate',         null,     ['string', 'string', 'string']);
 		module.JUN_CoreGetDefaults =    module.cwrap('JUN_CoreGetDefaults',    'string', []);
@@ -36,100 +43,141 @@ export default class Core {
 		module.JUN_CoreGetFrameHeight = module.cwrap('JUN_CoreGetFrameHeight', 'number', []);
 		module.JUN_CoreGetAudioData =   module.cwrap('JUN_CoreGetAudioData',   'number', []);
 		module.JUN_CoreGetAudioFrames = module.cwrap('JUN_CoreGetAudioFrames', 'number', []);
-		// module.JUN_CoreSaveState =      module.cwrap('JUN_CoreSaveState',      null,     []);
-		// module.JUN_CoreRestoreState =   module.cwrap('JUN_CoreRestoreState',   null,     []);
-		// module.JUN_CoreDestroy =        module.cwrap('JUN_CoreDestroy',        null,     []);
+		module.JUN_CoreSaveState =      module.cwrap('JUN_CoreSaveState',      null,     []);
+		module.JUN_CoreRestoreState =   module.cwrap('JUN_CoreRestoreState',   null,     []);
+		module.JUN_CoreDestroy =        module.cwrap('JUN_CoreDestroy',        null,     []);
 
-		this.module = module;
-		this.settings = JSON.parse(module.JUN_CoreGetDefaults());
+		this.#module = module;
+		this.#settings = JSON.parse(module.JUN_CoreGetDefaults());
 	}
 
 	async prepare(system, rom) {
-		this.system = system;
-		this.game = rom.replace(/\.[^/.]+$/, '');
-		this.rom = rom;
+		const module = this.#module;
+		const state = this.#state;
 
-		this.module.FS.mkdir(`${this.system}`);
-		this.module.FS.mkdir(`${this.system}/${this.game}`);
-		this.module.FS.writeFile(`${this.system}/${this.rom}`, await Database.read(`${this.system}/${this.rom}`));
+		state.system = system;
+		state.game = rom.replace(/\.[^/.]+$/, '');
+		state.rom = rom;
 
-		for (const path of await Database.list(`${this.system}/${this.game}`)) {
+		module.FS.mkdir(`${state.system}`);
+		module.FS.mkdir(`${state.system}/${state.game}`);
+		module.FS.writeFile(`${state.system}/${state.rom}`, await Database.read(`${state.system}/${state.rom}`));
+
+		for (const path of await Database.list(`${state.system}/${state.game}`)) {
 			const file = await Database.read(path);
-			if (file) this.module.FS.writeFile(path, file);
+			if (file) module.FS.writeFile(path, file);
 		}
 	}
 
 	async #sync() {
-		for (const name of this.module.FS.readdir(`${this.system}/${this.game}`)) {
+		const module = this.#module;
+		const state = this.#state;
+
+		for (const name of module.FS.readdir(`${state.system}/${state.game}`)) {
 			if (name == '.' || name == '..')
 				continue;
 
-			const path = `${this.system}/${this.game}/${name}`;
-			const data = this.module.FS.readFile(path);
+			const path = `${state.system}/${state.game}/${name}`;
+			const data = module.FS.readFile(path);
 			await Database.write(path, data);
 		}
 	}
 
 	start(settings, graphics) {
-		this.module.JUN_CoreCreate(this.system, this.rom, JSON.stringify(settings));
-		this.module.JUN_CoreStartGame();
+		return new Promise(resolve => {
+			const module = this.#module;
+			const state = this.#state;
 
-		this.sync_id = setInterval(() => this.#sync(), 1000);
+			module.JUN_CoreCreate(state.system, state.rom, JSON.stringify(settings));
+			module.JUN_CoreStartGame();
 
-		const video = graphics.getContext('2d');
+			state.sync_id = setInterval(() => this.#sync(), 1000);
 
-		const step = () => {
-			this.module.JUN_CoreRun(1);
+			const video = graphics.getContext('2d');
 
-			const frame = this.module.JUN_CoreGetFrameData();
-			const width = this.module.JUN_CoreGetFrameWidth();
-			const height = this.module.JUN_CoreGetFrameHeight();
+			const step = () => {
+				module.JUN_CoreRun(1);
 
-			graphics.width = width;
-			graphics.height = height;
+				const frame = module.JUN_CoreGetFrameData();
+				const width = module.JUN_CoreGetFrameWidth();
+				const height = module.JUN_CoreGetFrameHeight();
 
-			const frame_view = new Uint8ClampedArray(this.module.HEAPU8.buffer, frame, width * height * 4);
-			video.putImageData(new ImageData(frame_view, width, height), 0, 0);
+				graphics.width = width;
+				graphics.height = height;
 
-			const sample_rate = this.module.JUN_CoreGetSampleRate();
-			Audio.update(sample_rate, 2);
+				const frame_view = new Uint8ClampedArray(module.HEAPU8.buffer, frame, width * height * 4);
+				video.putImageData(new ImageData(frame_view, width, height), 0, 0);
 
-			const audio = this.module.JUN_CoreGetAudioData();
-			const frames = this.module.JUN_CoreGetAudioFrames();
-			const audio_view = new Float32Array(this.module.HEAP8.buffer, audio, frames * 2);
-			Audio.queue(audio_view);
+				const sample_rate = module.JUN_CoreGetSampleRate();
+				Audio.update(sample_rate, 2);
 
-			if (this.sync_id)
-				window.requestAnimationFrame(step);
-		}
+				if (state.audio) {
+					const audio = module.JUN_CoreGetAudioData();
+					const frames = module.JUN_CoreGetAudioFrames();
+					const audio_view = new Float32Array(module.HEAP8.buffer, audio, frames * 2);
+					Audio.queue(audio_view);
+				}
 
-		window.requestAnimationFrame(step);
+				if (!state.started) {
+					resolve();
+					state.started = true;
+				}
+
+
+				if (state.sync_id)
+					window.requestAnimationFrame(step);
+			}
+
+			window.requestAnimationFrame(step);
+		});
 	}
 
 	send(device, id, value) {
-		this.module.JUN_CoreSetInput(device, id, value);
+		if (this.#state.started)
+			this.#module.JUN_CoreSetInput(device, id, value);
+	}
+
+	save() {
+		if (this.#state.started)
+			this.#module.JUN_CoreSaveState();
+	}
+
+	restore() {
+		if (this.#state.started)
+			this.#module.JUN_CoreRestoreState();
+	}
+
+	audio(enable) {
+		this.#state.audio = enable;
 	}
 
 	async stop() {
-		clearInterval(this.sync_id);
-		this.sync_id = 0;
+		const module = this.#module;
+		const state = this.#state;
+
+		clearInterval(state.sync_id);
+		state.sync_id = 0;
+		state.audio = true;
+		state.started = false;
 
 		await this.#sync();
 
-		for (const name of this.module.FS.readdir(`${this.system}/${this.game}`)) {
+		for (const name of module.FS.readdir(`${state.system}/${state.game}`)) {
 			if (name == '.' || name == '..')
 				continue;
 
-			this.module.FS.unlink(`${this.system}/${this.game}/${name}`);
+			module.FS.unlink(`${state.system}/${state.game}/${name}`);
 		}
 
-		this.module.FS.unlink(`${this.system}/${this.rom}`);
-		this.module.FS.rmdir(`${this.system}/${this.game}`);
-		this.module.FS.rmdir(`${this.system}`);
+		module.FS.unlink(`${state.system}/${state.rom}`);
+		module.FS.rmdir(`${state.system}/${state.game}`);
+		module.FS.rmdir(`${state.system}`);
 
-		this.system = null;
-		this.game = null;
-		this.rom = null;
+		state.system = null;
+		state.game = null;
+		state.rom = null;
+
+		module.JUN_CoreDestroy();
 	}
 
 	static create(name) {
@@ -170,5 +218,12 @@ export default class Core {
 		static get X()      { return 9;  }
 		static get L()      { return 10; }
 		static get R()      { return 11; }
+	}
+
+	static Pointer = class {
+		static get X()       { return 0;  }
+		static get Y()       { return 1;  }
+		static get PRESSED() { return 2;  }
+		static get COUNT()   { return 3;  }
 	}
 }

@@ -1,8 +1,8 @@
 {
-    "genesis": {
+	"genesis": {
 		"name": "Genesis Plus GX",
 		"repository": "Genesis-Plus-GX",
-        "makefile": "Makefile.libretro",
+		"makefile": "Makefile.libretro",
 		"systems": [
 			{
 				"name": "Master System",
@@ -15,8 +15,8 @@
 				"extension": "md"
 			}
 		]
-    },
-    "melonds": {
+	},
+	"melonds": {
 		"name": "MelonDS",
 		"repository": "melonDS",
 		"systems": [
@@ -26,8 +26,8 @@
 				"extension": "nds"
 			}
 		]
-    },
-    "mgba": {
+	},
+	"mgba": {
 		"name": "mGBA",
 		"repository": "mgba",
 		"systems": [
@@ -47,11 +47,11 @@
 				"extension": "gba"
 			}
 		]
-    },
-    "nestopia": {
+	},
+	"nestopia": {
 		"name": "Nestopia",
 		"repository": "nestopia",
-        "directory": "libretro",
+		"directory": "libretro",
 		"systems": [
 			{
 				"name": "NES",
@@ -59,8 +59,8 @@
 				"extension": "nes"
 			}
 		]
-    },
-    "snes9x": {
+	},
+	"snes9x": {
 		"name": "Snes9x",
 		"repository": "snes9x2010",
 		"systems": [
@@ -70,5 +70,5 @@
 				"extension": "smc"
 			}
 		]
-    }
+	}
 }

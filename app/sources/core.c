@@ -525,10 +525,10 @@ void JUN_CoreSetInput(uint8_t device, uint8_t id, int16_t value)
 				CTX.pointer.pressed = value;
 				break;
 			case RETRO_DEVICE_ID_POINTER_X:
-				CTX.pointer.x = value;
+				CTX.pointer.x = (((double) value * 0x10000) / (double) CTX.frame.width) - 0x8000;
 				break;
 			case RETRO_DEVICE_ID_POINTER_Y:
-				CTX.pointer.y = value;
+				CTX.pointer.y = (((double) value * 0x10000) / (double) CTX.frame.height) - 0x8000;
 				break;
 		}
 	}
