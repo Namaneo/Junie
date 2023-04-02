@@ -34,7 +34,6 @@ export default class Core {
 		module.JUN_CoreCreate =             module.cwrap('JUN_CoreCreate',             null,     ['string', 'string']);
 		module.JUN_CoreStartGame =          module.cwrap('JUN_CoreStartGame',          'number', []);
 		module.JUN_CoreGetSampleRate =      module.cwrap('JUN_CoreGetSampleRate',      'number', []);
-		module.JUN_CoreGetFPS =             module.cwrap('JUN_CoreGetFPS',             'number', []);
 		module.JUN_CoreGetVariableCount =   module.cwrap('JUN_CoreGetVariableCount',   'number', []);
 		module.JUN_CoreGetVariableKey =     module.cwrap('JUN_CoreGetVariableKey',     'string', ['number']);
 		module.JUN_CoreGetVariableName =    module.cwrap('JUN_CoreGetVariableName',    'string', ['number']);

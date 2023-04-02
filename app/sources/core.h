@@ -5,7 +5,6 @@
 void JUN_CoreCreate(const char *system, const char *rom);
 uint8_t JUN_CoreStartGame();
 double JUN_CoreGetSampleRate();
-double JUN_CoreGetFPS();
 uint32_t JUN_CoreGetVariableCount();
 const char *JUN_CoreGetVariableKey(uint32_t index);
 const char *JUN_CoreGetVariableName(uint32_t index);

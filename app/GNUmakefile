@@ -10,7 +10,6 @@ BINARIES  := $(LIBRARIES:%=$(OUT_DIR)/lib%.js) $(OUT_DIR)/tools.js
 SRC := \
 	$(SRC_DIR)/core.c \
 	$(SRC_DIR)/tools.c \
-	$(SRC_DIR)/framerate.c \
 	$(SRC_DIR)/filesystem.c \
 	$(LIB_DIR)/parson.c
 

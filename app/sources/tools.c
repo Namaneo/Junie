@@ -8,22 +8,22 @@
 
 void JUN_Log(const char *fmt, ...)
 {
-// #if defined(DEBUG)
-// 	va_list args = {0};
-// 	va_start(args, fmt);
+#if defined(DEBUG)
+	va_list args = {0};
+	va_start(args, fmt);
 
-// 	size_t format_len = strlen(fmt);
-// 	char *format = calloc(format_len + 2, 1);
-// 	memcpy(format, fmt, format_len);
+	size_t format_len = strlen(fmt);
+	char *format = calloc(format_len + 2, 1);
+	memcpy(format, fmt, format_len);
 
-// 	if (format[format_len - 1] != '\n')
-// 		format[format_len] = '\n';
+	if (format[format_len - 1] != '\n')
+		format[format_len] = '\n';
 
-// 	vprintf(format, args);
+	vprintf(format, args);
 
-// 	free(format);
-// 	va_end(args);
-// #endif
+	free(format);
+	va_end(args);
+#endif
 }
 
 uint64_t JUN_GetTicks()

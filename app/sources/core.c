@@ -7,7 +7,6 @@
 #include "parson.h"
 
 #include "tools.h"
-#include "framerate.h"
 #include "filesystem.h"
 
 #include "core.h"
@@ -54,7 +53,6 @@ static struct CTX {
 	bool initialized;
 
 	char *paths[JUN_PATH_MAX];
-	JUN_Framerate *framerate;
 
 	struct retro_game_info game;
 	struct retro_system_info system;
@@ -473,19 +471,12 @@ uint8_t JUN_CoreStartGame()
 	restore_memories();
 	set_cheats();
 
-	CTX.framerate = JUN_FramerateCreate(CTX.av.timing.fps);
-
 	return CTX.initialized;
 }
 
 double JUN_CoreGetSampleRate()
 {
-	return CTX.av.timing.sample_rate;
-}
-
-double JUN_CoreGetFPS()
-{
-	return CTX.av.timing.fps;
+	return (CTX.av.timing.sample_rate / CTX.av.timing.fps) * 60.0;
 }
 
 uint32_t JUN_CoreGetVariableCount()
@@ -551,8 +542,6 @@ void JUN_CoreSetInput(uint8_t device, uint8_t id, int16_t value)
 
 void JUN_CoreRun(uint8_t fast_forward)
 {
-	// JUN_FramerateDelay(CTX.framerate);
-
 	CTX.fast_forward = true;
 
 	for (size_t i = 0; i < fast_forward - 1; i++)
@@ -620,7 +609,15 @@ void JUN_CoreDestroy()
 {
 	CTX.sym.retro_deinit();
 
-	JUN_FramerateDestroy(&CTX.framerate);
+	for (int8_t i = 0; i < INT8_MAX; i++) {
+		if (!CTX.variables[i].key)
+			break;
+
+		free(CTX.variables[i].key);
+		free(CTX.variables[i].name);
+		free(CTX.variables[i].options);
+		free(CTX.variables[i].value);
+	}
 
 	for (size_t i = 0; i < JUN_PATH_MAX; i++)
 		free(CTX.paths[i]);
