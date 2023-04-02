@@ -84,6 +84,12 @@ export const CorePage = ({ match }) => {
 			const settings = await Files.Settings.get();
 			await core.start(settings, canvas.current);
 
+			if (!settings.hasOwnProperty(`${match.params.lib}_junie_audio`))
+				settings[`${match.params.lib}_junie_audio`] = true;
+
+			if (!settings.hasOwnProperty(`${match.params.lib}_junie_gamepad`))
+				settings[`${match.params.lib}_junie_gamepad`] = true;
+
 			setSettings(settings);
 			setVariables(core.variables());
 
@@ -109,7 +115,14 @@ export const CorePage = ({ match }) => {
 
 	useEffect(() => resize(), [width, height]);
 
-	useEffect(() => core.audio(audio), [audio]);
+	useEffect(() => {
+		core.audio(audio);
+		update(`${match.params.lib}_junie_audio`, audio);
+	}, [audio]);
+
+	useEffect(() => {
+		update(`${match.params.lib}_junie_gamepad`, gamepad);
+	}, [gamepad]);
 
 	return (
 		<>
@@ -128,11 +141,11 @@ export const CorePage = ({ match }) => {
 						</IonItem>
 						<IonItem>
 							<IonLabel>Enable audio</IonLabel>
-							<IonCheckbox checked={audio} onIonChange={() => setAudio(!audio)}></IonCheckbox>
+							<IonCheckbox checked={audio} onIonChange={e => setAudio(e.detail.checked)}></IonCheckbox>
 						</IonItem>
 						<IonItem>
 							<IonLabel>Show gamepad</IonLabel>
-							<IonCheckbox checked={gamepad} onIonChange={() => setGamepad(!gamepad)}></IonCheckbox>
+							<IonCheckbox checked={gamepad} onIonChange={e => setGamepad(e.detail.checked)}></IonCheckbox>
 						</IonItem>
 						<IonItemDivider></IonItemDivider>
 						<Settings variables={variables} settings={settings} update={update}></Settings>

@@ -154,6 +154,9 @@ export default class Core {
 	}
 
 	update(variables) {
+		if (!this.#module)
+			return;
+
 		for (const key in variables)
 			this.#module.JUN_CoreSetVariable(key, variables[key]);
 	}
