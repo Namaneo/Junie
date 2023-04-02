@@ -56,9 +56,6 @@ static struct CTX {
 	char *paths[JUN_PATH_MAX];
 	JUN_Framerate *framerate;
 
-	JSON_Value *settings;
-	JSON_Value *overrides;
-
 	struct retro_game_info game;
 	struct retro_system_info system;
 	struct retro_system_av_info av;
@@ -68,6 +65,14 @@ static struct CTX {
 	uint64_t last_save;
 
 	bool inputs[UINT8_MAX];
+
+	struct {
+		char *key;
+		char *name;
+		char *options;
+		char *value;
+	} variables[INT8_MAX];
+	bool variables_update;
 
 	struct {
 		void *data;
@@ -99,51 +104,6 @@ static void core_log(enum retro_log_level level, const char *fmt, ...)
 	JUN_Log("%s", buffer);
 
 	va_end(args);
-}
-
-static bool core_environment_variables(unsigned cmd, void *data)
-{
-	unsigned command = cmd & ~RETRO_ENVIRONMENT_EXPERIMENTAL;
-	if (command != RETRO_ENVIRONMENT_SET_VARIABLES)
-		return false;
-
-	CTX.settings = json_value_init_object();
-
-	const struct retro_variable *variables = data;
-
-	for (size_t i = 0; i < SIZE_MAX; i++) {
-		const struct retro_variable *variable = &variables[i];
-
-		if (!variable->key || !variable->value)
-			break;
-
-		JUN_Log("SET -> %s: %s", variable->key, variable->value);
-
-		JSON_Value *item = json_value_init_object();
-
-		char *ptr = NULL;
-		char *value = strdup(variable->value);
-
-		char *name = strtok_r(value, ";", &ptr);
-		json_object_set_string(json_object(item), "name", name);
-
-		ptr += 1;
-		char *element = strtok_r(NULL, "|", &ptr);
-		json_object_set_string(json_object(item), "default", element);
-
-		JSON_Array *options = json_array(json_value_init_array());
-		while (element) {
-			json_array_append_string(options, element);
-			element = strtok_r(NULL, "|", &ptr);
-		}
-		json_object_set_value(json_object(item), "options", json_array_get_wrapping_value(options));
-
-		json_object_set_value(json_object(CTX.settings), variable->key, item);
-
-		free(value);
-	}
-
-	return true;
 }
 
 static bool environment(unsigned cmd, void *data)
@@ -194,22 +154,43 @@ static bool environment(unsigned cmd, void *data)
 			return true;
 		}
 		case RETRO_ENVIRONMENT_SET_VARIABLES: {
-			core_environment_variables(cmd, data);
+			const struct retro_variable *variables = data;
+
+			for (int8_t i = 0; i < INT8_MAX; i++) {
+				const struct retro_variable *variable = &variables[i];
+
+				if (!variable->key || !variable->value)
+					break;
+
+				JUN_Log("SET -> %s: %s", variable->key, variable->value);
+
+				char *value = strdup(variable->value);
+
+				CTX.variables[i].key = strdup(variable->key);
+
+				char *ptr = NULL;
+				CTX.variables[i].name = strdup(strtok_r(value, ";", &ptr));
+				CTX.variables[i].options = strdup(strtok_r(NULL, ";", &ptr));
+
+				char *options = strdup(CTX.variables[i].options);
+				CTX.variables[i].value = strdup(strtok_r(options, "|", &ptr));
+				free(options);
+
+				free(value);
+			}
 
 			return true;
 		}
 		case RETRO_ENVIRONMENT_GET_VARIABLE: {
 			struct retro_variable *variable = data;
 
-			const char *override = json_object_get_string(json_object(CTX.overrides), variable->key);
-			if (override) {
-				variable->value = override;
+			for (int8_t i = 0; i < INT8_MAX; i++) {
+				if (strcmp(CTX.variables[i].key, variable->key))
+					continue;
 
-			} else {
-				const JSON_Value *setting = json_object_get_value(json_object(CTX.settings), variable->key);
+				variable->value = CTX.variables[i].value;
 
-				if (setting)
-					variable->value = json_object_get_string(json_object(setting), "default");
+				break;
 			}
 
 			JUN_Log("GET -> %s: %s", variable->key, variable->value);
@@ -219,7 +200,7 @@ static bool environment(unsigned cmd, void *data)
 		case RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE: {
 			bool *update = data;
 
-			*update = false;
+			*update = CTX.variables_update;
 
 			return true;
 		}
@@ -245,23 +226,32 @@ static void video_refresh(const void *data, unsigned width, unsigned height, siz
 	if (CTX.fast_forward)
 		return;
 
-	free(CTX.frame.data);
+	if (width * height * sizeof(uint32_t) > CTX.frame.width * CTX.frame.height * sizeof(uint32_t))
+		CTX.frame.data = realloc(CTX.frame.data, width * height * sizeof(uint32_t));
 
-	CTX.frame.data =
-		CTX.format == RETRO_PIXEL_FORMAT_0RGB1555 ? JUN_ConvertARGB1555(data, width, height, pitch) :
-		CTX.format == RETRO_PIXEL_FORMAT_XRGB8888 ? JUN_ConvertARGB8888(data, width, height, pitch) :
-		CTX.format == RETRO_PIXEL_FORMAT_RGB565   ? JUN_ConvertRGB565(data, width, height, pitch)   :
-		NULL;
+	switch (CTX.format) {
+		case RETRO_PIXEL_FORMAT_0RGB1555:
+			JUN_ConvertARGB1555(data, width, height, pitch, CTX.frame.data);
+			break;
+		case RETRO_PIXEL_FORMAT_XRGB8888:
+			JUN_ConvertARGB8888(data, width, height, pitch, CTX.frame.data);
+			break;
+		case RETRO_PIXEL_FORMAT_RGB565:
+			JUN_ConvertRGB565(data, width, height, pitch, CTX.frame.data);
+			break;
+	}
 
-	CTX.frame.width = CTX.frame.data ? width : 0;
-	CTX.frame.height = CTX.frame.data ? height : 0;
+	CTX.frame.width = width;
+	CTX.frame.height = height;
 }
 
 static size_t audio_sample_batch(const int16_t *data, size_t frames)
 {
-	free(CTX.audio.data);
+	if (frames * 2 * sizeof(float) > CTX.audio.frames * 2 * sizeof(float))
+		CTX.audio.data = realloc(CTX.audio.data, frames * 2 * sizeof(float));
 
-	CTX.audio.data = JUN_ConvertPCM16(data, frames);
+	JUN_ConvertPCM16(data, frames, CTX.audio.data);
+
 	CTX.audio.frames = frames;
 
 	return frames;
@@ -441,39 +431,23 @@ static void create_paths(const char *system, const char *rom)
 	free(game);
 }
 
-void JUN_CoreCreate(const char *system, const char *rom, const char *settings)
+void JUN_CoreCreate(const char *system, const char *rom)
 {
 	JUN_FilesystemCreate();
 
-	CTX.overrides = json_parse_string(settings);
-
 	create_paths(system, rom);
 	initialize_symbols();
-}
 
-char *JUN_CoreGetDefaults()
-{
-	initialize_symbols();
-
-	CTX.sym.retro_set_environment(core_environment_variables);
-	CTX.sym.retro_init();
-
-	char *settings = json_serialize_to_string(CTX.settings);
-
-	JUN_CoreDestroy();
-
-	return settings;
-}
-
-uint8_t JUN_CoreStartGame()
-{
 	CTX.sym.retro_set_environment(environment);
 	CTX.sym.retro_set_video_refresh(video_refresh);
 	CTX.sym.retro_set_input_poll(input_poll);
 	CTX.sym.retro_set_input_state(input_state);
 	CTX.sym.retro_set_audio_sample(audio_sample);
 	CTX.sym.retro_set_audio_sample_batch(audio_sample_batch);
+}
 
+uint8_t JUN_CoreStartGame()
+{
 	CTX.sym.retro_init();
 
 	CTX.sym.retro_get_system_info(&CTX.system);
@@ -512,6 +486,47 @@ double JUN_CoreGetSampleRate()
 double JUN_CoreGetFPS()
 {
 	return CTX.av.timing.fps;
+}
+
+uint32_t JUN_CoreGetVariableCount()
+{
+	for (int8_t count = 0; count < INT8_MAX; count++)
+		if (!CTX.variables[count].key)
+			return count;
+
+	return 0;
+}
+
+const char *JUN_CoreGetVariableKey(uint32_t index)
+{
+	return CTX.variables[index].key;
+}
+
+const char *JUN_CoreGetVariableName(uint32_t index)
+{
+	return CTX.variables[index].name;
+}
+
+const char *JUN_CoreGetVariableOptions(uint32_t index)
+{
+	return CTX.variables[index].options;
+}
+
+void JUN_CoreSetVariable(const char *key, const char *value)
+{
+	for (int8_t i = 0; i < INT8_MAX; i++) {
+		if (!CTX.variables[i].key)
+			break;
+
+		if (strcmp(CTX.variables[i].key, key))
+			continue;
+
+		free(CTX.variables[i].value);
+		CTX.variables[i].value = strdup(value);
+		CTX.variables_update = true;
+
+		break;
+	}
 }
 
 void JUN_CoreSetInput(uint8_t device, uint8_t id, int16_t value)
@@ -606,9 +621,6 @@ void JUN_CoreDestroy()
 	CTX.sym.retro_deinit();
 
 	JUN_FramerateDestroy(&CTX.framerate);
-
-	json_value_free(CTX.settings);
-	json_value_free(CTX.overrides);
 
 	for (size_t i = 0; i < JUN_PATH_MAX; i++)
 		free(CTX.paths[i]);

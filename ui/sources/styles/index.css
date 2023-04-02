@@ -78,6 +78,10 @@
     border-radius: 50%;
 }
 
+#root .core-settings {
+	--width: 80%;
+}
+
 #root .core-settings ion-button {
 	flex: 1;
 	height: 80%;

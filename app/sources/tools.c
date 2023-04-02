@@ -52,12 +52,10 @@ char *JUN_Strfmt(const char *fmt, ...)
 	return str;
 }
 
-void *JUN_ConvertARGB1555(const void *data, uint32_t width, uint32_t height, size_t pitch)
+void JUN_ConvertARGB1555(const void *data, uint32_t width, uint32_t height, size_t pitch, uint32_t *rgba)
 {
 	if (!data)
-		return NULL;
-
-	uint32_t *rgba = calloc(width * height, sizeof(uint32_t));
+		return;
 
 	for (size_t x = 0; x < width; x++) {
 		for (size_t y = 0; y < height; y++) {
@@ -71,16 +69,12 @@ void *JUN_ConvertARGB1555(const void *data, uint32_t width, uint32_t height, siz
 			rgba[x + y * width] = r | g | b | a;
 		}
 	}
-
-	return rgba;
 }
 
-void *JUN_ConvertARGB8888(const void *data, uint32_t width, uint32_t height, size_t pitch)
+void JUN_ConvertARGB8888(const void *data, uint32_t width, uint32_t height, size_t pitch, uint32_t *rgba)
 {
 	if (!data)
-		return NULL;
-
-	uint32_t *rgba = calloc(width * height, sizeof(uint32_t));
+		return;
 
 	for (size_t x = 0; x < width; x++) {
 		for (size_t y = 0; y < height; y++) {
@@ -94,16 +88,12 @@ void *JUN_ConvertARGB8888(const void *data, uint32_t width, uint32_t height, siz
 			rgba[x + y * width] = r | g | b | a;
 		}
 	}
-
-	return rgba;
 }
 
-void *JUN_ConvertRGB565(const void *data, uint32_t width, uint32_t height, size_t pitch)
+void JUN_ConvertRGB565(const void *data, uint32_t width, uint32_t height, size_t pitch, uint32_t *rgba)
 {
 	if (!data)
-		return NULL;
-
-	uint32_t *rgba = calloc(width * height, sizeof(uint32_t));
+		return;
 
 	for (size_t x = 0; x < width; x++) {
 		for (size_t y = 0; y < height; y++) {
@@ -117,16 +107,10 @@ void *JUN_ConvertRGB565(const void *data, uint32_t width, uint32_t height, size_
 			rgba[x + y * width] = r | g | b | a;
 		}
 	}
-
-	return rgba;
 }
 
-float *JUN_ConvertPCM16(const int16_t *data, size_t frames)
+void JUN_ConvertPCM16(const int16_t *data, size_t frames, float *converted)
 {
-	float *converted = calloc(frames * 2, sizeof(float));
-
 	for (size_t i = 0; i < frames * 2; i++)
 		converted[i] = data[i] / 32768.0f;
-
-	return converted;
 }

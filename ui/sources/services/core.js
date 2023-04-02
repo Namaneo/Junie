@@ -31,24 +31,27 @@ export default class Core {
 		const origin = location.origin + location.pathname.replace(/\/$/, '');
 		const module = await (await import(`${origin}/modules/lib${this.#name}.js`)).default();
 
-		module.JUN_CoreCreate =         module.cwrap('JUN_CoreCreate',         null,     ['string', 'string', 'string']);
-		module.JUN_CoreGetDefaults =    module.cwrap('JUN_CoreGetDefaults',    'string', []);
-		module.JUN_CoreStartGame =      module.cwrap('JUN_CoreStartGame',      'number', []);
-		module.JUN_CoreGetSampleRate =  module.cwrap('JUN_CoreGetSampleRate',  'number', []);
-		module.JUN_CoreGetFPS =         module.cwrap('JUN_CoreGetFPS',         'number', []);
-		module.JUN_CoreSetInput =       module.cwrap('JUN_CoreSetInput',       null,     ['number', 'number', 'number']);
-		module.JUN_CoreRun =            module.cwrap('JUN_CoreRun',            null,     ['number']);
-		module.JUN_CoreGetFrameData =   module.cwrap('JUN_CoreGetFrameData',   'number', []);
-		module.JUN_CoreGetFrameWidth =  module.cwrap('JUN_CoreGetFrameWidth',  'number', []);
-		module.JUN_CoreGetFrameHeight = module.cwrap('JUN_CoreGetFrameHeight', 'number', []);
-		module.JUN_CoreGetAudioData =   module.cwrap('JUN_CoreGetAudioData',   'number', []);
-		module.JUN_CoreGetAudioFrames = module.cwrap('JUN_CoreGetAudioFrames', 'number', []);
-		module.JUN_CoreSaveState =      module.cwrap('JUN_CoreSaveState',      null,     []);
-		module.JUN_CoreRestoreState =   module.cwrap('JUN_CoreRestoreState',   null,     []);
-		module.JUN_CoreDestroy =        module.cwrap('JUN_CoreDestroy',        null,     []);
+		module.JUN_CoreCreate =             module.cwrap('JUN_CoreCreate',             null,     ['string', 'string']);
+		module.JUN_CoreStartGame =          module.cwrap('JUN_CoreStartGame',          'number', []);
+		module.JUN_CoreGetSampleRate =      module.cwrap('JUN_CoreGetSampleRate',      'number', []);
+		module.JUN_CoreGetFPS =             module.cwrap('JUN_CoreGetFPS',             'number', []);
+		module.JUN_CoreGetVariableCount =   module.cwrap('JUN_CoreGetVariableCount',   'number', []);
+		module.JUN_CoreGetVariableKey =     module.cwrap('JUN_CoreGetVariableKey',     'string', ['number']);
+		module.JUN_CoreGetVariableName =    module.cwrap('JUN_CoreGetVariableName',    'string', ['number']);
+		module.JUN_CoreGetVariableOptions = module.cwrap('JUN_CoreGetVariableOptions', 'string', ['number']);
+		module.JUN_CoreSetVariable =        module.cwrap('JUN_CoreSetVariable',        null,     ['string', 'string']);
+		module.JUN_CoreSetInput =           module.cwrap('JUN_CoreSetInput',           null,     ['number', 'number', 'number']);
+		module.JUN_CoreRun =                module.cwrap('JUN_CoreRun',                null,     ['number']);
+		module.JUN_CoreGetFrameData =       module.cwrap('JUN_CoreGetFrameData',       'number', []);
+		module.JUN_CoreGetFrameWidth =      module.cwrap('JUN_CoreGetFrameWidth',      'number', []);
+		module.JUN_CoreGetFrameHeight =     module.cwrap('JUN_CoreGetFrameHeight',     'number', []);
+		module.JUN_CoreGetAudioData =       module.cwrap('JUN_CoreGetAudioData',       'number', []);
+		module.JUN_CoreGetAudioFrames =     module.cwrap('JUN_CoreGetAudioFrames',     'number', []);
+		module.JUN_CoreSaveState =          module.cwrap('JUN_CoreSaveState',          null,     []);
+		module.JUN_CoreRestoreState =       module.cwrap('JUN_CoreRestoreState',       null,     []);
+		module.JUN_CoreDestroy =            module.cwrap('JUN_CoreDestroy',            null,     []);
 
 		this.#module = module;
-		this.#settings = JSON.parse(module.JUN_CoreGetDefaults());
 	}
 
 	async prepare(system, rom) {
@@ -83,12 +86,13 @@ export default class Core {
 		}
 	}
 
-	start(settings, graphics) {
+	start(variables, graphics) {
 		return new Promise(resolve => {
 			const module = this.#module;
 			const state = this.#state;
 
-			module.JUN_CoreCreate(state.system, state.rom, JSON.stringify(settings));
+			module.JUN_CoreCreate(state.system, state.rom);
+			this.update(variables);
 			module.JUN_CoreStartGame();
 
 			state.sync_id = setInterval(() => this.#sync(), 1000);
@@ -118,11 +122,10 @@ export default class Core {
 					Audio.queue(audio_view);
 				}
 
-				if (!state.started) {
-					resolve();
+				if (!state.started && state.sync_id) {
 					state.started = true;
+					resolve();
 				}
-
 
 				if (state.sync_id)
 					window.requestAnimationFrame(step);
@@ -130,6 +133,30 @@ export default class Core {
 
 			window.requestAnimationFrame(step);
 		});
+	}
+
+	variables() {
+		const variables = [];
+
+		if (!this.#module)
+			return variables;
+
+		const module = this.#module;
+
+		for (let i = 0; i < module.JUN_CoreGetVariableCount(); i++) {
+			const key = module.JUN_CoreGetVariableKey(i);
+			const name = module.JUN_CoreGetVariableName(i);
+			const options = module.JUN_CoreGetVariableOptions(i).split('|');
+
+			variables.push({ key, name, options });
+		}
+
+		return variables;
+	}
+
+	update(variables) {
+		for (const key in variables)
+			this.#module.JUN_CoreSetVariable(key, variables[key]);
 	}
 
 	send(device, id, value) {

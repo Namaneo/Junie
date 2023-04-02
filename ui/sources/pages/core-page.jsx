@@ -1,8 +1,23 @@
-import { IonBackButton, IonButton, IonButtons, IonCheckbox, IonContent, IonHeader, IonItem, IonLabel, IonList, IonMenu, IonMenuButton, IonPage, IonTitle, IonToolbar } from '@ionic/react';
+import { IonBackButton, IonButton, IonButtons, IonCheckbox, IonContent, IonHeader, IonItem, IonItemDivider, IonLabel, IonList, IonMenu, IonMenuButton, IonPage, IonSelect, IonSelectOption, IonTitle, IonToolbar } from '@ionic/react';
 import { useEffect, useRef, useState } from 'react';
 import { useWindowSize } from '../hooks/window';
 import Core from '../services/core';
 import Files from '../services/files';
+
+const Settings = ({ variables, settings, update }) => {
+	return variables.map(item =>
+		<IonItem key={item.key}>
+			<IonLabel>{item.name}</IonLabel>
+			<IonSelect interface="action-sheet"
+			           value={settings[item.key] ?? item.options[0]}
+			           onIonChange={e => update(item.key, e.detail.value)}>
+				{item.options.map(option => (
+					<IonSelectOption key={option} value={option}>{option}</IonSelectOption>)
+				)}
+			</IonSelect>
+		</IonItem>
+	);
+}
 
 const Control = ({ core, name, device, id, className, inset }) => {
 	const down = (e) => { core.send(device, id, 1); e.preventDefault(); };
@@ -27,6 +42,8 @@ const Control = ({ core, name, device, id, className, inset }) => {
 export const CorePage = ({ match }) => {
 
 	const [core] = useState(Core.create(match.params.lib));
+	const [variables, setVariables] = useState([]);
+	const [settings, setSettings] = useState({});
 	const [audio, setAudio] = useState(true);
 	const [gamepad, setGamepad] = useState(true);
 	const [touch, setTouch] = useState({ x: 0, y: 0, down: false });
@@ -51,12 +68,24 @@ export const CorePage = ({ match }) => {
 		}
 	};
 
+	const update = async (key, value) => {
+		settings[key] = value;
+
+		await Files.Settings.update(settings);
+
+		core.update(settings);
+	}
+
 	useEffect(() => {
 		const start = async () => {
 			await core.init();
 			await core.prepare(match.params.system, match.params.game);
 
-			await core.start(await Files.Settings.get(), canvas.current);
+			const settings = await Files.Settings.get();
+			await core.start(settings, canvas.current);
+
+			setSettings(settings);
+			setVariables(core.variables());
 
 			resize();
 		}
@@ -84,14 +113,14 @@ export const CorePage = ({ match }) => {
 
 	return (
 		<>
-			<IonMenu contentId="core" side="end" swipeGesture={false}>
+			<IonMenu class="core-settings" contentId="core" side="end" swipeGesture={false}>
 				<IonHeader>
 					<IonToolbar>
 						<IonTitle>Settings</IonTitle>
 					</IonToolbar>
 				</IonHeader>
 
-				<IonContent class="core-settings">
+				<IonContent>
 					<IonList>
 						<IonItem>
 							<IonButton fill="outline" onClick={() => core.save()}>Save state</IonButton>
@@ -105,6 +134,8 @@ export const CorePage = ({ match }) => {
 							<IonLabel>Show gamepad</IonLabel>
 							<IonCheckbox checked={gamepad} onIonChange={() => setGamepad(!gamepad)}></IonCheckbox>
 						</IonItem>
+						<IonItemDivider></IonItemDivider>
+						<Settings variables={variables} settings={settings} update={update}></Settings>
 					</IonList>
 				</IonContent>
 			</IonMenu>

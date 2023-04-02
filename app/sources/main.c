@@ -100,11 +100,10 @@ int main(int argc, const char *argv[])
 {
 	const char *system = argv[1];
 	const char *rom = argv[2];
-	const char *settings = argv[3];
 
 	JUN_App *app = JUN_AppCreate();
 
-	JUN_CoreCreate(system, rom, settings);
+	JUN_CoreCreate(system, rom);
 
 	if (!JUN_CoreStartGame()) {
 		JUN_Log("Core for system '%s' failed to start rom '%s'", system, rom);
