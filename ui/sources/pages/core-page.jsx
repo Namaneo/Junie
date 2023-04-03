@@ -5,18 +5,18 @@ import Core from '../services/core';
 import Files from '../services/files';
 
 const Settings = ({ variables, settings, update }) => {
-	return variables.map(item =>
+	return variables?.map(item =>
 		<IonItem key={item.key}>
 			<IonLabel>{item.name}</IonLabel>
 			<IonSelect interface="action-sheet"
-			           value={settings[item.key] ?? item.options[0]}
+			           value={settings?.[item.key] ?? item.options[0]}
 			           onIonChange={e => update(item.key, e.detail.value)}>
 				{item.options.map(option => (
 					<IonSelectOption key={option} value={option}>{option}</IonSelectOption>)
 				)}
 			</IonSelect>
 		</IonItem>
-	);
+	) ?? null;
 }
 
 const Control = ({ core, name, device, id, className, inset }) => {
@@ -40,13 +40,12 @@ const Control = ({ core, name, device, id, className, inset }) => {
 }
 
 export const CorePage = ({ match }) => {
-
 	const [core] = useState(Core.create(match.params.lib));
-	const [variables, setVariables] = useState([]);
-	const [settings, setSettings] = useState({});
+	const [variables, setVariables] = useState(null);
+	const [settings, setSettings] = useState(null);
 	const [audio, setAudio] = useState(true);
 	const [gamepad, setGamepad] = useState(true);
-	const [touch, setTouch] = useState({ x: 0, y: 0, down: false });
+	const [pointer, setPointer] = useState({ x: 0, y: 0, down: false });
 	const [width, height] = useWindowSize();
 
 	const content = useRef(null);
@@ -69,11 +68,22 @@ export const CorePage = ({ match }) => {
 	};
 
 	const update = async (key, value) => {
+		if (!settings)
+			return;
+
 		settings[key] = value;
 
 		await Files.Settings.update(settings);
 
 		core.update(settings);
+	}
+
+	const touch = (e, x, y, down) => {
+		if (gamepad)
+			return;
+
+		setPointer({ x, y, down });
+		e.preventDefault();
 	}
 
 	useEffect(() => {
@@ -90,6 +100,9 @@ export const CorePage = ({ match }) => {
 			if (!settings.hasOwnProperty(`${match.params.lib}_junie_gamepad`))
 				settings[`${match.params.lib}_junie_gamepad`] = true;
 
+			setAudio(settings[`${match.params.lib}_junie_audio`]);
+			setGamepad(settings[`${match.params.lib}_junie_gamepad`]);
+
 			setSettings(settings);
 			setVariables(core.variables());
 
@@ -104,25 +117,18 @@ export const CorePage = ({ match }) => {
 	useEffect(() => {
 		const rect = canvas.current.getBoundingClientRect();
 
-		const x = (touch.x - rect.left) / (rect.right  - rect.left) * canvas.current.width;
-		const y = (touch.y - rect.top ) / (rect.bottom - rect.top ) * canvas.current.height;
+		const x = (pointer.x - rect.left) / (rect.right  - rect.left) * canvas.current.width;
+		const y = (pointer.y - rect.top ) / (rect.bottom - rect.top ) * canvas.current.height;
 
 		core.send(Core.Device.POINTER, Core.Pointer.X,       x);
 		core.send(Core.Device.POINTER, Core.Pointer.Y,       y);
-		core.send(Core.Device.POINTER, Core.Pointer.PRESSED, touch.down);
+		core.send(Core.Device.POINTER, Core.Pointer.PRESSED, pointer.down);
 		core.send(Core.Device.POINTER, Core.Pointer.COUNT,   1);
-	}, [touch]);
+	}, [pointer]);
 
-	useEffect(() => resize(), [width, height]);
-
-	useEffect(() => {
-		core.audio(audio);
-		update(`${match.params.lib}_junie_audio`, audio);
-	}, [audio]);
-
-	useEffect(() => {
-		update(`${match.params.lib}_junie_gamepad`, gamepad);
-	}, [gamepad]);
+	useEffect(() => { update(`${match.params.lib}_junie_audio`, audio); core.audio(audio); }, [audio]);
+	useEffect(() => { update(`${match.params.lib}_junie_gamepad`, gamepad); }, [gamepad]);
+	useEffect(() => { resize() }, [width, height]);
 
 	return (
 		<>
@@ -168,9 +174,13 @@ export const CorePage = ({ match }) => {
 
 				<IonContent class="core" ref={content}>
 					<canvas ref={canvas}
-						onMouseDown={(e) => !gamepad && setTouch({ x: e.clientX, y: e.clientY, down: true })}
-						onMouseUp={(e) =>   !gamepad && setTouch({ x: e.clientX, y: e.clientY, down: false })}
-						onMouseMove={(e) => !gamepad && setTouch({ x: e.clientX, y: e.clientY, down: touch.down })}
+						onTouchStart={(e) =>  touch(e, e.touches[0].clientX, e.touches[0].clientY, true)}
+						onTouchMove={(e) =>   touch(e, e.touches[0].clientX, e.touches[0].clientY, pointer.down)}
+						onTouchEnd={(e) =>    touch(e, pointer.x, pointer.y, false)}
+						onTouchCancel={(e) => touch(e, pointer.x, pointer.y, false)}
+						onMouseDown={(e) =>   touch(e, e.clientX, e.clientY, true)}
+						onMouseMove={(e) =>   touch(e, e.clientX, e.clientY, pointer.down)}
+						onMouseUp={(e) =>     touch(e, pointer.x, pointer.y, false)}
 					/>
 
 					{gamepad &&

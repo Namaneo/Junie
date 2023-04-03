@@ -199,6 +199,7 @@ static bool environment(unsigned cmd, void *data)
 			bool *update = data;
 
 			*update = CTX.variables_update;
+			CTX.variables_update = false;
 
 			return true;
 		}

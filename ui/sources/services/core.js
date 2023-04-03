@@ -87,18 +87,21 @@ export default class Core {
 
 	start(variables, graphics) {
 		return new Promise(resolve => {
-			const module = this.#module;
-			const state = this.#state;
-
-			module.JUN_CoreCreate(state.system, state.rom);
+			this.#module.JUN_CoreCreate(this.#state.system, this.#state.rom);
 			this.update(variables);
-			module.JUN_CoreStartGame();
+			this.#module.JUN_CoreStartGame();
 
-			state.sync_id = setInterval(() => this.#sync(), 1000);
+			this.#state.sync_id = setInterval(() => this.#sync(), 1000);
 
 			const video = graphics.getContext('2d');
 
 			const step = () => {
+				if (!this.#module)
+					return;
+
+				const module = this.#module;
+				const state = this.#state;
+
 				module.JUN_CoreRun(1);
 
 				const frame = module.JUN_CoreGetFrameData();
@@ -121,13 +124,12 @@ export default class Core {
 					Audio.queue(audio_view);
 				}
 
-				if (!state.started && state.sync_id) {
+				if (!state.started) {
 					state.started = true;
 					resolve();
 				}
 
-				if (state.sync_id)
-					window.requestAnimationFrame(step);
+				window.requestAnimationFrame(step);
 			}
 
 			window.requestAnimationFrame(step);
@@ -207,6 +209,7 @@ export default class Core {
 		state.rom = null;
 
 		module.JUN_CoreDestroy();
+		this.#module = null;
 	}
 
 	static create(name) {
