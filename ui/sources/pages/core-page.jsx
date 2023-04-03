@@ -43,8 +43,8 @@ export const CorePage = ({ match }) => {
 	const [core] = useState(Core.create(match.params.lib));
 	const [variables, setVariables] = useState(null);
 	const [settings, setSettings] = useState(null);
-	const [audio, setAudio] = useState(true);
-	const [gamepad, setGamepad] = useState(true);
+	const [audio, setAudio] = useState(false);
+	const [gamepad, setGamepad] = useState(false);
 	const [pointer, setPointer] = useState({ x: 0, y: 0, down: false });
 	const [width, height] = useWindowSize();
 
