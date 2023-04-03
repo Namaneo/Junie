@@ -1,10 +1,10 @@
+#include "tools.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
 #include <time.h>
-
-#include "tools.h"
 
 void JUN_Log(const char *fmt, ...)
 {

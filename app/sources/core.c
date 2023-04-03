@@ -1,15 +1,14 @@
+#include "core.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
 
 #include "libretro.h"
-#include "parson.h"
 
-#include "tools.h"
 #include "filesystem.h"
-
-#include "core.h"
+#include "tools.h"
 
 typedef enum {
 	JUN_PATH_GAME   = 0,
@@ -42,6 +41,7 @@ struct jun_core_sym {
 	size_t (*retro_serialize_size)(void);
 	bool (*retro_serialize)(void *data, size_t size);
 	bool (*retro_unserialize)(const void *data, size_t size);
+	void (*retro_cheat_reset)();
 	void (*retro_cheat_set)(unsigned index, bool enabled, const char *code);
 	void (*retro_run)(void);
 	void (*retro_reset)(void);
@@ -59,7 +59,7 @@ static struct CTX {
 	struct retro_system_av_info av;
 	enum retro_pixel_format format;
 
-	bool fast_forward;
+	uint8_t fast_forward;
 	uint64_t last_save;
 
 	bool inputs[UINT8_MAX];
@@ -246,12 +246,21 @@ static void video_refresh(const void *data, unsigned width, unsigned height, siz
 
 static size_t audio_sample_batch(const int16_t *data, size_t frames)
 {
-	if (frames * 2 * sizeof(float) > CTX.audio.frames * 2 * sizeof(float))
-		CTX.audio.data = realloc(CTX.audio.data, frames * 2 * sizeof(float));
+	uint32_t offset = 0;
+	uint32_t current_size = CTX.audio.frames * 2 * sizeof(float);
+	uint32_t new_size = frames * 2 * sizeof(float);
 
-	JUN_ConvertPCM16(data, frames, CTX.audio.data);
+	if (CTX.fast_forward) {
+		offset = current_size;
+		new_size += current_size;
+	}
 
-	CTX.audio.frames = frames;
+	if (new_size > current_size)
+		CTX.audio.data = realloc(CTX.audio.data, new_size);
+
+	JUN_ConvertPCM16(data, frames, &CTX.audio.data[offset]);
+
+	CTX.audio.frames = CTX.fast_forward ? CTX.audio.frames + frames : frames;
 
 	return frames;
 }
@@ -322,7 +331,7 @@ static void restore_memory(uint32_t type, const char *path)
 	if (!size)
 		return;
 
-	JUN_File *file = JUN_FilesystemGetExistingFile(path);
+	JUN_File *file = JUN_FilesystemReadFile(path);
 	if (!file)
 		return;
 
@@ -336,37 +345,6 @@ static void restore_memories()
 
 	restore_memory(RETRO_MEMORY_SAVE_RAM, sram_path);
 	restore_memory(RETRO_MEMORY_RTC, rtc_path);
-}
-
-static void set_cheats()
-{
-	char *path = NULL;
-	size_t index = 0;
-
-	const char *cheats_path = CTX.paths[JUN_PATH_CHEATS];
-	JUN_File *file = JUN_FilesystemGetExistingFile(cheats_path);
-	if (!file)
-		return;
-
-	JSON_Value *json = json_parse_string(file->buffer);
-	for (size_t i = 0; i < json_array_get_count(json_array(json)); i++) {
-		const JSON_Value *cheat = json_array_get_value(json_array(json), i);
-
-		bool enabled = json_object_get_boolean(json_object(cheat), "enabled");
-		if (!enabled)
-			continue;
-
-		int32_t order = json_object_get_number(json_object(cheat), "order");
-
-		char *value = strdup(json_object_get_string(json_object(cheat), "value"));
-		for (size_t i = 0; i < strlen(value); i++)
-			if (value[i] == ' ' || value[i] == '\n')
-				value[i] = '+';
-
-		CTX.sym.retro_cheat_set(order, enabled, value);
-	}
-
-	json_value_free(json);
 }
 
 static void initialize_symbols()
@@ -392,6 +370,7 @@ static void initialize_symbols()
 	MAP_SYMBOL(retro_serialize_size);
 	MAP_SYMBOL(retro_serialize);
 	MAP_SYMBOL(retro_unserialize);
+	MAP_SYMBOL(retro_cheat_reset);
 	MAP_SYMBOL(retro_cheat_set);
 	MAP_SYMBOL(retro_run);
 	MAP_SYMBOL(retro_reset);
@@ -445,6 +424,48 @@ void JUN_CoreCreate(const char *system, const char *rom)
 	CTX.sym.retro_set_audio_sample_batch(audio_sample_batch);
 }
 
+void *JUN_CoreGetFileBuffer(const char *path, uint32_t length)
+{
+	return JUN_FilesystemGetNewFile(path, length)->buffer;
+}
+
+uint32_t JUN_CoreCountFiles()
+{
+	return JUN_FilesystemCountFiles();
+}
+
+const char *JUN_CoreGetFilePath(uint32_t index)
+{
+	return JUN_FilesystemGetFile(index)->path;
+}
+
+uint32_t JUN_CoreGetFileLength(uint32_t index)
+{
+	return JUN_FilesystemGetFile(index)->size;
+}
+
+const void *JUN_CoreReadFile(uint32_t index)
+{
+	return JUN_FilesystemGetFile(index)->buffer;
+}
+
+void JUN_CoreResetCheats()
+{
+	CTX.sym.retro_cheat_reset();
+}
+
+void JUN_CoreSetCheat(uint32_t index, uint8_t enabled, const char *code)
+{
+	char *value = strdup(code);
+	for (size_t i = 0; i < strlen(value); i++)
+		if (value[i] == ' ' || value[i] == '\n')
+			value[i] = '+';
+
+	CTX.sym.retro_cheat_set(index, enabled, value);
+
+	free(value);
+}
+
 uint8_t JUN_CoreStartGame()
 {
 	CTX.sym.retro_init();
@@ -452,14 +473,13 @@ uint8_t JUN_CoreStartGame()
 	CTX.sym.retro_get_system_info(&CTX.system);
 
 	const char *game_path = CTX.paths[JUN_PATH_GAME];
-	JUN_File *game = JUN_FilesystemGetExistingFile(game_path);
+	JUN_File *game = JUN_FilesystemReadFile(game_path);
 
 	CTX.game.path = game->path;
 	CTX.game.size = game->size;
-	if (!CTX.system.need_fullpath) {
-		CTX.game.data = calloc(CTX.game.size, 1);
-		memcpy((void *) CTX.game.data, game->buffer, CTX.game.size);
-	}
+
+	if (!CTX.system.need_fullpath)
+		CTX.game.data = game->buffer;
 
 	CTX.initialized = CTX.sym.retro_load_game(&CTX.game);
 
@@ -470,7 +490,6 @@ uint8_t JUN_CoreStartGame()
 	CTX.sym.retro_set_controller_port_device(0, RETRO_DEVICE_JOYPAD);
 
 	restore_memories();
-	set_cheats();
 
 	return CTX.initialized;
 }
@@ -543,12 +562,12 @@ void JUN_CoreSetInput(uint8_t device, uint8_t id, int16_t value)
 
 void JUN_CoreRun(uint8_t fast_forward)
 {
-	CTX.fast_forward = true;
+	CTX.fast_forward = 0;
 
-	for (size_t i = 0; i < fast_forward - 1; i++)
+	for (size_t i = 0; i < fast_forward - 1; i++) {
 		CTX.sym.retro_run();
-
-	CTX.fast_forward = false;
+		CTX.fast_forward++;
+	}
 
 	CTX.sym.retro_run();
 
@@ -599,7 +618,7 @@ void JUN_CoreRestoreState()
 	size_t size = CTX.sym.retro_serialize_size();
 
 	const char *state_path = CTX.paths[JUN_PATH_STATE];
-	JUN_File *file = JUN_FilesystemGetExistingFile(state_path);
+	JUN_File *file = JUN_FilesystemReadFile(state_path);
 	if (!file)
 		return;
 

@@ -1,10 +1,9 @@
 import { createMemoryHistory } from 'history';
-import { StrictMode } from 'react';
-import { render } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { Redirect, Route } from 'react-router';
 import { IonReactMemoryRouter } from '@ionic/react-router';
 import { IonApp, IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs, setupIonicReact } from '@ionic/react';
-import { cloudDownload, gameController, keyOutline, save, settingsOutline } from 'ionicons/icons';
+import { cloudDownload, gameController, keyOutline, save } from 'ionicons/icons';
 import { RecentPage } from './pages/recent-page';
 import { SystemsPage } from './pages/systems-page';
 import { GamesPage } from './pages/games-page';
@@ -44,7 +43,7 @@ function Junie() {
                 <IonTabs>
                     <IonRouterOutlet>
                         <Route exact path="/recent" component={RecentPage} />
-                        <Route exact path="/recent/:lib/:system/:game" component={CorePage} />
+                        <Route exact path="/recent/:lib/:system/:rom" component={CorePage} />
                         <Route exact path="/games" component={SystemsPage} />
 						<Route exact path="/games/:system" component={GamesPage} />
                         <Route exact path="/saves"  component={SavesPage}  />
@@ -76,4 +75,4 @@ function Junie() {
     );
 }
 
-render(<StrictMode><Junie /></StrictMode>, document.getElementById('root'));
+createRoot(document.getElementById('root')).render(<Junie />);

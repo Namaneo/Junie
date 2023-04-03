@@ -3,20 +3,19 @@
   "version": "0.0.0",
   "license": "MIT",
   "devDependencies": {
-    "@ionic/react": "^6.1.4",
-    "@ionic/react-router": "^6.1.4",
+    "@ionic/react": "^7.0.0",
+    "@ionic/react-router": "^7.0.0",
+    "@pkgjs/parseargs": "^0.11.0",
     "chokidar": "^3.5.3",
     "esbuild": "^0.17.5",
     "esbuild-plugin-copy": "^2.0.2",
     "glob": "^8.1.0",
     "jszip": "^3.10.1",
     "playwright": "^1.30.0",
-    "react": "^17.0.0",
-    "react-dom": "^17.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-joystick-component": "^6.1.0",
     "react-router": "^5.0.1",
     "react-router-dom": "^5.0.1"
-  },
-  "dependencies": {
-    "@pkgjs/parseargs": "^0.11.0"
   }
 }

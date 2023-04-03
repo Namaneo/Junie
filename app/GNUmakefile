@@ -1,5 +1,4 @@
 SRC_DIR := sources
-LIB_DIR := libraries
 RES_DIR := assets
 OUT_DIR := build
 
@@ -10,13 +9,12 @@ BINARIES  := $(LIBRARIES:%=$(OUT_DIR)/lib%.js) $(OUT_DIR)/tools.js
 SRC := \
 	$(SRC_DIR)/core.c \
 	$(SRC_DIR)/tools.c \
-	$(SRC_DIR)/filesystem.c \
-	$(LIB_DIR)/parson.c
+	$(SRC_DIR)/filesystem.c
 
 OBJ := $(SRC:.c=.o)
 
 CFLAGS  := \
-	-I$(SRC_DIR) -I$(LIB_DIR) \
+	-I$(SRC_DIR) \
 	-msimd128 -fPIC -Wno-switch
 
 LDFLAGS := \
@@ -37,7 +35,7 @@ LDFLAGS_GAME := $(LDFLAGS) \
 	-fwasm-exceptions -sMAIN_MODULE=2 \
 	-sINITIAL_MEMORY=32mb -sALLOW_MEMORY_GROWTH \
 	-sEXPORTED_FUNCTIONS=@exports.json \
-	-sEXPORTED_RUNTIME_METHODS=ccall,cwrap,FS
+	-sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 
 LDFLAGS_TOOLS := $(LDFLAGS) \
 	-sEXPORTED_RUNTIME_METHODS=IDBStore

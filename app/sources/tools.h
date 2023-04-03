@@ -1,7 +1,7 @@
 #pragma once
 
+#include <stddef.h>
 #include <stdint.h>
-#include <stdbool.h>
 
 void JUN_Log(const char *fmt, ...);
 uint64_t JUN_GetTicks();

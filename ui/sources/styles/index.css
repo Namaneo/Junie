@@ -64,6 +64,12 @@ html, body {
     border-radius: 50%;
 }
 
+#root .core .joystick {
+	position: absolute;
+    border: 2px solid white;
+	border-radius: 50%;
+}
+
 #root .core button.arrow {
 	width: min(12vw, 12 * 10px);
     height: min(12vw, 12 * 10px);

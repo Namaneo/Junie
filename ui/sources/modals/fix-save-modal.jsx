@@ -1,4 +1,4 @@
-import { IonButton, IonButtons, IonContent, IonHeader, IonItem, IonLabel, IonList, IonSelect, IonSelectOption, IonTitle, IonToolbar } from '@ionic/react';
+import { IonButton, IonButtons, IonContent, IonHeader, IonItem, IonList, IonSelect, IonSelectOption, IonTitle, IonToolbar } from '@ionic/react';
 import { useState } from 'react';
 
 export const FixSaveModal = ({ systems, dismiss, apply }) => {
@@ -30,8 +30,7 @@ export const FixSaveModal = ({ systems, dismiss, apply }) => {
 				<IonList lines="full">
 
 					<IonItem>
-						<IonLabel>System</IonLabel>
-						<IonSelect interface="action-sheet" onIonChange={e => systemChanged(e.detail.value)}>
+						<IonSelect label="System" interface="action-sheet" onIonChange={e => systemChanged(e.detail.value)}>
 							{systems.filter(system => system.games.length).map(system =>
 								<IonSelectOption key={system.name} value={system}>{system.name}</IonSelectOption>
 							)}
@@ -39,8 +38,7 @@ export const FixSaveModal = ({ systems, dismiss, apply }) => {
 					</IonItem>
 
 					<IonItem>
-						<IonLabel>Game</IonLabel>
-						<IonSelect interface="action-sheet" value={game} disabled={!system} onIonChange={e => gameChanged(e.detail.value)}>
+						<IonSelect label="Game" interface="action-sheet" value={game} disabled={!system} onIonChange={e => gameChanged(e.detail.value)}>
 							{system?.games.map(game =>
 								<IonSelectOption key={game.name} value={game}>{game.name}</IonSelectOption>
 							)}

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #include "libretro.h"
 
 #define MAX_FILES 32
@@ -18,7 +20,7 @@ struct retro_vfs_file_handle {
 	unsigned mode;
 	unsigned hints;
 
-	size_t size;
+	uint32_t size;
 	unsigned offset;
 	void *buffer;
 };
@@ -26,8 +28,9 @@ struct retro_vfs_file_handle {
 void JUN_FilesystemCreate();
 JUN_Files *JUN_FilesystemGetInterface();
 uint32_t JUN_FilesystemGetInterfaceVersion();
-JUN_File *JUN_FilesystemGetFiles();
-JUN_File *JUN_FilesystemGetNewFile(const char *path);
-JUN_File *JUN_FilesystemGetExistingFile(const char *path);
-void JUN_FilesystemSaveFile(const char *path, const void *buffer, size_t length);
+uint32_t JUN_FilesystemCountFiles();
+JUN_File *JUN_FilesystemGetNewFile(const char *path, uint32_t length);
+JUN_File *JUN_FilesystemGetFile(uint32_t index);
+JUN_File *JUN_FilesystemReadFile(const char *path);
+void JUN_FilesystemSaveFile(const char *path, const void *buffer, uint32_t length);
 void JUN_FilesystemDestroy();

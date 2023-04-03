@@ -1,5 +1,12 @@
 [
 	"_JUN_CoreCreate",
+	"_JUN_CoreGetFileBuffer",
+	"_JUN_CoreCountFiles",
+	"_JUN_CoreGetFilePath",
+	"_JUN_CoreGetFileLength",
+	"_JUN_CoreReadFile",
+	"_JUN_CoreResetCheats",
+	"_JUN_CoreSetCheat",
 	"_JUN_CoreStartGame",
 	"_JUN_CoreGetSampleRate",
 	"_JUN_CoreGetVariableCount",

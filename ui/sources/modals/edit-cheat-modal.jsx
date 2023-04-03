@@ -1,4 +1,4 @@
-import { IonButton, IonButtons, IonCheckbox, IonContent, IonHeader, IonInput, IonItem, IonLabel, IonList, IonSelect, IonSelectOption, IonTextarea, IonTitle, IonToolbar } from '@ionic/react';
+import { IonButton, IonButtons, IonCheckbox, IonContent, IonHeader, IonInput, IonItem, IonList, IonSelect, IonSelectOption, IonTextarea, IonTitle, IonToolbar } from '@ionic/react';
 import { useState } from 'react';
 
 export const EditCheatModal = ({ current, systems, dismiss, apply }) => {
@@ -47,8 +47,7 @@ export const EditCheatModal = ({ current, systems, dismiss, apply }) => {
 				<IonList lines="full">
 
 					{!current && <IonItem>
-						<IonLabel>System</IonLabel>
-						<IonSelect interface="action-sheet" value={system} onIonChange={e => systemChanged(e.detail.value)}>
+						<IonSelect label="System" interface="action-sheet" value={system} onIonChange={e => systemChanged(e.detail.value)}>
 							{systems.filter(system => system.games.length).map(system =>
 								<IonSelectOption key={system.name} value={system}>{system.name}</IonSelectOption>
 							)}
@@ -56,8 +55,7 @@ export const EditCheatModal = ({ current, systems, dismiss, apply }) => {
 					</IonItem>}
 
 					{!current && <IonItem>
-						<IonLabel>Game</IonLabel>
-						<IonSelect interface="action-sheet" value={game} disabled={!system} onIonChange={e => setGame(e.detail.value)}>
+						<IonSelect label="Game" interface="action-sheet" value={game} disabled={!system} onIonChange={e => setGame(e.detail.value)}>
 							{system?.games.map(game =>
 								<IonSelectOption key={game.name} value={game}>{game.name}</IonSelectOption>
 							)}
@@ -65,23 +63,19 @@ export const EditCheatModal = ({ current, systems, dismiss, apply }) => {
 					</IonItem>}
 
 					<IonItem>
-						<IonLabel>Enabled</IonLabel>
-						<IonCheckbox checked={enabled} onIonChange={e => setEnabed(e.detail.checked)} />
+						<IonCheckbox checked={enabled} onIonChange={e => setEnabed(e.detail.checked)}>Enabled</IonCheckbox>
 					</IonItem>
 
 					<IonItem>
-						<IonLabel>Name</IonLabel>
-						<IonInput value={name} onIonChange={e => setName(e.detail.value ?? '')} />
+						<IonInput label="Name" value={name} onIonChange={e => setName(e.detail.value ?? '')} />
 					</IonItem>
 
 					<IonItem>
-						<IonLabel>Order</IonLabel>
-						<IonInput type="number" value={order} min="0" onIonChange={e => setOrder(Number(e.detail.value ?? 0))} />
+						<IonInput label="Order" type="number" value={order} min="0" onIonChange={e => setOrder(Number(e.detail.value ?? 0))} />
 					</IonItem>
 
 					<IonItem>
-						<IonLabel>Value</IonLabel>
-						<IonTextarea value={value} onIonChange={e => setValue(e.detail.value ?? '')} autoGrow />
+						<IonTextarea label="Value" value={value} onIonChange={e => setValue(e.detail.value ?? '')} autoGrow />
 					</IonItem>
 
 				</IonList>

@@ -9,13 +9,10 @@ export default class Core {
 	#settings = null;
 
 	#state = {
-		system: null,
-		game: null,
 		rom: null,
-
-		started: false,
-		sync_id: 0,
+		speed: 1,
 		audio: true,
+		timeout: 0,
 	}
 
 	constructor(name) {
@@ -32,6 +29,13 @@ export default class Core {
 		const module = await (await import(`${origin}/modules/lib${this.#name}.js`)).default();
 
 		module.JUN_CoreCreate =             module.cwrap('JUN_CoreCreate',             null,     ['string', 'string']);
+		module.JUN_CoreGetFileBuffer =      module.cwrap('JUN_CoreGetFileBuffer',      'number', ['string', 'number']),
+		module.JUN_CoreCountFiles =         module.cwrap('JUN_CoreCountFiles',         'number', []),
+		module.JUN_CoreGetFilePath =        module.cwrap('JUN_CoreGetFilePath',        'string', ['number']),
+		module.JUN_CoreGetFileLength =      module.cwrap('JUN_CoreGetFileLength',      'number', ['number']),
+		module.JUN_CoreReadFile =           module.cwrap('JUN_CoreReadFile',           'number', ['number']),
+		module.JUN_CoreResetCheats =         module.cwrap('JUN_CoreResetCheats',         null,     []);
+		module.JUN_CoreSetCheat =           module.cwrap('JUN_CoreSetCheat',           null,     ['number', 'number', 'string']);
 		module.JUN_CoreStartGame =          module.cwrap('JUN_CoreStartGame',          'number', []);
 		module.JUN_CoreGetSampleRate =      module.cwrap('JUN_CoreGetSampleRate',      'number', []);
 		module.JUN_CoreGetVariableCount =   module.cwrap('JUN_CoreGetVariableCount',   'number', []);
@@ -57,83 +61,103 @@ export default class Core {
 		const module = this.#module;
 		const state = this.#state;
 
-		state.system = system;
-		state.game = rom.replace(/\.[^/.]+$/, '');
-		state.rom = rom;
+		module.JUN_CoreCreate(system, rom);
 
-		module.FS.mkdir(`${state.system}`);
-		module.FS.mkdir(`${state.system}/${state.game}`);
-		module.FS.writeFile(`${state.system}/${state.rom}`, await Database.read(`${state.system}/${state.rom}`));
+		const rom_path = `${system}/${rom}`;
+		const rom_data = await Database.read(rom_path);
+		const rom_offset = module.JUN_CoreGetFileBuffer(rom_path, rom_data.length);
+		new Uint8Array(module.HEAPU8.buffer, rom_offset, rom_data.length).set(rom_data);
 
-		for (const path of await Database.list(`${state.system}/${state.game}`)) {
-			const file = await Database.read(path);
-			if (file) module.FS.writeFile(path, file);
+		const game_path = `${system}/${rom.replace(/\.[^/.]+$/, '')}`;
+		for (const path of await Database.list(game_path)) {
+			const data = await Database.read(path);
+			const offset = module.JUN_CoreGetFileBuffer(path, data.length);
+			new Uint8Array(module.HEAPU8.buffer, offset, data.length).set(data);
 		}
+
+		state.rom = rom_path;
 	}
 
-	async #sync() {
+	async #sync(loop) {
+		if (!this.#module)
+			return;
+
 		const module = this.#module;
 		const state = this.#state;
 
-		for (const name of module.FS.readdir(`${state.system}/${state.game}`)) {
-			if (name == '.' || name == '..')
+		for (let i = 0; i < module.JUN_CoreCountFiles(); i++) {
+			const path = module.JUN_CoreGetFilePath(i);
+			if (path == state.rom)
 				continue;
 
-			const path = `${state.system}/${state.game}/${name}`;
-			const data = module.FS.readFile(path);
-			await Database.write(path, data);
+			const data = module.JUN_CoreReadFile(i);
+			const length = module.JUN_CoreGetFileLength(i);
+
+			await Database.write(path, new Uint8Array(module.HEAPU8.buffer, data, length));
 		}
+
+		if (loop)
+			state.timeout = setTimeout(() => this.#sync(loop), 5000);
 	}
 
-	start(variables, graphics) {
-		return new Promise(resolve => {
-			this.#module.JUN_CoreCreate(this.#state.system, this.#state.rom);
-			this.update(variables);
-			this.#module.JUN_CoreStartGame();
+	start(graphics, settings, cheats) {
+		const module = this.#module;
 
-			this.#state.sync_id = setInterval(() => this.#sync(), 1000);
+		this.settings(settings);
+		module.JUN_CoreStartGame();
+		this.cheats(cheats);
 
-			const video = graphics.getContext('2d');
+		module.JUN_CoreRun(1);
+		graphics.width = module.JUN_CoreGetFrameWidth();
+		graphics.height = module.JUN_CoreGetFrameHeight();
 
-			const step = () => {
-				if (!this.#module)
-					return;
+		this.#sync(true);
 
-				const module = this.#module;
-				const state = this.#state;
+		const video = graphics.getContext('2d');
 
-				module.JUN_CoreRun(1);
+		const step = () => {
+			if (!this.#module)
+				return;
 
-				const frame = module.JUN_CoreGetFrameData();
-				const width = module.JUN_CoreGetFrameWidth();
-				const height = module.JUN_CoreGetFrameHeight();
+			const module = this.#module;
+			const state = this.#state;
 
-				graphics.width = width;
-				graphics.height = height;
+			module.JUN_CoreRun(state.speed);
 
-				const frame_view = new Uint8ClampedArray(module.HEAPU8.buffer, frame, width * height * 4);
-				video.putImageData(new ImageData(frame_view, width, height), 0, 0);
+			const frame = module.JUN_CoreGetFrameData();
+			graphics.width = module.JUN_CoreGetFrameWidth();
+			graphics.height = module.JUN_CoreGetFrameHeight();
 
-				const sample_rate = module.JUN_CoreGetSampleRate();
-				Audio.update(sample_rate, 2);
+			const frame_view = new Uint8ClampedArray(module.HEAPU8.buffer, frame, graphics.width * graphics.height * 4);
+			video.putImageData(new ImageData(frame_view, graphics.width, graphics.height), 0, 0);
 
-				if (state.audio) {
-					const audio = module.JUN_CoreGetAudioData();
-					const frames = module.JUN_CoreGetAudioFrames();
-					const audio_view = new Float32Array(module.HEAP8.buffer, audio, frames * 2);
-					Audio.queue(audio_view);
-				}
+			const sample_rate = module.JUN_CoreGetSampleRate();
+			Audio.update(sample_rate * state.speed, 2);
 
-				if (!state.started) {
-					state.started = true;
-					resolve();
-				}
-
-				window.requestAnimationFrame(step);
+			if (state.audio) {
+				const audio = module.JUN_CoreGetAudioData();
+				const frames = module.JUN_CoreGetAudioFrames();
+				const audio_view = new Float32Array(module.HEAP8.buffer, audio, frames * 2);
+				Audio.queue(audio_view);
 			}
 
 			window.requestAnimationFrame(step);
-		});
+		}
+
+		window.requestAnimationFrame(step);
+	}
+
+	async stop() {
+		const module = this.#module;
+		const state = this.#state;
+
+		state.audio = false;
+
+		clearTimeout(state.timeout);
+		await this.#sync(false);
+
+		module.JUN_CoreDestroy();
+		this.#module = null;
 	}
 
 	variables() {
@@ -155,61 +179,51 @@ export default class Core {
 		return variables;
 	}
 
-	update(variables) {
+	settings(settings) {
 		if (!this.#module)
 			return;
 
-		for (const key in variables)
-			this.#module.JUN_CoreSetVariable(key, variables[key]);
+		for (const key in settings)
+			this.#module.JUN_CoreSetVariable(key, settings[key]);
+	}
+
+	cheats(cheats) {
+		if (!this.#module)
+			return;
+
+		this.#module.JUN_CoreResetCheats();
+		const filtered = cheats?.filter(x => x.enabled).sort((x, y) => x.order - y.order);
+		for (const cheat of filtered ?? [])
+			this.#module.JUN_CoreSetCheat(cheat.order, true, cheat.value);
 	}
 
 	send(device, id, value) {
-		if (this.#state.started)
-			this.#module.JUN_CoreSetInput(device, id, value);
+		if (!this.#module)
+			return;
+
+		this.#module.JUN_CoreSetInput(device, id, value);
 	}
 
 	save() {
-		if (this.#state.started)
-			this.#module.JUN_CoreSaveState();
+		if (!this.#module)
+			return;
+
+		this.#module.JUN_CoreSaveState();
 	}
 
 	restore() {
-		if (this.#state.started)
-			this.#module.JUN_CoreRestoreState();
+		if (!this.#module)
+			return;
+
+		this.#module.JUN_CoreRestoreState();
+	}
+
+	speed(value) {
+		this.#state.speed = value;
 	}
 
 	audio(enable) {
 		this.#state.audio = enable;
-	}
-
-	async stop() {
-		const module = this.#module;
-		const state = this.#state;
-
-		clearInterval(state.sync_id);
-		state.sync_id = 0;
-		state.audio = true;
-		state.started = false;
-
-		await this.#sync();
-
-		for (const name of module.FS.readdir(`${state.system}/${state.game}`)) {
-			if (name == '.' || name == '..')
-				continue;
-
-			module.FS.unlink(`${state.system}/${state.game}/${name}`);
-		}
-
-		module.FS.unlink(`${state.system}/${state.rom}`);
-		module.FS.rmdir(`${state.system}/${state.game}`);
-		module.FS.rmdir(`${state.system}`);
-
-		state.system = null;
-		state.game = null;
-		state.rom = null;
-
-		module.JUN_CoreDestroy();
-		this.#module = null;
 	}
 
 	static create(name) {

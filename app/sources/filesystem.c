@@ -1,15 +1,17 @@
+#include "filesystem.h"
+
 #include <stdlib.h>
-#include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 
 #include "tools.h"
 
-#include "filesystem.h"
-
 #define VFS_INTERFACE_VERSION 2
 
-static JUN_Files *interface;
-static JUN_File *files;
+static struct CTX {
+	JUN_Files *interface;
+	JUN_File *files;
+} CTX;
 
 /* V1 */
 
@@ -43,39 +45,38 @@ static int fs_closedir(JUN_Directory *dirstream);
 
 void JUN_FilesystemCreate()
 {
-	files = calloc(MAX_FILES, sizeof(JUN_File));
-
-	interface = calloc(1, sizeof(JUN_Files));
+	CTX.files = calloc(MAX_FILES, sizeof(JUN_File));
+	CTX.interface = calloc(1, sizeof(JUN_Files));
 
 	/* V1 */
-	interface->get_path = fs_get_path;
-	interface->open = fs_open;
-	interface->close = fs_close;
-	interface->size = fs_size;
-	interface->tell = fs_tell;
-	interface->seek = fs_seek;
-	interface->read = fs_read;
-	interface->write = fs_write;
-	interface->flush = fs_flush;
-	interface->remove = fs_remove;
-	interface->rename = fs_rename;
+	CTX.interface->get_path = fs_get_path;
+	CTX.interface->open = fs_open;
+	CTX.interface->close = fs_close;
+	CTX.interface->size = fs_size;
+	CTX.interface->tell = fs_tell;
+	CTX.interface->seek = fs_seek;
+	CTX.interface->read = fs_read;
+	CTX.interface->write = fs_write;
+	CTX.interface->flush = fs_flush;
+	CTX.interface->remove = fs_remove;
+	CTX.interface->rename = fs_rename;
 
 	/* V2 */
-	interface->truncate = fs_truncate;
+	CTX.interface->truncate = fs_truncate;
 
 	/* V3 */
-	interface->stat = fs_stat;
-	interface->mkdir = fs_mkdir;
-	interface->opendir = fs_opendir;
-	interface->readdir = fs_readdir;
-	interface->dirent_get_name = fs_dirent_get_name;
-	interface->dirent_is_dir = fs_dirent_is_dir;
-	interface->closedir = fs_closedir;
+	CTX.interface->stat = fs_stat;
+	CTX.interface->mkdir = fs_mkdir;
+	CTX.interface->opendir = fs_opendir;
+	CTX.interface->readdir = fs_readdir;
+	CTX.interface->dirent_get_name = fs_dirent_get_name;
+	CTX.interface->dirent_is_dir = fs_dirent_is_dir;
+	CTX.interface->closedir = fs_closedir;
 }
 
 JUN_Files *JUN_FilesystemGetInterface()
 {
-	return interface;
+	return CTX.interface;
 }
 
 uint32_t JUN_FilesystemGetInterfaceVersion()
@@ -83,105 +84,78 @@ uint32_t JUN_FilesystemGetInterfaceVersion()
 	return VFS_INTERFACE_VERSION;
 }
 
-JUN_File *JUN_FilesystemGetFiles()
-{
-	return files;
-}
-
-JUN_File *JUN_FilesystemGetNewFile(const char *path)
+JUN_File *JUN_FilesystemGetNewFile(const char *path, uint32_t length)
 {
 	for (int i = 0; i < MAX_FILES; ++i) {
-		if (!files[i].exists) {
-			files[i].exists = true;
-			files[i].path = strdup(path);
+		if (!CTX.files[i].exists) {
+			CTX.files[i].exists = true;
+			CTX.files[i].path = strdup(path);
 
-			return &files[i];
+			if (length > 0) {
+				CTX.files[i].size = length;
+				CTX.files[i].buffer = calloc(length, 1);
+			}
+
+			return &CTX.files[i];
 		}
 	}
+
 	return NULL;
 }
 
-static void *read_file(const char *path, int32_t *length)
-{
-	FILE *file = fopen(path, "r");
-	if (!file)
-		return NULL;
-
-	fseek(file, 0, SEEK_END);
-	int32_t size = ftell(file);
-	fseek(file, 0, SEEK_SET);
-
-	void *data = calloc(size, 1);
-	fread(data, 1, size, file);
-
-	if (length)
-		*length = size;
-
-	return data;
-}
-
-static void write_file(const char *path, const void *data, int32_t length)
-{
-	FILE *file = fopen(path, "w+");
-	if (!file)
-		return;
-
-	fwrite(data, 1, length, file);
-}
-
-JUN_File *JUN_FilesystemGetExistingFile(const char *path)
+uint32_t JUN_FilesystemCountFiles()
 {
 	for (int i = 0; i < MAX_FILES; ++i)
-		if (files[i].exists && strcmp(files[i].path, path) == 0)
-			return &files[i];
+		if (!CTX.files[i].exists)
+			return i;
 
-	int32_t size = 0;
-	void *buffer = read_file(path, &size);
+	return 0;
+}
 
-	if (buffer) {
-		JUN_File *file = JUN_FilesystemGetNewFile(path);
+JUN_File *JUN_FilesystemGetFile(uint32_t index)
+{
+	return &CTX.files[index];
+}
 
-		file->buffer = buffer;
-		file->size = size;
-
-		return file;
-	}
+JUN_File *JUN_FilesystemReadFile(const char *path)
+{
+	for (int i = 0; i < MAX_FILES; ++i)
+		if (CTX.files[i].exists && !strcmp(CTX.files[i].path, path))
+			return &CTX.files[i];
 
 	return NULL;
 }
 
-void JUN_FilesystemSaveFile(const char *path, const void *buffer, size_t length)
+void JUN_FilesystemSaveFile(const char *path, const void *buffer, uint32_t length)
 {
-	JUN_File *file = JUN_FilesystemGetExistingFile(path);
+	JUN_File *file = JUN_FilesystemReadFile(path);
 
-	if (!file)
-		file = JUN_FilesystemGetNewFile(path);
+	if (!file) {
+		file = JUN_FilesystemGetNewFile(path, length);
 
-	file->size = length;
-	file->buffer = file->buffer
-		? realloc(file->buffer, file->size)
-		: calloc(file->size, 1);
+	} else {
+		file->size = length;
+		file->buffer = realloc(file->buffer, file->size);
+	}
 
 	memcpy(file->buffer, buffer, file->size);
-
-	write_file(file->path, file->buffer, file->size);
 }
 
 void JUN_FilesystemDestroy()
 {
-	for (int i = 0; files && i < MAX_FILES; ++i) {
-		if (files[i].path)
-			free(files[i].path);
+	for (int i = 0; CTX.files && i < MAX_FILES; ++i) {
+		if (CTX.files[i].path)
+			free(CTX.files[i].path);
 
-		if (files[i].buffer)
-			free(files[i].buffer);
+		if (CTX.files[i].buffer)
+			free(CTX.files[i].buffer);
 	}
 
-	free(files);
-	files = NULL;
+	free(CTX.files);
+	CTX.files = NULL;
 
-	free(interface);
-	interface = NULL;
+	free(CTX.interface);
+	CTX.interface = NULL;
 }
 
 /* V1 */
@@ -199,14 +173,14 @@ static JUN_File *fs_open(const char *path, unsigned mode, unsigned hints)
 	if (strstr(path, "firmware.bin"))
 		return NULL;
 
-	JUN_File *file = JUN_FilesystemGetExistingFile(path);
+	JUN_File *file = JUN_FilesystemReadFile(path);
 	if (file)
 		return file;
 
 	if (!(mode & RETRO_VFS_FILE_ACCESS_WRITE))
 		return NULL;
 
-	file = JUN_FilesystemGetNewFile(path);
+	file = JUN_FilesystemGetNewFile(path, 0);
 
 	file->mode = mode;
 	file->hints = hints;
@@ -288,7 +262,7 @@ static int fs_remove(const char *path)
 {
 	JUN_Log("%s", path);
 
-	JUN_File *file = JUN_FilesystemGetExistingFile(path);
+	JUN_File *file = JUN_FilesystemReadFile(path);
 	if (!file)
 		return -1;
 
@@ -310,7 +284,7 @@ static int fs_rename(const char *old_path, const char *new_path)
 {
 	JUN_Log("%s -> %s", old_path, new_path);
 
-	JUN_File *file = JUN_FilesystemGetExistingFile(old_path);
+	JUN_File *file = JUN_FilesystemReadFile(old_path);
 	if (!file)
 		return -1;
 
