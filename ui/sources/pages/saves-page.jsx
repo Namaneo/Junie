@@ -32,6 +32,7 @@ export const SavesPage = () => {
 			const a = document.createElement('a');
 			document.body.appendChild(a);
 
+			 // TODO broken: files don't exist here anymore
 			const files = saves.reduce((acc, save) => acc.concat(save.files), []);
 			const content = await Helpers.zip(files);
 			const blob = new Blob([content], { type: 'octet/stream' })

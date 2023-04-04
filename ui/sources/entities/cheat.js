@@ -32,14 +32,14 @@ export class CheatList {
 		return obj;
 	}
 
-	static fromFile(file) {
+	static fromFile(path, data) {
 		const obj = new CheatList();
 
-		const matches = file.path.match(/(.*)\/(.*)\/(.*).(.*)/)
+		const matches = path.match(/(.*)\/(.*)\/(.*).(.*)/)
 
 		obj.system = matches[1];
 		obj.game = matches[2];
-		obj.cheats = file.data;
+		obj.cheats = data;
 
 		return obj;
 	}

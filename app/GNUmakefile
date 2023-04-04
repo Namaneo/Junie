@@ -1,10 +1,9 @@
 SRC_DIR := sources
-RES_DIR := assets
 OUT_DIR := build
 
 CORES_DIR := ../cores
 LIBRARIES := $(shell jq -r 'keys[]' $(CORES_DIR)/cores.json)
-BINARIES  := $(LIBRARIES:%=$(OUT_DIR)/lib%.js) $(OUT_DIR)/tools.js
+BINARIES  := $(LIBRARIES:%=$(OUT_DIR)/lib%.js)
 
 SRC := \
 	$(SRC_DIR)/core.c \
@@ -20,7 +19,11 @@ CFLAGS  := \
 LDFLAGS := \
 	--no-entry -sENVIRONMENT=web \
 	-sMODULARIZE -sEXPORT_ES6 \
-	-sINVOKE_RUN=0 -sEXIT_RUNTIME
+	-sINVOKE_RUN=0 -sEXIT_RUNTIME \
+	-fwasm-exceptions -sMAIN_MODULE=2 \
+	-sINITIAL_MEMORY=32mb -sALLOW_MEMORY_GROWTH \
+	-sEXPORTED_FUNCTIONS=@exports.json \
+	-sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 
 ifeq ($(DEBUG), 1)
 CFLAGS  += -O0 -ferror-limit=0 -D DEBUG
@@ -29,16 +32,6 @@ else
 CFLAGS  += -O3
 LDFLAGS += -O3
 endif
-
-LDFLAGS_GAME := $(LDFLAGS) \
-	--embed-file $(RES_DIR) \
-	-fwasm-exceptions -sMAIN_MODULE=2 \
-	-sINITIAL_MEMORY=32mb -sALLOW_MEMORY_GROWTH \
-	-sEXPORTED_FUNCTIONS=@exports.json \
-	-sEXPORTED_RUNTIME_METHODS=ccall,cwrap
-
-LDFLAGS_TOOLS := $(LDFLAGS) \
-	-sEXPORTED_RUNTIME_METHODS=IDBStore
 
 QUIET := > /dev/null 2>&1
 MAKEFLAGS += --no-print-directory
@@ -55,11 +48,7 @@ prepare:
 
 $(OUT_DIR)/lib%.js:
 	@echo Building lib$*.js...
-	@$(CXX) -o $(OUT_DIR)/lib$*.js $(OBJ) -L$(CORES_DIR) -l$* $(LDFLAGS_GAME) -sEXPORT_NAME=lib$* $(QUIET)
-
-$(OUT_DIR)/tools.js:
-	@echo Building tools.js...
-	@$(CXX) -o $(OUT_DIR)/tools.js $(OBJ) $(LDFLAGS_TOOLS) -sEXPORT_NAME=tools $(QUIET)
+	@$(CXX) -o $(OUT_DIR)/lib$*.js $(OBJ) -L$(CORES_DIR) -l$* $(LDFLAGS) -sEXPORT_NAME=lib$* $(QUIET)
 
 clean:
 	@rm -rf $(OBJ) $(OUT_DIR)

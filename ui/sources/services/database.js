@@ -1,45 +1,61 @@
-import Tools from './tools';
-
 export default class Database {
 	static get #name() { return 'Junie' };
+	static get #store() { return 'FILE_DATA' };
+
+	static async #open() {
+		return new Promise((resolve, reject) => {
+			const request = indexedDB.open(this.#name);
+
+			request.onupgradeneeded = (event) => event.target.result.createObjectStore(this.#store);
+			request.onerror = (event) => reject(event.target.error);
+			request.onsuccess = (event) => resolve(event.target.result
+				.transaction([this.#store], 'readwrite')
+				.objectStore(this.#store)
+			);
+		});
+	}
 
 	static async list(path) {
-		const database = await Tools.database();
+		const store = await this.#open();
 
-		return new Promise(resolve => {
-			database.getStore(this.#name, 'readwrite', (_, store) => {
-				const request = store.getAllKeys();
-				request.onsuccess = (event) => {
-					const result = path
-						? event.target.result.filter(x => x.startsWith(path))
-						: event.target.result;
-					resolve(result);
-				}
-			});
+		return new Promise((resolve, reject) => {
+			const request = store.getAllKeys();
+
+			request.onerror = (event) => reject(event.target.error);
+			request.onsuccess = (event) => resolve(event.target.result.filter(x => !path || x.startsWith(path)));
 		});
 	}
 
 	static async read(path) {
-		const database = await Tools.database();
+		const store = await this.#open();
 
-		return new Promise(resolve => {
-			database.getFile(this.#name, path, (_, data) => resolve(data));
+		return new Promise((resolve, reject) => {
+			const request = store.get(path);
+
+			request.onerror = (event) => reject(event.target.error);
+			request.onsuccess = (event) => resolve(event.target.result);
 		});
 	}
 
 	static async write(path, data) {
-		const database = await Tools.database();
+		const store = await this.#open();
 
-		return new Promise(resolve => {
-			database.setFile(this.#name, path, data, () => resolve());
+		return new Promise((resolve, reject) => {
+			const request = store.put(data, path);
+
+			request.onerror = (event) => reject(event.target.error);
+			request.onsuccess = () => resolve();
 		});
 	}
 
 	static async remove(path) {
-		const database = await Tools.database();
+		const store = await this.#open();
 
-		return new Promise(resolve => {
-			database.deleteFile(this.#name, path, () => resolve());
+		return new Promise((resolve, reject) => {
+			const request = store.delete(path);
+
+			request.onerror = (event) => reject(event.target.error);
+			request.onsuccess = () => resolve();
 		});
 	}
 }

@@ -5,25 +5,17 @@ import { Game } from '../entities/game';
 import Helpers from '../services/helpers';
 
 export default class Files {
-	static async #list(func, ...suffixes) {
+	static async #list(...suffixes) {
 		let paths = await Database.list();
 
 		if (suffixes)
 			paths = paths.filter(p => suffixes.some(s => p.endsWith(s)));
 
-		const files = [];
-		for (let path of paths)
-			files.push({ path, data: await func(path) });
-
-		return files;
+		return paths;
 	}
 
 	static async list(...suffixes) {
-		return await Files.#list(path => Files.read(path), ...suffixes);
-	}
-
-	static async list_json(...suffixes) {
-		return await Files.#list(path => Files.read_json(path), ...suffixes);
+		return await Files.#list(...suffixes);
 	}
 
 	static async read(path) {
@@ -92,31 +84,25 @@ export default class Files {
 
 	static Saves = class {
 		static async get() {
-			const rawSaves = await Files.list('.sav', '.srm', '.rtc', '.state', '.cht');
+			const paths = await Files.list('.sav', '.srm', '.rtc', '.state', '.cht');
 
-			return rawSaves.map(file => new Save(file)).reduce((acc, newSave) => {
+			return paths.map(path => new Save(path)).reduce((saves, save) => {
+				saves.find(x => x.game == save.game)
+					? save.paths.push(save.paths[0])
+					: saves.push(save);
 
-				const save = acc.find(x => x.game == newSave.game);
-				save ? save.files.push(newSave.files[0]) : acc.push(newSave);
-
-				return acc;
+				return saves;
 			}, []);
 		};
 
-		static async update(save) {
-			for (const file of save.files)
-				await Files.write(file.path, file.data);
-		}
-
 		static async fix(save, system, game) {
-			for (const file of save.files) {
-				const key = file.path;
+			for (const path of save.paths) {
+				const filename = game.rom.replace(`.${system.extension}`, '');
+				const new_path = path.replace(save.system, system.name).replaceAll(save.game, filename);
 
-				const filename = game.rom?.replace(`.${system.extension}`, '');
-				file.path = file.path.replace(save.system, system.name).replaceAll(save.game, filename);
-
-				await Files.remove(key);
-				await Files.write(file.path, file.data);
+				const data = await Files.read(path);
+				await Files.remove(path);
+				await Files.write(new_path, data);
 			}
 		}
 
@@ -129,9 +115,15 @@ export default class Files {
 
 	static Cheats = class {
 		static async get() {
-			const rawCheats = await Files.list_json('.cht');
+			const paths = await Files.list('.cht');
 
-			return rawCheats.map(file => CheatList.fromFile(file));
+			const files = [];
+			for (const path of paths) {
+				const data = await Files.read_json(path)
+				files.push(CheatList.fromFile(path, data));
+			}
+
+			return files;
 		};
 
 		static async update(cheat) {
@@ -145,9 +137,15 @@ export default class Files {
 
 	static Games = class {
 		static async get() {
-			const games = await Files.list_json('.meta');
+			const paths = await Files.list('.meta');
 
-			return games.map(game => new Game(game.data.system, game.data.game));
+			const files = [];
+			for (const path of paths) {
+				const meta = await Files.read_json(path);
+				files.push(new Game(meta.system, meta.game));
+			}
+
+			return files;
 		};
 
 		static async add(game, data) {

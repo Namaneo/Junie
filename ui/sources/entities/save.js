@@ -1,14 +1,13 @@
 export class Save {
-	files = [];
+	paths = [];
 
 	system;
 	game;
 	extension;
 
-	constructor(file) {
-		this.files.push(file);
+	constructor(path) {
+		this.paths.push(path);
 
-		const path = this.files[0].path;
 		this.system = this.match(path, 1);
 		this.game = this.match(path, 2);
 		this.extension = this.match(path, 4);

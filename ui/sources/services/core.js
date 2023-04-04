@@ -9,6 +9,7 @@ export default class Core {
 	#settings = null;
 
 	#state = {
+		id: 0,
 		rom: null,
 		speed: 1,
 		audio: true,
@@ -34,7 +35,7 @@ export default class Core {
 		module.JUN_CoreGetFilePath =        module.cwrap('JUN_CoreGetFilePath',        'string', ['number']),
 		module.JUN_CoreGetFileLength =      module.cwrap('JUN_CoreGetFileLength',      'number', ['number']),
 		module.JUN_CoreReadFile =           module.cwrap('JUN_CoreReadFile',           'number', ['number']),
-		module.JUN_CoreResetCheats =         module.cwrap('JUN_CoreResetCheats',         null,     []);
+		module.JUN_CoreResetCheats =        module.cwrap('JUN_CoreResetCheats',         null,     []);
 		module.JUN_CoreSetCheat =           module.cwrap('JUN_CoreSetCheat',           null,     ['number', 'number', 'string']);
 		module.JUN_CoreStartGame =          module.cwrap('JUN_CoreStartGame',          'number', []);
 		module.JUN_CoreGetSampleRate =      module.cwrap('JUN_CoreGetSampleRate',      'number', []);
@@ -102,6 +103,7 @@ export default class Core {
 
 	start(graphics, settings, cheats) {
 		const module = this.#module;
+		const state = this.#state;
 
 		this.settings(settings);
 		module.JUN_CoreStartGame();
@@ -116,12 +118,6 @@ export default class Core {
 		const video = graphics.getContext('2d');
 
 		const step = () => {
-			if (!this.#module)
-				return;
-
-			const module = this.#module;
-			const state = this.#state;
-
 			module.JUN_CoreRun(state.speed);
 
 			const frame = module.JUN_CoreGetFrameData();
@@ -141,16 +137,17 @@ export default class Core {
 				Audio.queue(audio_view);
 			}
 
-			window.requestAnimationFrame(step);
+			state.id = requestAnimationFrame(step);
 		}
 
-		window.requestAnimationFrame(step);
+		state.id = requestAnimationFrame(step);
 	}
 
 	async stop() {
 		const module = this.#module;
 		const state = this.#state;
 
+		cancelAnimationFrame(state.id);
 		state.audio = false;
 
 		clearTimeout(state.timeout);
