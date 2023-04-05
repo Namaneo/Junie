@@ -2,6 +2,7 @@ import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem
 import { checkmarkCircleOutline, closeCircleOutline, cloudDownload, cloudUpload, buildOutline } from 'ionicons/icons';
 import { useRef, useState } from 'react';
 import { FixSaveModal } from '../modals/fix-save-modal';
+import Database from '../services/database';
 import Requests from '../services/requests';
 import Helpers from '../services/helpers';
 import Files from '../services/files';
@@ -32,8 +33,11 @@ export const SavesPage = () => {
 			const a = document.createElement('a');
 			document.body.appendChild(a);
 
-			 // TODO broken: files don't exist here anymore
-			const files = saves.reduce((acc, save) => acc.concat(save.files), []);
+			const files = []
+			for (const save of saves)
+				for (const path of save.paths)
+					files.push({ path, data: await Database.read(path) });
+
 			const content = await Helpers.zip(files);
 			const blob = new Blob([content], { type: 'octet/stream' })
 

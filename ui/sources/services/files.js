@@ -83,9 +83,8 @@ export default class Files {
 			const paths = await Files.list('.sav', '.srm', '.rtc', '.state', '.cht');
 
 			return paths.map(path => new Save(path)).reduce((saves, save) => {
-				saves.find(x => x.game == save.game)
-					? save.paths.push(save.paths[0])
-					: saves.push(save);
+				const found = saves.find(x => x.system == save.system && x.game == save.game);
+				found ? found.paths.push(save.paths[0]) : saves.push(save);
 
 				return saves;
 			}, []);

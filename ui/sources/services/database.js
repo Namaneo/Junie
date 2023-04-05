@@ -4,10 +4,15 @@ export default class Database {
 	static get #name() { return 'Junie' };
 	static get #store() { return 'FILE_DATA' };
 
+	static #upgrade(db) {
+		db.createObjectStore(this.#store, { keyPath: 'name' });
+	}
+
 	static async #version() {
 		return new Promise((resolve, reject) => {
 			const request = indexedDB.open(this.#name);
 
+			request.onupgradeneeded = (event) => this.#upgrade(event.target.result);
 			request.onerror = (event) => reject(event.target.error);
 			request.onsuccess = (event) => {
 				resolve(event.target.result.version);
@@ -30,7 +35,7 @@ export default class Database {
 
 			const request = indexedDB.open(this.#name);
 
-			request.onupgradeneeded = (event) => event.target.result.createObjectStore(this.#store, { keyPath: 'name' });
+			request.onupgradeneeded = (event) => this.#upgrade(event.target.result);
 			request.onerror = (event) => reject(event.target.error);
 			request.onsuccess = (event) => {
 				this.#db = event.target.result;
