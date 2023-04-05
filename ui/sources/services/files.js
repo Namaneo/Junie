@@ -5,17 +5,13 @@ import { Game } from '../entities/game';
 import Helpers from '../services/helpers';
 
 export default class Files {
-	static async #list(...suffixes) {
+	static async list(...suffixes) {
 		let paths = await Database.list();
 
 		if (suffixes)
 			paths = paths.filter(p => suffixes.some(s => p.endsWith(s)));
 
 		return paths;
-	}
-
-	static async list(...suffixes) {
-		return await Files.#list(...suffixes);
 	}
 
 	static async read(path) {
@@ -107,8 +103,7 @@ export default class Files {
 		}
 
 		static async remove(save) {
-			const paths = save.files.map(x => x.path);
-			for (let path of paths)
+			for (let path of save.paths)
 				await Files.remove(path);
 		}
 	}

@@ -98,7 +98,7 @@ export default class Core {
 		}
 
 		if (loop)
-			state.timeout = setTimeout(() => this.#sync(loop), 5000);
+			state.timeout = setTimeout(() => this.#sync(loop), 1000);
 	}
 
 	start(graphics, settings, cheats) {

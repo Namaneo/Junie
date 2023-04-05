@@ -1,22 +1,46 @@
 export default class Database {
+	static #db = null;
+
 	static get #name() { return 'Junie' };
 	static get #store() { return 'FILE_DATA' };
 
-	static async #open() {
+	static async #version() {
 		return new Promise((resolve, reject) => {
 			const request = indexedDB.open(this.#name);
 
-			request.onupgradeneeded = (event) => event.target.result.createObjectStore(this.#store);
 			request.onerror = (event) => reject(event.target.error);
-			request.onsuccess = (event) => resolve(event.target.result
-				.transaction([this.#store], 'readwrite')
-				.objectStore(this.#store)
-			);
+			request.onsuccess = (event) => {
+				resolve(event.target.result.version);
+				event.target.result.close();
+			}
+		});
+	}
+
+	static async #get(type) {
+		const transaction = (db) => db
+			.transaction([this.#store], type)
+			.objectStore(this.#store);
+
+		if (await this.#version() != 1)
+			indexedDB.deleteDatabase(this.#name);
+
+		return new Promise((resolve, reject) => {
+			if (this.#db)
+				return resolve(transaction(this.#db));
+
+			const request = indexedDB.open(this.#name);
+
+			request.onupgradeneeded = (event) => event.target.result.createObjectStore(this.#store, { keyPath: 'name' });
+			request.onerror = (event) => reject(event.target.error);
+			request.onsuccess = (event) => {
+				this.#db = event.target.result;
+				resolve(transaction(this.#db));
+			};
 		});
 	}
 
 	static async list(path) {
-		const store = await this.#open();
+		const store = await this.#get('readonly');
 
 		return new Promise((resolve, reject) => {
 			const request = store.getAllKeys();
@@ -27,21 +51,24 @@ export default class Database {
 	}
 
 	static async read(path) {
-		const store = await this.#open();
+		const store = await this.#get('readonly');
 
 		return new Promise((resolve, reject) => {
 			const request = store.get(path);
 
 			request.onerror = (event) => reject(event.target.error);
-			request.onsuccess = (event) => resolve(event.target.result);
+			request.onsuccess = async (event) => {
+				const data = await event.target.result?.arrayBuffer()
+				resolve(data ? new Uint8Array(data) : null);
+			};
 		});
 	}
 
 	static async write(path, data) {
-		const store = await this.#open();
+		const store = await this.#get('readwrite');
 
 		return new Promise((resolve, reject) => {
-			const request = store.put(data, path);
+			const request = store.put(new File([data], path));
 
 			request.onerror = (event) => reject(event.target.error);
 			request.onsuccess = () => resolve();
@@ -49,7 +76,7 @@ export default class Database {
 	}
 
 	static async remove(path) {
-		const store = await this.#open();
+		const store = await this.#get('readwrite');
 
 		return new Promise((resolve, reject) => {
 			const request = store.delete(path);
