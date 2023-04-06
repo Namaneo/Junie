@@ -111,15 +111,9 @@ export const CorePage = ({ match }) => {
 	}
 
 	useEffect(() => {
-		const tabs = document.getElementsByTagName('ion-tab-bar')[0];
-
-		tabs.style.display = 'none';
 		core.init(system, rom, canvas.current).then(() => resize());
 
-		return () => {
-			core.current.stop();
-			tabs.style.display = 'flex';
-		}
+		return () => core.current.stop();
 	}, []);
 
 	useEffect(() => {
