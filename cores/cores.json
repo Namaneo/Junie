@@ -1,32 +1,4 @@
 {
-	"genesis": {
-		"name": "Genesis Plus GX",
-		"repository": "Genesis-Plus-GX",
-		"makefile": "Makefile.libretro",
-		"systems": [
-			{
-				"name": "Master System",
-				"full_name": "Sega - Master System - Mark III",
-				"extension": "sms"
-			},
-			{
-				"name": "Mega Drive",
-				"full_name": "Sega - Mega Drive - Genesis",
-				"extension": "md"
-			}
-		]
-	},
-	"melonds": {
-		"name": "MelonDS",
-		"repository": "melonDS",
-		"systems": [
-			{
-				"name": "Nintendo DS",
-				"full_name": "Nintendo - Nintendo DS",
-				"extension": "nds"
-			}
-		]
-	},
 	"gambatte": {
 		"name": "Gambatte",
 		"repository": "gambatte-libretro",
@@ -55,6 +27,17 @@
 			}
 		]
 	},
+	"melonds": {
+		"name": "MelonDS",
+		"repository": "melonDS",
+		"systems": [
+			{
+				"name": "Nintendo DS",
+				"full_name": "Nintendo - Nintendo DS",
+				"extension": "nds"
+			}
+		]
+	},
 	"nestopia": {
 		"name": "Nestopia",
 		"repository": "nestopia",
@@ -75,6 +58,23 @@
 				"name": "SNES",
 				"full_name": "Nintendo - Super Nintendo Entertainment System",
 				"extension": "smc"
+			}
+		]
+	},
+	"genesis": {
+		"name": "Genesis Plus GX",
+		"repository": "Genesis-Plus-GX",
+		"makefile": "Makefile.libretro",
+		"systems": [
+			{
+				"name": "Master System",
+				"full_name": "Sega - Master System - Mark III",
+				"extension": "sms"
+			},
+			{
+				"name": "Mega Drive",
+				"full_name": "Sega - Mega Drive - Genesis",
+				"extension": "md"
 			}
 		]
 	}
