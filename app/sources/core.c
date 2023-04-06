@@ -115,6 +115,13 @@ static bool environment(unsigned cmd, void *data)
 
 			return true;
 		}
+		case RETRO_ENVIRONMENT_GET_CAN_DUPE: {
+			bool *dupe = data;
+
+			*dupe = true;
+
+			return true;
+		}
 		case RETRO_ENVIRONMENT_GET_LOG_INTERFACE: {
 			struct retro_log_callback *callback = data;
 
@@ -222,7 +229,7 @@ static bool environment(unsigned cmd, void *data)
 
 static void video_refresh(const void *data, unsigned width, unsigned height, size_t pitch)
 {
-	if (CTX.fast_forward)
+	if (CTX.fast_forward || !data)
 		return;
 
 	if (width * height * sizeof(uint32_t) > CTX.frame.width * CTX.frame.height * sizeof(uint32_t))

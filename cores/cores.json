@@ -32,6 +32,17 @@
 		"repository": "mgba",
 		"systems": [
 			{
+				"name": "Game Boy Advance",
+				"full_name": "Nintendo - Game Boy Advance",
+				"extension": "gba"
+			}
+		]
+	},
+	"gambatte": {
+		"name": "Gambatte",
+		"repository": "gambatte-libretro",
+		"systems": [
+			{
 				"name": "Game Boy",
 				"full_name": "Nintendo - Game Boy",
 				"extension": "gb"
@@ -40,11 +51,6 @@
 				"name": "Game Boy Color",
 				"full_name": "Nintendo - Game Boy Color",
 				"extension": "gbc"
-			},
-			{
-				"name": "Game Boy Advance",
-				"full_name": "Nintendo - Game Boy Advance",
-				"extension": "gba"
 			}
 		]
 	},
