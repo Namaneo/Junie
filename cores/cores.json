@@ -27,18 +27,6 @@
 			}
 		]
 	},
-	"vbam": {
-		"name": "VBA-M",
-		"repository": "vbam-libretro",
-		"directory": "src/libretro",
-		"systems": [
-			{
-				"name": "Game Boy Advance",
-				"full_name": "Nintendo - Game Boy Advance",
-				"extension": "gba"
-			}
-		]
-	},
 	"gambatte": {
 		"name": "Gambatte",
 		"repository": "gambatte-libretro",
@@ -52,6 +40,18 @@
 				"name": "Game Boy Color",
 				"full_name": "Nintendo - Game Boy Color",
 				"extension": "gbc"
+			}
+		]
+	},
+	"vbam": {
+		"name": "VBA-M",
+		"repository": "vbam-libretro",
+		"directory": "src/libretro",
+		"systems": [
+			{
+				"name": "Game Boy Advance",
+				"full_name": "Nintendo - Game Boy Advance",
+				"extension": "gba"
 			}
 		]
 	},
