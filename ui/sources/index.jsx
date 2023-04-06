@@ -4,7 +4,7 @@ import { Redirect, Route } from 'react-router';
 import { IonReactMemoryRouter } from '@ionic/react-router';
 import { IonApp, IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs, setupIonicReact } from '@ionic/react';
 import { cloudDownload, gameController, keyOutline, save } from 'ionicons/icons';
-import { RecentPage } from './pages/recent-page';
+import { HomePage } from './pages/home-page';
 import { SystemsPage } from './pages/systems-page';
 import { GamesPage } from './pages/games-page';
 import { SavesPage } from './pages/saves-page';
@@ -42,17 +42,17 @@ function Junie() {
 			<IonReactMemoryRouter history={createMemoryHistory()}>
 				<IonTabs>
 					<IonRouterOutlet>
-						<Route exact path="/recent" component={RecentPage} />
-						<Route exact path="/recent/:lib/:system/:rom" component={CorePage} />
+						<Route exact path="/home" component={HomePage} />
+						<Route exact path="/home/:lib/:system/:rom" component={CorePage} />
 						<Route exact path="/games" component={SystemsPage} />
 						<Route exact path="/games/:system" component={GamesPage} />
 						<Route exact path="/saves"  component={SavesPage}  />
 						<Route exact path="/cheats" component={CheatsPage} />
-						<Route exact path="/" render={() => <Redirect to="/recent" />} />
+						<Route exact path="/" render={() => <Redirect to="/home" />} />
 					</IonRouterOutlet>
 
 					<IonTabBar slot="bottom">
-						<IonTabButton tab="recent" href="/recent">
+						<IonTabButton tab="home" href="/home">
 							<IonIcon icon={gameController} />
 							<IonLabel>Games</IonLabel>
 						</IonTabButton>

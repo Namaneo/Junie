@@ -15,7 +15,7 @@ export const useToast = (header) => {
 		setTimeout(() => present({
 			header: header,
 			message: queue[0],
-			duration: 2000,
+			duration: 5000,
 			position: "top",
 			buttons: [{ icon: checkmarkSharp, role: 'cancel' }],
 			onDidDismiss: () => {

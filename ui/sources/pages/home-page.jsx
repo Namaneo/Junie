@@ -1,15 +1,21 @@
 import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
+import { add, playOutline, informationCircleOutline } from 'ionicons/icons';
 import { useRef, useState } from 'react';
-import { add, playOutline } from 'ionicons/icons';
+import { useToast } from '../hooks/toast';
 import { Game } from '../entities/game';
 import { JunImg } from '../components/jun-img';
 import Audio from '../services/audio';
 import Requests from '../services/requests';
 import Files from '../services/files';
 
-export const RecentPage = () => {
+export const HomePage = () => {
 
 	const [played, setPlayed] = useState([])
+
+	const version = window.junie_build.split('-')[0];
+	const build = window.junie_build.split('-')[1];
+	const date = new Date(build * 1000).toUTCString();
+	const [present] = useToast(`Junie - ${version} (${build})`);
 
 	const addGame = async (files) => {
 		if (!files?.length)
@@ -37,7 +43,7 @@ export const RecentPage = () => {
 	}
 
 	const gameURL = (played) => {
-		return '/recent'
+		return '/home'
 			+ `/${played.system.lib_name}`
 			+ `/${played.system.name}`
 			+ `/${played.game.rom}`;
@@ -50,15 +56,17 @@ export const RecentPage = () => {
 
 	const fileInput = useRef(null);
 
-	const version = window.junie_build.split('-')[0];
-	const date = new Date(window.junie_build.split('-')[1] * 1000).toLocaleString();
-
 	return (
 		<IonPage>
 
 			<IonHeader>
 				<IonToolbar>
-					<IonTitle>Junie - {version} ({date})</IonTitle>
+					<IonButtons slot="start">
+						<IonButton onClick={() => present(date)}>
+							<IonIcon slot="icon-only" icon={informationCircleOutline} />
+						</IonButton>
+					</IonButtons>
+					<IonTitle>Junie</IonTitle>
 					<IonButtons slot="end">
 						<IonButton onClick={() => fileInput.current.click()}>
 							<input type="file" ref={fileInput} onChange={e => addGame(e.target.files)} hidden />
@@ -68,7 +76,7 @@ export const RecentPage = () => {
 				</IonToolbar>
 			</IonHeader>
 
-			<IonContent class="recent">
+			<IonContent class="home">
 				<IonList lines="none">
 					{played.map(played =>
 						<IonCard key={played.game.rom}>

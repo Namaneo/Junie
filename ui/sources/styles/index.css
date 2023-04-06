@@ -11,22 +11,22 @@ html, body {
 
 
 /*
- * Recent
+ * Home
  */
-#root .recent ion-list {
+#root .home ion-list {
     padding: 0;
     background: transparent;
 }
 
-#root .recent ion-item {
+#root .home ion-item {
     margin-left: -16px;
 }
 
-#root .recent img {
+#root .home img {
     width: 25%;
 }
 
-#root .recent ion-label {
+#root .home ion-label {
     margin-left: 16px;
 }
 
