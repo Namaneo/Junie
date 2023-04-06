@@ -64,7 +64,7 @@ export const GamesPage = ({ match }) => {
 				<IonLoading isOpen={loading} message="Installing..." spinner={null} />
 				{system.games.filter(game => !game.installed).map(game =>
 					<IonCard key={game.rom} onClick={() => install(game)}>
-						<IonItem>
+						<IonItem color="light">
 							<JunImg system={system} game={game} />
 							<IonLabel>
 								<h2>{game.name}</h2>

@@ -81,7 +81,7 @@ export const HomePage = () => {
 					{played.map(played =>
 						<IonCard key={played.game.rom}>
 							<IonItemSliding>
-								<IonItem>
+								<IonItem color="light">
 									<JunImg system={played.system} game={played.game} />
 									<IonLabel>
 										<h2>{played.game.name.replaceAll(/ \(.*\).*/g, '')}</h2>

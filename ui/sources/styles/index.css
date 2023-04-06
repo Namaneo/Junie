@@ -22,6 +22,10 @@ html, body {
     width: 25%;
 }
 
+#root .home ion-item {
+	--padding-start: 0;
+}
+
 #root .home ion-label {
     margin-left: 16px;
 }
@@ -122,6 +126,7 @@ html, body {
 
 #root .games ion-item {
     width: 100%;
+	--padding-start: 0;
 }
 
 #root .games ion-label {
