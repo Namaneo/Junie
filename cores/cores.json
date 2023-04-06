@@ -27,9 +27,10 @@
 			}
 		]
 	},
-	"mgba": {
-		"name": "mGBA",
-		"repository": "mgba",
+	"vbam": {
+		"name": "VBA-M",
+		"repository": "vbam-libretro",
+		"directory": "src/libretro",
 		"systems": [
 			{
 				"name": "Game Boy Advance",
