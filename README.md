@@ -12,17 +12,14 @@ Junie currently runs on most recent browsers, but your experience will probably 
 
 ***Disclaimer**: development is still in progress. I'll try my best not to break anything between releases (especially regarding local save files), but it's probably a good idea for you to backup your saves before each update.*
 
-![](assets/showcase.png)
-
 # Supported features
 
 - [x] All the systems described in the [Folder structure](#folder-structure).
 - [x] Save files and cheats (stored inside your browser's storage).
 - [x] Core-specific configurations override.
-- [x] Multi-touch controller, with D-pad used as a joystick.
-- [x] Re-mappable keyboard to joypad bindings.
-- [x] Touch inputs, enabled by pressing the top button.
-- [x] Savestate creation and restore.
+- [x] Multi-touch controller, with either a D-pad or a Joystick.
+- [x] Touch inputs for the Nintendo DS, when the gamepad is hidden.
+- [x] Save and restore states, backup and restore save files.
 - [x] Fast-forward up to 4 times the original speed.
 - [x] Nice platform-specific user interface.
 - [x] Fully working offline from your homescreen.
@@ -48,24 +45,21 @@ games
 ## Prerequisites
 
 Junie is composed of 3 main components:
-* The **UI**: developed in JSX using React and Ionic, located in the [ui](ui) folder
-* The **Emulator**: developed in C using libmatoya, located in the [app](app) folder
-
-To initialize the submodules if you haven't already:
-
-```bash
-git submodule sync
-git submodule update --init
-```
+* The **UI**: developed in JSX using React and Ionic, located in the [ui](ui) folder.
+* The **Emulator**: developed in C, located in the [app](app) folder.
 
 ## Build
 
-First, install the following dependencies: **yarn**, **python**, **make**, **zip** and **xxd**. Then follow the instructions to install and setup [emscripten](https://emscripten.org/docs/getting_started/downloads.html).
+First, install the following dependencies: **yarn**, **make** and **zip**. Then follow the instructions to install and setup [emscripten](https://emscripten.org/docs/getting_started/downloads.html).
 
 ```bash
-make       # Build cores, libraries and the application
-make pack  # Same as `make`, but also outputs binary in a zip file
-make watch # Same as `make`, but also rebuild on file changes
+emmake make       # Build cores, libraries and the application
+emmake make pack  # Same as `make`, but also outputs binaries in a zip file
+emmake make watch # Same as `make`, but also rebuild on source file changes
+
+# Additional flags:
+# * DEBUG=1 : build app and ui in debug mode
+# * QUIET=  : enable verbose build mode
 ```
 
 ## Docker
@@ -83,27 +77,13 @@ docker run \
 
 # Credits
 
-## Libraries
-
-- The main framework used here is [libmatoya](https://github.com/matoya/libmatoya).
-- The [zlib](https://github.com/madler/zlib) library is required for some cores.
-- Thumbnails are retrieved from [libretro-thumbnails](https://thumbnails.libretro.com/)
-- Modules and headers from [libretro-common](https://github.com/libretro/libretro-common).
-
-## Cores
-
-- [mGBA](https://github.com/libretro/mgba) for Game Boy, Game Boy Color and Game Boy Advance emulation.
-- [Snes9x](https://github.com/libretro/snes9x2010) for SNES emulation.
+- [Gambatte](https://github.com/libretro/gambatte-libretro) for Game Boy and Game Boy Color emulation.
+- [VBA-M](https://github.com/libretro/vbam-libretro) for Game Boy Advance emulation.
 - [melonDS](https://github.com/libretro/melonDS) for Nintendo DS emulation.
-- [Genesis Plus GX](https://github.com/libretro/Genesis-Plus-GX) for Mega Drive and Master System emulation.
 - [Nestopia](https://github.com/libretro/Nestopia) for NES emulation.
-
-## Assets
-
-- Original controller assets come from the [Delta emulator](https://github.com/rileytestut/Delta).
-- Menu graphics come from the [Google Material Icons](https://fonts.google.com/icons).
-- Loading screen comes from [Pixel Art Maker](http://pixelartmaker.com/art/8f6c49d5035cd32) (not sure exactly who to credit).
-- Game cover [placeholder](https://pixabay.com/vectors/game-console-icon-video-play-2389215/) reworked from [Memed_Nurrohmad](https://pixabay.com/users/memed_nurrohmad-3307648/?tab=about)'s work.
+- [Snes9x2010](https://github.com/libretro/snes9x2010) for SNES emulation.
+- [Genesis Plus GX](https://github.com/libretro/Genesis-Plus-GX) for Master System and Mega Drive emulation.
+- [libretro-thumbnails](https://github.com/libretro/libretro-thumbnails) for game covers.
 
 # License
 
