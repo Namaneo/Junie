@@ -76,7 +76,7 @@ export const HomePage = () => {
 				</IonToolbar>
 			</IonHeader>
 
-			<IonContent class="home">
+			<IonContent className="home">
 				<IonList lines="none">
 					{played.map(played =>
 						<IonCard key={played.game.rom}>

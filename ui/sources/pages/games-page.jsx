@@ -60,7 +60,7 @@ export const GamesPage = ({ match }) => {
 				</IonToolbar>
 			</IonHeader>
 
-			<IonContent class="games">
+			<IonContent className="games">
 				<IonLoading isOpen={loading} message="Installing..." spinner={null} />
 				{system.games.filter(game => !game.installed).map(game =>
 					<IonCard key={game.rom} onClick={() => install(game)}>

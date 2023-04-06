@@ -52,7 +52,7 @@ export const SystemsPage = () => {
 				</IonToolbar>
 			</IonHeader>
 
-			<IonContent class="systems">
+			<IonContent className="systems">
 				<IonLoading isOpen={loading} message="Refreshing..." spinner={null} />
 				{systems.filter(filterSystem).map(system =>
 					<IonCard key={system.name} routerLink={`/games/${system.name}`}>

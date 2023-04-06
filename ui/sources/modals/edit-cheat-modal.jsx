@@ -43,7 +43,7 @@ export const EditCheatModal = ({ current, systems, dismiss, apply }) => {
 				</IonToolbar>
 			</IonHeader>
 
-			<IonContent class="modal">
+			<IonContent className="modal">
 				<IonList lines="full">
 
 					{!current && <IonItem>

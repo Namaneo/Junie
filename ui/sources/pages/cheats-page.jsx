@@ -71,7 +71,7 @@ export const CheatsPage = () => {
 				</IonToolbar>
 			</IonHeader>
 
-			<IonContent class="cheats">
+			<IonContent className="cheats">
 				<IonModal isOpen={modal}>
 					<EditCheatModal current={currentCheat} systems={systems} apply={apply} dismiss={dismiss}  />
 				</IonModal>

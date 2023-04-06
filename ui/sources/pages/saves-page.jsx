@@ -103,7 +103,7 @@ export const SavesPage = () => {
 				</IonToolbar>
 			</IonHeader>
 
-			<IonContent class="saves">
+			<IonContent className="saves">
 				<IonModal isOpen={modal}>
 					<FixSaveModal systems={systems} apply={apply} dismiss={dismiss}  />
 				</IonModal>

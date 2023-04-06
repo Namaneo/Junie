@@ -26,7 +26,7 @@ export const FixSaveModal = ({ systems, dismiss, apply }) => {
 				</IonToolbar>
 			</IonHeader>
 
-			<IonContent class="modal">
+			<IonContent className="modal">
 				<IonList lines="full">
 
 					<IonItem>

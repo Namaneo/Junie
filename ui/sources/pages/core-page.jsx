@@ -132,7 +132,7 @@ export const CorePage = ({ match }) => {
 
 	return (
 		<>
-			<IonMenu class="core-settings" contentId="core" side="end" swipeGesture={false}>
+			<IonMenu className="core-settings" contentId="core" side="end" swipeGesture={false}>
 				<IonHeader>
 					<IonToolbar>
 						<IonTitle>Settings</IonTitle>
@@ -194,7 +194,7 @@ export const CorePage = ({ match }) => {
 					</IonToolbar>
 				</IonHeader>
 
-				<IonContent class="core" ref={content}>
+				<IonContent className="core" ref={content}>
 					<canvas ref={canvas}
 						onTouchStart={(e) =>  touch(e, e.touches[0].clientX, e.touches[0].clientY, true)}
 						onTouchMove={(e) =>   touch(e, e.touches[0].clientX, e.touches[0].clientY, pointer.down)}
