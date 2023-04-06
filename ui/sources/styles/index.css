@@ -30,7 +30,6 @@ html, body {
     margin-left: 16px;
 }
 
-
 /*
  * Core
  */
@@ -153,13 +152,6 @@ html, body {
 #root .settings ion-list {
     padding: 0;
     background: transparent;
-}
-
-#root .settings .version {
-	text-align: center;
-	opacity: 0.75;
-    font-family: monospace;
-    font-style: italic;
 }
 
 #root .settings ion-select {

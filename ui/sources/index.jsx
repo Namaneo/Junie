@@ -37,42 +37,42 @@ function Junie() {
 		swipeBackEnabled: false,
 	});
 
-    return (
-        <IonApp>
-            <IonReactMemoryRouter history={createMemoryHistory()}>
-                <IonTabs>
-                    <IonRouterOutlet>
-                        <Route exact path="/recent" component={RecentPage} />
-                        <Route exact path="/recent/:lib/:system/:rom" component={CorePage} />
-                        <Route exact path="/games" component={SystemsPage} />
+	return (
+		<IonApp>
+			<IonReactMemoryRouter history={createMemoryHistory()}>
+				<IonTabs>
+					<IonRouterOutlet>
+						<Route exact path="/recent" component={RecentPage} />
+						<Route exact path="/recent/:lib/:system/:rom" component={CorePage} />
+						<Route exact path="/games" component={SystemsPage} />
 						<Route exact path="/games/:system" component={GamesPage} />
-                        <Route exact path="/saves"  component={SavesPage}  />
-                        <Route exact path="/cheats" component={CheatsPage} />
-                        <Route exact path="/" render={() => <Redirect to="/recent" />} />
-                    </IonRouterOutlet>
+						<Route exact path="/saves"  component={SavesPage}  />
+						<Route exact path="/cheats" component={CheatsPage} />
+						<Route exact path="/" render={() => <Redirect to="/recent" />} />
+					</IonRouterOutlet>
 
-                    <IonTabBar slot="bottom">
-                        <IonTabButton tab="recent" href="/recent">
-                            <IonIcon icon={gameController} />
-                            <IonLabel>Games</IonLabel>
-                        </IonTabButton>
-                        <IonTabButton tab="games" href="/games">
-                            <IonIcon icon={cloudDownload} />
-                            <IonLabel>Install</IonLabel>
-                        </IonTabButton>
-                        <IonTabButton tab="saves" href="/saves">
-                            <IonIcon icon={save} />
-                            <IonLabel>Saves</IonLabel>
-                        </IonTabButton>
-                        <IonTabButton tab="cheats" href="/cheats">
-                            <IonIcon icon={keyOutline} />
-                            <IonLabel>Cheats</IonLabel>
-                        </IonTabButton>
-                    </IonTabBar>
-                </IonTabs>
-            </IonReactMemoryRouter>
-        </IonApp>
-    );
+					<IonTabBar slot="bottom">
+						<IonTabButton tab="recent" href="/recent">
+							<IonIcon icon={gameController} />
+							<IonLabel>Games</IonLabel>
+						</IonTabButton>
+						<IonTabButton tab="games" href="/games">
+							<IonIcon icon={cloudDownload} />
+							<IonLabel>Install</IonLabel>
+						</IonTabButton>
+						<IonTabButton tab="saves" href="/saves">
+							<IonIcon icon={save} />
+							<IonLabel>Saves</IonLabel>
+						</IonTabButton>
+						<IonTabButton tab="cheats" href="/cheats">
+							<IonIcon icon={keyOutline} />
+							<IonLabel>Cheats</IonLabel>
+						</IonTabButton>
+					</IonTabBar>
+				</IonTabs>
+			</IonReactMemoryRouter>
+		</IonApp>
+	);
 }
 
 createRoot(document.getElementById('root')).render(<Junie />);

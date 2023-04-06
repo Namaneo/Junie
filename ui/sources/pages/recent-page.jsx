@@ -50,12 +50,15 @@ export const RecentPage = () => {
 
 	const fileInput = useRef(null);
 
+	const version = window.junie_build.split('-')[0];
+	const date = new Date(window.junie_build.split('-')[1] * 1000).toLocaleString();
+
 	return (
 		<IonPage>
 
 			<IonHeader>
 				<IonToolbar>
-					<IonTitle>Recent</IonTitle>
+					<IonTitle>Junie - {version} ({date})</IonTitle>
 					<IonButtons slot="end">
 						<IonButton onClick={() => fileInput.current.click()}>
 							<input type="file" ref={fileInput} onChange={e => addGame(e.target.files)} hidden />
@@ -87,7 +90,6 @@ export const RecentPage = () => {
 						</IonCard>
 					)}
 				</IonList>
-
 			</IonContent>
 
 		</IonPage>

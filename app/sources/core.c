@@ -277,6 +277,9 @@ static void input_poll()
 
 static int16_t input_state(unsigned port, unsigned device, unsigned index, unsigned id)
 {
+	if (port != 0)
+		return 0;
+
 	if (device == RETRO_DEVICE_JOYPAD)
 		return CTX.inputs[id];
 
