@@ -1,4 +1,4 @@
-import { IonBackButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonLoading, IonPage, IonTitle, IonToolbar, useIonAlert, useIonViewWillEnter } from '@ionic/react';
+import { IonBackButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonItem, IonLabel, IonLoading, IonPage, IonTitle, IonToolbar, useIonAlert, useIonViewWillEnter } from '@ionic/react';
 import { useState } from 'react';
 import { useToast } from '../hooks/toast';
 import { Game } from '../entities/game';
@@ -64,10 +64,12 @@ export const GamesPage = ({ match }) => {
 				<IonLoading isOpen={loading} message="Installing..." spinner={null} />
 				{system.games.filter(game => !game.installed).map(game =>
 					<IonCard key={game.rom} onClick={() => install(game)}>
-						<JunImg system={system} game={game} />
-						<IonCardHeader>
-							<IonCardSubtitle>{game.name}</IonCardSubtitle>
-						</IonCardHeader>
+						<IonItem>
+							<JunImg system={system} game={game} />
+							<IonLabel>
+								<h2>{game.name}</h2>
+							</IonLabel>
+						</IonItem>
 					</IonCard>
 				)}
 			</IonContent>
