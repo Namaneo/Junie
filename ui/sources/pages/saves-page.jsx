@@ -1,6 +1,6 @@
 import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonModal, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
 import { checkmarkCircleOutline, closeCircleOutline, cloudDownload, cloudUpload, buildOutline } from 'ionicons/icons';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FixSaveModal } from '../modals/fix-save-modal';
 import Database from '../services/database';
 import Requests from '../services/requests';
@@ -13,6 +13,10 @@ export const SavesPage = () => {
 	const [current, setCurrent] = useState(null);
 	const [saves, setSaves] = useState([]);
 	const [systems, setSystems] = useState([]);
+
+	const page = useRef(null);
+	const [presenting, setPresenting] = useState(null);
+	useEffect(() => setPresenting(page.current), []);
 
 	for (let save of saves)
 		save.mapped = save.isMapped(systems);
@@ -86,7 +90,7 @@ export const SavesPage = () => {
 	const fileUpload = useRef(null);
 
 	return (
-		<IonPage>
+		<IonPage ref={page}>
 
 			<IonHeader>
 				<IonToolbar>
@@ -104,7 +108,7 @@ export const SavesPage = () => {
 			</IonHeader>
 
 			<IonContent className="saves">
-				<IonModal isOpen={modal}>
+				<IonModal isOpen={modal} presentingElement={presenting}>
 					<FixSaveModal systems={systems} apply={apply} dismiss={dismiss}  />
 				</IonModal>
 

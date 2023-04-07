@@ -1,6 +1,6 @@
 import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonModal, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
 import { add, checkmarkCircleOutline, closeCircleOutline, buildOutline } from 'ionicons/icons';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CheatList } from '../entities/cheat';
 import { EditCheatModal } from '../modals/edit-cheat-modal';
 import Files from '../services/files';
@@ -14,6 +14,10 @@ export const CheatsPage = () => {
 
 	const [lists, setLists] = useState([]);
 	const [systems, setSystems] = useState([]);
+
+	const page = useRef(null);
+	const [presenting, setPresenting] = useState(null);
+	useEffect(() => setPresenting(page.current), []);
 
 	const showModal = (list, cheat) => {
 		setCurrentList(list);
@@ -58,7 +62,7 @@ export const CheatsPage = () => {
 	});
 
 	return (
-		<IonPage>
+		<IonPage ref={page}>
 
 			<IonHeader>
 				<IonToolbar>
@@ -72,7 +76,7 @@ export const CheatsPage = () => {
 			</IonHeader>
 
 			<IonContent className="cheats">
-				<IonModal isOpen={modal}>
+				<IonModal isOpen={modal} presentingElement={presenting}>
 					<EditCheatModal current={currentCheat} systems={systems} apply={apply} dismiss={dismiss}  />
 				</IonModal>
 
