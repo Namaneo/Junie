@@ -81,6 +81,8 @@ static struct CTX {
 	struct {
 		void *data;
 		size_t frames;
+		size_t max_size;
+		bool finalized;
 	} audio;
 
 	struct {
@@ -175,7 +177,7 @@ static bool environment(unsigned cmd, void *data)
 
 				char *ptr = NULL;
 				CTX.variables[i].name = strdup(strtok_r(value, ";", &ptr));
-				CTX.variables[i].options = strdup(strtok_r(NULL, ";", &ptr));
+				CTX.variables[i].options = strdup(strtok_r(NULL, ";", &ptr) + 1);
 
 				char *options = strdup(CTX.variables[i].options);
 				CTX.variables[i].value = strdup(strtok_r(options, "|", &ptr));
@@ -253,21 +255,22 @@ static void video_refresh(const void *data, unsigned width, unsigned height, siz
 
 static size_t audio_sample_batch(const int16_t *data, size_t frames)
 {
-	uint32_t offset = 0;
-	uint32_t current_size = CTX.audio.frames * 2 * sizeof(float);
-	uint32_t new_size = frames * 2 * sizeof(float);
-
-	if (CTX.fast_forward) {
-		offset = current_size;
-		new_size += current_size;
+	if (CTX.audio.finalized) {
+		CTX.audio.frames = 0;
+		CTX.audio.finalized = false;
 	}
 
-	if (new_size > current_size)
+	size_t offset = CTX.audio.frames * 2 * sizeof(float);
+	size_t new_size = (CTX.audio.frames + frames) * 2 * sizeof(float);
+
+	if (new_size > CTX.audio.max_size) {
 		CTX.audio.data = realloc(CTX.audio.data, new_size);
+		CTX.audio.max_size = new_size;
+	}
 
 	JUN_ConvertPCM16(data, frames, &CTX.audio.data[offset]);
 
-	CTX.audio.frames = CTX.fast_forward ? CTX.audio.frames + frames : frames;
+	CTX.audio.frames += frames;
 
 	return frames;
 }
@@ -581,6 +584,7 @@ void JUN_CoreRun(uint8_t fast_forward)
 
 	CTX.sym.retro_run();
 
+	CTX.audio.finalized = true;
 	save_memories();
 }
 
