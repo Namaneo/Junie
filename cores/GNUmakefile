@@ -15,9 +15,10 @@ all: $(LIBRARIES:%=build-%)
 
 fetch-%:
 	@target=`pwd`/lib$*.so && \
+	owner=`jq -r '."$*".owner // "libretro"' cores.json` && \
 	name=`jq -r '."$*".repository' cores.json` && \
 	echo Fetching $$name... && \
-	git -C $$name pull $(QUIET) || git clone https://github.com/libretro/$$name.git $(QUIET)
+	git -C $$name pull $(QUIET) || git clone https://github.com/$$owner/$$name.git $(QUIET)
 
 build-%: fetch-%
 	@target=`pwd`/lib$*.so && \

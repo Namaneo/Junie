@@ -27,9 +27,11 @@
 			}
 		]
 	},
-	"melonds": {
-		"name": "MelonDS",
-		"repository": "melonDS",
+	"desmume": {
+		"name": "DeSmuME",
+		"owner": "Namaneo",
+		"repository": "desmume",
+		"directory": "desmume/src/frontend/libretro",
 		"systems": [
 			{
 				"name": "Nintendo DS",

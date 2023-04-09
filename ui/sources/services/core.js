@@ -229,20 +229,6 @@ export default class Core {
 		return this.#cores[name];
 	}
 
-	static async factory() {
-		const cores_json = await fetch('cores.json').then(res => res.json());
-
-		const factory = [];
-		for (let key in cores_json)
-			factory[cores_json[key].name] = async () => {
-				const core = Core.create(key);
-				await core.init();
-				return core;
-			}
-
-		return factory;
-	}
-
 	static Device = class {
 		static get JOYPAD()  { return 1; }
 		static get POINTER() { return 6; }
