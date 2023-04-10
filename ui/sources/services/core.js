@@ -173,6 +173,8 @@ export default class Core {
 
 		module.JUN_CoreDestroy();
 		this.#module = null;
+
+		new Uint8Array(Core.#memory.buffer).fill(0);
 	}
 
 	variables() {
