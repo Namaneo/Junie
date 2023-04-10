@@ -2,6 +2,13 @@ import Audio from './audio';
 import Database from './database'
 
 export default class Core {
+	static #INITIAL_MEMORY = 600 * 1024 * 1024;
+
+	static #memory = new WebAssembly.Memory({
+		'initial': this.#INITIAL_MEMORY / 65536,
+		'maximum': this.#INITIAL_MEMORY / 65536
+	});
+
 	static #cores = [];
 
 	#name = null;
@@ -27,7 +34,7 @@ export default class Core {
 			return;
 
 		const origin = location.origin + location.pathname.replace(/\/$/, '');
-		const module = await (await import(`${origin}/modules/lib${this.#name}.js`)).default();
+		const module = await (await import(`${origin}/modules/lib${this.#name}.js`)).default({ wasmMemory: Core.#memory });
 
 		module.JUN_CoreCreate =             module.cwrap('JUN_CoreCreate',             null,     ['string', 'string']);
 		module.JUN_CoreGetFileBuffer =      module.cwrap('JUN_CoreGetFileBuffer',      'number', ['string', 'number']),
