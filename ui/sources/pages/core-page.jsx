@@ -2,7 +2,7 @@ import { IonAccordion, IonAccordionGroup, IonBackButton, IonButton, IonButtons, 
 import { useEffect, useRef, useState } from 'react';
 import { checkmarkOutline } from 'ionicons/icons';
 import { Joystick } from 'react-joystick-component';
-import { useWindowSize } from '../hooks/window';
+import { useRefSize, useWindowSize } from '../hooks/size';
 import { useCore } from '../hooks/core';
 import Core from '../services/core';
 
@@ -49,8 +49,8 @@ const Control = ({ core, name, device, id, className, inset }) => {
 	);
 }
 
-const Stick = ({ core, inset }) => {
-	const size = Math.min(document.body.clientWidth * 0.32, 32 * 10);
+const Stick = ({ core, width, inset }) => {
+	const size = Math.min(width * 0.32, 32 * 10);
 
 	const style = {
 		top:    `min(${inset.top}vw,    ${inset.top    * 10}px)`,
@@ -79,12 +79,13 @@ const Stick = ({ core, inset }) => {
 export const CorePage = ({ match }) => {
 	const { lib, system, rom } = match.params;
 
-	const [core, audio, speed, gamepad, joystick] = useCore(lib);
-	const [pointer, setPointer] = useState({ x: 0, y: 0, down: false });
-	const [width, height] = useWindowSize();
-
 	const content = useRef(null);
 	const canvas = useRef(null);
+
+	const [core, audio, speed, gamepad, joystick] = useCore(lib);
+	const [pointer, setPointer] = useState({ x: 0, y: 0, down: false });
+	const [window_w, window_h] = useWindowSize();
+	const [canvas_w, canvas_h] = useRefSize(canvas);
 
 	const resize = () => {
 		const rect = content.current.getBoundingClientRect();
@@ -128,7 +129,7 @@ export const CorePage = ({ match }) => {
 		core.current.send(Core.Device.POINTER, Core.Pointer.COUNT,   1);
 	}, [pointer]);
 
-	useEffect(() => resize(), [width, height]);
+	useEffect(() => resize(), [window_w, window_h, canvas_w, canvas_h]);
 
 	return (
 		<>
@@ -215,7 +216,7 @@ export const CorePage = ({ match }) => {
 							<Control core={core.current} name="&#183;" device={Core.Device.JOYPAD} id={Core.Joypad.START} className='special'  inset={{bottom: 4,  right: 37}} />
 
 							{joystick.value && <>
-								<Stick core={core.current} inset={{bottom: 6, left: 2 }} />
+								<Stick core={core.current} width={window_w} inset={{bottom: 6, left: 2 }} />
 							</>}
 							{!joystick.value && <>
 								<Control core={core.current} name="&#5130;" device={Core.Device.JOYPAD} id={Core.Joypad.LEFT}  className='arrow' inset={{bottom: 16, left: 4 }} />
