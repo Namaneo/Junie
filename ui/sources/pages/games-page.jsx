@@ -1,4 +1,4 @@
-import { IonBackButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonItem, IonLabel, IonLoading, IonPage, IonTitle, IonToolbar, useIonAlert, useIonViewWillEnter } from '@ionic/react';
+import { IonBackButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonItem, IonLabel, IonLoading, IonPage, IonProgressBar, IonTitle, IonToolbar, useIonAlert, useIonViewWillEnter } from '@ionic/react';
 import { useState } from 'react';
 import { useToast } from '../hooks/toast';
 import { Game } from '../entities/game';
@@ -9,19 +9,19 @@ import Files from '../services/files';
 
 export const GamesPage = ({ match }) => {
 
-	const [loading, setLoading] = useState(false);
 	const [system, setSystem] = useState({ games: [] });
+	const [download, setDownload] = useState({ game: null, progress: 0 });
 
 	const [present, dismiss] = useToast('Game successfully installed!');
 	const [alert] = useIonAlert();
 
 	const install = async (game) => {
-		setLoading(true);
-
-		const data = await Requests.fetchGame(system, game);
+		setDownload({ game: game.name, progress: 0 });
+		const data = await Requests.fetchGame(system, game, progress => {
+			setDownload({ game: game.name, progress });
+		});
 
 		if (!data) {
-			setLoading(false);
 			alert({
 				header: 'Install failed',
 				message: `${game.name} (${system.name})`,
@@ -40,7 +40,7 @@ export const GamesPage = ({ match }) => {
 		dismiss();
 		present(`${game.name} (${system.name})`);
 
-		setLoading(false);
+		setDownload({ game: null, progress: 0 });
 	}
 
 	useIonViewWillEnter(async () => {
@@ -61,13 +61,15 @@ export const GamesPage = ({ match }) => {
 			</IonHeader>
 
 			<IonContent className="games">
-				<IonLoading isOpen={loading} message="Installing..." spinner={null} />
 				{system.games.filter(game => !game.installed).map(game =>
-					<IonCard key={game.rom} onClick={() => install(game)}>
+					<IonCard key={game.rom} onClick={() => !download.game && install(game)}>
 						<IonItem color="light">
 							<JunImg system={system} game={game} />
 							<IonLabel>
 								<h2>{game.name}</h2>
+								{download.game == game.name &&
+									<IonProgressBar value={download.progress}></IonProgressBar>
+								}
 							</IonLabel>
 						</IonItem>
 					</IonCard>

@@ -61,11 +61,29 @@ export default class Requests {
 		return host + path;
 	}
 
-	static async fetchGame(system, game) {
+	static async fetchGame(system, game, progress) {
 		try {
 			const path = `${location.origin}/games/${system.name}/${game.rom}`;
+
 			const response = await fetch(path);
-			return response.status == 200 ? await response.arrayBuffer() : null;
+			const reader = response.body.getReader();
+
+			const length = response.headers.get('Content-Length');
+			const buffer = new Uint8Array(new ArrayBuffer(length));
+
+			let offset = 0
+			return reader.read().then(function process({ done, value }) {
+				if (done)
+					return buffer;
+
+				buffer.set(value, offset);
+				offset += value.length;
+
+				progress(offset / length);
+
+				return reader.read().then(process);
+			});
+
 		} catch (e) {
 			console.error(e);
 			return null;

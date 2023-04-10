@@ -130,7 +130,14 @@ html, body {
 }
 
 #root .games ion-label {
+    height: 50%;
+	position: relative;
     margin-left: 16px;
+}
+
+#root .games ion-progress-bar {
+    position: absolute;
+    bottom: 0;
 }
 
 

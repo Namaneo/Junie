@@ -5,8 +5,8 @@ export default class Core {
 	static #INITIAL_MEMORY = 600 * 1024 * 1024;
 
 	static #memory = new WebAssembly.Memory({
-		'initial': this.#INITIAL_MEMORY / 65536,
-		'maximum': this.#INITIAL_MEMORY / 65536
+		initial: this.#INITIAL_MEMORY / 65536,
+		maximum: this.#INITIAL_MEMORY / 65536,
 	});
 
 	static #cores = [];

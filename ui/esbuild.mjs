@@ -115,6 +115,7 @@ const { host, port } = await context.serve({ servedir: 'build' });
 const watched = [
 	'index.html',
 	'sources/**',
+	'../cores/cores.json',
 	'../app/GNUmakefile*',
 	'../app/sources/*.c',
 	'../app/sources/*.h',
