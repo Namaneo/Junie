@@ -55,7 +55,7 @@ export default class Database {
 		});
 	}
 
-	static async read(path) {
+	static async file(path) {
 		const store = await this.#get('readonly');
 
 		return new Promise((resolve, reject) => {
@@ -63,10 +63,16 @@ export default class Database {
 
 			request.onerror = (event) => reject(event.target.error);
 			request.onsuccess = async (event) => {
-				const data = await event.target.result?.arrayBuffer()
-				resolve(data ? new Uint8Array(data) : null);
+				resolve(event.target.result);
 			};
 		});
+	}
+
+	static async read(path) {
+		const file = await this.file(path);
+		const data = await file?.arrayBuffer();
+
+		return data ? new Uint8Array(data) : null;
 	}
 
 	static async write(path, data) {

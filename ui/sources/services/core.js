@@ -58,25 +58,36 @@ export default class Core {
 		this.#module = module;
 	}
 
+	async #read(path) {
+		const module = this.#module;
+
+		const file = await Database.file(path);
+		const reader = file.stream().getReader();
+		const pointer = module.JUN_CoreGetFileBuffer(path, file.size);
+		const data = new Uint8Array(module.HEAPU8.buffer, pointer, file.size);
+
+		let offset = 0;
+		await reader.read().then(function process({ done, value }) {
+			if (done)
+				return;
+
+			data.set(value, offset);
+			offset += value.length;
+
+			return reader.read().then(process);
+		});
+	}
+
 	async prepare(system, rom) {
 		const module = this.#module;
 		const state = this.#state;
 
 		module.JUN_CoreCreate(system, rom);
-
-		const rom_path = `${system}/${rom}`;
-		const rom_data = await Database.read(rom_path);
-		const rom_offset = module.JUN_CoreGetFileBuffer(rom_path, rom_data.length);
-		new Uint8Array(module.HEAPU8.buffer, rom_offset, rom_data.length).set(rom_data);
+		state.rom = `${system}/${rom}`;
 
 		const game_path = `${system}/${rom.replace(/\.[^/.]+$/, '')}`;
-		for (const path of await Database.list(game_path)) {
-			const data = await Database.read(path);
-			const offset = module.JUN_CoreGetFileBuffer(path, data.length);
-			new Uint8Array(module.HEAPU8.buffer, offset, data.length).set(data);
-		}
-
-		state.rom = rom_path;
+		for (const path of await Database.list(game_path))
+			await this.#read(path);
 	}
 
 	async #sync(loop) {

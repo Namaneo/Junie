@@ -17,11 +17,9 @@ CFLAGS  := \
 	-msimd128 -fPIC -Wno-switch
 
 LDFLAGS := \
-	--no-entry -sENVIRONMENT=web \
+	--no-entry -fwasm-exceptions \
 	-sMODULARIZE -sEXPORT_ES6 \
-	-sINVOKE_RUN=0 -sEXIT_RUNTIME \
-	-fwasm-exceptions -sMAIN_MODULE=2 \
-	-sINITIAL_MEMORY=100mb -sALLOW_MEMORY_GROWTH \
+	-sTOTAL_MEMORY=600mb \
 	-sEXPORTED_FUNCTIONS=@exports.json \
 	-sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 
@@ -29,8 +27,8 @@ ifeq ($(DEBUG), 1)
 CFLAGS  += -O0 -ferror-limit=0 -D DEBUG
 LDFLAGS += -O0 -g -Wl,--error-limit=0
 else
-CFLAGS  += -O3
-LDFLAGS += -O3
+CFLAGS  += -O3 -flto
+LDFLAGS += -O3 -flto
 endif
 
 QUIET := > /dev/null 2>&1

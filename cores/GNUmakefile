@@ -3,10 +3,10 @@ LIBRARIES := $(shell jq -r 'keys[]' cores.json)
 BUILD_FLAGS := \
 	-j 8 \
 	platform=emscripten \
-	SHARED=-shared \
+	SHARED="-flto -shared" \
 	STATIC_LINKING=0 \
 	STATIC_LINKING_LINK=0 \
-	fpic="-fPIC -fwasm-exceptions -msimd128"
+	fpic="-fPIC -flto -fwasm-exceptions -msimd128"
 
 MAKEFLAGS += --no-print-directory
 QUIET := > /dev/null 2>&1
