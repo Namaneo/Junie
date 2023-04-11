@@ -47,6 +47,7 @@ export default class Core {
 		module.JUN_CoreStartGame =          module.cwrap('JUN_CoreStartGame',          'number', []);
 		module.JUN_CoreGetSampleRate =      module.cwrap('JUN_CoreGetSampleRate',      'number', []);
 		module.JUN_CoreGetVariableCount =   module.cwrap('JUN_CoreGetVariableCount',   'number', []);
+		module.JUN_CoreIsVariableLocked =   module.cwrap('JUN_CoreIsVariableLocked',   'number', ['number']);
 		module.JUN_CoreGetVariableKey =     module.cwrap('JUN_CoreGetVariableKey',     'string', ['number']);
 		module.JUN_CoreGetVariableName =    module.cwrap('JUN_CoreGetVariableName',    'string', ['number']);
 		module.JUN_CoreGetVariableOptions = module.cwrap('JUN_CoreGetVariableOptions', 'string', ['number']);
@@ -186,6 +187,9 @@ export default class Core {
 		const module = this.#module;
 
 		for (let i = 0; i < module.JUN_CoreGetVariableCount(); i++) {
+			if (module.JUN_CoreIsVariableLocked(i))
+				continue;
+
 			const key = module.JUN_CoreGetVariableKey(i);
 			const name = module.JUN_CoreGetVariableName(i);
 			const options = module.JUN_CoreGetVariableOptions(i).split('|');

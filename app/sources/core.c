@@ -69,6 +69,7 @@ static struct CTX {
 		char *name;
 		char *options;
 		char *value;
+		bool locked;
 	} variables[INT8_MAX];
 	bool variables_update;
 
@@ -179,9 +180,19 @@ static bool environment(unsigned cmd, void *data)
 				CTX.variables[i].name = strdup(strtok_r(value, ";", &ptr));
 				CTX.variables[i].options = strdup(strtok_r(NULL, ";", &ptr) + 1);
 
-				char *options = strdup(CTX.variables[i].options);
-				CTX.variables[i].value = strdup(strtok_r(options, "|", &ptr));
-				free(options);
+				if (!strcmp(CTX.variables[i].key, "desmume_pointer_type")) {
+					CTX.variables[i].value = strdup("touch");
+					CTX.variables[i].locked = true;
+
+				} else if (!strcmp(CTX.variables[i].key, "desmume_num_cores")) {
+					CTX.variables[i].value = strdup("1");
+					CTX.variables[i].locked = true;
+
+				} else {
+					char *options = strdup(CTX.variables[i].options);
+					CTX.variables[i].value = strdup(strtok_r(options, "|", &ptr));
+					free(options);
+				}
 
 				free(value);
 			}
@@ -260,14 +271,13 @@ static size_t audio_sample_batch(const int16_t *data, size_t frames)
 		CTX.audio.finalized = false;
 	}
 
-	size_t offset = CTX.audio.frames * 2 * sizeof(float);
 	size_t new_size = (CTX.audio.frames + frames) * 2 * sizeof(float);
-
 	if (new_size > CTX.audio.max_size) {
 		CTX.audio.data = realloc(CTX.audio.data, new_size);
 		CTX.audio.max_size = new_size;
 	}
 
+	size_t offset = CTX.audio.frames * 2 * sizeof(float);
 	JUN_ConvertPCM16(data, frames, &CTX.audio.data[offset]);
 
 	CTX.audio.frames += frames;
@@ -519,6 +529,11 @@ uint32_t JUN_CoreGetVariableCount()
 			return count;
 
 	return 0;
+}
+
+uint8_t JUN_CoreIsVariableLocked(uint32_t index)
+{
+	return CTX.variables[index].locked;
 }
 
 const char *JUN_CoreGetVariableKey(uint32_t index)

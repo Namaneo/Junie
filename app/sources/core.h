@@ -13,6 +13,7 @@ void JUN_CoreSetCheat(uint32_t index, uint8_t enabled, const char *code);
 uint8_t JUN_CoreStartGame();
 double JUN_CoreGetSampleRate();
 uint32_t JUN_CoreGetVariableCount();
+uint8_t JUN_CoreIsVariableLocked(uint32_t index);
 const char *JUN_CoreGetVariableKey(uint32_t index);
 const char *JUN_CoreGetVariableName(uint32_t index);
 const char *JUN_CoreGetVariableOptions(uint32_t index);
