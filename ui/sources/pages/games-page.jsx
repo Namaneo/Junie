@@ -1,10 +1,8 @@
-import { IonBackButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonItem, IonLabel, IonLoading, IonPage, IonProgressBar, IonTitle, IonToolbar, useIonAlert, useIonViewWillEnter } from '@ionic/react';
+import { IonBackButton, IonButtons, IonCard, IonContent, IonHeader, IonItem, IonLabel, IonPage, IonProgressBar, IonTitle, IonToolbar, useIonAlert, useIonViewWillEnter } from '@ionic/react';
 import { useState } from 'react';
 import { useToast } from '../hooks/toast';
 import { Game } from '../entities/game';
-import { JunImg } from '../components/jun-img';
 import Requests from '../services/requests';
-import Helpers from '../services/helpers';
 import Files from '../services/files';
 
 export const GamesPage = ({ match }) => {
@@ -30,9 +28,7 @@ export const GamesPage = ({ match }) => {
 			return;
 		}
 
-		game.cover = await Helpers.requestDataURL(game.cover);
-
-		await Files.Games.add(new Game(system, game), data);
+		await Files.Games.add(system.name, game.rom, data);
 
 		system.games = system.games.filter(x => x.rom != game.rom);
 		setSystem({ ...system });
@@ -64,7 +60,7 @@ export const GamesPage = ({ match }) => {
 				{system.games.filter(game => !game.installed).map(game =>
 					<IonCard key={game.rom} onClick={() => !download.game && install(game)}>
 						<IonItem color="light">
-							<JunImg system={system} game={game} />
+							<img src={Requests.getGameCover(system, game)} onError={(e) => e.target.src = 'assets/placeholder.png'} />
 							<IonLabel>
 								<h2>{game.name}</h2>
 								{download.game == game.name &&

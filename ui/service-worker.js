@@ -9,14 +9,24 @@ const cacheResources = async () => {
 const clearCaches = async () => {
 	await clients.claim();
 	const keys = await caches.keys()
-	for (const key of keys.filter(key => key != version))
+	for (const key of keys.filter(key => key != version && key != 'covers'))
 		caches.delete(key);
 }
 
-const fetchResource = async (request) => {
-	const cache = await caches.open(version);
-	const resource = await cache.match(request);
-    return resource ?? await fetch(request);
+const fetchResource = async (request, cover) => {
+	const cache = await caches.open(cover ? 'covers' : version);
+
+	const match = await cache.match(request);
+	if (match)
+		return match;
+
+	const response = await fetch(request);
+	if (!cover)
+		return response;
+
+	await cache.put(request, response.clone());
+
+	return response;
 }
 
 self.addEventListener('install', (event) => {
@@ -28,5 +38,6 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-    event.respondWith(fetchResource(event.request));
+	const cover = event.request.url.startsWith('https://thumbnails.libretro.com/');
+	event.respondWith(fetchResource(event.request, cover));
 });

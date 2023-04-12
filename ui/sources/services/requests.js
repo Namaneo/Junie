@@ -1,3 +1,4 @@
+import { Game } from '../entities/game';
 import Files from './files';
 
 export default class Requests {
@@ -33,32 +34,32 @@ export default class Requests {
 		const systems = await Files.Library.get(false);
 		const installed = await Files.Games.get();
 
-		for (let system of systems) {
+		for (const system of systems) {
 			if (!system.games)
 				system.games = [];
 
-			const games = installed.filter(x => x.system.name == system.name);
-			const local = games.filter(x => !system.games.find(y => x.game.rom == y.rom));
+			const games = installed.filter(x => x.system == system.name);
+			const local = games.filter(x => !system.games.find(y => x.rom == y.rom));
 
-			system.games = [ ...local.map(x => x.game), ...system.games ];
+			system.games = [
+				...local.map(x => x.game),
+				...system.games.map(x => new Game(system.full_name, x.rom)),
+			];
 
-			for (let game of system.games)
-				game.installed = !!games.find(x => x.game.rom == game.rom);
+			for (const game of system.games)
+				game.installed = !!games.find(x => x.rom == game.rom);
 		}
 
 		return systems;
 	};
 
-	static getSystemCover(system) {
-		const dark_mode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-		return dark_mode && system.coverDark ? system.coverDark : system.cover;
+	static shouldInvertCover(system) {
+		return system.cover_dark && window.matchMedia('(prefers-color-scheme: dark)').matches;
 	}
 
 	static getGameCover(system, game) {
 		const cover = game.rom.substring(0, game.rom.lastIndexOf('.')) + '.png';
-		const host = 'https://raw.githubusercontent.com';
-		const path = `/libretro/libretro-thumbnails/master/${system.full_name}/Named_Boxarts/${cover}`;
-		return host + path;
+		return `https://thumbnails.libretro.com/${system.full_name}/Named_Boxarts/${cover}`;
 	}
 
 	static async fetchGame(system, game, progress) {

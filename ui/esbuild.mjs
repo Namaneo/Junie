@@ -33,8 +33,14 @@ function plugin_html(html, sw) {
 		setup(build) {
 			const outdir = build.initialOptions.outdir;
 			build.onEnd(() => {
-				const css = readFileSync(path.join(outdir, "index.css")).toString("base64");
-				const js = readFileSync(path.join(outdir, "index.js")).toString("base64");
+				const css_path = path.join(outdir, "index.css");
+				const js_path = path.join(outdir, "index.js");
+
+				if (!existsSync(css_path) || !existsSync(js_path))
+					return;
+
+				const css = readFileSync(css_path).toString("base64");
+				const js = readFileSync(js_path).toString("base64");
 
 				const resources = [
 					'./', './manifest.json', './cores.json',
@@ -87,7 +93,6 @@ const context = await esbuild.context({
 	outdir: 'build',
 	bundle: true,
 	format: 'esm',
-	loader: { '.png': 'dataurl' },
 	jsx: 'automatic',
 	minify: !options.debug,
 	sourcemap: options.debug ? 'inline' : false,
@@ -125,6 +130,7 @@ let rebuilding = false;
 async function rebuild() {
 	if (rebuilding)
 		return;
+
 	rebuilding = true;
 
 	console.clear();
@@ -133,9 +139,14 @@ async function rebuild() {
 	const parameters = options.watch.split(' ').slice(1);
 	spawnSync(command, parameters, { stdio: 'inherit' });
 
-	await context.rebuild();
-
-	console.log(`\nBuild finished, serving on 'http://${host}:${port}/'...`);
+	try {
+		await context.rebuild();
+		console.log(`\nBuild finished, serving on 'http://${host}:${port}/'...`);
+	} catch (e) {
+		console.error('\nBuild failed:');
+		for (const error of e.errors)
+			console.error(`- ${error.text} (${error.location.file}:${error.location.line})`);
+	}
 
 	rebuilding = false;
 }

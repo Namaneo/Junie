@@ -2,7 +2,6 @@ import Database from './database';
 import { Save } from '../entities/save';
 import { CheatList } from '../entities/cheat';
 import { Game } from '../entities/game';
-import Helpers from '../services/helpers';
 
 export default class Files {
 	static async list(...suffixes) {
@@ -54,8 +53,7 @@ export default class Files {
 						...system,
 						lib_name: core,
 						core_name: cores[core].name,
-						cover: await Helpers.requestDataURL(`./assets/covers/${system.name}.png`),
-						coverDark: await Helpers.requestDataURL(`./assets/covers/${system.name}.dark.png`),
+						cover: `assets/covers/${system.name}.png`,
 					});
 				}
 			}
@@ -131,35 +129,28 @@ export default class Files {
 
 	static Games = class {
 		static async get() {
-			const paths = await Files.list('.meta');
+			const systems = await Files.Library.get();
+			const extensions = systems.map(x => x.extension);
+			const paths = await Files.list(...extensions);
 
 			const files = [];
 			for (const path of paths) {
-				const meta = await Files.read_json(path);
-				files.push(new Game(meta.system, meta.game));
+				const system_name = path.split('/')[0];
+				const rom_name = path.split('/')[1];
+
+				const system = systems.find(x => x.name == system_name);
+				files.push(new Game(system.full_name, rom_name));
 			}
 
 			return files;
 		};
 
-		static async add(game, data) {
-			const file = {
-				path: game.path(),
-				data: new Uint8Array(data),
-				meta: JSON.parse(JSON.stringify(game))
-			};
-
-			delete file.meta.game.installed;
-			delete file.meta.system.cover;
-			delete file.meta.system.games;
-
-			await Files.write(game.path(), file.data);
-			await Files.write_json(game.meta(), file.meta);
+		static async add(system, rom, data) {
+			await Files.write(`${system}/${rom}`, new Uint8Array(data));
 		}
 
-		static async remove(game) {
-			await Files.remove(game.path());
-			await Files.remove(game.meta());
+		static async remove(system, rom) {
+			await Files.remove(`${system}/${rom}`);
 		}
 	}
 }

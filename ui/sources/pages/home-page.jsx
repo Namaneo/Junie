@@ -3,14 +3,14 @@ import { add, playOutline, informationCircleOutline } from 'ionicons/icons';
 import { useRef, useState } from 'react';
 import { useToast } from '../hooks/toast';
 import { Game } from '../entities/game';
-import { JunImg } from '../components/jun-img';
 import Audio from '../services/audio';
 import Requests from '../services/requests';
 import Files from '../services/files';
 
 export const HomePage = () => {
 
-	const [played, setPlayed] = useState([])
+	const [systems, setSystems] = useState([]);
+	const [games, setGames] = useState([]);
 
 	const version = window.junie_build.split('-')[0];
 	const build = window.junie_build.split('-')[1];
@@ -22,36 +22,31 @@ export const HomePage = () => {
 			return;
 
 		const file = files[0];
-		const systems = await Requests.getSystems();
-		const system = systems.find(x => x.extension == file.name.split('.').pop());;
+		const system = systems.find(x => x.extension == file.name.split('.').pop());
 
 		const data = await file.arrayBuffer();
-		const game = new Game(system, {
-			name: file.name.substring(0, file.name.lastIndexOf('.')),
-			rom: file.name
-		});
-
-		await Files.Games.add(game, data);
-
+		await Files.Games.add(system.name, file.name, data);
 		setPlayed(await Files.Games.get());
 	}
 
 	const deleteGame = async (game) => {
-		await Files.Games.remove(game);
-
-		setPlayed(await Files.Games.get());
+		await Files.Games.remove(game.system, game.rom);
+		setGames(await Files.Games.get());
 	}
 
-	const gameURL = (played) => {
+	const gameURL = (game) => {
+		const system = systems.find(x => x.name == game.system);
+
 		return '/home'
-			+ `/${played.system.lib_name}`
-			+ `/${played.system.name}`
-			+ `/${played.game.rom}`;
+			+ `/${system.lib_name}`
+			+ `/${system.name}`
+			+ `/${game.rom}`;
 	};
 
 	useIonViewWillEnter(async () => {
 		Audio.unlock();
-		setPlayed(await Files.Games.get());
+		setSystems(await Requests.getSystems());
+		setGames(await Files.Games.get());
 	});
 
 	const fileInput = useRef(null);
@@ -78,21 +73,21 @@ export const HomePage = () => {
 
 			<IonContent className="home">
 				<IonList lines="none">
-					{played.map(played =>
-						<IonCard key={played.game.rom}>
+					{games.map(game =>
+						<IonCard key={game.rom}>
 							<IonItemSliding>
 								<IonItem color="light">
-									<JunImg system={played.system} game={played.game} />
+									<img src={game.cover} onError={(e) => e.target.src = 'assets/placeholder.png'} />
 									<IonLabel>
-										<h2>{played.game.name.replaceAll(/ \(.*\).*/g, '')}</h2>
-										<h3>{played.system.name}</h3>
+										<h2>{game.name}</h2>
+										<h3>{game.system}</h3>
 									</IonLabel>
-									<IonButton routerLink={gameURL(played)} fill="clear">
+									<IonButton routerLink={gameURL(game)} fill="clear">
 										<IonIcon slot="icon-only" icon={playOutline} />
 									</IonButton>
 								</IonItem>
 								<IonItemOptions side="end">
-									<IonItemOption color="danger" onClick={() => deleteGame(played)}>Delete</IonItemOption>
+									<IonItemOption color="danger" onClick={() => deleteGame(game)}>Delete</IonItemOption>
 								</IonItemOptions>
 							</IonItemSliding>
 						</IonCard>

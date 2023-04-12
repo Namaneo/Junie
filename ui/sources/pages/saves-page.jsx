@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { FixSaveModal } from '../modals/fix-save-modal';
 import Database from '../services/database';
 import Requests from '../services/requests';
-import Helpers from '../services/helpers';
 import Files from '../services/files';
+import Zip from '../services/zip';
 
 export const SavesPage = () => {
 
@@ -42,7 +42,7 @@ export const SavesPage = () => {
 				for (const path of save.paths)
 					files.push({ path, data: await Database.read(path) });
 
-			const content = await Helpers.zip(files);
+			const content = await Zip.compress(files);
 			const blob = new Blob([content], { type: 'octet/stream' })
 
 			a.href = URL.createObjectURL(blob);
@@ -61,7 +61,7 @@ export const SavesPage = () => {
 			return;
 
 		const content = await input[0].arrayBuffer();
-		const files = await Helpers.unzip(content);
+		const files = await Zip.decompress(content);
 
 		fileUpload.current.value = '';
 

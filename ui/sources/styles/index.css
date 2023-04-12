@@ -19,7 +19,9 @@ html, body {
 }
 
 #root .home img {
-    width: 25%;
+    width: 25vw;
+	height: 25vw;
+    object-fit: fill;
 }
 
 #root .home ion-item {
@@ -107,6 +109,7 @@ html, body {
 
 #root .systems img {
     display: inline-block;
+	height: 10vw;
     max-width: 80%;
     margin: 36px 8px 8px 8px;
 }
@@ -121,7 +124,9 @@ html, body {
 }
 
 #root .games img {
-    width: 25%;
+    width: 25vw;
+	height: 25vw;
+    object-fit: fill;
 }
 
 #root .games ion-item {

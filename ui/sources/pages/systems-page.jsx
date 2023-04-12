@@ -56,7 +56,7 @@ export const SystemsPage = () => {
 				<IonLoading isOpen={loading} message="Refreshing..." spinner={null} />
 				{systems.filter(filterSystem).map(system =>
 					<IonCard key={system.name} routerLink={`/games/${system.name}`}>
-						<img src={Requests.getSystemCover(system)} />
+						<img src={system.cover} style={{filter: Requests.shouldInvertCover(system) && 'invert(1)'}} />
 						<IonCardHeader>
 							<IonCardSubtitle>{system.core_name}</IonCardSubtitle>
 						</IonCardHeader>
