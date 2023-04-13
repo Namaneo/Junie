@@ -1,15 +1,14 @@
 import { IonButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonIcon, IonLoading, IonPage, IonTitle, IonToolbar, useIonAlert, useIonViewWillEnter } from '@ionic/react';
 import { useState } from 'react';
 import { refreshOutline } from 'ionicons/icons';
-import { useOnline } from '../hooks/online';
+import { System } from '../entities/system';
 import Requests from '../services/requests';
 
 export const SystemsPage = () => {
 
-	const [systems, setSystems] = useState([]);
-	const [loading, setLoading] = useState(false);
+	const [systems, setSystems] = useState(/** @type {System[]} */ ([])   );
+	const [loading, setLoading] = useState(/** @type {boolean}  */ (false));
 	const [alert] = useIonAlert();
-	const online = useOnline();
 
 	const filterSystem = (system) => {
 		return system.games.length && system.games.find(game => !game.installed);
@@ -18,8 +17,7 @@ export const SystemsPage = () => {
 	const refreshLibrary = async () => {
 		setLoading(true);
 
-		const success = await Requests.refreshLibrary();
-		if (!success) {
+		if (!await Requests.refreshLibrary()) {
 			setLoading(false);
 			alert({
 				header: 'Refresh failed',
@@ -45,7 +43,7 @@ export const SystemsPage = () => {
 				<IonToolbar>
 					<IonTitle>Systems</IonTitle>
 					<IonButtons slot="end">
-						<IonButton onClick={refreshLibrary} hidden={!online}>
+						<IonButton onClick={refreshLibrary}>
 							<IonIcon slot="icon-only" icon={refreshOutline} />
 						</IonButton>
 					</IonButtons>

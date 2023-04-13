@@ -1,3 +1,6 @@
+import { System } from "./system";
+import { Game } from "./game";
+
 export class Cheat {
 	/** @type {string} */
 	name;
@@ -22,28 +25,42 @@ export class CheatList {
 	/** @type {Cheat[]} */
 	cheats;
 
+	/**
+	 * @param {System} system
+	 * @param {Game} game
+	 * @returns {CheatList}
+	 */
 	static fromGame(system, game) {
-		const obj = new CheatList();
+		const object = new CheatList();
 
-		obj.system = system.name;
-		obj.game = game.name;
-		obj.cheats = [];
+		object.system = system.name;
+		object.game = game.name;
+		object.cheats = [];
 
-		return obj;
+		return object;
 	}
 
-	static fromFile(path, data) {
-		const obj = new CheatList();
+	/**
+	 *
+	 * @param {string} path
+	 * @param {Cheat[]} cheats
+	 * @returns
+	 */
+	static fromFile(path, cheats) {
+		const object = new CheatList();
 
 		const matches = path.match(/(.*)\/(.*)\/(.*).(.*)/)
 
-		obj.system = matches[1];
-		obj.game = matches[2];
-		obj.cheats = data;
+		object.system = matches[1];
+		object.game = matches[2];
+		object.cheats = cheats;
 
-		return obj;
+		return object;
 	}
 
+	/**
+	 * @returns {string}
+	 */
 	path() {
 		return `${this.system}/${this.game}/${this.game}.cht`;
 	}

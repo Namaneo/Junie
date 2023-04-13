@@ -1,13 +1,20 @@
 export default class Database {
 	static #db = null;
 
-	static get #name() { return 'Junie' };
-	static get #store() { return 'FILE_DATA' };
+	static get #name() { return 'Junie'; };
+	static get #store() { return 'FILE_DATA'; };
 
+	/**
+	 * @param {IDBDatabase} db
+	 * @returns {void}
+	 */
 	static #upgrade(db) {
 		db.createObjectStore(this.#store, { keyPath: 'name' });
 	}
 
+	/**
+	 * @returns {Promise<number>}
+	 */
 	static async #version() {
 		return new Promise((resolve, reject) => {
 			const request = indexedDB.open(this.#name);
@@ -21,6 +28,10 @@ export default class Database {
 		});
 	}
 
+	/**
+	 * @param {string} type
+	 * @returns {Promise<IDBObjectStore>}
+	 */
 	static async #get(type) {
 		const transaction = (db) => db
 			.transaction([this.#store], type)
@@ -44,6 +55,10 @@ export default class Database {
 		});
 	}
 
+	/**
+	 * @param {String} path
+	 * @returns {Promise<string[]>}
+	 */
 	static async list(path) {
 		const store = await this.#get('readonly');
 
@@ -55,6 +70,10 @@ export default class Database {
 		});
 	}
 
+	/**
+	 * @param {String} path
+	 * @returns {Promise<File>}
+	 */
 	static async file(path) {
 		const store = await this.#get('readonly');
 
@@ -62,19 +81,26 @@ export default class Database {
 			const request = store.get(path);
 
 			request.onerror = (event) => reject(event.target.error);
-			request.onsuccess = async (event) => {
-				resolve(event.target.result);
-			};
+			request.onsuccess = (event) => resolve(event.target.result);
 		});
 	}
 
+	/**
+	 * @param {String} path
+	 * @returns {Promise<Uint8Array>}
+	 */
 	static async read(path) {
 		const file = await this.file(path);
-		const data = await file?.arrayBuffer();
+		const buffer = await file?.arrayBuffer();
 
-		return data ? new Uint8Array(data) : null;
+		return buffer ? new Uint8Array(buffer) : null;
 	}
 
+	/**
+	 * @param {String} path
+	 * @param {Uint8Array} data
+	 * @returns {Promise<void>}
+	 */
 	static async write(path, data) {
 		const store = await this.#get('readwrite');
 
@@ -86,6 +112,10 @@ export default class Database {
 		});
 	}
 
+	/**
+	 * @param {String} path
+	 * @returns {Promise<void>}
+	 */
 	static async remove(path) {
 		const store = await this.#get('readwrite');
 

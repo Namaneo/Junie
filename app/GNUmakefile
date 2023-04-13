@@ -19,7 +19,7 @@ CFLAGS  := \
 LDFLAGS := \
 	--no-entry -fwasm-exceptions \
 	-sMODULARIZE -sEXPORT_ES6 \
-	-sTOTAL_MEMORY=600mb -sIMPORTED_MEMORY \
+	-sTOTAL_MEMORY=400mb -sIMPORTED_MEMORY \
 	-sEXPORTED_FUNCTIONS=@exports.json \
 	-sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 

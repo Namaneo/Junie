@@ -1,13 +1,13 @@
 import { IonBackButton, IonButtons, IonCard, IonContent, IonHeader, IonItem, IonLabel, IonPage, IonProgressBar, IonTitle, IonToolbar, useIonAlert, useIonViewWillEnter } from '@ionic/react';
 import { useState } from 'react';
 import { useToast } from '../hooks/toast';
-import { Game } from '../entities/game';
+import { System } from '../entities/system';
 import Requests from '../services/requests';
 import Files from '../services/files';
 
 export const GamesPage = ({ match }) => {
 
-	const [system, setSystem] = useState({ games: [] });
+	const [system,   setSystem]   = useState(/** @type {System} */ ({ games: [] }));
 	const [download, setDownload] = useState({ game: null, progress: 0 });
 
 	const [present, dismiss] = useToast('Game successfully installed!');
@@ -25,6 +25,7 @@ export const GamesPage = ({ match }) => {
 				message: `${game.name} (${system.name})`,
 				buttons: [ 'OK' ],
 			});
+			setDownload({ game: null, progress: 0 });
 			return;
 		}
 
@@ -60,7 +61,7 @@ export const GamesPage = ({ match }) => {
 				{system.games.filter(game => !game.installed).map(game =>
 					<IonCard key={game.rom} onClick={() => !download.game && install(game)}>
 						<IonItem color="light">
-							<img src={Requests.getGameCover(system, game)} onError={(e) => e.target.src = 'assets/placeholder.png'} />
+							<img src={Requests.getGameCover(system.full_name, game.rom)} onError={(e) => e.target.src = 'assets/placeholder.png'} crossOrigin="anonymous" />
 							<IonLabel>
 								<h2>{game.name}</h2>
 								{download.game == game.name &&

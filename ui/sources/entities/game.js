@@ -1,3 +1,5 @@
+import Requests from "../services/requests";
+
 export class Game {
 	/** @type {String} */
 	system;
@@ -14,12 +16,14 @@ export class Game {
 	/** @type {Boolean} */
 	installed;
 
+	/**
+	 * @param {string} system
+	 * @param {string} rom
+	 */
 	constructor(system, rom) {
-		const name = rom.substring(0, rom.lastIndexOf('.'));
-
 		this.system = system.split(' - ')[1];
 		this.rom = rom;
-		this.name = name.replaceAll(/ \(.*\).*/g, '');
-		this.cover = `https://thumbnails.libretro.com/${system}/Named_Boxarts/${name}.png`;
+		this.name = rom.substring(0, rom.lastIndexOf('.')).replaceAll(/ \(.*\).*/g, '');
+		this.cover = Requests.getGameCover(system, rom);
 	}
 }

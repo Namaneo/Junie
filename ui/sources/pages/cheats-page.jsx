@@ -1,16 +1,16 @@
 import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonModal, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
 import { add, checkmarkCircleOutline, closeCircleOutline, buildOutline } from 'ionicons/icons';
 import { useEffect, useRef, useState } from 'react';
-import { CheatList } from '../entities/cheat';
+import { Cheat, CheatList } from '../entities/cheat';
 import { EditCheatModal } from '../modals/edit-cheat-modal';
 import Files from '../services/files';
 import Requests from '../services/requests';
 
 export const CheatsPage = () => {
 
-	const [modal, setModal] = useState(false);
-	const [currentList, setCurrentList] = useState(null);
-	const [currentCheat, setCurrentCheat] = useState(null);
+	const [modal,        setModal]        = useState(/** @type {boolean}   */ (false));
+	const [currentList,  setCurrentList]  = useState(/** @type {CheatList} */ (null) );
+	const [currentCheat, setCurrentCheat] = useState(/** @type {Cheat}     */ (null) );
 
 	const [lists, setLists] = useState([]);
 	const [systems, setSystems] = useState([]);

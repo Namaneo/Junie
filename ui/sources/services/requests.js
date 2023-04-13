@@ -57,9 +57,14 @@ export default class Requests {
 		return system.cover_dark && window.matchMedia('(prefers-color-scheme: dark)').matches;
 	}
 
-	static getGameCover(system, game) {
-		const cover = game.rom.substring(0, game.rom.lastIndexOf('.')) + '.png';
-		return `https://thumbnails.libretro.com/${system.full_name}/Named_Boxarts/${cover}`;
+	static getGameCover(system, rom) {
+		const system_name = system.replaceAll(' ', '_');
+		const cover = rom.substring(0, rom.lastIndexOf('.')) + '.png';
+
+		const host = 'https://raw.githubusercontent.com';
+		const path = `/libretro-thumbnails/${system_name}/master/Named_Boxarts/${cover}`;
+
+		return host + path;
 	}
 
 	static async fetchGame(system, game, progress) {

@@ -2,7 +2,7 @@ import Audio from './audio';
 import Database from './database'
 
 export default class Core {
-	static #INITIAL_MEMORY = 600 * 1024 * 1024;
+	static #INITIAL_MEMORY = 400 * 1024 * 1024;
 
 	static #memory = new WebAssembly.Memory({
 		initial: this.#INITIAL_MEMORY / 65536,
@@ -274,9 +274,9 @@ export default class Core {
 	}
 
 	static Pointer = class {
-		static get X()       { return 0;  }
-		static get Y()       { return 1;  }
-		static get PRESSED() { return 2;  }
-		static get COUNT()   { return 3;  }
+		static get X()       { return 0; }
+		static get Y()       { return 1; }
+		static get PRESSED() { return 2; }
+		static get COUNT()   { return 3; }
 	}
 }

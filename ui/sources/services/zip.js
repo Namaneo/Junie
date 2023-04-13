@@ -1,26 +1,43 @@
-import JSZip from 'jszip/dist/jszip';
+import JSZip from 'jszip';
+
+class ZipFile {
+	/** @type {string} */
+	path;
+
+	/** @type {Uint8Array} */
+	data;
+}
 
 export default class Zip {
+
+	/**
+	 * @param {ZipFile[]} files
+	 * @returns {Promise<Uint8Array>}
+	 */
 	static async compress(files) {
 		const zip = new JSZip();
 
-		for (let file of files)
+		for (const file of files)
 			zip.file(file.path, file.data);
 
 		return await zip.generateAsync({ type: 'uint8array' });
 	}
 
+	/**
+	 * @param {Uint8Array} files
+	 * @returns {Promise<ZipFile[]>}
+	 */
 	static async decompress(content) {
 		const zip = await new JSZip().loadAsync(content);
 
 		const files = [];
-		for (let path in zip.files) {
-			const obj = zip.files[path];
+		for (const path in zip.files) {
+			const object = zip.files[path];
 
-			if (obj.dir)
+			if (object.dir)
 				continue;
 
-			const data = await obj.async('uint8array');
+			const data = await object.async('uint8array');
 			files.push({ path, data });
 		}
 

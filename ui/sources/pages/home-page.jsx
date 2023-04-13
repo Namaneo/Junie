@@ -2,6 +2,7 @@ import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem
 import { add, playOutline, informationCircleOutline } from 'ionicons/icons';
 import { useRef, useState } from 'react';
 import { useToast } from '../hooks/toast';
+import { System } from '../entities/system';
 import { Game } from '../entities/game';
 import Audio from '../services/audio';
 import Requests from '../services/requests';
@@ -9,8 +10,8 @@ import Files from '../services/files';
 
 export const HomePage = () => {
 
-	const [systems, setSystems] = useState([]);
-	const [games, setGames] = useState([]);
+	const [systems, setSystems] = useState(/** @type {System[]} */ ([]));
+	const [games,   setGames]   = useState(/** @type {Game[]}   */ ([]));
 
 	const version = window.junie_build.split('-')[0];
 	const build = window.junie_build.split('-')[1];
@@ -24,7 +25,7 @@ export const HomePage = () => {
 		const file = files[0];
 		const system = systems.find(x => x.extension == file.name.split('.').pop());
 
-		const data = await file.arrayBuffer();
+		const data = new Uint8Array(await file.arrayBuffer());
 		await Files.Games.add(system.name, file.name, data);
 		setPlayed(await Files.Games.get());
 	}
@@ -77,7 +78,7 @@ export const HomePage = () => {
 						<IonCard key={game.rom}>
 							<IonItemSliding>
 								<IonItem color="light">
-									<img src={game.cover} onError={(e) => e.target.src = 'assets/placeholder.png'} />
+									<img src={game.cover} onError={(e) => e.target.src = 'assets/placeholder.png'} crossOrigin="anonymous" />
 									<IonLabel>
 										<h2>{game.name}</h2>
 										<h3>{game.system}</h3>

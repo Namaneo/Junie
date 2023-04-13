@@ -1,5 +1,6 @@
 const version = null;
 const resources = null;
+const debug = false;
 
 const cacheResources = async () => {
     const cache = await caches.open(version);
@@ -9,19 +10,36 @@ const cacheResources = async () => {
 const clearCaches = async () => {
 	await clients.claim();
 	const keys = await caches.keys()
-	for (const key of keys.filter(key => key != version && key != 'covers'))
+	for (const key of keys.filter(key => key != version && key != 'external'))
 		caches.delete(key);
 }
 
-const fetchResource = async (request, cover) => {
-	const cache = await caches.open(cover ? 'covers' : version);
+const fetchEx = async (request) => {
+	const response = await fetch(request);
 
+	const headers = new Headers(response.headers);
+	headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+	headers.set('Cross-Origin-Resource-Policy', 'cross-origin');
+	headers.set('Cross-Origin-Embedder-Policy', 'credentialless');
+
+	return new Response(response.body, {
+		status: response.status,
+		statusText: response.statusText,
+		headers: headers,
+	});
+}
+
+const fetchResource = async (request, external) => {
+	if (debug && !external)
+		return await fetchEx(request);
+
+	const cache = await caches.open(external ? 'external' : version);
 	const match = await cache.match(request);
 	if (match)
 		return match;
 
-	const response = await fetch(request);
-	if (!cover)
+	const response = await fetchEx(request);
+	if (!external)
 		return response;
 
 	await cache.put(request, response.clone());
@@ -38,6 +56,6 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-	const cover = event.request.url.startsWith('https://thumbnails.libretro.com/');
-	event.respondWith(fetchResource(event.request, cover));
+	const external = !event.request.url.startsWith(location.origin);
+	event.respondWith(fetchResource(event.request, external));
 });

@@ -1,10 +1,21 @@
+import { System } from "./system";
+
 export class Save {
+	/** @type {string[]} */
 	paths = [];
 
+	/** @type {string} */
 	system;
+
+	/** @type {string} */
 	game;
+
+	/** @type {string} */
 	extension;
 
+	/**
+	 * @param {string} path
+	 */
 	constructor(path) {
 		this.paths.push(path);
 
@@ -13,6 +24,9 @@ export class Save {
 		this.extension = this.match(path, 4);
 	}
 
+	/**
+	 * @param {System[]} systems
+	 */
 	isMapped(systems) {
 		const system = systems.find(system => system.name == this.system);
 		if (!system || !system.games)
@@ -25,6 +39,10 @@ export class Save {
 		return true;
 	}
 
+	/**
+	 * @param {string} path
+	 * @param {number} index
+	 */
 	match(path, index) {
 		const matches = path.match(/(.*)\/(.*)\/(.*)\.(.*)/);
 

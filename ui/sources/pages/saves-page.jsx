@@ -2,6 +2,8 @@ import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem
 import { checkmarkCircleOutline, closeCircleOutline, cloudDownload, cloudUpload, buildOutline } from 'ionicons/icons';
 import { useEffect, useRef, useState } from 'react';
 import { FixSaveModal } from '../modals/fix-save-modal';
+import { System } from '../entities/system';
+import { Save } from '../entities/save';
 import Database from '../services/database';
 import Requests from '../services/requests';
 import Files from '../services/files';
@@ -9,16 +11,16 @@ import Zip from '../services/zip';
 
 export const SavesPage = () => {
 
-	const [modal, setModal] = useState(false);
-	const [current, setCurrent] = useState(null);
-	const [saves, setSaves] = useState([]);
-	const [systems, setSystems] = useState([]);
+	const [modal,   setModal]   = useState(/** @type {boolean}  */ (false));
+	const [current, setCurrent] = useState(/** @type {Save}     */ (null) );
+	const [saves,   setSaves]   = useState(/** @type {Save[]}   */ ([])   );
+	const [systems, setSystems] = useState(/** @type {System[]} */ ([])   );
 
 	const page = useRef(null);
 	const [presenting, setPresenting] = useState(null);
 	useEffect(() => setPresenting(page.current), []);
 
-	for (let save of saves)
+	for (const save of saves)
 		save.mapped = save.isMapped(systems);
 
 	const showModal = (save) => {
@@ -60,7 +62,7 @@ export const SavesPage = () => {
 		if (!input?.length)
 			return;
 
-		const content = await input[0].arrayBuffer();
+		const content = new Uint8Array(await input[0].arrayBuffer());
 		const files = await Zip.decompress(content);
 
 		fileUpload.current.value = '';

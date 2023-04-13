@@ -29,7 +29,6 @@
 	},
 	"desmume": {
 		"name": "DeSmuME",
-		"owner": "Namaneo",
 		"repository": "desmume",
 		"directory": "desmume/src/frontend/libretro",
 		"systems": [

@@ -72,6 +72,10 @@ function plugin_html(html, sw) {
 					'const resources = null;',
 					`const resources = ${JSON.stringify(resources)};`
 				);
+				code_sw = code_sw.replace(
+					'const debug = false;',
+					`const debug = ${options.debug};`
+				);
 
 				writeFileSync(`${outdir}/${html}`, code_html);
 				writeFileSync(`${outdir}/${sw}`, code_sw);
@@ -119,6 +123,8 @@ const { host, port } = await context.serve({ servedir: 'build' });
 
 const watched = [
 	'index.html',
+	'service-worker.js',
+	'manifest.json',
 	'sources/**',
 	'../cores/cores.json',
 	'../app/GNUmakefile*',

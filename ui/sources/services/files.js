@@ -1,55 +1,89 @@
 import Database from './database';
 import { Save } from '../entities/save';
 import { CheatList } from '../entities/cheat';
+import { System } from '../entities/system';
 import { Game } from '../entities/game';
 
 export default class Files {
+	static #encoder = new TextEncoder();
+	static #decoder = new TextDecoder();
+
+	/**
+	 * @param {string[]} suffixes
+	 * @returns {Promise<string[]>}
+	 */
 	static async list(...suffixes) {
-		let paths = await Database.list();
+		const paths = await Database.list();
 
-		if (suffixes)
-			paths = paths.filter(p => suffixes.some(s => p.endsWith(s)));
-
-		return paths;
+		return suffixes
+			? paths.filter(p => suffixes.some(s => p.endsWith(s)))
+			: paths;
 	}
 
+	/**
+	 * @param {string} path
+	 * @returns {Promise<Uint8Array>}
+	 */
 	static async read(path) {
 		return await Database.read(path);
 	}
 
+	/**
+	 * @template T
+	 * @param {string} path
+	 * @returns {Promise<T>}
+	 */
 	static async read_json(path) {
-		let file = await Files.read(path);
+		const file = await Files.read(path);
 
-		if (file)
-			file = JSON.parse(new TextDecoder().decode(file));
-
-		return file;
+		return file
+			? JSON.parse(this.#decoder.decode(file))
+			: null;
 	}
 
+	/**
+	 * @param {string} path
+	 * @param {Uint8Array} data
+	 * @returns {Promise<void>}
+	 */
 	static async write(path, data) {
 		await Database.write(path, data);
 	}
 
+	/**
+	 * @template T
+	 * @param {string} path
+	 * @param {T} data
+	 * @returns {Promise<void>}
+	 */
 	static async write_json(path, data) {
-		data = new TextEncoder().encode(JSON.stringify(data));
-		await Files.write(path, data);
+		const encoded = this.#encoder.encode(JSON.stringify(data));
+		await Files.write(path, encoded);
 	}
 
+	/**
+	 * @param {string} path
+	 * @returns {Promise<void>}
+	 */
 	static async remove(path) {
 		await Database.remove(path);
 	}
 
 	static Library = class {
+		/**
+		 * @param {boolean} force
+		 * @returns {Promise<System[]>}
+		 */
 		static async get(force) {
 			if (!force)
 				return await Files.read_json('library.json') ?? [];
 
 			const cores = await fetch('cores.json').then(res => res.json());
 
-			const library = [];
+			const systems = [];
 			for (const core of Object.keys(cores)) {
 				for (const system of cores[core].systems) {
-					library.push({
+					systems.push({
 						...system,
 						lib_name: core,
 						core_name: cores[core].name,
@@ -58,25 +92,39 @@ export default class Files {
 				}
 			}
 
-			return library;
+			return systems;
 		};
 
-		static async update(library) {
-			await Files.write_json('library.json', library);
+		/**
+		 * @param {System[]} systems
+		 * @returns {Promise<void>}
+		 */
+		static async update(systems) {
+			await Files.write_json('library.json', systems);
 		}
 	}
 
 	static Settings = class {
+		/**
+		 * @returns {Promise<{[key: string]: string}>}
+		 */
 		static async get() {
 			return await Files.read_json('settings.json') ?? {};
 		};
 
+		/**
+		 * @param {{[key: string]: string}} settings
+		 * @returns {Promise<void>}
+		 */
 		static async update(settings) {
 			await Files.write_json('settings.json', settings);
 		}
 	}
 
 	static Saves = class {
+		/**
+		 * @returns {Promise<Save>}
+		 */
 		static async get() {
 			const paths = await Files.list('.sav', '.srm', '.rtc', '.state', '.cht');
 
@@ -88,6 +136,12 @@ export default class Files {
 			}, []);
 		};
 
+		/**
+		 * @param {Save} save
+		 * @param {System} system
+		 * @param {Game} game
+		 * @returns {Promise<void>}
+		 */
 		static async fix(save, system, game) {
 			for (const path of save.paths) {
 				const filename = game.rom.replace(`.${system.extension}`, '');
@@ -99,6 +153,10 @@ export default class Files {
 			}
 		}
 
+		/**
+		 * @param {Save} save
+		 * @returns {Promise<void>}
+		 */
 		static async remove(save) {
 			for (let path of save.paths)
 				await Files.remove(path);
@@ -106,28 +164,42 @@ export default class Files {
 	}
 
 	static Cheats = class {
+		/**
+		 * @returns {Promise<CheatList[]>}
+		 */
 		static async get() {
 			const paths = await Files.list('.cht');
 
 			const files = [];
 			for (const path of paths) {
-				const data = await Files.read_json(path)
-				files.push(CheatList.fromFile(path, data));
+				const cheats = await Files.read_json(path)
+				files.push(CheatList.fromFile(path, cheats));
 			}
 
 			return files;
 		};
 
-		static async update(cheat) {
-			await Files.write_json(cheat.path(), cheat.cheats);
+		/**
+		 * @param {CheatList} cheatlist
+		 * @returns {Promise<void>}
+		 */
+		static async update(cheatlist) {
+			await Files.write_json(cheat.path(), cheatlist.cheats);
 		}
 
-		static async remove(cheat) {
-			await Files.remove(cheat.path());
+		/**
+		 * @param {CheatList} cheatlist
+		 * @returns {Promise<void>}
+		 */
+		static async remove(cheatlist) {
+			await Files.remove(cheatlist.path());
 		}
 	}
 
 	static Games = class {
+		/**
+		 * @returns {Promise<Game[]>}
+		 */
 		static async get() {
 			const systems = await Files.Library.get();
 			const extensions = systems.map(x => x.extension);
@@ -145,10 +217,21 @@ export default class Files {
 			return files;
 		};
 
+		/**
+		 * @param {string} system
+		 * @param {string} rom
+		 * @param {Uint8Array} data
+		 * @param {Promise<void>}
+		 */
 		static async add(system, rom, data) {
-			await Files.write(`${system}/${rom}`, new Uint8Array(data));
+			await Files.write(`${system}/${rom}`, data);
 		}
 
+		/**
+		 * @param {string} system
+		 * @param {string} rom
+		 * @returns {Promise<void>}
+		 */
 		static async remove(system, rom) {
 			await Files.remove(`${system}/${rom}`);
 		}
