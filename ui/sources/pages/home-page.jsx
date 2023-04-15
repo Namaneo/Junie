@@ -27,7 +27,7 @@ export const HomePage = () => {
 
 		const data = new Uint8Array(await file.arrayBuffer());
 		await Files.Games.add(system.name, file.name, data);
-		setPlayed(await Files.Games.get());
+		setGames(await Files.Games.get());
 	}
 
 	const deleteGame = async (game) => {

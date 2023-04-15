@@ -1,18 +1,6 @@
 const version = null;
 const resources = null;
 
-const cacheResources = async () => {
-    const cache = await caches.open(version);
-    await cache.addAll(resources);
-};
-
-const clearCaches = async () => {
-	await clients.claim();
-	const keys = await caches.keys()
-	for (const key of keys.filter(key => key != version && key != 'external'))
-		caches.delete(key);
-}
-
 const fetchEx = async (request) => {
 	const response = await fetch(request);
 
@@ -26,6 +14,28 @@ const fetchEx = async (request) => {
 		statusText: response.statusText,
 		headers: headers,
 	});
+}
+
+const cacheResources = async () => {
+    const cache = await caches.open(version);
+
+	const requests = [];
+	for (const resource of resources) {
+		requests.push((async () => {
+			const response = await fetchEx(resource);
+			await cache.put(resource, response.clone());
+		})());
+	};
+
+	await Promise.allSettled(requests);
+};
+
+const clearCaches = async () => {
+	await clients.claim();
+
+	const keys = await caches.keys()
+	for (const key of keys.filter(key => key != version && key != 'external'))
+		caches.delete(key);
 }
 
 const fetchResource = async (request, external) => {
@@ -48,6 +58,7 @@ const fetchResource = async (request, external) => {
 }
 
 self.addEventListener('install', (event) => {
+	self.skipWaiting();
     event.waitUntil(cacheResources());
 });
 
