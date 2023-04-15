@@ -62,6 +62,6 @@ export class CheatList {
 	 * @returns {string}
 	 */
 	path() {
-		return `${this.system}/${this.game}/${this.game}.cht`;
+		return `/${this.system}/${this.game}/${this.game}.cht`;
 	}
 }

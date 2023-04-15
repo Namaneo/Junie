@@ -76,7 +76,7 @@ export default class Files {
 		 */
 		static async get(force) {
 			if (!force)
-				return await Files.read_json('library.json') ?? [];
+				return await Files.read_json('/library.json') ?? [];
 
 			const cores = await fetch('cores.json').then(res => res.json());
 
@@ -100,7 +100,7 @@ export default class Files {
 		 * @returns {Promise<void>}
 		 */
 		static async update(systems) {
-			await Files.write_json('library.json', systems);
+			await Files.write_json('/library.json', systems);
 		}
 	}
 
@@ -109,7 +109,7 @@ export default class Files {
 		 * @returns {Promise<{[key: string]: string}>}
 		 */
 		static async get() {
-			return await Files.read_json('settings.json') ?? {};
+			return await Files.read_json('/settings.json') ?? {};
 		};
 
 		/**
@@ -117,7 +117,7 @@ export default class Files {
 		 * @returns {Promise<void>}
 		 */
 		static async update(settings) {
-			await Files.write_json('settings.json', settings);
+			await Files.write_json('/settings.json', settings);
 		}
 	}
 
@@ -207,8 +207,8 @@ export default class Files {
 
 			const files = [];
 			for (const path of paths) {
-				const system_name = path.split('/')[0];
-				const rom_name = path.split('/')[1];
+				const system_name = path.split('/')[1];
+				const rom_name = path.split('/')[2];
 
 				const system = systems.find(x => x.name == system_name);
 				files.push(new Game(system.full_name, rom_name));
@@ -224,7 +224,7 @@ export default class Files {
 		 * @param {Promise<void>}
 		 */
 		static async add(system, rom, data) {
-			await Files.write(`${system}/${rom}`, data);
+			await Files.write(`/${system}/${rom}`, data);
 		}
 
 		/**
@@ -233,7 +233,7 @@ export default class Files {
 		 * @returns {Promise<void>}
 		 */
 		static async remove(system, rom) {
-			await Files.remove(`${system}/${rom}`);
+			await Files.remove(`/${system}/${rom}`);
 		}
 	}
 }

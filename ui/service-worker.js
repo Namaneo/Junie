@@ -1,6 +1,5 @@
 const version = null;
 const resources = null;
-const debug = false;
 
 const cacheResources = async () => {
     const cache = await caches.open(version);
@@ -20,7 +19,7 @@ const fetchEx = async (request) => {
 	const headers = new Headers(response.headers);
 	headers.set('Cross-Origin-Opener-Policy', 'same-origin');
 	headers.set('Cross-Origin-Resource-Policy', 'cross-origin');
-	headers.set('Cross-Origin-Embedder-Policy', 'credentialless');
+	headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
 
 	return new Response(response.body, {
 		status: response.status,
@@ -30,7 +29,8 @@ const fetchEx = async (request) => {
 }
 
 const fetchResource = async (request, external) => {
-	if (debug && !external)
+	const localhost = ['localhost', '127.0.0.1'].includes(location.hostname);
+	if (localhost && !external)
 		return await fetchEx(request);
 
 	const cache = await caches.open(external ? 'external' : version);

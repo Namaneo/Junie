@@ -34,7 +34,7 @@ export const useCore = (lib) => {
 
 		settings[key] = value;
 		await Files.Settings.update(settings);
-		core.settings(settings);
+		await core.settings(settings);
 	}
 
 	const [audio, initAudio, setAudio] = useStatus(lib, 'audio', true, update, (value) => core.audio(value));
@@ -56,11 +56,11 @@ export const useCore = (lib) => {
 		setSettings(settings);
 		setCheats(cheats);
 
-		await core.init();
+		await core.init(canvas);
 		await core.prepare(system, rom);
-		core.start(canvas, settings, cheats);
+		await core.start(settings, cheats);
 
-		setVariables(core.variables());
+		setVariables(await core.variables());
 	}
 
 	return [

@@ -3,6 +3,8 @@ import { existsSync, readFileSync, symlinkSync, unlinkSync, writeFileSync } from
 import { parseArgs } from '@pkgjs/parseargs';
 import { spawnSync } from 'child_process';
 import { exit } from 'process';
+import http from 'http';
+import https from 'https';
 import esbuild from 'esbuild';
 import chokidar from 'chokidar';
 import copy from 'esbuild-plugin-copy';
@@ -43,7 +45,7 @@ function plugin_html(html, sw) {
 				const js = readFileSync(js_path).toString("base64");
 
 				const resources = [
-					'./', './manifest.json', './cores.json',
+					'./', './manifest.json', './cores.json', './worker.js',
 					...glob.sync(`./${outdir}/modules/**/*.js`).map(x => x.replace(`${outdir}/`, '')),
 					...glob.sync(`./${outdir}/modules/**/*.wasm`).map(x => x.replace(`${outdir}/`, '')),
 					...glob.sync(`./${outdir}/assets/**/*.png`).map(x => x.replace(`${outdir}/`, ''))
@@ -72,10 +74,6 @@ function plugin_html(html, sw) {
 					'const resources = null;',
 					`const resources = ${JSON.stringify(resources)};`
 				);
-				code_sw = code_sw.replace(
-					'const debug = false;',
-					`const debug = ${options.debug};`
-				);
 
 				writeFileSync(`${outdir}/${html}`, code_html);
 				writeFileSync(`${outdir}/${sw}`, code_sw);
@@ -103,10 +101,11 @@ const context = await esbuild.context({
 	plugins: [
 		copy({
 			assets: [
-				{ from: [ '../ui/manifest.json' ], to: [ '.' ]         },
-				{ from: [ '../cores/cores.json' ], to: [ '.' ]         },
-				{ from: [ '../ui/assets/**/*' ],   to: [ './assets' ]  },
-				{ from: [ '../app/build/*' ],      to: [ './modules' ] },
+				{ from: [ '../ui/worker.js'     ], to: [ '.'         ] },
+				{ from: [ '../ui/manifest.json' ], to: [ '.'         ] },
+				{ from: [ '../cores/cores.json' ], to: [ '.'         ] },
+				{ from: [ '../ui/assets/**/*'   ], to: [ './assets'  ] },
+				{ from: [ '../app/build/*'      ], to: [ './modules' ] },
 			]
 		}),
 		plugin_html('index.html', 'service-worker.js'),
@@ -119,11 +118,39 @@ if (!options.watch) {
 	exit(0);
 }
 
-const { host, port } = await context.serve({ servedir: 'build' });
+const { host, port } = await context.serve({ servedir: 'build', port: 8000 });
+
+// openssl req -x509 -newkey rsa:4096 -keyout development.key -out development.cert -days 9999 -nodes -subj /CN=127.0.0.1
+if (existsSync('development.key') && existsSync('development.cert')) {
+	const server_options = {
+		key: readFileSync('development.key'),
+		cert: readFileSync('development.cert'),
+	};
+
+	https.createServer(server_options, (request, response) => {
+		const options = {
+			hostname: host, port: port, path: request.url,
+			method: request.method, headers: request.headers,
+		};
+
+		// Forward each incoming request to esbuild
+		const proxy_request = http.request(options, proxy_response => {
+			proxy_response.headers['Cross-Origin-Opener-Policy'] = 'same-origin';
+			proxy_response.headers['Cross-Origin-Resource-Policy'] = 'cross-origin';
+			proxy_response.headers['Cross-Origin-Embedder-Policy'] = 'require-corp';
+
+			response.writeHead(proxy_response.statusCode, proxy_response.headers);
+			proxy_response.pipe(response, { end: true });
+		});
+
+		request.pipe(proxy_request, { end: true });
+	}).listen(8001);
+}
 
 const watched = [
 	'index.html',
 	'service-worker.js',
+	'worker.js',
 	'manifest.json',
 	'sources/**',
 	'../cores/cores.json',
@@ -149,9 +176,7 @@ async function rebuild() {
 		await context.rebuild();
 		console.log(`\nBuild finished, serving on 'http://${host}:${port}/'...`);
 	} catch (e) {
-		console.error('\nBuild failed:');
-		for (const error of e.errors)
-			console.error(`- ${error.text} (${error.location.file}:${error.location.line})`);
+		console.error('\nBuild failed: ', e);
 	}
 
 	rebuilding = false;

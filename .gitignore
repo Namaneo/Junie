@@ -14,3 +14,5 @@ app/include/res_inputs.h
 
 ui/build
 ui/node_modules
+ui/development.key
+ui/development.cert

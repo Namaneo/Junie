@@ -421,13 +421,13 @@ static void create_paths(const char *system, const char *rom)
 {
 	char *game = remove_extension(rom);
 
-	CTX.paths[JUN_PATH_SYSTEM] = JUN_Strfmt("%s",             system);
-	CTX.paths[JUN_PATH_GAME] =   JUN_Strfmt("%s/%s",          system, rom);
-	CTX.paths[JUN_PATH_SAVES] =  JUN_Strfmt("%s/%s",          system, game);
-	CTX.paths[JUN_PATH_STATE] =  JUN_Strfmt("%s/%s/%s.state", system, game, game);
-	CTX.paths[JUN_PATH_SRAM] =   JUN_Strfmt("%s/%s/%s.srm",   system, game, game);
-	CTX.paths[JUN_PATH_RTC] =    JUN_Strfmt("%s/%s/%s.rtc",   system, game, game);
-	CTX.paths[JUN_PATH_CHEATS] = JUN_Strfmt("%s/%s/%s.cht",   system, game, game);
+	CTX.paths[JUN_PATH_SYSTEM] = JUN_Strfmt("/%s",             system);
+	CTX.paths[JUN_PATH_GAME] =   JUN_Strfmt("/%s/%s",          system, rom);
+	CTX.paths[JUN_PATH_SAVES] =  JUN_Strfmt("/%s/%s",          system, game);
+	CTX.paths[JUN_PATH_STATE] =  JUN_Strfmt("/%s/%s/%s.state", system, game, game);
+	CTX.paths[JUN_PATH_SRAM] =   JUN_Strfmt("/%s/%s/%s.srm",   system, game, game);
+	CTX.paths[JUN_PATH_RTC] =    JUN_Strfmt("/%s/%s/%s.rtc",   system, game, game);
+	CTX.paths[JUN_PATH_CHEATS] = JUN_Strfmt("/%s/%s/%s.cht",   system, game, game);
 
 	free(game);
 }
