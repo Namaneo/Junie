@@ -35,17 +35,8 @@ function plugin_html(html, sw) {
 		setup(build) {
 			const outdir = build.initialOptions.outdir;
 			build.onEnd(() => {
-				const css_path = path.join(outdir, "index.css");
-				const js_path = path.join(outdir, "index.js");
-
-				if (!existsSync(css_path) || !existsSync(js_path))
-					return;
-
-				const css = readFileSync(css_path).toString("base64");
-				const js = readFileSync(js_path).toString("base64");
-
 				const resources = [
-					'./', './manifest.json', './cores.json', './worker.js',
+					'./', './index.js', './index.css', './manifest.json', './cores.json', './worker.js',
 					...glob.sync(`./${outdir}/modules/**/*.js`).map(x => x.replace(`${outdir}/`, '')),
 					...glob.sync(`./${outdir}/modules/**/*.wasm`).map(x => x.replace(`${outdir}/`, '')),
 					...glob.sync(`./${outdir}/assets/**/*.png`).map(x => x.replace(`${outdir}/`, ''))
@@ -55,14 +46,6 @@ function plugin_html(html, sw) {
 				code_html = code_html.replace(
 					'window.junie_build = null;',
 					`window.junie_build = '${options.version}';`
-				);
-				code_html = code_html.replace(
-					'const css = null;',
-					`const css = '${css}';`
-				);
-				code_html = code_html.replace(
-					'const source = null;',
-					`const source = '${js}';`
 				);
 
 				let code_sw = readFileSync(sw, 'utf-8');
@@ -82,9 +65,6 @@ function plugin_html(html, sw) {
 					unlinkSync(`${outdir}/games`);
 				if (existsSync('../games'))
 					symlinkSync('../../games', `${outdir}/games`);
-
-				unlinkSync(path.join(outdir, "index.css"));
-				unlinkSync(path.join(outdir, "index.js"));
 			});
 		},
 	};

@@ -71,7 +71,7 @@ class Core {
 
 	#init_gl() {
 		const state = this.#state;
-		const gl = this.#canvas.getContext('webgl');
+		const gl = this.#canvas.getContext('webgl2');
 
 		const vertex_shader = gl.createShader(gl.VERTEX_SHADER);
 		gl.shaderSource(vertex_shader, vs);
@@ -146,7 +146,7 @@ class Core {
 	 */
 	#drawImage(frame, width, height) {
 		const state = this.#state;
-		const gl = this.#canvas.getContext('webgl');
+		const gl = this.#canvas.getContext('webgl2');
 
 		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 		gl.useProgram(state.program);

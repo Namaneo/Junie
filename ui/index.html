@@ -16,15 +16,7 @@
 		<meta name="apple-mobile-web-app-capable" content="yes">
 		<meta name="apple-mobile-web-app-status-bar-style" content="black">
 
-        <style>
-            @media (prefers-color-scheme: dark) {
-                body { background-color: #1e2023; }
-            }
-
-            @media (prefers-color-scheme: light) {
-                body { background-color: #808289; }
-            }
-        </style>
+		<link rel="stylesheet" href="index.css">
 	</head>
     <body>
         <div id="root"></div>
@@ -49,21 +41,6 @@
 			registerServiceWorker();
 		</script>
 
-        <script>
-			const css = null;
-            const source = null;
-
-			const stylesheet = document.createElement('link');
-			stylesheet.rel = 'stylesheet';
-			stylesheet.href = URL.createObjectURL(new Blob([atob(css)]));
-			document.head.appendChild(stylesheet);
-
-            const script = document.createElement('script');
-			script.type = 'module';
-            script.src = URL.createObjectURL(new Blob([atob(source)], { type: 'text/javascript'}));
-            document.body.appendChild(script);
-
-            document.currentScript.remove();
-        </script>
+        <script src="index.js" type="module"></script>
     </body>
 </html>
