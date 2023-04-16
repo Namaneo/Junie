@@ -1,3 +1,4 @@
+import Path from "../services/path";
 import { System } from "./system";
 
 export class Save {
@@ -10,18 +11,16 @@ export class Save {
 	/** @type {string} */
 	game;
 
-	/** @type {string} */
-	extension;
-
 	/**
 	 * @param {string} path
 	 */
 	constructor(path) {
 		this.paths.push(path);
 
-		this.system = this.match(path, 1);
-		this.game = this.match(path, 2);
-		this.extension = this.match(path, 4);
+		const [system, game] = Path.parse(path);
+
+		this.system = system;
+		this.game = game;
 	}
 
 	/**
@@ -37,18 +36,5 @@ export class Save {
 			return false;
 
 		return true;
-	}
-
-	/**
-	 * @param {string} path
-	 * @param {number} index
-	 */
-	match(path, index) {
-		const matches = path.match(/\/(.*)\/(.*)\/(.*)\.(.*)/);
-
-		if (!matches || matches.length <= index)
-			return undefined;
-
-		return matches[index];
 	}
 }

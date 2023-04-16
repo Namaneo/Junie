@@ -1,5 +1,6 @@
 import { System } from "./system";
 import { Game } from "./game";
+import Path from "../services/path";
 
 export class Cheat {
 	/** @type {string} */
@@ -49,19 +50,12 @@ export class CheatList {
 	static fromFile(path, cheats) {
 		const object = new CheatList();
 
-		const matches = path.match(/\/(.*)\/(.*)\/(.*).(.*)/)
+		const [system, game] = Path.parse(path);
 
-		object.system = matches[1];
-		object.game = matches[2];
+		object.system = system;
+		object.game = game;
 		object.cheats = cheats;
 
 		return object;
-	}
-
-	/**
-	 * @returns {string}
-	 */
-	path() {
-		return `/${this.system}/${this.game}/${this.game}.cht`;
 	}
 }

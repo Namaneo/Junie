@@ -3,6 +3,7 @@ import { Save } from '../entities/save';
 import { CheatList } from '../entities/cheat';
 import { System } from '../entities/system';
 import { Game } from '../entities/game';
+import Path from './path';
 
 export default class Files {
 	static #encoder = new TextEncoder();
@@ -76,7 +77,7 @@ export default class Files {
 		 */
 		static async get() {
 			const cores = await fetch('cores.json').then(res => res.json());
-			const stored = await Files.read_json('/library.json') ?? [];
+			const stored = await Files.read_json(Path.library()) ?? [];
 
 			const systems = [];
 			for (const core of Object.keys(cores)) {
@@ -99,7 +100,7 @@ export default class Files {
 		 * @returns {Promise<void>}
 		 */
 		static async update(systems) {
-			await Files.write_json('/library.json', systems);
+			await Files.write_json(Path.library(), systems);
 		}
 	}
 
@@ -108,7 +109,7 @@ export default class Files {
 		 * @returns {Promise<{[key: string]: string}>}
 		 */
 		static async get() {
-			return await Files.read_json('/settings.json') ?? {};
+			return await Files.read_json(Path.settings()) ?? {};
 		};
 
 		/**
@@ -116,7 +117,7 @@ export default class Files {
 		 * @returns {Promise<void>}
 		 */
 		static async update(settings) {
-			await Files.write_json('/settings.json', settings);
+			await Files.write_json(Path.settings(), settings);
 		}
 	}
 
@@ -183,7 +184,7 @@ export default class Files {
 		 * @returns {Promise<void>}
 		 */
 		static async update(cheatlist) {
-			await Files.write_json(cheat.path(), cheatlist.cheats);
+			await Files.write_json(Path.cheat(cheatlist.system, cheatlist.game), cheatlist.cheats);
 		}
 
 		/**
@@ -191,7 +192,7 @@ export default class Files {
 		 * @returns {Promise<void>}
 		 */
 		static async remove(cheatlist) {
-			await Files.remove(cheatlist.path());
+			await Files.remove(Path.cheat(cheatlist.system, cheatlist.game));
 		}
 	}
 
@@ -206,8 +207,7 @@ export default class Files {
 
 			const files = [];
 			for (const path of paths) {
-				const system_name = path.split('/')[1];
-				const rom_name = path.split('/')[2];
+				const [system_name, rom_name] = Path.parse(path);
 
 				const system = systems.find(x => x.name == system_name);
 				files.push(new Game(system.full_name, rom_name));
@@ -223,7 +223,7 @@ export default class Files {
 		 * @param {Promise<void>}
 		 */
 		static async add(system, rom, data) {
-			await Files.write(`/${system}/${rom}`, data);
+			await Files.write(Path.game(system, rom), data);
 		}
 
 		/**
@@ -232,7 +232,7 @@ export default class Files {
 		 * @returns {Promise<void>}
 		 */
 		static async remove(system, rom) {
-			await Files.remove(`/${system}/${rom}`);
+			await Files.remove(Path.game(system, rom));
 		}
 	}
 }

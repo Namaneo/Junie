@@ -1,6 +1,7 @@
 import { Cheat } from '../entities/cheat';
 import Audio from './audio';
 import Database from './database'
+import Path from './path';
 
 const vs = `
 	attribute vec2 a_position;
@@ -169,11 +170,11 @@ export default class Core {
 	async prepare(system, rom) {
 		const state = this.#state;
 
-		state.rom = `/${system}/${rom}`;
+		state.rom = Path.game(system, rom);
 
 		await this.#call('Create', [system, rom]);
 
-		const game_path = `/${system}/${rom.replace(/\.[^/.]+$/, '')}`;
+		const game_path = Path.game(system, rom.replace(/\.[^/.]+$/, ''));
 		for (const path of await Database.list(game_path))
 			await this.#read(path);
 	}
