@@ -28,7 +28,7 @@ const fs = `
 `;
 
 export default class Core {
-	static #INITIAL_MEMORY = 400 * 1024 * 1024;
+	static #INITIAL_MEMORY = 450 * 1024 * 1024;
 
 	static #memory = new WebAssembly.Memory({
 		initial: this.#INITIAL_MEMORY / 65536,

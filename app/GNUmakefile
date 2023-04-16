@@ -20,7 +20,7 @@ LDFLAGS := \
 	--no-entry -fwasm-exceptions \
 	--shared-memory -pthread \
 	-sMODULARIZE -sEXPORT_ES6 \
-	-sTOTAL_MEMORY=400mb -sIMPORTED_MEMORY \
+	-sTOTAL_MEMORY=450mb -sIMPORTED_MEMORY \
 	-sEXPORTED_FUNCTIONS=@exports.json \
 	-sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 
