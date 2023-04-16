@@ -1,15 +1,101 @@
+const vs = `
+	attribute vec2 a_position;
+
+	uniform vec2 u_resolution;
+	uniform mat3 u_matrix;
+
+	varying vec2 v_texCoord;
+
+	void main() {
+		gl_Position = vec4(u_matrix * vec3(a_position, 1), 1);
+		v_texCoord = a_position;
+	}
+`;
+const fs = `
+	precision mediump float;
+
+	uniform sampler2D u_image;
+
+	varying vec2 v_texCoord;
+
+	void main() {
+		gl_FragColor = texture2D(u_image, v_texCoord);
+	}
+`;
+
 class Core {
+	/** @type {string} */
 	#name = null;
+
+	/** @type {Object} */
 	#module = null;
+
+	/** @type {WebAssembly.Memory} */
 	#memory = null;
+
+	/** @type {OffscreenCanvas} */
 	#canvas = null;
 
+	#state = {
+		/** @type {WebGLProgram} */
+		program: null,
+
+		/** @type {WebGLTexture} */
+		texture: null,
+
+		/** @type {WebGLBuffer} */
+		position_buffer: null,
+
+		/** @type {number} */
+		position_location: 0,
+
+		/** @type {number} */
+		matrix_location: 0,
+	}
+
+	/**
+	 * @param {string} name
+	 */
 	constructor(name) {
 		this.#name = name;
 	}
 
+	/**
+	 * @param {string} name
+	 * @param {string} type
+	 * @param {string[]} parameters
+	 */
 	#wrap(name, type, parameters) {
 		this[name] = this.#module.cwrap(`JUN_Core${name}`, type, parameters);;
+	}
+
+	#init_gl() {
+		const state = this.#state;
+		const gl = this.#canvas.getContext('webgl');
+
+		const vertex_shader = gl.createShader(gl.VERTEX_SHADER);
+		gl.shaderSource(vertex_shader, vs);
+		gl.compileShader(vertex_shader);
+
+		const fragment_shader = gl.createShader(gl.FRAGMENT_SHADER);
+		gl.shaderSource(fragment_shader, fs);
+		gl.compileShader(fragment_shader);
+
+		state.program = gl.createProgram();
+		gl.attachShader(state.program, vertex_shader);
+		gl.attachShader(state.program, fragment_shader);
+		gl.linkProgram(state.program);
+
+		state.texture = gl.createTexture();
+		gl.bindTexture(gl.TEXTURE_2D, state.texture);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+		state.position_location = gl.getAttribLocation(state.program, "a_position");
+		state.matrix_location = gl.getUniformLocation(state.program, "u_matrix");
+
+		state.position_buffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, state.position_buffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([ 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1 ]), gl.STATIC_DRAW);
 	}
 
 	/**
@@ -49,6 +135,39 @@ class Core {
 		this.#wrap('SaveState',          null,     []);
 		this.#wrap('RestoreState',       null,     []);
 		this.#wrap('Destroy',            null,     []);
+
+		this.#init_gl();
+	}
+
+	/**
+	 * @param {number} frame
+	 * @param {number} width
+	 * @param {number} height
+	 */
+	#drawImage(frame, width, height) {
+		const state = this.#state;
+		const gl = this.#canvas.getContext('webgl');
+
+		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+		gl.useProgram(state.program);
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, state.position_buffer);
+		gl.enableVertexAttribArray(state.position_location);
+		gl.vertexAttribPointer(state.position_location, 2, gl.FLOAT, false, 0, 0);
+
+		// https://stackoverflow.com/questions/12250953/drawing-an-image-using-webgl
+		// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+		// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+		// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+		const frame_view = new Uint8Array(this.#memory.buffer, frame, width * height * 4);
+		gl.bindTexture(gl.TEXTURE_2D, state.texture);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, frame_view);
+		gl.generateMipmap(gl.TEXTURE_2D);
+
+		gl.uniformMatrix3fv(state.matrix_location, false, [ 2, 0, 0, 0, -2, 0, -1, 1, 1 ]);
+		gl.drawArrays(gl.TRIANGLES, 0, 6);
 	}
 
 	/**
@@ -67,9 +186,7 @@ class Core {
 		if (width == 0 || height == 0)
 			return;
 
-		const video = this.#canvas.getContext('2d');
-		const frame_view = new Uint8ClampedArray(this.#memory.buffer, frame, width * height * 4);
-		video.putImageData(new ImageData(new Uint8ClampedArray(frame_view), width, height), 0, 0);
+		this.#drawImage(frame, width, height);
 	}
 }
 
