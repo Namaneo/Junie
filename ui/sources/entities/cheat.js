@@ -49,7 +49,7 @@ export class CheatList {
 	static fromFile(path, cheats) {
 		const object = new CheatList();
 
-		const matches = path.match(/(.*)\/(.*)\/(.*).(.*)/)
+		const matches = path.match(/\/(.*)\/(.*)\/(.*).(.*)/)
 
 		object.system = matches[1];
 		object.game = matches[2];

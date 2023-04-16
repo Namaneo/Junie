@@ -20,7 +20,7 @@ export default class Requests {
 
 	static async refreshLibrary() {
 		try {
-			const library = await Files.Library.get(true);
+			const library = await Files.Library.get();
 			await Promise.all(library.map(this.#fetchGames));
 			await Files.Library.update(library);
 		} catch (e) {
@@ -31,7 +31,7 @@ export default class Requests {
 	}
 
 	static async getSystems() {
-		const systems = await Files.Library.get(false);
+		const systems = await Files.Library.get();
 		const installed = await Files.Games.get();
 
 		for (const system of systems) {

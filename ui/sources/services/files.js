@@ -74,11 +74,9 @@ export default class Files {
 		 * @param {boolean} force
 		 * @returns {Promise<System[]>}
 		 */
-		static async get(force) {
-			if (!force)
-				return await Files.read_json('/library.json') ?? [];
-
+		static async get() {
 			const cores = await fetch('cores.json').then(res => res.json());
+			const stored = await Files.read_json('/library.json') ?? [];
 
 			const systems = [];
 			for (const core of Object.keys(cores)) {
@@ -88,6 +86,7 @@ export default class Files {
 						lib_name: core,
 						core_name: cores[core].name,
 						cover: `assets/covers/${system.name}.png`,
+						games: stored.find(x => x.name == system.name)?.games,
 					});
 				}
 			}

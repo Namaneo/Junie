@@ -44,7 +44,7 @@ export class Save {
 	 * @param {number} index
 	 */
 	match(path, index) {
-		const matches = path.match(/(.*)\/(.*)\/(.*)\.(.*)/);
+		const matches = path.match(/\/(.*)\/(.*)\/(.*)\.(.*)/);
 
 		if (!matches || matches.length <= index)
 			return undefined;
