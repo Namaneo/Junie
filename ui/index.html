@@ -23,22 +23,6 @@
 
 		<script>
 			window.junie_build = null;
-
-			const registerServiceWorker = async () => {
-				if (!navigator.serviceWorker)
-					return;
-
-				try {
-					const origin = location.origin + location.pathname.replace(/\/$/, '');
-					const registration = await navigator.serviceWorker.register(`${origin}/service-worker.js`);
-
-					registration.update();
-				} catch (error) {
-					console.error(`Registration failed with ${error}`);
-				}
-			};
-
-			registerServiceWorker();
 		</script>
 
         <script src="index.js" type="module"></script>

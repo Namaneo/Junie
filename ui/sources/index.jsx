@@ -2,7 +2,7 @@ import { createMemoryHistory } from 'history';
 import { createRoot } from 'react-dom/client';
 import { Redirect, Route } from 'react-router';
 import { IonReactMemoryRouter } from '@ionic/react-router';
-import { IonApp, IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs, setupIonicReact } from '@ionic/react';
+import { IonApp, IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs, setupIonicReact, useIonLoading } from '@ionic/react';
 import { cloudDownload, gameController, keyOutline, save } from 'ionicons/icons';
 import { HomePage } from './pages/home-page';
 import { SystemsPage } from './pages/systems-page';
@@ -10,6 +10,7 @@ import { GamesPage } from './pages/games-page';
 import { SavesPage } from './pages/saves-page';
 import { CheatsPage } from './pages/cheats-page';
 import { CorePage } from './pages/core-page';
+import { useEffect } from 'react';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -33,9 +34,32 @@ import './styles/index.css';
 
 function Junie() {
 
+	const [present] = useIonLoading();
+
 	setupIonicReact({
 		swipeBackEnabled: false,
 	});
+
+	const registerServiceWorker = async () => {
+		if (!navigator.serviceWorker)
+			return;
+
+		try {
+			const origin = location.origin + location.pathname.replace(/\/$/, '');
+			const registration = await navigator.serviceWorker.register(`${origin}/service-worker.js`);
+
+			registration.onupdatefound = () => {
+				present('Updating...');
+				registration.installing.onstatechange = () => location.reload();
+			};
+
+			await registration.update();
+		} catch (error) {
+			console.error(`Registration failed with ${error}`);
+		}
+	};
+
+	useEffect(() => { registerServiceWorker(); }, []);
 
 	return (
 		<IonApp>

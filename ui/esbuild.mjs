@@ -8,7 +8,6 @@ import https from 'https';
 import esbuild from 'esbuild';
 import chokidar from 'chokidar';
 import copy from 'esbuild-plugin-copy';
-import path from 'path';
 import glob from 'glob';
 
 const { values: options } = parseArgs({ args: process.argv, allowPositionals: true, options: {
@@ -25,7 +24,7 @@ const { values: options } = parseArgs({ args: process.argv, allowPositionals: tr
 	version: {
 		type: 'string',
 		short: 'v',
-		default: Date.now().toString(),
+		default: `Development-${Date.now()}`,
 	}
 } });
 
@@ -151,6 +150,8 @@ async function rebuild() {
 	const command = options.watch.split(' ')[0];
 	const parameters = options.watch.split(' ').slice(1);
 	spawnSync(command, parameters, { stdio: 'inherit' });
+
+	options.version = `Development-${Date.now()}`;
 
 	try {
 		await context.rebuild();

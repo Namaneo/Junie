@@ -31,8 +31,6 @@ const cacheResources = async () => {
 };
 
 const clearCaches = async () => {
-	await clients.claim();
-
 	const keys = await caches.keys()
 	for (const key of keys.filter(key => key != version && key != 'external'))
 		caches.delete(key);
@@ -63,6 +61,7 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
+	self.clients.claim()
 	event.waitUntil(clearCaches());
 });
 
