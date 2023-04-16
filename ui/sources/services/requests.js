@@ -3,31 +3,28 @@ import Files from './files';
 
 export default class Requests {
 	static async #fetchGames(system) {
-		const path = `${location.origin}/games/${system.name}/`;
-		const folder = await fetch(path);
+		try {
+			const folder = await fetch(`games/${system.name}/`);
 
-		const html = document.createElement('html');
-		html.innerHTML = await folder.text();
+			const html = document.createElement('html');
+			html.innerHTML = await folder.text();
 
-		const elements = Array.from(html.querySelectorAll('a'));
-		const games = elements.map(a => {
-			const name = a.innerText.substring(0, a.innerText.lastIndexOf('.'));
-			return { name: name, rom: a.innerText, cover: `${path}${name}.png` };
-		});
+			const elements = Array.from(html.querySelectorAll('a'));
+			const games = elements.map(a => {
+				const name = a.innerText.substring(0, a.innerText.lastIndexOf('.'));
+				return { name: name, rom: a.innerText };
+			});
 
-		system.games = games.filter(game => game.rom.endsWith(`.${system.extension}`));
+			system.games = games.filter(game => game.rom.endsWith(`.${system.extension}`));
+		} catch (e) {
+			system.games = [];
+		}
 	}
 
 	static async refreshLibrary() {
-		try {
-			const library = await Files.Library.get();
-			await Promise.all(library.map(this.#fetchGames));
-			await Files.Library.update(library);
-		} catch (e) {
-			console.error(e);
-			return false;
-		}
-		return true;
+		const library = await Files.Library.get();
+		await Promise.all(library.map(this.#fetchGames));
+		await Files.Library.update(library);
 	}
 
 	static async getSystems() {

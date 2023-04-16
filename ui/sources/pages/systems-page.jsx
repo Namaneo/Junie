@@ -1,4 +1,4 @@
-import { IonButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonIcon, IonLoading, IonPage, IonTitle, IonToolbar, useIonAlert, useIonViewWillEnter } from '@ionic/react';
+import { IonButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonIcon, IonLoading, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
 import { useState } from 'react';
 import { refreshOutline } from 'ionicons/icons';
 import { System } from '../entities/system';
@@ -8,7 +8,6 @@ export const SystemsPage = () => {
 
 	const [systems, setSystems] = useState(/** @type {System[]} */ ([])   );
 	const [loading, setLoading] = useState(/** @type {boolean}  */ (false));
-	const [alert] = useIonAlert();
 
 	const filterSystem = (system) => {
 		return system.games.length && system.games.find(game => !game.installed);
@@ -17,16 +16,7 @@ export const SystemsPage = () => {
 	const refreshLibrary = async () => {
 		setLoading(true);
 
-		if (!await Requests.refreshLibrary()) {
-			setLoading(false);
-			alert({
-				header: 'Refresh failed',
-				message: `Could not refreh the library. Please check you internet connection.`,
-				buttons: [ 'OK' ],
-			});
-			return;
-		}
-
+		await Requests.refreshLibrary()
 		setSystems(await Requests.getSystems());
 
 		setLoading(false);
