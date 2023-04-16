@@ -90,7 +90,7 @@ export default class Core {
 	async prepare(system, rom) {
 		const state = this.#state;
 
-		state.rom = `${system}/${rom}`;
+		state.rom = `/${system}/${rom}`;
 
 		await this.#call('Create', [system, rom]);
 
