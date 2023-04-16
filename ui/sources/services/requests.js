@@ -39,10 +39,9 @@ export default class Requests {
 				system.games = [];
 
 			const games = installed.filter(x => x.system == system.name);
-			const local = games.filter(x => !system.games.find(y => x.rom == y.rom));
 
 			system.games = [
-				...local,
+				...games.filter(x => !system.games.find(y => x.rom == y.rom)),
 				...system.games.map(x => new Game(system.full_name, x.rom)),
 			];
 
