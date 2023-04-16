@@ -2,6 +2,31 @@ import { Cheat } from '../entities/cheat';
 import Audio from './audio';
 import Database from './database'
 
+const vs = `
+	attribute vec2 a_position;
+
+	uniform vec2 u_resolution;
+	uniform mat3 u_matrix;
+
+	varying vec2 v_texCoord;
+
+	void main() {
+		gl_Position = vec4(u_matrix * vec3(a_position, 1), 1);
+		v_texCoord = a_position;
+	}
+`;
+const fs = `
+	precision mediump float;
+
+	uniform sampler2D u_image;
+
+	varying vec2 v_texCoord;
+
+	void main() {
+		gl_FragColor = texture2D(u_image, v_texCoord);
+	}
+`;
+
 export default class Core {
 	static #INITIAL_MEMORY = 400 * 1024 * 1024;
 
@@ -20,12 +45,32 @@ export default class Core {
 	/** @type {Worker} */
 	#worker = null;
 
+	/** @type {HTMLCanvasElement} */
+	#canvas = null;
+
 	#state = {
 		id: 0,
 		rom: null,
 		speed: 1,
 		audio: true,
 		timeout: 0,
+	}
+
+	#state_gl = {
+		/** @type {WebGLProgram} */
+		program: null,
+
+		/** @type {WebGLTexture} */
+		texture: null,
+
+		/** @type {WebGLBuffer} */
+		position_buffer: null,
+
+		/** @type {number} */
+		position_location: 0,
+
+		/** @type {number} */
+		matrix_location: 0,
 	}
 
 	constructor(name) {
@@ -56,13 +101,47 @@ export default class Core {
 	}
 
 	/**
-	 * @param {HTMLCanvasElement} graphics
+	 * @returns {void}
+	 */
+	#init_gl() {
+		const state = this.#state_gl;
+		const gl = this.#canvas.getContext('webgl2');
+
+		const vertex_shader = gl.createShader(gl.VERTEX_SHADER);
+		gl.shaderSource(vertex_shader, vs);
+		gl.compileShader(vertex_shader);
+
+		const fragment_shader = gl.createShader(gl.FRAGMENT_SHADER);
+		gl.shaderSource(fragment_shader, fs);
+		gl.compileShader(fragment_shader);
+
+		state.program = gl.createProgram();
+		gl.attachShader(state.program, vertex_shader);
+		gl.attachShader(state.program, fragment_shader);
+		gl.linkProgram(state.program);
+
+		state.texture = gl.createTexture();
+		gl.bindTexture(gl.TEXTURE_2D, state.texture);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+		state.position_location = gl.getAttribLocation(state.program, "a_position");
+		state.matrix_location = gl.getUniformLocation(state.program, "u_matrix");
+
+		state.position_buffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, state.position_buffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([ 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1 ]), gl.STATIC_DRAW);
+	}
+
+	/**
+	 * @param {HTMLCanvasElement} canvas
 	 * @returns {Promise<void>}
 	 */
-	async init(graphics) {
-		const offscreen = graphics.transferControlToOffscreen();
+	async init(canvas) {
+		this.#canvas = canvas;
 		this.#worker = new Worker('worker.js', { name: this.#name });
-		await this.#call('init', [Core.#memory, offscreen], [offscreen]);
+		await this.#call('init', [Core.#memory]);
+
+		this.#init_gl();
 	}
 
 	/**
@@ -119,6 +198,34 @@ export default class Core {
 	}
 
 	/**
+	 * @param {number} frame
+	 * @param {number} width
+	 * @param {number} height
+	 */
+	#draw(frame, width, height) {
+		const state = this.#state_gl;
+		const gl = this.#canvas.getContext('webgl2');
+
+		gl.canvas.width = width;
+		gl.canvas.height = height;
+
+		gl.viewport(0, 0, width, height);
+		gl.useProgram(state.program);
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, state.position_buffer);
+		gl.enableVertexAttribArray(state.position_location);
+		gl.vertexAttribPointer(state.position_location, 2, gl.FLOAT, false, 0, 0);
+
+		const frame_view = new Uint8Array(Core.#memory.buffer, frame, width * height * 4);
+		gl.bindTexture(gl.TEXTURE_2D, state.texture);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, frame_view);
+		gl.generateMipmap(gl.TEXTURE_2D);
+
+		gl.uniformMatrix3fv(state.matrix_location, false, [ 2, 0, 0, 0, -2, 0, -1, 1, 1 ]);
+		gl.drawArrays(gl.TRIANGLES, 0, 6);
+	}
+
+	/**
 	 * @param {{[key: string]: string}} settings
 	 * @param {Cheat[]} cheats
 	 * @returns {Promise<void>}
@@ -136,7 +243,14 @@ export default class Core {
 			if (!this.#worker)
 				return;
 
-			await this.#call('run', [state.speed]);
+			await this.#call('Run', [state.speed]);
+
+			const frame = await this.#call('GetFrameData');
+			const width = await this.#call('GetFrameWidth');
+			const height = await this.#call('GetFrameHeight');
+
+			if (width != 0 && height != 0)
+				this.#draw(frame, width, height);
 
 			const sample_rate = await this.#call('GetSampleRate');
 			Audio.update(sample_rate * state.speed, 2);
