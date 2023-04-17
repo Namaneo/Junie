@@ -54,10 +54,9 @@ export const SavesPage = () => {
 		const files = []
 		for (const save of saves)
 			for (const path of save.paths)
-				files.push({ path, data: await Database.read(path) });
+				files.push(await Database.file(path));
 
-		const zip = await Zip.compress(files);
-		const blob = new Blob([zip], { type: 'octet/stream' })
+		const blob = await Zip.compress(files);
 
 		a.href = URL.createObjectURL(blob);
 		a.download = `junie-${Date.now()}.zip`;
@@ -68,20 +67,19 @@ export const SavesPage = () => {
 	}
 
 	/**
-	 * @param {FileList} zip
+	 * @param {FileList} input
 	 * @returns {Promise<void>}
 	 */
-	const restoreSaves = async (zip) => {
-		if (!zip?.length)
+	const restoreSaves = async (input) => {
+		if (!input?.length)
 			return;
 
-		const content = new Uint8Array(await zip[0].arrayBuffer());
-		const files = await Zip.decompress(content);
+		const files = await Zip.decompress(input[0]);
 
 		fileInput.current.value = '';
 
 		for (const file of files)
-			await Files.write(file.path, file.data);
+			await Database.add(file.name, file);
 
 		setSaves(await Files.Saves.get());
 	}

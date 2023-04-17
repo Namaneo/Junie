@@ -1,33 +1,25 @@
 import JSZip from 'jszip';
 
-class ZipFile {
-	/** @type {string} */
-	path;
-
-	/** @type {Uint8Array} */
-	data;
-}
-
 export default class Zip {
 	/**
-	 * @param {ZipFile[]} files
-	 * @returns {Promise<Uint8Array>}
+	 * @param {File[]} files
+	 * @returns {Promise<Blob>}
 	 */
 	static async compress(files) {
 		const zip = new JSZip();
 
 		for (const file of files)
-			zip.file(file.path, file.data);
+			zip.file(file.name.substring(1), file);
 
-		return await zip.generateAsync({ type: 'uint8array' });
+		return await zip.generateAsync({ type: 'blob' });
 	}
 
 	/**
-	 * @param {Uint8Array} files
-	 * @returns {Promise<ZipFile[]>}
+	 * @param {Blob} archive
+	 * @returns {Promise<File[]>}
 	 */
-	static async decompress(content) {
-		const zip = await new JSZip().loadAsync(content);
+	static async decompress(archive) {
+		const zip = await new JSZip().loadAsync(archive);
 
 		const files = [];
 		for (const path in zip.files) {
@@ -36,8 +28,8 @@ export default class Zip {
 			if (object.dir)
 				continue;
 
-			const data = await object.async('uint8array');
-			files.push({ path, data });
+			const data = await object.async('blob');
+			files.push(new File([data], `/${path}`));
 		}
 
 		return files;

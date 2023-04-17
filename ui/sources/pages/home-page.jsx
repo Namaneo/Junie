@@ -22,14 +22,14 @@ export const HomePage = () => {
 	const [present] = useToast(`Junie - ${version} (${build})`);
 
 	/**
-	 * @param {FileList} files
+	 * @param {FileList} input
 	 * @returns {Promise<void>}
 	 */
-	const addGame = async (files) => {
-		if (!files?.length)
+	const addGame = async (input) => {
+		if (!input?.length)
 			return;
 
-		const file = files[0];
+		const file = input[0];
 
 		const system = systems.find(x => x.extension == file.name.split('.').pop());
 		if (!system)
