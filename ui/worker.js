@@ -2,7 +2,7 @@ class Core {
 	/** @type {string} */
 	#name = null;
 
-	/** @type {Object} */
+	/** @type {any} */
 	#module = null;
 
 	/** @type {WebAssembly.Memory} */
@@ -17,6 +17,7 @@ class Core {
 
 	/**
 	 * @param {WebAssembly.Memory} memory
+	 * @returns {Promise<void>}
 	 */
 	async init(memory) {
 		this.#memory = memory;

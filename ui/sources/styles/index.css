@@ -5,10 +5,6 @@ html, body {
 	touch-action: none;
 }
 
-#root ion-card {
-    margin: 16px;
-}
-
 
 /*
  * Home

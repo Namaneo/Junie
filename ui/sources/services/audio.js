@@ -4,27 +4,53 @@ export default class Audio {
 	static #context = new AudioContext();
 
 	static #state = {
+		/** @type {boolean} */
 		flushing: false,
+
+		/** @type {boolean} */
 		playing: false,
+
+		/** @type {number} */
 		sample_rate: 0,
+
+		/** @type {number} */
 		channels: 0,
 
+
+		/** @type {number} */
 		frames_per_ms: 0,
+
+		/** @type {number} */
 		min_buffer: 0,
+
+		/** @type {number} */
 		max_buffer: 0,
 
+
+		/** @type {number} */
 		offset: 0,
+
+		/** @type {number} */
 		next_time: 0,
+
+		/** @type {Float32Array} */
 		buffer: null,
 	}
 
-
+	/**
+	 * @return {void}
+	 */
 	static unlock() {
 		const unlock = () => this.#context.state == 'suspended' && this.#context.resume();
 		const events = ['touchstart', 'touchend', 'mousedown', 'keydown'];
 		events.forEach(e => document.body.addEventListener(e, unlock));
 	}
 
+	/**
+	 * @param {number} sampleRate
+	 * @param {number} channels
+	 * @returns {void}
+	 */
 	static update(sampleRate, channels) {
 		const state = this.#state;
 
@@ -49,6 +75,10 @@ export default class Audio {
 		}
 	}
 
+	/**
+	 * @param {Float32Array} frames
+	 * @returns {void}
+	 */
 	static queue(frames) {
 		const state = this.#state;
 

@@ -1,3 +1,4 @@
+import { System } from "./system";
 import Requests from "../services/requests";
 
 export class Game {
@@ -17,11 +18,11 @@ export class Game {
 	installed;
 
 	/**
-	 * @param {string} system
+	 * @param {System} system
 	 * @param {string} rom
 	 */
 	constructor(system, rom) {
-		this.system = system.split(' - ')[1];
+		this.system = system.name;
 		this.rom = rom;
 		this.name = rom.substring(0, rom.lastIndexOf('.')).replaceAll(/ \(.*\).*/g, '');
 		this.cover = Requests.getGameCover(system, rom);

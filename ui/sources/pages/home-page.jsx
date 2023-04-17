@@ -11,7 +11,6 @@ import Database from '../services/database';
 import Path from '../services/path';
 
 export const HomePage = () => {
-
 	const [systems, setSystems] = useState(/** @type {System[]} */ ([]));
 	const [games,   setGames]   = useState(/** @type {Game[]}   */ ([]));
 
@@ -25,7 +24,10 @@ export const HomePage = () => {
 			return;
 
 		const file = files[0];
+
 		const system = systems.find(x => x.extension == file.name.split('.').pop());
+		if (!system)
+			return;
 
 		const path = Path.game(system.name, file.name);
 		await Database.add(new File([file], path));
@@ -39,7 +41,7 @@ export const HomePage = () => {
 	}
 
 	const gameURL = (game) => {
-		const system = systems.find(x => x.name == game.system);
+		const system = systems.find(system => system.name == game.system);
 
 		return '/home'
 			+ `/${system.lib_name}`

@@ -3,6 +3,7 @@ import { Save } from '../entities/save';
 import { CheatList } from '../entities/cheat';
 import { System } from '../entities/system';
 import { Game } from '../entities/game';
+import { Settings } from '../entities/settings';
 import Path from './path';
 
 export default class Files {
@@ -106,14 +107,14 @@ export default class Files {
 
 	static Settings = class {
 		/**
-		 * @returns {Promise<{[key: string]: string}>}
+		 * @returns {Promise<Settings>}
 		 */
 		static async get() {
 			return await Files.read_json(Path.settings()) ?? {};
 		};
 
 		/**
-		 * @param {{[key: string]: string}} settings
+		 * @param {Settings} settings
 		 * @returns {Promise<void>}
 		 */
 		static async update(settings) {
@@ -210,7 +211,7 @@ export default class Files {
 				const [system_name, rom_name] = Path.parse(path);
 
 				const system = systems.find(x => x.name == system_name);
-				files.push(new Game(system.full_name, rom_name));
+				files.push(new Game(system, rom_name));
 			}
 
 			return files;

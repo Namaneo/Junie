@@ -25,6 +25,7 @@ export class Save {
 
 	/**
 	 * @param {System[]} systems
+	 * @returns {boolean}
 	 */
 	isMapped(systems) {
 		const system = systems.find(system => system.name == this.system);

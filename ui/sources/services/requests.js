@@ -1,7 +1,12 @@
 import { Game } from '../entities/game';
+import { System } from '../entities/system';
 import Files from './files';
 
 export default class Requests {
+	/**
+	 * @param {System} system
+	 * @returns {Promise<void>}
+	 */
 	static async #fetchGames(system) {
 		try {
 			const folder = await fetch(`games/${system.name}/`);
@@ -21,12 +26,18 @@ export default class Requests {
 		}
 	}
 
+	/**
+	 * @returns {Promise<void>}
+	 */
 	static async refreshLibrary() {
 		const library = await Files.Library.get();
 		await Promise.all(library.map(this.#fetchGames));
 		await Files.Library.update(library);
 	}
 
+	/**
+	 * @returns {Promise<System[]>}
+	 */
 	static async getSystems() {
 		const systems = await Files.Library.get();
 		const installed = await Files.Games.get();
@@ -39,7 +50,7 @@ export default class Requests {
 
 			system.games = [
 				...games.filter(x => !system.games.find(y => x.rom == y.rom)),
-				...system.games.map(x => new Game(system.full_name, x.rom)),
+				...system.games.map(x => new Game(system, x.rom)),
 			];
 
 			for (const game of system.games)
@@ -49,12 +60,21 @@ export default class Requests {
 		return systems;
 	};
 
+	/**
+	 * @param {System} system
+	 * @returns {boolean}
+	 */
 	static shouldInvertCover(system) {
 		return system.cover_dark && window.matchMedia('(prefers-color-scheme: dark)').matches;
 	}
 
+	/**
+	 * @param {System} system
+	 * @param {string} rom
+	 * @returns {string}
+	 */
 	static getGameCover(system, rom) {
-		const system_name = system.replaceAll(' ', '_');
+		const system_name = system.full_name.replaceAll(' ', '_');
 		const cover = rom.substring(0, rom.lastIndexOf('.')) + '.png';
 
 		const host = 'https://raw.githubusercontent.com';
@@ -63,6 +83,13 @@ export default class Requests {
 		return host + path;
 	}
 
+	/**
+	 *
+	 * @param {System} system
+	 * @param {Game} game
+	 * @param {(progress: number) => void} progress
+	 * @returns {Promise<Uint8Array>}
+	 */
 	static async fetchGame(system, game, progress) {
 		try {
 			const path = `${location.origin}/games/${system.name}/${game.rom}`;

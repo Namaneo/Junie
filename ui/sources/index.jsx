@@ -1,4 +1,5 @@
 import { createMemoryHistory } from 'history';
+import { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Redirect, Route } from 'react-router';
 import { IonReactMemoryRouter } from '@ionic/react-router';
@@ -10,7 +11,6 @@ import { GamesPage } from './pages/games-page';
 import { SavesPage } from './pages/saves-page';
 import { CheatsPage } from './pages/cheats-page';
 import { CorePage } from './pages/core-page';
-import { useEffect } from 'react';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';

@@ -13,26 +13,26 @@ QUIET := > /dev/null 2>&1
 
 all: $(LIBRARIES:%=build-%)
 
+clean: $(LIBRARIES:%=clean-%)
+
 fetch-%:
 	@target=`pwd`/lib$*.so && \
+	name=`jq -r '."$*".repository // "$*"' cores.json` && \
 	owner=`jq -r '."$*".owner // "libretro"' cores.json` && \
-	name=`jq -r '."$*".repository' cores.json` && \
 	echo Fetching $$name... && \
 	git -C $$name pull $(QUIET) || git clone https://github.com/$$owner/$$name.git $(QUIET)
 
 build-%: fetch-%
 	@target=`pwd`/lib$*.so && \
-	name=`jq -r '."$*".repository' cores.json` && \
+	name=`jq -r '."$*".repository // "$*"' cores.json` && \
 	makedir=`jq -r '."$*".directory // ""' cores.json` && \
 	makefile=`jq -r '."$*".makefile // "Makefile"' cores.json` && \
 	echo Building lib$*.so... && \
 	$(MAKE) -C $$name/$$makedir -f $$makefile TARGET=$$target $(BUILD_FLAGS) $(QUIET)
 
-clean: $(LIBRARIES:%=clean-%)
-
 clean-%:
 	@target=`pwd`/lib$*.so && \
-	name=`jq -r '."$*".repository' cores.json` && \
+	name=`jq -r '."$*".repository // "$*"' cores.json` && \
 	makedir=`jq -r '."$*".directory // ""' cores.json` && \
 	makefile=`jq -r '."$*".makefile // "Makefile"' cores.json` && \
 	test ! -d $$name || \

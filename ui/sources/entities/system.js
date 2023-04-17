@@ -19,6 +19,9 @@ export class System {
 	/** @type {string} */
 	cover;
 
+	/** @type {boolean} */
+	cover_dark;
+
 	/** @type {Game[]} */
 	games;
 }

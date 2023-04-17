@@ -61,7 +61,7 @@ export const GamesPage = ({ match }) => {
 				{system.games.filter(game => !game.installed).map(game =>
 					<IonCard key={game.rom} onClick={() => !download.game && install(game)}>
 						<IonItem color="light">
-							<img src={Requests.getGameCover(system.full_name, game.rom)} onError={(e) => e.target.src = 'assets/placeholder.png'} crossOrigin="anonymous" />
+							<img src={Requests.getGameCover(system, game.rom)} onError={(e) => e.target.src = 'assets/placeholder.png'} crossOrigin="anonymous" />
 							<IonLabel>
 								<h2>{game.name}</h2>
 								{download.game == game.name &&

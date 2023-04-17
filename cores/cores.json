@@ -29,7 +29,6 @@
 	},
 	"desmume": {
 		"name": "DeSmuME",
-		"repository": "desmume",
 		"directory": "desmume/src/frontend/libretro",
 		"systems": [
 			{
@@ -42,7 +41,6 @@
 	},
 	"nestopia": {
 		"name": "Nestopia",
-		"repository": "nestopia",
 		"directory": "libretro",
 		"systems": [
 			{
@@ -54,7 +52,7 @@
 	},
 	"snes9x": {
 		"name": "Snes9x",
-		"repository": "snes9x2010",
+		"directory": "libretro",
 		"systems": [
 			{
 				"name": "SNES",

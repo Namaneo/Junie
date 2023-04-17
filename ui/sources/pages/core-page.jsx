@@ -2,7 +2,7 @@ import { IonAccordion, IonAccordionGroup, IonBackButton, IonButton, IonButtons, 
 import { useEffect, useRef, useState } from 'react';
 import { checkmarkOutline } from 'ionicons/icons';
 import { Joystick } from 'react-joystick-component';
-import { useRefSize, useWindowSize } from '../hooks/size';
+import { useCanvasSize, useWindowSize } from '../hooks/size';
 import { useCore } from '../hooks/core';
 import Core from '../services/core';
 
@@ -79,13 +79,13 @@ const Stick = ({ core, width, inset }) => {
 export const CorePage = ({ match }) => {
 	const { lib, system, rom } = match.params;
 
-	const content = useRef(null);
-	const canvas = useRef(null);
+	const content = useRef(/** @type {HTMLIonContentElement} */ (null));
+	const canvas  = useRef(/** @type {HTMLCanvasElement}     */ (null));
 
 	const [core, audio, speed, gamepad, joystick] = useCore(lib);
 	const [pointer, setPointer] = useState({ x: 0, y: 0, down: false });
 	const [window_w, window_h] = useWindowSize();
-	const [canvas_w, canvas_h] = useRefSize(canvas);
+	const [canvas_w, canvas_h] = useCanvasSize(canvas);
 
 	const resize = () => {
 		const rect = content.current.getBoundingClientRect();

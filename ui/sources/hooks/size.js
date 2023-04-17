@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 
+/**
+ * @returns {[width: number, height: number]}
+ */
 export function useWindowSize() {
 	const [size, setSize] = useState([0, 0]);
 
@@ -15,7 +18,11 @@ export function useWindowSize() {
 	return size;
 }
 
-export function useRefSize(ref) {
+/**
+ * @param {React.MutableRefObject<HTMLCanvasElement>} ref
+ * @returns {[width: number, height: number]}
+ */
+export function useCanvasSize(ref) {
 	const [size, setSize] = useState([0, 0]);
 
 	useEffect(() => {

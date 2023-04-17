@@ -9,7 +9,6 @@ class ZipFile {
 }
 
 export default class Zip {
-
 	/**
 	 * @param {ZipFile[]} files
 	 * @returns {Promise<Uint8Array>}

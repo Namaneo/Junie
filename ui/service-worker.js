@@ -36,21 +36,15 @@ const clearCaches = async () => {
 		caches.delete(key);
 }
 
-const fetchResource = async (request, external) => {
-	const localhost = ['localhost', '127.0.0.1'].includes(location.hostname);
-	if (localhost && !external)
-		return await fetchEx(request);
-
-	const cache = await caches.open(external ? 'external' : version);
+const fetchResource = async (request, internal) => {
+	const cache = await caches.open(internal ? version : 'external');
 	const match = await cache.match(request);
 	if (match)
 		return match;
 
 	const response = await fetchEx(request);
-	if (!external)
-		return response;
-
-	await cache.put(request, response.clone());
+	if (!internal && response.ok)
+		await cache.put(request, response.clone());
 
 	return response;
 }
@@ -66,6 +60,6 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-	const external = !event.request.url.startsWith(location.origin);
-	event.respondWith(fetchResource(event.request, external));
+	const internal = event.request.url.startsWith(location.origin);
+	event.respondWith(fetchResource(event.request, internal));
 });
