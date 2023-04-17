@@ -97,6 +97,21 @@ export default class Database {
 	}
 
 	/**
+	 * @param {File} file
+	 * @returns {Promise<void>}
+	 */
+	static async add(file) {
+		const store = await this.#get('readwrite');
+
+		return new Promise((resolve, reject) => {
+			const request = store.put(file);
+
+			request.onerror = (event) => reject(event.target.error);
+			request.onsuccess = () => resolve();
+		});
+	}
+
+	/**
 	 * @param {String} path
 	 * @param {Uint8Array} data
 	 * @returns {Promise<void>}

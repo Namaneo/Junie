@@ -7,6 +7,8 @@ import { Game } from '../entities/game';
 import Audio from '../services/audio';
 import Requests from '../services/requests';
 import Files from '../services/files';
+import Database from '../services/database';
+import Path from '../services/path';
 
 export const HomePage = () => {
 
@@ -25,8 +27,9 @@ export const HomePage = () => {
 		const file = files[0];
 		const system = systems.find(x => x.extension == file.name.split('.').pop());
 
-		const data = new Uint8Array(await file.arrayBuffer());
-		await Files.Games.add(system.name, file.name, data);
+		const path = Path.game(system.name, file.name);
+		await Database.add(new File([file], path));
+
 		setGames(await Files.Games.get());
 	}
 
