@@ -1,6 +1,6 @@
-import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonModal, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
+import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
 import { checkmarkCircleOutline, closeCircleOutline, cloudDownload, cloudUpload, buildOutline } from 'ionicons/icons';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { FixSaveModal } from '../modals/fix-save-modal';
 import { System } from '../entities/system';
 import { Game } from '../entities/game';
@@ -10,6 +10,9 @@ import Requests from '../services/requests';
 import Files from '../services/files';
 import Zip from '../services/zip';
 
+/**
+ * @returns {JSX.Element}
+ */
 export const SavesPage = () => {
 	const fileInput = useRef(null);
 
@@ -17,10 +20,6 @@ export const SavesPage = () => {
 	const [current, setCurrent] = useState(/** @type {Save}     */ (null) );
 	const [saves,   setSaves]   = useState(/** @type {Save[]}   */ ([])   );
 	const [systems, setSystems] = useState(/** @type {System[]} */ ([])   );
-
-	const page = useRef(null);
-	const [presenting, setPresenting] = useState(null);
-	useEffect(() => setPresenting(page.current), []);
 
 	for (const save of saves)
 		save.mapped = save.isMapped(systems);
@@ -96,20 +95,13 @@ export const SavesPage = () => {
 		setModal(false);
 	};
 
-	/**
-	 * @returns {void}
-	 */
-	const dismiss = () => {
-		setModal(false);
-	}
-
 	useIonViewWillEnter(async () => {
 		setSystems(await Requests.getSystems());
 		setSaves(await Files.Saves.get());
 	});
 
 	return (
-		<IonPage ref={page}>
+		<IonPage>
 
 			<IonHeader>
 				<IonToolbar>
@@ -127,9 +119,7 @@ export const SavesPage = () => {
 			</IonHeader>
 
 			<IonContent className="saves">
-				<IonModal isOpen={modal} presentingElement={presenting}>
-					<FixSaveModal systems={systems} apply={apply} dismiss={dismiss}  />
-				</IonModal>
+				<FixSaveModal isOpen={modal} systems={systems} apply={apply} dismiss={() => setModal(false)} />
 
 				<IonList lines="none">
 					{saves.map(save =>

@@ -4,8 +4,10 @@ import { refreshOutline } from 'ionicons/icons';
 import { System } from '../entities/system';
 import Requests from '../services/requests';
 
+/**
+ * @returns {JSX.Element}
+ */
 export const SystemsPage = () => {
-
 	const [systems, setSystems] = useState(/** @type {System[]} */ ([])   );
 	const [loading, setLoading] = useState(/** @type {boolean}  */ (false));
 

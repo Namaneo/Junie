@@ -1,6 +1,6 @@
-import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonModal, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
+import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
 import { add, checkmarkCircleOutline, closeCircleOutline, buildOutline } from 'ionicons/icons';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { Cheat, CheatList } from '../entities/cheat';
 import { EditCheatModal } from '../modals/edit-cheat-modal';
 import { System } from '../entities/system';
@@ -8,18 +8,16 @@ import { Game } from '../entities/game';
 import Files from '../services/files';
 import Requests from '../services/requests';
 
+/**
+ * @returns {JSX.Element}
+ */
 export const CheatsPage = () => {
-
 	const [modal,        setModal]        = useState(/** @type {boolean}   */ (false));
 	const [currentList,  setCurrentList]  = useState(/** @type {CheatList} */ (null) );
 	const [currentCheat, setCurrentCheat] = useState(/** @type {Cheat}     */ (null) );
 
 	const [lists, setLists] = useState([]);
 	const [systems, setSystems] = useState([]);
-
-	const page = useRef(null);
-	const [presenting, setPresenting] = useState(null);
-	useEffect(() => setPresenting(page.current), []);
 
 	/**
 	 * @param {CheatList} list
@@ -83,7 +81,7 @@ export const CheatsPage = () => {
 	});
 
 	return (
-		<IonPage ref={page}>
+		<IonPage>
 
 			<IonHeader>
 				<IonToolbar>
@@ -97,9 +95,7 @@ export const CheatsPage = () => {
 			</IonHeader>
 
 			<IonContent className="cheats">
-				<IonModal isOpen={modal} presentingElement={presenting}>
-					<EditCheatModal current={currentCheat} systems={systems} apply={apply} dismiss={dismiss}  />
-				</IonModal>
+				<EditCheatModal isOpen={modal} current={currentCheat} systems={systems} apply={apply} dismiss={() => setModal(false)}  />
 
 				<IonList lines="none">
 					{lists.map(list => list.cheats.map(cheat =>

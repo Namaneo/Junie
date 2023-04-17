@@ -153,12 +153,8 @@ async function rebuild() {
 
 	options.version = `Development-${Date.now()}`;
 
-	try {
-		await context.rebuild();
-		console.log(`\nBuild finished, serving on 'http://${host}:${port}/'...`);
-	} catch (e) {
-		console.error('\nBuild failed: ', e);
-	}
+	await context.rebuild().catch(() => {});
+	console.log(`\nBuild finished, serving on 'http://${host}:${port}/'...`);
 
 	rebuilding = false;
 }

@@ -163,8 +163,12 @@ html, body {
 /*
  * Modals
  */
+#root .modal {
+    --height: auto;
+}
+
 #root .modal ion-list {
-    padding: 0;
+    padding-top: 16px;
 }
 
 #root .modal ion-label {
@@ -182,4 +186,9 @@ html, body {
 #root .modal ion-textarea {
     font-family: monospace;
     text-align: right;
+}
+
+#root .modal ion-button {
+	width: 100%;
+    height: 100%;
 }

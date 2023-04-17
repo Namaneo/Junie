@@ -10,6 +10,9 @@ import Files from '../services/files';
 import Database from '../services/database';
 import Path from '../services/path';
 
+/**
+ * @returns {JSX.Element}
+ */
 export const HomePage = () => {
 	const fileInput = useRef(null);
 

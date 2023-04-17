@@ -4,9 +4,19 @@ import { checkmarkOutline } from 'ionicons/icons';
 import { Joystick } from 'react-joystick-component';
 import { useCanvasSize, useWindowSize } from '../hooks/size';
 import { useCore } from '../hooks/core';
+import { Variable } from '../entities/variable';
+import { Settings } from '../entities/settings';
+import { Cheat } from '../entities/cheat';
 import Core from '../services/core';
 
-const Settings = ({ variables, settings, update }) => {
+/**
+ * @param {Object} parameters
+ * @param {Variable[]} parameters.variables
+ * @param {Settings} parameters.settings
+ * @param {(key: string, value: string) => void} parameters.update
+ * @returns {JSX.Element}
+ */
+const SettingsView = ({ variables, settings, update }) => {
 	return variables?.map(item =>
 		<IonItem key={item.key}>
 			<IonSelect label={item.name} interface="action-sheet"
@@ -20,7 +30,12 @@ const Settings = ({ variables, settings, update }) => {
 	) ?? null;
 }
 
-const Cheats = ({ cheats }) => {
+/**
+ * @param {Object} parameters
+ * @param {Cheat[]} parameters.cheats
+ * @returns {JSX.Element}
+ */
+const CheatsView = ({ cheats }) => {
 	return cheats?.map(item =>
 		<IonItem key={item.name}>
 			<IonLabel>{item.name} ({item.order})</IonLabel>
@@ -29,6 +44,16 @@ const Cheats = ({ cheats }) => {
 	) ?? null;
 }
 
+/**
+ * @param {Object} parameters
+ * @param {Core} parameters.core
+ * @param {string} parameters.name
+ * @param {number} parameters.device
+ * @param {number} parameters.id
+ * @param {string} parameters.className
+ * @param {{top: number, right: number, bottom: number, left: number}} parameters.inset
+ * @returns {JSX.Element}
+ */
 const Control = ({ core, name, device, id, className, inset }) => {
 	/**
 	 * @param {Event} event
@@ -64,6 +89,13 @@ const Control = ({ core, name, device, id, className, inset }) => {
 	);
 }
 
+/**
+ * @param {Object} parameters
+ * @param {Core} parameters.core
+ * @param {number} parameters.width
+ * @param {{top: number, right: number, bottom: number, left: number}} parameters.inset
+ * @returns {JSX.Element}
+ */
 const Stick = ({ core, width, inset }) => {
 	const size = Math.min(width * 0.32, 32 * 10);
 
@@ -95,13 +127,16 @@ const Stick = ({ core, width, inset }) => {
 	);
 }
 
-export const CorePage = ({ match }) => {
-	const { lib, system, rom } = match.params;
+/**
+ * @returns {JSX.Element}
+ */
+export const CorePage = () => {
+	const parameters = /** @type {{ lib: string, system: string, rom: string }} */ (useRouteMatch().params);
 
 	const content = useRef(/** @type {HTMLIonContentElement} */ (null));
 	const canvas  = useRef(/** @type {HTMLCanvasElement}     */ (null));
 
-	const [core, audio, speed, gamepad, joystick] = useCore(lib);
+	const [core, audio, speed, gamepad, joystick] = useCore(parameters.lib);
 	const [pointer, setPointer] = useState({ x: 0, y: 0, down: false });
 	const [window_w, window_h] = useWindowSize();
 	const [canvas_w, canvas_h] = useCanvasSize(canvas);
@@ -141,7 +176,7 @@ export const CorePage = ({ match }) => {
 	}
 
 	useEffect(() => {
-		core.init(system, rom, canvas.current).then(() => resize());
+		core.init(parameters.system, parameters.rom, canvas.current).then(() => resize());
 
 		return () => core.current.stop();
 	}, []);
@@ -195,7 +230,7 @@ export const CorePage = ({ match }) => {
 									<IonLabel>Settings</IonLabel>
 								</IonItem>
 								<IonList slot="content">
-									<Settings variables={core.variables} settings={core.settings} update={core.update}></Settings>
+									<SettingsView variables={core.variables} settings={core.settings} update={core.update}></SettingsView>
 								</IonList>
 							</IonAccordion>
 							<IonAccordion>
@@ -203,7 +238,7 @@ export const CorePage = ({ match }) => {
 									<IonLabel>Cheats</IonLabel>
 								</IonItem>
 								<IonList slot="content">
-									<Cheats cheats={core.cheats}></Cheats>
+									<CheatsView cheats={core.cheats}></CheatsView>
 								</IonList>
 							</IonAccordion>
 						</IonAccordionGroup>
@@ -217,7 +252,7 @@ export const CorePage = ({ match }) => {
 						<IonButtons slot="start">
 							<IonBackButton />
 						</IonButtons>
-						<IonTitle>{system}</IonTitle>
+						<IonTitle>{parameters.system}</IonTitle>
 						<IonButtons slot="end">
 							<IonMenuButton></IonMenuButton>
 						</IonButtons>

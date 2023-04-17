@@ -1,12 +1,17 @@
 import { IonBackButton, IonButtons, IonCard, IonContent, IonHeader, IonItem, IonLabel, IonPage, IonProgressBar, IonTitle, IonToolbar, useIonAlert, useIonViewWillEnter } from '@ionic/react';
 import { useState } from 'react';
+import { useRouteMatch } from 'react-router';
 import { useToast } from '../hooks/toast';
 import { System } from '../entities/system';
 import { Game } from '../entities/game';
 import Requests from '../services/requests';
 import Files from '../services/files';
 
-export const GamesPage = ({ match }) => {
+/**
+ * @returns {JSX.Element}
+ */
+export const GamesPage = () => {
+	const params = /** @type {{ system: string }} */ (useRouteMatch().params);
 
 	const [system,   setSystem]   = useState(/** @type {System} */ ({ games: [] }));
 	const [download, setDownload] = useState({ game: null, progress: 0 });
@@ -47,7 +52,7 @@ export const GamesPage = ({ match }) => {
 
 	useIonViewWillEnter(async () => {
 		const systems = await Requests.getSystems();
-		setSystem(systems.find(x => x.name == match.params.system));
+		setSystem(systems.find(x => x.name == params.system));
 	});
 
 	return (
