@@ -9,10 +9,17 @@ export const SystemsPage = () => {
 	const [systems, setSystems] = useState(/** @type {System[]} */ ([])   );
 	const [loading, setLoading] = useState(/** @type {boolean}  */ (false));
 
+	/**
+	 * @param {System} system
+	 * @returns {boolean}
+	 */
 	const filterSystem = (system) => {
 		return system.games.length && system.games.find(game => !game.installed);
 	}
 
+	/**
+	 * @returns {Promise<void>}
+	 */
 	const refreshLibrary = async () => {
 		setLoading(true);
 

@@ -30,8 +30,23 @@ const Cheats = ({ cheats }) => {
 }
 
 const Control = ({ core, name, device, id, className, inset }) => {
-	const down = (e) => { core.send(device, id, 1); e.preventDefault(); };
-	const up = (e) => { core.send(device, id, 0); e.preventDefault(); };
+	/**
+	 * @param {Event} event
+	 * @returns {void}
+	 */
+	const down = (event) => {
+		core.send(device, id, 1);
+		event.preventDefault();
+	};
+
+	/**
+	 * @param {Event} event
+	 * @returns {void}
+	 */
+	const up = (event) => {
+		core.send(device, id, 0);
+		event.preventDefault();
+	};
 
 	const style = {
 		top:    `min(${inset.top}vw,    ${inset.top    * 10}px)`,
@@ -59,13 +74,17 @@ const Stick = ({ core, width, inset }) => {
 		left:   `min(${inset.left}vw,   ${inset.left   * 10}px)`,
 	};
 
-	const event = (e) => {
-		const valid = e.type = 'move' && e.distance > 50;
+	/**
+	 * @param {Event} event
+	 * @returns {void}
+	 */
+	const event = (event) => {
+		const valid = event.type = 'move' && event.distance > 50;
 
-		core.send(Core.Device.JOYPAD, Core.Joypad.UP,    valid && e.direction == 'FORWARD');
-		core.send(Core.Device.JOYPAD, Core.Joypad.DOWN,  valid && e.direction == 'BACKWARD');
-		core.send(Core.Device.JOYPAD, Core.Joypad.LEFT,  valid && e.direction == 'LEFT');
-		core.send(Core.Device.JOYPAD, Core.Joypad.RIGHT, valid && e.direction == 'RIGHT');
+		core.send(Core.Device.JOYPAD, Core.Joypad.UP,    valid && event.direction == 'FORWARD');
+		core.send(Core.Device.JOYPAD, Core.Joypad.DOWN,  valid && event.direction == 'BACKWARD');
+		core.send(Core.Device.JOYPAD, Core.Joypad.LEFT,  valid && event.direction == 'LEFT');
+		core.send(Core.Device.JOYPAD, Core.Joypad.RIGHT, valid && event.direction == 'RIGHT');
 	}
 
 	return (
@@ -87,6 +106,9 @@ export const CorePage = ({ match }) => {
 	const [window_w, window_h] = useWindowSize();
 	const [canvas_w, canvas_h] = useCanvasSize(canvas);
 
+	/**
+	 * @returns {void}
+	 */
 	const resize = () => {
 		const rect = content.current.getBoundingClientRect();
 
@@ -103,12 +125,19 @@ export const CorePage = ({ match }) => {
 		}
 	};
 
-	const touch = (e, x, y, down) => {
+	/**
+	 * @param {Event} event
+	 * @param {number} x
+	 * @param {number} y
+	 * @param {boolean} down
+	 * @returns {void}
+	 */
+	const touch = (event, x, y, down) => {
 		if (gamepad.value)
 			return;
 
 		setPointer({ x, y, down });
-		e.preventDefault();
+		event.preventDefault();
 	}
 
 	useEffect(() => {
@@ -197,13 +226,13 @@ export const CorePage = ({ match }) => {
 
 				<IonContent className="core" ref={content}>
 					<canvas ref={canvas}
-						onTouchStart={(e) =>  touch(e, e.touches[0].clientX, e.touches[0].clientY, true)}
-						onTouchMove={(e) =>   touch(e, e.touches[0].clientX, e.touches[0].clientY, pointer.down)}
-						onTouchEnd={(e) =>    touch(e, pointer.x, pointer.y, false)}
-						onTouchCancel={(e) => touch(e, pointer.x, pointer.y, false)}
-						onMouseDown={(e) =>   touch(e, e.clientX, e.clientY, true)}
-						onMouseMove={(e) =>   touch(e, e.clientX, e.clientY, pointer.down)}
-						onMouseUp={(e) =>     touch(e, pointer.x, pointer.y, false)}
+						onTouchStart={ (event) => touch(event, event.touches[0].clientX, event.touches[0].clientY, true)        }
+						onTouchMove={  (event) => touch(event, event.touches[0].clientX, event.touches[0].clientY, pointer.down)}
+						onTouchEnd={   (event) => touch(event, pointer.x,                pointer.y,                false)       }
+						onTouchCancel={(event) => touch(event, pointer.x,                pointer.y,                false)       }
+						onMouseDown={  (event) => touch(event, event.clientX,            event.clientY,            true)        }
+						onMouseMove={  (event) => touch(event, event.clientX,            event.clientY,            pointer.down)}
+						onMouseUp={    (event) => touch(event, pointer.x,                pointer.y,                false)       }
 					/>
 
 					{gamepad.value &&

@@ -2,6 +2,7 @@ import { IonBackButton, IonButtons, IonCard, IonContent, IonHeader, IonItem, Ion
 import { useState } from 'react';
 import { useToast } from '../hooks/toast';
 import { System } from '../entities/system';
+import { Game } from '../entities/game';
 import Requests from '../services/requests';
 import Files from '../services/files';
 
@@ -13,6 +14,10 @@ export const GamesPage = ({ match }) => {
 	const [present, dismiss] = useToast('Game successfully installed!');
 	const [alert] = useIonAlert();
 
+	/**
+	 * @param {Game} game
+	 * @returns {Promise<void>}
+	 */
 	const install = async (game) => {
 		setDownload({ game: game.name, progress: 0 });
 		const data = await Requests.fetchGame(system, game, progress => {

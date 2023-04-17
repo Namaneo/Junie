@@ -11,6 +11,8 @@ import Database from '../services/database';
 import Path from '../services/path';
 
 export const HomePage = () => {
+	const fileInput = useRef(null);
+
 	const [systems, setSystems] = useState(/** @type {System[]} */ ([]));
 	const [games,   setGames]   = useState(/** @type {Game[]}   */ ([]));
 
@@ -19,6 +21,10 @@ export const HomePage = () => {
 	const date = new Date(build * 1000).toUTCString();
 	const [present] = useToast(`Junie - ${version} (${build})`);
 
+	/**
+	 * @param {FileList} files
+	 * @returns {Promise<void>}
+	 */
 	const addGame = async (files) => {
 		if (!files?.length)
 			return;
@@ -35,11 +41,19 @@ export const HomePage = () => {
 		setGames(await Files.Games.get());
 	}
 
+	/**
+	 * @param {Game} game
+	 * @returns {Promise<void>}
+	 */
 	const deleteGame = async (game) => {
 		await Files.Games.remove(game.system, game.rom);
 		setGames(await Files.Games.get());
 	}
 
+	/**
+	 * @param {Game} game
+	 * @returns {void}
+	 */
 	const gameURL = (game) => {
 		const system = systems.find(system => system.name == game.system);
 
@@ -54,8 +68,6 @@ export const HomePage = () => {
 		setSystems(await Requests.getSystems());
 		setGames(await Files.Games.get());
 	});
-
-	const fileInput = useRef(null);
 
 	return (
 		<IonPage>

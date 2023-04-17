@@ -3,6 +3,7 @@ import { checkmarkCircleOutline, closeCircleOutline, cloudDownload, cloudUpload,
 import { useEffect, useRef, useState } from 'react';
 import { FixSaveModal } from '../modals/fix-save-modal';
 import { System } from '../entities/system';
+import { Game } from '../entities/game';
 import { Save } from '../entities/save';
 import Database from '../services/database';
 import Requests from '../services/requests';
@@ -10,6 +11,7 @@ import Files from '../services/files';
 import Zip from '../services/zip';
 
 export const SavesPage = () => {
+	const fileInput = useRef(null);
 
 	const [modal,   setModal]   = useState(/** @type {boolean}  */ (false));
 	const [current, setCurrent] = useState(/** @type {Save}     */ (null) );
@@ -23,49 +25,60 @@ export const SavesPage = () => {
 	for (const save of saves)
 		save.mapped = save.isMapped(systems);
 
+	/**
+	 * @param {Save} save
+	 * @returns {void}
+	 */
 	const showModal = (save) => {
 		setCurrent(save);
 		setModal(true);
 	}
 
+	/**
+	 * @param {Save} save
+	 * @returns {Promise<void>}
+	 */
 	const deleteSave = async (save) => {
 		await Files.Saves.remove(save);
 
 		setSaves(await Files.Saves.get());
 	};
 
+	/**
+	 * @returns {Promise<void>}
+	 */
 	const backupSave = async () => {
-		await new Promise(async resolve => {
-			const a = document.createElement('a');
-			document.body.appendChild(a);
+		const a = document.createElement('a');
+		document.body.appendChild(a);
 
-			const files = []
-			for (const save of saves)
-				for (const path of save.paths)
-					files.push({ path, data: await Database.read(path) });
+		const files = []
+		for (const save of saves)
+			for (const path of save.paths)
+				files.push({ path, data: await Database.read(path) });
 
-			const content = await Zip.compress(files);
-			const blob = new Blob([content], { type: 'octet/stream' })
+		const zip = await Zip.compress(files);
+		const blob = new Blob([zip], { type: 'octet/stream' })
 
-			a.href = URL.createObjectURL(blob);
-			a.download = `junie-${Date.now()}.zip`;
-			a.click();
+		a.href = URL.createObjectURL(blob);
+		a.download = `junie-${Date.now()}.zip`;
+		a.click();
 
-			URL.revokeObjectURL(a.href);
-			document.body.removeChild(a);
-
-			resolve();
-		});
+		URL.revokeObjectURL(a.href);
+		document.body.removeChild(a);
 	}
 
-	const restoreSaves = async (input) => {
-		if (!input?.length)
+	/**
+	 * @param {FileList} zip
+	 * @returns {Promise<void>}
+	 */
+	const restoreSaves = async (zip) => {
+		if (!zip?.length)
 			return;
 
-		const content = new Uint8Array(await input[0].arrayBuffer());
+		const content = new Uint8Array(await zip[0].arrayBuffer());
 		const files = await Zip.decompress(content);
 
-		fileUpload.current.value = '';
+		fileInput.current.value = '';
 
 		for (const file of files)
 			await Files.write(file.path, file.data);
@@ -73,6 +86,11 @@ export const SavesPage = () => {
 		setSaves(await Files.Saves.get());
 	}
 
+	/**
+	 * @param {System} system
+	 * @param {Game} game
+	 * @returns {Promise<void>}
+	 */
 	const apply = async (system, game) => {
 		await Files.Saves.fix(current, system, game);
 
@@ -80,6 +98,9 @@ export const SavesPage = () => {
 		setModal(false);
 	};
 
+	/**
+	 * @returns {void}
+	 */
 	const dismiss = () => {
 		setModal(false);
 	}
@@ -88,8 +109,6 @@ export const SavesPage = () => {
 		setSystems(await Requests.getSystems());
 		setSaves(await Files.Saves.get());
 	});
-
-	const fileUpload = useRef(null);
 
 	return (
 		<IonPage ref={page}>
@@ -101,8 +120,8 @@ export const SavesPage = () => {
 						<IonButton onClick={() => backupSave()}>
 							<IonIcon slot="icon-only" icon={cloudDownload} />
 						</IonButton>
-						<IonButton onClick={() => fileUpload?.current?.click()}>
-							<input type="file" ref={fileUpload} onChange={e => restoreSaves(e.target.files)} hidden />
+						<IonButton onClick={() => fileInput?.current?.click()}>
+							<input type="file" ref={fileInput} onChange={e => restoreSaves(e.target.files)} hidden />
 							<IonIcon slot="icon-only" icon={cloudUpload} />
 						</IonButton>
 					</IonButtons>

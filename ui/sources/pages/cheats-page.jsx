@@ -3,6 +3,8 @@ import { add, checkmarkCircleOutline, closeCircleOutline, buildOutline } from 'i
 import { useEffect, useRef, useState } from 'react';
 import { Cheat, CheatList } from '../entities/cheat';
 import { EditCheatModal } from '../modals/edit-cheat-modal';
+import { System } from '../entities/system';
+import { Game } from '../entities/game';
 import Files from '../services/files';
 import Requests from '../services/requests';
 
@@ -19,12 +21,22 @@ export const CheatsPage = () => {
 	const [presenting, setPresenting] = useState(null);
 	useEffect(() => setPresenting(page.current), []);
 
+	/**
+	 * @param {CheatList} list
+	 * @param {Cheat} cheat
+	 * @returns {void}
+	 */
 	const showModal = (list, cheat) => {
 		setCurrentList(list);
 		setCurrentCheat(cheat);
 		setModal(true);
 	}
 
+	/**
+	 * @param {CheatList} list
+	 * @param {Cheat} cheat
+	 * @returns {Promise<void>}
+	 */
 	const deleteCheat = async (list, cheat) => {
 		list.cheats = list.cheats.filter(x => x != cheat);
 
@@ -38,6 +50,12 @@ export const CheatsPage = () => {
 		setLists(await Files.Cheats.get());
 	};
 
+	/**
+	 * @param {CheatList} list
+	 * @param {System} system
+	 * @param {Game} game
+	 * @returns {Promise<void>}
+	 */
 	const apply = async (cheat, system, game) => {
 		const list = currentList
 			|| lists.find(x => x.system == system.name && x.game == game.name)
@@ -52,6 +70,9 @@ export const CheatsPage = () => {
 		setModal(false);
 	};
 
+	/**
+	 * @returns {void}
+	 */
 	const dismiss = () => {
 		setModal(false);
 	}
