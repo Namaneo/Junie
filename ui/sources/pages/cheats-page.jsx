@@ -52,7 +52,7 @@ export const CheatsPage = () => {
 		await Files.Cheats.update(list);
 		setLists(await Files.Cheats.get());
 
-		dismiss();
+		close();
 	};
 
 	/**
@@ -64,10 +64,10 @@ export const CheatsPage = () => {
 		setCurrentList(list);
 		setCurrentCheat(cheat);
 
-		present({ initialBreakpoint: 1, breakpoints: [0, 1], className: 'modal' });
+		open({ initialBreakpoint: 1, breakpoints: [0, 1], cssClass: 'modal' });
 	}
 
-	const [present, dismiss] = useIonModal(EditCheatModal, {
+	const [open, close] = useIonModal(EditCheatModal, {
 		current: currentCheat,
 		systems: systems,
 		apply: apply,
@@ -79,7 +79,7 @@ export const CheatsPage = () => {
 	});
 
 	return (
-		<IonPage>
+		<IonPage className="page">
 
 			<IonHeader>
 				<IonToolbar>

@@ -5,11 +5,12 @@ import { checkmarkOutline } from 'ionicons/icons';
 import { Joystick } from 'react-joystick-component';
 import { useCanvasSize, useWindowSize } from '../hooks/size';
 import { useCore } from '../hooks/core';
+import { System } from '../entities/system';
+import { Game } from '../entities/game';
 import { Variable } from '../entities/variable';
 import { Settings } from '../entities/settings';
 import { Cheat } from '../entities/cheat';
 import Core from '../services/core';
-
 /**
  * @param {Object} parameters
  * @param {Variable[]} parameters.variables
@@ -129,15 +130,17 @@ const Stick = ({ core, width, inset }) => {
 }
 
 /**
+ * @param {Object} parameters
+ * @param {System} parameters.system
+ * @param {Game} parameters.game
+ * @param {() => void} parameters.close
  * @returns {JSX.Element}
  */
-export const CorePage = () => {
-	const parameters = /** @type {{ lib: string, system: string, rom: string }} */ (useRouteMatch().params);
-
+export const CoreModal = ({ system, game, close }) => {
 	const content = useRef(/** @type {HTMLIonContentElement} */ (null));
 	const canvas  = useRef(/** @type {HTMLCanvasElement}     */ (null));
 
-	const [core, audio, speed, gamepad, joystick] = useCore(parameters.lib);
+	const [core, audio, speed, gamepad, joystick] = useCore(system.lib_name);
 	const [pointer, setPointer] = useState({ x: 0, y: 0, down: false });
 	const [window_w, window_h] = useWindowSize();
 	const [canvas_w, canvas_h] = useCanvasSize(canvas);
@@ -177,7 +180,7 @@ export const CorePage = () => {
 	}
 
 	useEffect(() => {
-		core.init(parameters.system, parameters.rom, canvas.current).then(() => resize());
+		core.init(system.name, game.rom, canvas.current).then(() => resize());
 
 		return () => core.current.stop();
 	}, []);
@@ -198,7 +201,7 @@ export const CorePage = () => {
 
 	return (
 		<>
-			<IonMenu className="core-settings" contentId="core" side="end" swipeGesture={false}>
+			<IonMenu className="core-settings" contentId="core" side="start" swipeGesture={false}>
 				<IonHeader>
 					<IonToolbar>
 						<IonTitle>Settings</IonTitle>
@@ -251,11 +254,11 @@ export const CorePage = () => {
 				<IonHeader>
 					<IonToolbar>
 						<IonButtons slot="start">
-							<IonBackButton />
-						</IonButtons>
-						<IonTitle>{parameters.system}</IonTitle>
-						<IonButtons slot="end">
 							<IonMenuButton></IonMenuButton>
+						</IonButtons>
+						<IonTitle>{system.name}</IonTitle>
+						<IonButtons slot="end">
+							<IonButton onClick={close}>Close</IonButton>
 						</IonButtons>
 					</IonToolbar>
 				</IonHeader>

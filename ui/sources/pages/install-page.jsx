@@ -1,14 +1,16 @@
-import { IonButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonIcon, IonLoading, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
+import { IonButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonIcon, IonLoading, IonPage, IonTitle, IonToolbar, useIonModal, useIonViewWillEnter } from '@ionic/react';
 import { useState } from 'react';
 import { refreshOutline } from 'ionicons/icons';
+import { GamesModal } from '../modals/games-modal';
 import { System } from '../entities/system';
 import Requests from '../services/requests';
 
 /**
  * @returns {JSX.Element}
  */
-export const SystemsPage = () => {
+export const InstallPage = () => {
 	const [systems, setSystems] = useState(/** @type {System[]} */ ([])   );
+	const [system,  setSystem]  = useState(/** @type {System}   */ (null)   );
 	const [loading, setLoading] = useState(/** @type {boolean}  */ (false));
 
 	/**
@@ -31,12 +33,24 @@ export const SystemsPage = () => {
 		setLoading(false);
 	}
 
+	/**
+	 * @param {System} system
+	 * @returns {void}
+	 */
+	const showModal = (system) => {
+		setSystem(system);
+
+		open({ cssClass: 'fullscreen' });
+	}
+
+	const [open, close] = useIonModal(GamesModal, { system, close: () => close() });
+
 	useIonViewWillEnter(async () => {
 		setSystems(await Requests.getSystems());
 	});
 
 	return (
-		<IonPage>
+		<IonPage className="page">
 
 			<IonHeader>
 				<IonToolbar>
@@ -52,7 +66,7 @@ export const SystemsPage = () => {
 			<IonContent className="systems">
 				<IonLoading isOpen={loading} message="Refreshing..." spinner={null} />
 				{systems.filter(filterSystem).map(system =>
-					<IonCard key={system.name} routerLink={`/games/${system.name}`}>
+					<IonCard key={system.name} onClick={() => showModal(system)}>
 						<img src={system.cover} style={{filter: Requests.shouldInvertCover(system) && 'invert(1)'}} />
 						<IonCardHeader>
 							<IonCardSubtitle>{system.core_name}</IonCardSubtitle>

@@ -7,24 +7,21 @@ html, body {
 
 
 /*
- * Router
+ * Pages
  */
- #root ion-router-outlet .ion-page {
+#root .page {
     align-items: center;
 }
 
-#root ion-router-outlet ion-content {
+#root .page ion-content {
+    max-width: 768px;
     overflow: auto;
     --overflow: hidden;
+    --offset-bottom: auto !important;
 	scrollbar-width: none;
 }
 
-#root ion-router-outlet ion-content:not(.core) {
-    max-width: 768px;
-    --offset-bottom: auto !important;
-}
-
-#root ion-router-outlet ion-content::-webkit-scrollbar {
+#root .page ion-content::-webkit-scrollbar {
 	display: none;
 }
 
@@ -135,6 +132,10 @@ html, body {
 /*
  * Games
  */
+#root .games {
+	--background: var(--ion-background-color);
+}
+
 #root .games ion-card {
     display: flex;
     cursor: pointer
@@ -185,6 +186,12 @@ html, body {
  */
 #root .modal {
     --height: auto;
+}
+
+#root ion-modal.fullscreen {
+	--width: 100%;
+	--height: 100%;
+	--border-radius: 0;
 }
 
 #root .modal ion-list {

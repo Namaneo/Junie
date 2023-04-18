@@ -1,19 +1,17 @@
-import { IonBackButton, IonButtons, IonCard, IonContent, IonHeader, IonItem, IonLabel, IonPage, IonProgressBar, IonTitle, IonToolbar, useIonAlert, useIonViewWillEnter } from '@ionic/react';
+import { IonBackButton, IonButton, IonButtons, IonCard, IonContent, IonHeader, IonItem, IonLabel, IonPage, IonProgressBar, IonTitle, IonToolbar, useIonAlert, useIonViewWillEnter } from '@ionic/react';
 import { useState } from 'react';
-import { useRouteMatch } from 'react-router';
 import { useToast } from '../hooks/toast';
-import { System } from '../entities/system';
 import { Game } from '../entities/game';
 import Requests from '../services/requests';
 import Files from '../services/files';
 
 /**
+ * @param {Object} parameters
+ * @param {string} parameters.system
+ * @param {() => void} parameters.close
  * @returns {JSX.Element}
  */
-export const GamesPage = () => {
-	const params = /** @type {{ system: string }} */ (useRouteMatch().params);
-
-	const [system,   setSystem]   = useState(/** @type {System} */ ({ games: [] }));
+export const GamesModal = ({ system, close }) => {
 	const [download, setDownload] = useState({ game: null, progress: 0 });
 
 	const [present, dismiss] = useToast('Game successfully installed!');
@@ -42,7 +40,6 @@ export const GamesPage = () => {
 		await Files.Games.add(system.name, game.rom, data);
 
 		system.games = system.games.filter(x => x.rom != game.rom);
-		setSystem({ ...system });
 
 		dismiss();
 		present(`${game.name} (${system.name})`);
@@ -50,19 +47,14 @@ export const GamesPage = () => {
 		setDownload({ game: null, progress: 0 });
 	}
 
-	useIonViewWillEnter(async () => {
-		const systems = await Requests.getSystems();
-		setSystem(systems.find(x => x.name == params.system));
-	});
-
 	return (
-		<IonPage>
+		<IonPage className="page">
 
 			<IonHeader>
 				<IonToolbar>
 					<IonTitle>Games</IonTitle>
-					<IonButtons slot="start">
-						<IonBackButton />
+					<IonButtons slot="end">
+						<IonButton onClick={close}>Close</IonButton>
 					</IonButtons>
 				</IonToolbar>
 			</IonHeader>

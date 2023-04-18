@@ -82,7 +82,7 @@ export const SavesPage = () => {
 		await Files.Saves.fix(current, system, game);
 		setSaves(await Files.Saves.get());
 
-		dismiss();
+		close();
 	};
 
 	/**
@@ -91,10 +91,10 @@ export const SavesPage = () => {
 	 */
 	const showModal = (save) => {
 		setCurrent(save);
-		present({ initialBreakpoint: 1, breakpoints: [0, 1], className: 'modal' });
+		open({ initialBreakpoint: 1, breakpoints: [0, 1], cssClass: 'modal' });
 	}
 
-	const [present, dismiss] = useIonModal(FixSaveModal, {
+	const [open, close] = useIonModal(FixSaveModal, {
 		systems: systems,
 		apply: apply,
 	});
@@ -105,7 +105,7 @@ export const SavesPage = () => {
 	});
 
 	return (
-		<IonPage>
+		<IonPage className="page">
 
 			<IonHeader>
 				<IonToolbar>

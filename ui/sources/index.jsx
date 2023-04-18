@@ -6,11 +6,9 @@ import { IonReactMemoryRouter } from '@ionic/react-router';
 import { IonApp, IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs, setupIonicReact, useIonLoading } from '@ionic/react';
 import { cloudDownload, gameController, keyOutline, save } from 'ionicons/icons';
 import { HomePage } from './pages/home-page';
-import { SystemsPage } from './pages/systems-page';
-import { GamesPage } from './pages/games-page';
+import { InstallPage } from './pages/install-page';
 import { SavesPage } from './pages/saves-page';
 import { CheatsPage } from './pages/cheats-page';
-import { CorePage } from './pages/core-page';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -37,6 +35,7 @@ function Junie() {
 	const [present] = useIonLoading();
 
 	setupIonicReact({
+		mode: 'ios',
 		swipeBackEnabled: false,
 	});
 
@@ -67,9 +66,7 @@ function Junie() {
 				<IonTabs>
 					<IonRouterOutlet>
 						<Route exact path="/home" component={HomePage} />
-						<Route exact path="/home/:lib/:system/:rom" component={CorePage} />
-						<Route exact path="/games" component={SystemsPage} />
-						<Route exact path="/games/:system" component={GamesPage} />
+						<Route exact path="/install" component={InstallPage} />
 						<Route exact path="/saves"  component={SavesPage}  />
 						<Route exact path="/cheats" component={CheatsPage} />
 						<Route exact path="/" render={() => <Redirect to="/home" />} />
@@ -80,7 +77,7 @@ function Junie() {
 							<IonIcon icon={gameController} />
 							<IonLabel>Games</IonLabel>
 						</IonTabButton>
-						<IonTabButton tab="games" href="/games">
+						<IonTabButton tab="install" href="/install">
 							<IonIcon icon={cloudDownload} />
 							<IonLabel>Install</IonLabel>
 						</IonTabButton>
