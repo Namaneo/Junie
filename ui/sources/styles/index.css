@@ -169,6 +169,14 @@ html, body {
 
 #root .modal ion-list {
     padding-top: 16px;
+    padding-bottom: 32px;
+    background: var(--ion-color-light-shade);
+}
+
+#root .modal ion-item {
+    margin-top: 8px;
+	margin-bottom: 8px;
+    --background: var(--ion-color-light-shade);
 }
 
 #root .modal ion-label {
@@ -183,7 +191,7 @@ html, body {
     text-align: right;
 }
 
-#root .modal ion-textarea {
+#root .modal textarea {
     font-family: monospace;
     text-align: right;
 }

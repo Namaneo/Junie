@@ -1,4 +1,4 @@
-import { IonButton, IonCheckbox, IonInput, IonItem, IonList, IonModal, IonSelect, IonSelectOption, IonTextarea } from '@ionic/react';
+import { IonButton, IonCheckbox, IonInput, IonItem, IonList, IonSelect, IonSelectOption, IonTextarea } from '@ionic/react';
 import { useState } from 'react';
 import { System } from '../entities/system';
 import { Game } from '../entities/game';
@@ -10,10 +10,9 @@ import { Cheat } from '../entities/cheat';
  * @param {Cheat} parameters.current
  * @param {System[]} parameters.systems
  * @param {(current: Cheat, system: System, game: Game) => void} parameters.apply
- * @param {() => void} parameters.dismiss
  * @returns {JSX.Element}
  */
-export const EditCheatModal = ({ isOpen, current, systems, apply, dismiss }) => {
+export const EditCheatModal = ({ current, systems, apply }) => {
 	const [system, setSystem] = useState(/** @type {System} */ (null));
 	const [game,   setGame]   = useState(/** @type {Game}   */ (null));
 
@@ -54,46 +53,44 @@ export const EditCheatModal = ({ isOpen, current, systems, apply, dismiss }) => 
 	}
 
 	return (
-		<IonModal isOpen={isOpen} onDidDismiss={dismiss} initialBreakpoint={1} breakpoints={[0, 1]} className="modal">
-			<IonList lines="full" className="modal">
-				{!current && <IonItem>
-					<IonSelect label="System" interface="action-sheet" value={system} onIonChange={e => systemChanged(e.detail.value)}>
-						{systems.filter(system => system.games.length).map(system =>
-							<IonSelectOption key={system.name} value={system}>{system.name}</IonSelectOption>
-						)}
-					</IonSelect>
-				</IonItem>}
+		<IonList lines="none">
+			{!current && <IonItem>
+				<IonSelect label="System" interface="action-sheet" value={system} onIonChange={e => systemChanged(e.detail.value)}>
+					{systems.filter(system => system.games.length).map(system =>
+						<IonSelectOption key={system.name} value={system}>{system.name}</IonSelectOption>
+					)}
+				</IonSelect>
+			</IonItem>}
 
-				{!current && <IonItem>
-					<IonSelect label="Game" interface="action-sheet" value={game} disabled={!system} onIonChange={e => setGame(e.detail.value)}>
-						{system?.games.map(game =>
-							<IonSelectOption key={game.name} value={game}>{game.name}</IonSelectOption>
-						)}
-					</IonSelect>
-				</IonItem>}
+			{!current && <IonItem>
+				<IonSelect label="Game" interface="action-sheet" value={game} disabled={!system} onIonChange={e => setGame(e.detail.value)}>
+					{system?.games.map(game =>
+						<IonSelectOption key={game.name} value={game}>{game.name}</IonSelectOption>
+					)}
+				</IonSelect>
+			</IonItem>}
 
-				<IonItem>
-					<IonCheckbox checked={enabled} onIonChange={e => setEnabed(e.detail.checked)}>Enabled</IonCheckbox>
-				</IonItem>
+			<IonItem>
+				<IonCheckbox checked={enabled} onIonChange={e => setEnabed(e.detail.checked)}>Enabled</IonCheckbox>
+			</IonItem>
 
-				<IonItem>
-					<IonInput label="Name" value={name} onIonChange={e => setName(e.detail.value ?? '')} />
-				</IonItem>
+			<IonItem>
+				<IonInput label="Name" value={name} onIonInput={e => setName(e.detail.value ?? '')} />
+			</IonItem>
 
-				<IonItem>
-					<IonInput label="Order" type="number" value={order} min="0" onIonChange={e => setOrder(Number(e.detail.value ?? 0))} />
-				</IonItem>
+			<IonItem>
+				<IonInput label="Order" type="number" value={order} min="0" onIonChange={e => setOrder(Number(e.detail.value ?? 0))} />
+			</IonItem>
 
-				<IonItem>
-					<IonTextarea label="Value" value={value} onIonChange={e => setValue(e.detail.value ?? '')} autoGrow />
-				</IonItem>
+			<IonItem>
+				<IonTextarea label="Value" value={value} onIonInput={e => setValue(e.detail.value ?? '')} autoGrow />
+			</IonItem>
 
-				<IonItem>
-					<IonButton expand="block" disabled={!isValid()} onClick={() => validate()}>
-						Apply
-					</IonButton>
-				</IonItem>
-			</IonList>
-		</IonModal>
+			<IonItem>
+				<IonButton expand="block" disabled={!isValid()} onClick={validate}>
+					Apply
+				</IonButton>
+			</IonItem>
+		</IonList>
 	);
 }

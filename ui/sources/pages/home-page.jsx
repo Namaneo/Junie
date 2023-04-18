@@ -14,7 +14,7 @@ import Path from '../services/path';
  * @returns {JSX.Element}
  */
 export const HomePage = () => {
-	const fileInput = useRef(null);
+	const fileInput = useRef(/** @type {HTMLInputElement} */ (null));
 
 	const [systems, setSystems] = useState(/** @type {System[]} */ ([]));
 	const [games,   setGames]   = useState(/** @type {Game[]}   */ ([]));

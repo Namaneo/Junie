@@ -1,4 +1,4 @@
-import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
+import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonPage, IonTitle, IonToolbar, useIonModal, useIonViewWillEnter } from '@ionic/react';
 import { checkmarkCircleOutline, closeCircleOutline, cloudDownload, cloudUpload, buildOutline } from 'ionicons/icons';
 import { useRef, useState } from 'react';
 import { FixSaveModal } from '../modals/fix-save-modal';
@@ -14,24 +14,14 @@ import Zip from '../services/zip';
  * @returns {JSX.Element}
  */
 export const SavesPage = () => {
-	const fileInput = useRef(null);
+	const fileInput = useRef(/** @type {HTMLInputElement} */ (null));
 
-	const [modal,   setModal]   = useState(/** @type {boolean}  */ (false));
 	const [current, setCurrent] = useState(/** @type {Save}     */ (null) );
 	const [saves,   setSaves]   = useState(/** @type {Save[]}   */ ([])   );
 	const [systems, setSystems] = useState(/** @type {System[]} */ ([])   );
 
 	for (const save of saves)
 		save.mapped = save.isMapped(systems);
-
-	/**
-	 * @param {Save} save
-	 * @returns {void}
-	 */
-	const showModal = (save) => {
-		setCurrent(save);
-		setModal(true);
-	}
 
 	/**
 	 * @param {Save} save
@@ -90,10 +80,24 @@ export const SavesPage = () => {
 	 */
 	const apply = async (system, game) => {
 		await Files.Saves.fix(current, system, game);
-
 		setSaves(await Files.Saves.get());
-		setModal(false);
+
+		dismiss();
 	};
+
+	/**
+	 * @param {Save} save
+	 * @returns {void}
+	 */
+	const showModal = (save) => {
+		setCurrent(save);
+		present({ initialBreakpoint: 1, breakpoints: [0, 1], className: 'modal' });
+	}
+
+	const [present, dismiss] = useIonModal(FixSaveModal, {
+		systems: systems,
+		apply: apply,
+	});
 
 	useIonViewWillEnter(async () => {
 		setSystems(await Requests.getSystems());
@@ -119,8 +123,6 @@ export const SavesPage = () => {
 			</IonHeader>
 
 			<IonContent className="saves">
-				<FixSaveModal isOpen={modal} systems={systems} apply={apply} dismiss={() => setModal(false)} />
-
 				<IonList lines="none">
 					{saves.map(save =>
 						<IonCard key={save.game}>

@@ -1,4 +1,4 @@
-import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
+import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonPage, IonTitle, IonToolbar, useIonModal, useIonViewWillEnter } from '@ionic/react';
 import { add, checkmarkCircleOutline, closeCircleOutline, buildOutline } from 'ionicons/icons';
 import { useState } from 'react';
 import { Cheat, CheatList } from '../entities/cheat';
@@ -12,23 +12,10 @@ import Requests from '../services/requests';
  * @returns {JSX.Element}
  */
 export const CheatsPage = () => {
-	const [modal,        setModal]        = useState(/** @type {boolean}   */ (false));
-	const [currentList,  setCurrentList]  = useState(/** @type {CheatList} */ (null) );
-	const [currentCheat, setCurrentCheat] = useState(/** @type {Cheat}     */ (null) );
-
-	const [lists, setLists] = useState([]);
-	const [systems, setSystems] = useState([]);
-
-	/**
-	 * @param {CheatList} list
-	 * @param {Cheat} cheat
-	 * @returns {void}
-	 */
-	const showModal = (list, cheat) => {
-		setCurrentList(list);
-		setCurrentCheat(cheat);
-		setModal(true);
-	}
+	const [lists,        setLists]        = useState(/** @type {CheatList[]} */ ([]));
+	const [systems,      setSystems]      = useState(/** @type {System[]}    */ ([]));
+	const [currentList,  setCurrentList]  = useState(/** @type {CheatList}   */ (null) );
+	const [currentCheat, setCurrentCheat] = useState(/** @type {Cheat}       */ (null) );
 
 	/**
 	 * @param {CheatList} list
@@ -63,17 +50,28 @@ export const CheatsPage = () => {
 			list.cheats.push(cheat);
 
 		await Files.Cheats.update(list);
-
 		setLists(await Files.Cheats.get());
-		setModal(false);
+
+		dismiss();
 	};
 
 	/**
+	 * @param {CheatList} list
+	 * @param {Cheat} cheat
 	 * @returns {void}
 	 */
-	const dismiss = () => {
-		setModal(false);
+	const showModal = (list, cheat) => {
+		setCurrentList(list);
+		setCurrentCheat(cheat);
+
+		present({ initialBreakpoint: 1, breakpoints: [0, 1], className: 'modal' });
 	}
+
+	const [present, dismiss] = useIonModal(EditCheatModal, {
+		current: currentCheat,
+		systems: systems,
+		apply: apply,
+	});
 
 	useIonViewWillEnter(async () => {
 		setLists(await Files.Cheats.get());
@@ -95,8 +93,6 @@ export const CheatsPage = () => {
 			</IonHeader>
 
 			<IonContent className="cheats">
-				<EditCheatModal isOpen={modal} current={currentCheat} systems={systems} apply={apply} dismiss={() => setModal(false)}  />
-
 				<IonList lines="none">
 					{lists.map(list => list.cheats.map(cheat =>
 						<IonCard key={list.system + list.game + cheat.name}>
