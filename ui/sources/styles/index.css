@@ -15,13 +15,16 @@ html, body {
 
 #root .page ion-content {
     max-width: 768px;
+}
+
+#root ion-content:not(.core) {
     overflow: auto;
     --overflow: hidden;
     --offset-bottom: auto !important;
 	scrollbar-width: none;
 }
 
-#root .page ion-content::-webkit-scrollbar {
+#root ion-content::-webkit-scrollbar {
 	display: none;
 }
 
@@ -62,9 +65,21 @@ html, body {
 	image-rendering: pixelated;
 }
 
+#root .core .controls {
+	position: absolute;
+    inset: 0;
+	padding-left: var(--ion-safe-area-left);
+	padding-right: var(--ion-safe-area-right);
+}
+
+#root .core .controls > div {
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+
 #root .core button {
 	position: absolute;
-    font-size: min(5vw, 5 * 10px);
 	padding: 0;
 	color: white;
     background: transparent;
@@ -73,36 +88,6 @@ html, body {
 
 #root .core button:active {
 	background: rgba(255, 255, 255, 0.1)
-}
-
-#root .core button.generic {
-	width: min(12vw, 12 * 10px);
-    height: min(12vw, 12 * 10px);
-    border-radius: 50%;
-}
-
-#root .core .joystick {
-	position: absolute;
-    border: 2px solid white;
-	border-radius: 50%;
-}
-
-#root .core button.arrow {
-	width: min(12vw, 12 * 10px);
-    height: min(12vw, 12 * 10px);
-	border-radius: 10%;
-}
-
-#root .core button.shoulder {
-	width: min(12vw, 12 * 10px);
-    height: min(8vw, 8 * 10px);
-    border-radius: 20%;
-}
-
-#root .core button.special {
-	width: min(8vw, 8 * 10px);
-    height: min(8vw, 8 * 10px);
-    border-radius: 50%;
 }
 
 #root .core-settings {
@@ -120,6 +105,7 @@ html, body {
  */
 #root .systems ion-card {
     text-align: center;
+    cursor: pointer;
 }
 
 #root .systems img {
@@ -138,7 +124,7 @@ html, body {
 
 #root .games ion-card {
     display: flex;
-    cursor: pointer
+    cursor: pointer;
 }
 
 #root .games img {
@@ -192,6 +178,9 @@ html, body {
 	--width: 100%;
 	--height: 100%;
 	--border-radius: 0;
+    --ion-background-color: unset;
+    --ion-toolbar-background: unset;
+    --ion-toolbar-border-color: unset;
 }
 
 #root .modal ion-list {

@@ -35,7 +35,6 @@ function Junie() {
 	const [present] = useIonLoading();
 
 	setupIonicReact({
-		mode: 'ios',
 		swipeBackEnabled: false,
 	});
 

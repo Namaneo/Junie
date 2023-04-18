@@ -560,9 +560,11 @@ void JUN_CoreSetVariable(const char *key, const char *value)
 		if (strcmp(CTX.variables[i].key, key))
 			continue;
 
-		free(CTX.variables[i].value);
-		CTX.variables[i].value = strdup(value);
-		CTX.variables_update = true;
+		if (strcmp(CTX.variables[i].value, value)) {
+			free(CTX.variables[i].value);
+			CTX.variables[i].value = strdup(value);
+			CTX.variables_update = true;
+		}
 
 		break;
 	}

@@ -79,11 +79,11 @@ docker run \
 
 - [Gambatte](https://github.com/libretro/gambatte-libretro) for Game Boy and Game Boy Color emulation.
 - [VBA-M](https://github.com/libretro/vbam-libretro) for Game Boy Advance emulation.
-- [melonDS](https://github.com/libretro/melonDS) for Nintendo DS emulation.
+- [DeSmuME](https://github.com/libretro/desmume) for Nintendo DS emulation.
 - [Nestopia](https://github.com/libretro/Nestopia) for NES emulation.
-- [Snes9x2010](https://github.com/libretro/snes9x2010) for SNES emulation.
+- [Snes9x](https://github.com/libretro/snes9x) for SNES emulation.
 - [Genesis Plus GX](https://github.com/libretro/Genesis-Plus-GX) for Master System and Mega Drive emulation.
-- [libretro-thumbnails](https://thumbnails.libretro.com/) for game covers.
+- [libretro-thumbnails](https://github.com/libretro-thumbnails/libretro-thumbnails) for game covers.
 
 # License
 

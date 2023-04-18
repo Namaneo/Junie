@@ -1,9 +1,7 @@
 import { IonAccordion, IonAccordionGroup, IonBackButton, IonButton, IonButtons, IonCheckbox, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonMenu, IonMenuButton, IonPage, IonSegment, IonSegmentButton, IonSelect, IonSelectOption, IonTitle, IonToolbar } from '@ionic/react';
 import { useEffect, useRef, useState } from 'react';
-import { useRouteMatch } from 'react-router';
 import { checkmarkOutline } from 'ionicons/icons';
-import { Joystick } from 'react-joystick-component';
-import { useCanvasSize, useWindowSize } from '../hooks/size';
+import { useSize } from '../hooks/size';
 import { useCore } from '../hooks/core';
 import { System } from '../entities/system';
 import { Game } from '../entities/game';
@@ -19,17 +17,29 @@ import Core from '../services/core';
  * @returns {JSX.Element}
  */
 const SettingsView = ({ variables, settings, update }) => {
-	return variables?.map(item =>
-		<IonItem key={item.key}>
-			<IonSelect label={item.name} interface="action-sheet"
-			           value={settings?.[item.key] ?? item.options[0]}
-			           onIonChange={e => update(item.key, e.detail.value)}>
-				{item.options.map(option => (
-					<IonSelectOption key={option} value={option}>{option}</IonSelectOption>)
+	if (!variables?.length)
+		return null;
+
+	return (
+		<IonAccordion>
+			<IonItem slot="header" lines="none">
+				<IonLabel>Settings</IonLabel>
+			</IonItem>
+			<IonList slot="content" lines="none">
+				{variables.map(item =>
+					<IonItem key={item.key}>
+						<IonSelect label={item.name} interface="action-sheet" labelPlacement="floating"
+								value={settings?.[item.key] ?? item.options[0]}
+								onIonChange={e => update(item.key, e.detail.value)}>
+							{item.options.map(option => (
+								<IonSelectOption key={option} value={option}>{option}</IonSelectOption>)
+							)}
+						</IonSelect>
+					</IonItem>
 				)}
-			</IonSelect>
-		</IonItem>
-	) ?? null;
+			</IonList>
+		</IonAccordion>
+	);
 }
 
 /**
@@ -38,12 +48,24 @@ const SettingsView = ({ variables, settings, update }) => {
  * @returns {JSX.Element}
  */
 const CheatsView = ({ cheats }) => {
-	return cheats?.map(item =>
-		<IonItem key={item.name}>
-			<IonLabel>{item.name} ({item.order})</IonLabel>
-			{item.enabled && <IonIcon icon={checkmarkOutline} color="primary"></IonIcon>}
-		</IonItem>
-	) ?? null;
+	if (!cheats?.length)
+		return null;
+
+	return (
+		<IonAccordion>
+			<IonItem slot="header" lines="none">
+				<IonLabel>Cheats</IonLabel>
+			</IonItem>
+			<IonList slot="content" lines="none">
+				{cheats.map(item =>
+					<IonItem key={item.name}>
+						<IonLabel>{item.name} ({item.order})</IonLabel>
+						{item.enabled && <IonIcon icon={checkmarkOutline} color="primary"></IonIcon>}
+					</IonItem>
+				)}
+			</IonList>
+		</IonAccordion>
+	);
 }
 
 /**
@@ -52,80 +74,56 @@ const CheatsView = ({ cheats }) => {
  * @param {string} parameters.name
  * @param {number} parameters.device
  * @param {number} parameters.id
- * @param {string} parameters.className
+ * @param {('generic' | 'arrow' | 'shoulder' | 'special')} parameters.type
  * @param {{top: number, right: number, bottom: number, left: number}} parameters.inset
  * @returns {JSX.Element}
  */
-const Control = ({ core, name, device, id, className, inset }) => {
-	/**
-	 * @param {Event} event
-	 * @returns {void}
-	 */
-	const down = (event) => {
-		core.send(device, id, 1);
-		event.preventDefault();
-	};
+const Control = ({ core, name, device, id, type, inset }) => {
+	/** @param {Event} event @returns {void} */
+	const down = (event) => { core.send(device, id, 1); event.preventDefault(); };
 
-	/**
-	 * @param {Event} event
-	 * @returns {void}
-	 */
-	const up = (event) => {
-		core.send(device, id, 0);
-		event.preventDefault();
-	};
+	/** @param {Event} event @returns {void} */
+	const up = (event) => { core.send(device, id, 0); event.preventDefault(); };
+
+	const unit = window.innerWidth < window.innerHeight ? 'vw' : 'vh'
 
 	const style = {
-		top:    `min(${inset.top}vw,    ${inset.top    * 10}px)`,
-		right:  `min(${inset.right}vw,  ${inset.right  * 10}px)`,
-		bottom: `min(${inset.bottom}vw, ${inset.bottom * 10}px)`,
-		left:   `min(${inset.left}vw,   ${inset.left   * 10}px)`,
+		top:      `min(${inset.top}${unit},    ${inset.top    * 10}px)`,
+		right:    `min(${inset.right}${unit},  ${inset.right  * 10}px)`,
+		bottom:   `min(${inset.bottom}${unit}, ${inset.bottom * 10}px)`,
+		left:     `min(${inset.left}${unit},   ${inset.left   * 10}px)`,
+		fontSize: `min(5${unit}, 5 * 10px)`,
 	};
 
+	switch (type) {
+		case 'generic':
+			style.width = `min(12${unit}, 12 * 10px)`;
+			style.height = `min(12${unit}, 12 * 10px)`;
+			style.borderRadius = '50%';
+			break;
+		case 'arrow':
+			style.width = `min(12${unit}, 12 * 10px)`;
+			style.height = `min(12${unit}, 12 * 10px)`;
+			style.borderRadius = '10%';
+			break;
+		case 'shoulder':
+			style.width = `min(12${unit}, 12 * 10px)`;
+			style.height = `min(8${unit}, 8 * 10px)`;
+			style.borderRadius = '20%';
+			break;
+		case 'special':
+			style.width = `min(8${unit}, 8 * 10px)`;
+			style.height = `min(8${unit}, 8 * 10px)`;
+			style.borderRadius = '50%';
+			break;
+	}
+
 	return (
-		<button className={className} style={style}
+		<button style={style}
 			onTouchStart={down} onTouchEnd={up} onTouchCancel={up}
 			onMouseDown={down} onMouseUp={up}>
 			{name}
 		</button>
-	);
-}
-
-/**
- * @param {Object} parameters
- * @param {Core} parameters.core
- * @param {number} parameters.width
- * @param {{top: number, right: number, bottom: number, left: number}} parameters.inset
- * @returns {JSX.Element}
- */
-const Stick = ({ core, width, inset }) => {
-	const size = Math.min(width * 0.32, 32 * 10);
-
-	const style = {
-		top:    `min(${inset.top}vw,    ${inset.top    * 10}px)`,
-		right:  `min(${inset.right}vw,  ${inset.right  * 10}px)`,
-		bottom: `min(${inset.bottom}vw, ${inset.bottom * 10}px)`,
-		left:   `min(${inset.left}vw,   ${inset.left   * 10}px)`,
-	};
-
-	/**
-	 * @param {Event} event
-	 * @returns {void}
-	 */
-	const event = (event) => {
-		const valid = event.type = 'move' && event.distance > 50;
-
-		core.send(Core.Device.JOYPAD, Core.Joypad.UP,    valid && event.direction == 'FORWARD');
-		core.send(Core.Device.JOYPAD, Core.Joypad.DOWN,  valid && event.direction == 'BACKWARD');
-		core.send(Core.Device.JOYPAD, Core.Joypad.LEFT,  valid && event.direction == 'LEFT');
-		core.send(Core.Device.JOYPAD, Core.Joypad.RIGHT, valid && event.direction == 'RIGHT');
-	}
-
-	return (
-		<div className="joystick" style={style}>
-			<Joystick size={size} throttle={100} move={event} stop={event}
-			          baseColor="transparent" stickColor="white" />
-		</div>
 	);
 }
 
@@ -140,10 +138,10 @@ export const CoreModal = ({ system, game, close }) => {
 	const content = useRef(/** @type {HTMLIonContentElement} */ (null));
 	const canvas  = useRef(/** @type {HTMLCanvasElement}     */ (null));
 
-	const [core, audio, speed, gamepad, joystick] = useCore(system.lib_name);
+	const [core, audio, speed, gamepad] = useCore(system.lib_name);
 	const [pointer, setPointer] = useState({ x: 0, y: 0, down: false });
-	const [window_w, window_h] = useWindowSize();
-	const [canvas_w, canvas_h] = useCanvasSize(canvas);
+	const [window_w, window_h] = useSize({ current: document.body });
+	const [canvas_w, canvas_h] = useSize(canvas);
 
 	/**
 	 * @returns {void}
@@ -209,7 +207,7 @@ export const CoreModal = ({ system, game, close }) => {
 				</IonHeader>
 
 				<IonContent>
-					<IonList>
+					<IonList lines="none">
 						<IonItem>
 							<IonButton fill="outline" onClick={() => core.current.save()}>Save state</IonButton>
 							<IonButton fill="outline" onClick={() => core.current.restore()}>Restore state</IonButton>
@@ -225,26 +223,9 @@ export const CoreModal = ({ system, game, close }) => {
 						<IonItem>
 							<IonCheckbox checked={gamepad.value} onIonChange={e => gamepad.set(e.detail.checked)}>Show gamepad</IonCheckbox>
 						</IonItem>
-						<IonItem>
-							<IonCheckbox checked={joystick.value} onIonChange={e => joystick.set(e.detail.checked)}>Use joystick</IonCheckbox>
-						</IonItem>
 						<IonAccordionGroup>
-							<IonAccordion>
-								<IonItem slot="header">
-									<IonLabel>Settings</IonLabel>
-								</IonItem>
-								<IonList slot="content">
-									<SettingsView variables={core.variables} settings={core.settings} update={core.update}></SettingsView>
-								</IonList>
-							</IonAccordion>
-							<IonAccordion>
-								<IonItem slot="header">
-									<IonLabel>Cheats</IonLabel>
-								</IonItem>
-								<IonList slot="content">
-									<CheatsView cheats={core.cheats}></CheatsView>
-								</IonList>
-							</IonAccordion>
+							<SettingsView variables={core.variables} settings={core.settings} update={core.update}></SettingsView>
+							<CheatsView cheats={core.cheats}></CheatsView>
 						</IonAccordionGroup>
 					</IonList>
 				</IonContent>
@@ -263,7 +244,7 @@ export const CoreModal = ({ system, game, close }) => {
 					</IonToolbar>
 				</IonHeader>
 
-				<IonContent className="core" ref={content}>
+				<IonContent ref={content} className="core">
 					<canvas ref={canvas}
 						onTouchStart={ (event) => touch(event, event.touches[0].clientX, event.touches[0].clientY, true)        }
 						onTouchMove={  (event) => touch(event, event.touches[0].clientX, event.touches[0].clientY, pointer.down)}
@@ -274,29 +255,21 @@ export const CoreModal = ({ system, game, close }) => {
 						onMouseUp={    (event) => touch(event, pointer.x,                pointer.y,                false)       }
 					/>
 
-					{gamepad.value &&
-						<>
-							<Control core={core.current} name="A"      device={Core.Device.JOYPAD} id={Core.Joypad.A}     className='generic'  inset={{bottom: 16, right: 4 }} />
-							<Control core={core.current} name="B"      device={Core.Device.JOYPAD} id={Core.Joypad.B}     className='generic'  inset={{bottom: 4,  right: 16}} />
-							<Control core={core.current} name="X"      device={Core.Device.JOYPAD} id={Core.Joypad.X}     className='generic'  inset={{bottom: 28, right: 16}} />
-							<Control core={core.current} name="Y"      device={Core.Device.JOYPAD} id={Core.Joypad.Y}     className='generic'  inset={{bottom: 16, right: 28}} />
-							<Control core={core.current} name="R"      device={Core.Device.JOYPAD} id={Core.Joypad.R}     className='shoulder' inset={{bottom: 34, right: 34}} />
-							<Control core={core.current} name="&#183;" device={Core.Device.JOYPAD} id={Core.Joypad.START} className='special'  inset={{bottom: 4,  right: 37}} />
+					{gamepad.value && <div className="controls"><div>
+						<Control core={core.current} name="A"        device={Core.Device.JOYPAD} id={Core.Joypad.A}     type='generic'  inset={{bottom: 30, right: 4 }} />
+						<Control core={core.current} name="B"        device={Core.Device.JOYPAD} id={Core.Joypad.B}     type='generic'  inset={{bottom: 18, right: 16}} />
+						<Control core={core.current} name="X"        device={Core.Device.JOYPAD} id={Core.Joypad.X}     type='generic'  inset={{bottom: 42, right: 16}} />
+						<Control core={core.current} name="Y"        device={Core.Device.JOYPAD} id={Core.Joypad.Y}     type='generic'  inset={{bottom: 30, right: 28}} />
+						<Control core={core.current} name="R"        device={Core.Device.JOYPAD} id={Core.Joypad.R}     type='shoulder' inset={{bottom: 48, right: 34}} />
+						<Control core={core.current} name="&#x00B7;" device={Core.Device.JOYPAD} id={Core.Joypad.START} type='special'  inset={{bottom: 18, right: 37}} />
 
-							{joystick.value && <>
-								<Stick core={core.current} width={window_w} inset={{bottom: 6, left: 2 }} />
-							</>}
-							{!joystick.value && <>
-								<Control core={core.current} name="&#5130;" device={Core.Device.JOYPAD} id={Core.Joypad.LEFT}  className='arrow' inset={{bottom: 16, left: 4 }} />
-								<Control core={core.current} name="&#5121;" device={Core.Device.JOYPAD} id={Core.Joypad.DOWN}  className='arrow' inset={{bottom: 4,  left: 16}} />
-								<Control core={core.current} name="&#5123;" device={Core.Device.JOYPAD} id={Core.Joypad.UP}    className='arrow' inset={{bottom: 28, left: 16}} />
-								<Control core={core.current} name="&#5125;" device={Core.Device.JOYPAD} id={Core.Joypad.RIGHT} className='arrow' inset={{bottom: 16, left: 28}} />
-							</>}
-
-							<Control core={core.current} name="L"      device={Core.Device.JOYPAD} id={Core.Joypad.L}      className='shoulder' inset={{bottom: 34, left: 34}} />
-							<Control core={core.current} name="&#183;" device={Core.Device.JOYPAD} id={Core.Joypad.SELECT} className='special'  inset={{bottom: 4,  left: 37}} />
-						</>
-					}
+						<Control core={core.current} name="&#x140A;" device={Core.Device.JOYPAD} id={Core.Joypad.LEFT}   type='arrow'    inset={{bottom: 30, left: 4 }} />
+						<Control core={core.current} name="&#x1401;" device={Core.Device.JOYPAD} id={Core.Joypad.DOWN}   type='arrow'    inset={{bottom: 18, left: 16}} />
+						<Control core={core.current} name="&#x1403;" device={Core.Device.JOYPAD} id={Core.Joypad.UP}     type='arrow'    inset={{bottom: 42, left: 16}} />
+						<Control core={core.current} name="&#x1405;" device={Core.Device.JOYPAD} id={Core.Joypad.RIGHT}  type='arrow'    inset={{bottom: 30, left: 28}} />
+						<Control core={core.current} name="L"        device={Core.Device.JOYPAD} id={Core.Joypad.L}      type='shoulder' inset={{bottom: 48, left: 34}} />
+						<Control core={core.current} name="&#x00B7;" device={Core.Device.JOYPAD} id={Core.Joypad.SELECT} type='special'  inset={{bottom: 18, left: 37}} />
+					</div></div>}
 				</IonContent>
 			</IonPage>
 		</>

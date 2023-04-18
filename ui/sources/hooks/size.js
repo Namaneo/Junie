@@ -1,38 +1,24 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
 /**
+ * @param {React.MutableRefObject<Element>} element
  * @returns {[width: number, height: number]}
  */
-export function useWindowSize() {
+export function useSize(element) {
 	const [size, setSize] = useState([0, 0]);
 
 	useEffect(() => {
-		const updateSize = () => setSize([window.innerWidth, window.innerHeight]);
+		const oberser = new ResizeObserver((entries) => {
+			const element = entries[0];
+			const width = element.contentRect.width;
+			const height = element.contentRect.height;
 
-		window.addEventListener('resize', updateSize);
-		updateSize();
-
-		return () => window.removeEventListener('resize', updateSize);
-	}, []);
-
-	return size;
-}
-
-/**
- * @param {React.MutableRefObject<HTMLCanvasElement>} ref
- * @returns {[width: number, height: number]}
- */
-export function useCanvasSize(ref) {
-	const [size, setSize] = useState([0, 0]);
-
-	useEffect(() => {
-		const observer = new ResizeObserver(() => {
-			setSize([ref.current.width, ref.current.height]);
+			setSize([width, height]);
 		});
 
-		observer.observe(ref.current);
+		oberser.observe(element.current);
 
-		return () => observer.disconnect();
+		return () => oberser.disconnect();
 	}, []);
 
 	return size;

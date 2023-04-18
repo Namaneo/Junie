@@ -75,7 +75,6 @@ class CoreState {
  * 	audio: CoreState<boolean>,
  * 	speed: CoreState<number>,
  * 	gamepad: CoreState<boolean>,
- * 	joystick: CoreState<boolean>
  * ]}
  */
 export const useCore = (lib) => {
@@ -91,18 +90,28 @@ export const useCore = (lib) => {
 	 * @returns {Promise<void>}
 	 */
 	const update = async (key, value) => {
-		if (!settings)
+		if (!settings || !variables)
 			return;
 
 		settings[key] = value;
+
+		const variable = variables.find(x => x.key == key);
+		if (variable && variable.options[0] == value)
+			delete settings[key];
+
 		await Files.Settings.update(settings);
-		await core.settings(settings);
+
+		const updated = variables.reduce((object, variable) => {
+			object[variable.key] = settings[variable.key] ?? variable.options[0];
+			return object;
+		}, {});
+
+		await core.settings(updated);
 	}
 
 	const [audio,    initAudio,    setAudio]    = useStatus(lib, 'audio',    true, update, (value) => core.audio(value));
 	const [speed,    initSpeed,    setSpeed]    = useStatus(lib, 'speed',    1,    update, (value) => core.speed(value));
 	const [gamepad,  initGamepad,  setGamepad]  = useStatus(lib, 'gamepad',  true, update);
-	const [joystick, initjoystick, setJoystick] = useStatus(lib, 'joystick', true, update);
 
 	/**
 	 * @param {string} system
@@ -119,7 +128,6 @@ export const useCore = (lib) => {
 		initAudio(settings);
 		initSpeed(settings);
 		initGamepad(settings);
-		initjoystick(settings);
 
 		setSettings(settings);
 		setCheats(cheats);
@@ -136,6 +144,5 @@ export const useCore = (lib) => {
 		{ value: audio,    set: (value) => setAudio(value)    },
 		{ value: speed,    set: (value) => setSpeed(value)    },
 		{ value: gamepad,  set: (value) => setGamepad(value)  },
-		{ value: joystick, set: (value) => setJoystick(value) },
 	]
 }

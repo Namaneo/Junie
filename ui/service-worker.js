@@ -1,3 +1,6 @@
+/** @type {ServiceWorkerGlobalScope} */
+const sw = self;
+
 const version = null;
 const resources = null;
 
@@ -49,17 +52,17 @@ const fetchResource = async (request, internal) => {
 	return response;
 }
 
-self.addEventListener('install', (event) => {
-	self.skipWaiting();
+sw.addEventListener('install', (event) => {
+	sw.skipWaiting();
     event.waitUntil(cacheResources());
 });
 
-self.addEventListener('activate', (event) => {
-	self.clients.claim()
+sw.addEventListener('activate', (event) => {
+	sw.clients.claim()
 	event.waitUntil(clearCaches());
 });
 
-self.addEventListener('fetch', (event) => {
+sw.addEventListener('fetch', (event) => {
 	const internal = event.request.url.startsWith(location.origin);
 	event.respondWith(fetchResource(event.request, internal));
 });
