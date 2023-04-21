@@ -2,6 +2,7 @@ import { Cheat } from '../entities/cheat';
 import { Settings } from '../entities/settings';
 import { Variable } from '../entities/variable';
 import Audio from './audio';
+import Caller from './caller';
 import Database from './database'
 import Path from './path';
 
@@ -31,8 +32,17 @@ const fs = `
 `;
 
 class CoreAPI {
+	/** @type {string} */
+	static #name = null;
+
+	/** @type {WebAssembly.Memory} */
+	static #memory = null;
+
 	/** @type {Worker} */
 	static #worker = null;
+
+	/** @type {Worker[]} */
+	static #threads = [];
 
 	/** @type {boolean} */
 	static get ready() { return !!this.#worker; }
@@ -43,8 +53,31 @@ class CoreAPI {
 	 * @returns {Promise<void>}
 	 */
 	static async init(name, memory) {
-		this.#worker = new Worker('worker.js', { name });
-		await this.#call('init', memory);
+		this.#name = name;
+		this.#memory = memory;
+		this.#worker = new Worker('worker.js', { name, type: 'module' });
+
+		Caller.receive(this.#worker, CoreAPI);
+		await Caller.call(this.#worker, 'init', memory);
+	}
+
+	/**
+	 * @param {number} start_arg
+	 * @param {Int32Array} sync
+	 * @returns {number}
+	 */
+	static async spawn(start_arg) {
+		const id = Math.floor(Math.random() * 90000) + 10000;
+
+		const name = `${this.#name}-${id}`;
+		const worker = new Worker('worker.js', { name, type: 'module' });
+
+		Caller.receive(worker, CoreAPI);
+		Caller.call(worker, 'init', this.#memory, start_arg);
+
+		this.#threads.push(worker);
+
+		return id;
 	}
 
 	/**
@@ -55,112 +88,88 @@ class CoreAPI {
 
 		this.#worker.terminate();
 		this.#worker = null;
-	}
 
-	/**
-	 * @param {string} name
-	 * @param {...(string | number)} parameters
-	 * @returns {Promise<any>}
-	 */
-	static #call(name, ...parameters) {
-		if (!parameters) parameters = [];
-
-		return new Promise(resolve => {
-			const worker = this.#worker;
-			if (!worker) resolve();
-
-			const id = Number(Math.random().toString().substring(2));
-
-			const on_message = (event) => {
-				if (event.data.id != id)
-					return;
-
-				worker.removeEventListener('message', on_message);
-				resolve(event.data.result);
-			}
-
-			worker.addEventListener('message', on_message);
-			worker.postMessage({ id, name, parameters });
-		});
+		this.#threads.forEach(thread => thread.terminate());
+		this.#threads = [];
 	}
 
 	/** @param {string} system @param {string} rom @returns {Promise<void>} */
-	static Create(system, rom) { return this.#call('Create', system, rom); }
+	static Create(system, rom) { return Caller.call(this.#worker, 'Create', system, rom); }
 
 	/** @param {string} path @param {number} length @returns {Promise<number>} */
-	static GetFileBuffer(path, length) { return this.#call('GetFileBuffer', path, length); }
+	static GetFileBuffer(path, length) { return Caller.call(this.#worker, 'GetFileBuffer', path, length); }
 
 	/** @returns {Promise<number>} */
-	static CountFiles() { return this.#call('CountFiles'); }
+	static CountFiles() { return Caller.call(this.#worker, 'CountFiles'); }
+
+	/** @param {number} index @returns {Promise<number>} */
+	static IsFileUpdated(index) { return Caller.call(this.#worker, 'IsFileUpdated', index); }
 
 	/** @param {number} index @returns {Promise<string>} */
-	static GetFilePath(index) { return this.#call('GetFilePath', index); }
+	static GetFilePath(index) { return Caller.call(this.#worker, 'GetFilePath', index); }
 
 	/** @param {number} index @returns {Promise<number>} */
-	static GetFileLength(index) { return this.#call('GetFileLength', index); }
+	static GetFileLength(index) { return Caller.call(this.#worker, 'GetFileLength', index); }
 
 	/** @param {number} index @returns {Promise<number>} */
-	static ReadFile(index) { return this.#call('ReadFile', index); }
+	static ReadFile(index) { return Caller.call(this.#worker, 'ReadFile', index); }
 
 	/** @returns {Promise<void>} */
-	static ResetCheats() { return this.#call('ResetCheats'); }
+	static ResetCheats() { return Caller.call(this.#worker, 'ResetCheats'); }
 
 	/** @param {number} index @param {number} enabled @param {string} code @returns {Promise<void>} */
-	static SetCheat(index, enabled, code) { return this.#call('SetCheat', index, enabled, code); }
+	static SetCheat(index, enabled, code) { return Caller.call(this.#worker, 'SetCheat', index, enabled, code); }
 
 	/** @returns {Promise<number>} */
-	static StartGame() { return this.#call('StartGame'); }
+	static StartGame() { return Caller.call(this.#worker, 'StartGame'); }
 
 	/** @returns {Promise<number>} */
-	static GetSampleRate() { return this.#call('GetSampleRate'); }
+	static GetSampleRate() { return Caller.call(this.#worker, 'GetSampleRate'); }
 
 	/** @returns {Promise<number>} */
-	static GetVariableCount() { return this.#call('GetVariableCount'); }
-
-	/** @param {number} index @returns {Promise<number>} */
-	static IsVariableLocked(index) { return this.#call('IsVariableLocked', index); }
+	static GetVariableCount() { return Caller.call(this.#worker, 'GetVariableCount'); }
 
 	/** @param {number} index @returns {Promise<string>} */
-	static GetVariableKey(index) { return this.#call('GetVariableKey', index); }
+	static GetVariableKey(index) { return Caller.call(this.#worker, 'GetVariableKey', index); }
 
 	/** @param {number} index @returns {Promise<string>} */
-	static GetVariableName(index) { return this.#call('GetVariableName', index); }
+	static GetVariableName(index) { return Caller.call(this.#worker, 'GetVariableName', index); }
 
 	/** @param {number} index @returns {Promise<string>} */
-	static GetVariableOptions(index) { return this.#call('GetVariableOptions', index); }
+	static GetVariableOptions(index) { return Caller.call(this.#worker, 'GetVariableOptions', index); }
 
 	/** @param {string} key @param {string} value @returns {Promise<void>} */
-	static SetVariable(key, value) { return this.#call('SetVariable', key, value); }
+	static SetVariable(key, value) { return Caller.call(this.#worker, 'SetVariable', key, value); }
 
 	/** @param {number} device @param {number} id @param {number} value @returns {Promise<void>} */
-	static SetInput(device, id, value) { return this.#call('SetInput', device, id, value); }
+	static SetInput(device, id, value) { return Caller.call(this.#worker, 'SetInput', device, id, value); }
 
 	/** @param {number} fast_forward @returns {Promise<void>} */
-	static Run(fast_forward) { return this.#call('Run', fast_forward); }
+	static Run(fast_forward) { return Caller.call(this.#worker, 'Run', fast_forward); }
 
 	/** @returns {Promise<number>} */
-	static GetFrameData() { return this.#call('GetFrameData'); }
+	static GetFrameData() { return Caller.call(this.#worker, 'GetFrameData'); }
 
 	/** @returns {Promise<number>} */
-	static GetFrameWidth() { return this.#call('GetFrameWidth'); }
+	static GetFrameWidth() { return Caller.call(this.#worker, 'GetFrameWidth'); }
 
 	/** @returns {Promise<number>} */
-	static GetFrameHeight() { return this.#call('GetFrameHeight'); }
+	static GetFrameHeight() { return Caller.call(this.#worker, 'GetFrameHeight'); }
 
 	/** @returns {Promise<number>} */
-	static GetAudioData() { return this.#call('GetAudioData'); }
+	static GetAudioData() { return Caller.call(this.#worker, 'GetAudioData'); }
 
 	/** @returns {Promise<number>} */
-	static GetAudioFrames() { return this.#call('GetAudioFrames'); }
+	static GetAudioFrames() { return Caller.call(this.#worker, 'GetAudioFrames'); }
 
 	/** @returns {Promise<void>} */
-	static SaveState() { return this.#call('SaveState'); }
+	static SaveState() { return Caller.call(this.#worker, 'SaveState'); }
 
 	/** @returns {Promise<void>} */
-	static RestoreState() { return this.#call('RestoreState'); }
+	static RestoreState() { return Caller.call(this.#worker, 'RestoreState'); }
 
 	/** @returns {Promise<void>} */
-	static Destroy() { return this.#call('Destroy'); }
+	static Destroy() { return Caller.call(this.#worker, 'Destroy'); }
 }
 
 export default class Core {
@@ -184,9 +193,6 @@ export default class Core {
 	#canvas = null;
 
 	#state = {
-		/** @type {number} */
-		id: 0,
-
 		/** @type {string} */
 		rom: null,
 
@@ -196,8 +202,11 @@ export default class Core {
 		/** @type {boolean} */
 		audio: true,
 
-		/** @type {number} */
-		timeout: 0,
+		/** @type {boolean} */
+		stop: false,
+
+		/** @type {Promise} */
+		running: null,
 	}
 
 	#state_gl = {
@@ -301,15 +310,14 @@ export default class Core {
 	}
 
 	/**
-	 * @param {boolean} loop
 	 * @returns {Promise<void>}
 	 */
-	async #sync(loop) {
+	async #sync() {
 		const state = this.#state;
 
 		for (let i = 0; i < await CoreAPI.CountFiles(); i++) {
 			const path = await CoreAPI.GetFilePath(i);
-			if (path == state.rom)
+			if (path == state.rom || !await CoreAPI.IsFileUpdated(i))
 				continue;
 
 			const data = await CoreAPI.ReadFile(i);
@@ -318,9 +326,6 @@ export default class Core {
 			const view = new Uint8Array(Core.#memory.buffer, data, length);
 			await Database.write(path, new Uint8Array(view));
 		}
-
-		if (loop)
-			state.timeout = setTimeout(() => this.#sync(loop), 1000);
 	}
 
 	/**
@@ -363,35 +368,38 @@ export default class Core {
 		await CoreAPI.StartGame();
 		await this.cheats(cheats);
 
-		this.#sync(true);
+		state.stop = false;
+		state.running = new Promise((resolve) => {
+			const step = async () => {
+				if (!CoreAPI.ready)
+					return;
 
-		const step = async () => {
-			if (!CoreAPI.ready)
-				return;
+				await CoreAPI.Run(state.speed);
 
-			await CoreAPI.Run(state.speed);
+				const frame = await CoreAPI.GetFrameData();
+				const width = await CoreAPI.GetFrameWidth();
+				const height = await CoreAPI.GetFrameHeight();
 
-			const frame = await CoreAPI.GetFrameData();
-			const width = await CoreAPI.GetFrameWidth();
-			const height = await CoreAPI.GetFrameHeight();
+				if (width != 0 && height != 0)
+					this.#draw(frame, width, height);
 
-			if (width != 0 && height != 0)
-				this.#draw(frame, width, height);
+				const sample_rate = await CoreAPI.GetSampleRate();
+				Audio.update(sample_rate * state.speed, 2);
 
-			const sample_rate = await CoreAPI.GetSampleRate();
-			Audio.update(sample_rate * state.speed, 2);
+				if (state.audio) {
+					const audio = await CoreAPI.GetAudioData();
+					const frames = await CoreAPI.GetAudioFrames();
+					const audio_view = new Float32Array(Core.#memory.buffer, audio, frames * 2);
+					Audio.queue(audio_view);
+				}
 
-			if (state.audio) {
-				const audio = await CoreAPI.GetAudioData();
-				const frames = await CoreAPI.GetAudioFrames();
-				const audio_view = new Float32Array(Core.#memory.buffer, audio, frames * 2);
-				Audio.queue(audio_view);
+				await this.#sync();
+
+				state.stop ? resolve() : requestAnimationFrame(step);
 			}
 
-			state.id = requestAnimationFrame(step);
-		}
-
-		state.id = requestAnimationFrame(step);
+			requestAnimationFrame(step);
+		});
 	}
 
 	/**
@@ -400,14 +408,10 @@ export default class Core {
 	async stop() {
 		const state = this.#state;
 
-		cancelAnimationFrame(state.id);
-		state.audio = false;
-
-		clearTimeout(state.timeout);
-		await this.#sync(false);
+		state.stop = true;
+		await state.running;
 
 		await CoreAPI.terminate();
-
 		new Uint8Array(Core.#memory.buffer).fill(0);
 	}
 
@@ -418,9 +422,6 @@ export default class Core {
 		const variables = [];
 
 		for (let i = 0; i < await CoreAPI.GetVariableCount(); i++) {
-			if (await CoreAPI.IsVariableLocked(i))
-				continue;
-
 			const key = await CoreAPI.GetVariableKey(i);
 			const name = await CoreAPI.GetVariableName(i);
 			const options = (await CoreAPI.GetVariableOptions(i)).split('|');

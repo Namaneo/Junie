@@ -1,25 +1,30 @@
 # Build
-FROM emscripten/emsdk AS build
+FROM node AS build
+
+WORKDIR /root
+
+RUN wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-20/wasi-sdk-20.0-linux.tar.gz
+RUN tar xvf wasi-sdk-20.0-linux.tar.gz
 
 WORKDIR /junie
 
 RUN apt update
 RUN apt install -y jq
-RUN npm install -g yarn
 
 ADD GNUmakefile .
+ADD GNUmakefile.common .
 
 ADD ./ui/package.json ./ui/package.json
-RUN emmake make prepare
+RUN make prepare
 
 ADD ./cores ./cores
-RUN emmake make cores
+RUN make cores
 
 ADD ./app ./app
-RUN emmake make app
+RUN make app
 
 ADD ./ui ./ui
-RUN emmake make ui
+RUN make ui
 
 # Run
 FROM node:alpine AS run

@@ -19,6 +19,9 @@ UI_FLAGS := --version $(VERSION)
 ifeq ($(DEBUG), 1)
 UI_FLAGS += --debug
 endif
+ifneq ($(UI_ONLY), 1)
+UI_FLAGS += --command "$(MAKE) -C ../$(APP_DIR) DEBUG=$(DEBUG)"
+endif
 
 .PHONY: cores app ui
 
@@ -33,18 +36,18 @@ app:
 	@$(MAKE) -C $(APP_DIR) DEBUG=$(DEBUG)
 
 ui:
-	@echo Building index.html...
+	@echo Building application...
 	@( cd ui && node esbuild.mjs $(UI_FLAGS) $(QUIET) )
 
 # Watch
 
-watch: clean prepare cores
-	@( cd ui && node esbuild.mjs --watch "$(MAKE) -C ../$(APP_DIR) DEBUG=$(DEBUG)" $(UI_FLAGS) )
+watch: clean prepare cores app
+	@( cd ui && node esbuild.mjs --watch $(UI_FLAGS) )
 
 # Common
 
 prepare:
-	@echo Fetching UI dependencies...
+	@echo Fetching dependencies...
 	@yarn --cwd $(UI_DIR) install $(QUIET)
 
 # Pack

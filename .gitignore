@@ -3,12 +3,12 @@
 /data
 /build
 
-cores/*.so
-cores/**/
+cores/*.a
+cores/*/
+!cores/include/
 
 app/build
-app/**/*.o
-app/**/*.tmp
+app/sources/*.o
 
 app/include/res_inputs.h
 

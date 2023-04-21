@@ -17,6 +17,11 @@ const { values: options } = parseArgs({ args: process.argv, allowPositionals: tr
 		default: false,
 	},
 	watch: {
+		type: 'boolean',
+		short: 'w',
+		default: false,
+	},
+	command: {
 		type: 'string',
 		short: 'w',
 		default: undefined,
@@ -70,7 +75,7 @@ function plugin_html(html, sw) {
 }
 
 const context = await esbuild.context({
-	entryPoints: ['sources/index.jsx'],
+	entryPoints: ['sources/index.jsx', 'sources/worker.js'],
 	outdir: 'build',
 	bundle: true,
 	format: 'esm',
@@ -80,7 +85,6 @@ const context = await esbuild.context({
 	plugins: [
 		copy({
 			assets: [
-				{ from: [ '../ui/worker.js'     ], to: [ '.'         ] },
 				{ from: [ '../ui/manifest.json' ], to: [ '.'         ] },
 				{ from: [ '../cores/cores.json' ], to: [ '.'         ] },
 				{ from: [ '../ui/assets/**/*'   ], to: [ './assets'  ] },
@@ -147,9 +151,11 @@ async function rebuild() {
 
 	console.clear();
 
-	const command = options.watch.split(' ')[0];
-	const parameters = options.watch.split(' ').slice(1);
-	spawnSync(command, parameters, { stdio: 'inherit' });
+	if (options.command) {
+		const command = options.command.split(' ')[0];
+		const parameters = options.command.split(' ').slice(1);
+		spawnSync(command, parameters, { stdio: 'inherit' });
+	}
 
 	options.version = `Development-${Date.now()}`;
 

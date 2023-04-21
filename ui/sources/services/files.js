@@ -127,7 +127,7 @@ export default class Files {
 		 * @returns {Promise<Save>}
 		 */
 		static async get() {
-			const paths = await Files.list('.sav', '.srm', '.rtc', '.state', '.cht');
+			const paths = await Files.list('.sav', '.dsv', '.srm', '.rtc', '.state', '.cht');
 
 			return paths.map(path => new Save(path)).reduce((saves, save) => {
 				const found = saves.find(x => x.system == save.system && x.game == save.game);

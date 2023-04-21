@@ -69,7 +69,6 @@ static struct CTX {
 		char *name;
 		char *options;
 		char *value;
-		bool locked;
 	} variables[INT8_MAX];
 	bool variables_update;
 
@@ -180,19 +179,9 @@ static bool environment(unsigned cmd, void *data)
 				CTX.variables[i].name = strdup(strtok_r(value, ";", &ptr));
 				CTX.variables[i].options = strdup(strtok_r(NULL, ";", &ptr) + 1);
 
-				if (!strcmp(CTX.variables[i].key, "desmume_pointer_type")) {
-					CTX.variables[i].value = strdup("touch");
-					CTX.variables[i].locked = true;
-
-				} else if (!strcmp(CTX.variables[i].key, "desmume_num_cores")) {
-					CTX.variables[i].value = strdup("1");
-					CTX.variables[i].locked = true;
-
-				} else {
-					char *options = strdup(CTX.variables[i].options);
-					CTX.variables[i].value = strdup(strtok_r(options, "|", &ptr));
-					free(options);
-				}
+				char *options = strdup(CTX.variables[i].options);
+				CTX.variables[i].value = strdup(strtok_r(options, "|", &ptr));
+				free(options);
 
 				free(value);
 			}
@@ -249,6 +238,7 @@ static void video_refresh(const void *data, unsigned width, unsigned height, siz
 		CTX.frame.data = realloc(CTX.frame.data, width * height * sizeof(uint32_t));
 
 	switch (CTX.format) {
+		case RETRO_PIXEL_FORMAT_UNKNOWN:
 		case RETRO_PIXEL_FORMAT_0RGB1555:
 			JUN_ConvertARGB1555(data, width, height, pitch, CTX.frame.data);
 			break;
@@ -327,7 +317,9 @@ static void save_memory(uint32_t type, const char *path)
 	if (!size)
 		return;
 
-	JUN_FilesystemSaveFile(path, buffer, size);
+	JUN_File *file = JUN_FilesystemReadFile(path);
+	if (!file || file->size != size || memcmp(file->buffer, buffer, size))
+		JUN_FilesystemSaveFile(path, buffer, size);
 }
 
 static void save_memories()
@@ -457,6 +449,11 @@ uint32_t JUN_CoreCountFiles()
 	return JUN_FilesystemCountFiles();
 }
 
+uint8_t JUN_CoreIsFileUpdated(uint32_t index)
+{
+	return JUN_FilesystemGetFile(index)->updated;
+}
+
 const char *JUN_CoreGetFilePath(uint32_t index)
 {
 	return JUN_FilesystemGetFile(index)->path;
@@ -469,7 +466,9 @@ uint32_t JUN_CoreGetFileLength(uint32_t index)
 
 const void *JUN_CoreReadFile(uint32_t index)
 {
-	return JUN_FilesystemGetFile(index)->buffer;
+	JUN_File *file = JUN_FilesystemGetFile(index);
+	file->updated = false;
+	return file->buffer;
 }
 
 void JUN_CoreResetCheats()
@@ -529,11 +528,6 @@ uint32_t JUN_CoreGetVariableCount()
 			return count;
 
 	return 0;
-}
-
-uint8_t JUN_CoreIsVariableLocked(uint32_t index)
-{
-	return CTX.variables[index].locked;
 }
 
 const char *JUN_CoreGetVariableKey(uint32_t index)

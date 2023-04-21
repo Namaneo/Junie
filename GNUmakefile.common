@@ -1,0 +1,7 @@
+WASI_SDK     = $(HOME)/wasi-sdk-20.0
+WASI_SYSROOT = --sysroot=$(WASI_SDK)/share/wasi-sysroot --target=wasm32-wasi-threads -pthread
+
+CC     = $(WASI_SDK)/bin/clang $(WASI_SYSROOT) $(WASI_FLAGS)
+CXX    = $(WASI_SDK)/bin/clang++ $(WASI_SYSROOT) $(WASI_FLAGS)
+AR     = $(WASI_SDK)/bin/ar
+RANLIB = $(WASI_SDK)/bin/ranlib

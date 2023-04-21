@@ -139,6 +139,7 @@ void JUN_FilesystemSaveFile(const char *path, const void *buffer, uint32_t lengt
 	}
 
 	memcpy(file->buffer, buffer, file->size);
+	file->updated = true;
 }
 
 void JUN_FilesystemDestroy()
@@ -247,8 +248,7 @@ static int64_t fs_write(JUN_File *stream, const void *s, uint64_t len)
 	memcpy(stream->buffer + stream->offset, s, len);
 
 	stream->offset += len;
-
-	JUN_FilesystemSaveFile(stream->path, stream->buffer, stream->size);
+	stream->updated = true;
 
 	return 0;
 }

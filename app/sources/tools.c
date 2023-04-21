@@ -19,7 +19,8 @@ void JUN_Log(const char *fmt, ...)
 	if (format[format_len - 1] != '\n')
 		format[format_len] = '\n';
 
-	vprintf(format, args);
+	vfprintf(stdout, format, args);
+	fflush(stdout);
 
 	free(format);
 	va_end(args);
