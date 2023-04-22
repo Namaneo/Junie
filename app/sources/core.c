@@ -87,8 +87,8 @@ static struct CTX {
 
 	struct {
 		bool pressed;
-		double x;
-		double y;
+		int16_t x;
+		int16_t y;
 	} pointer;
 
 	struct jun_core_sym sym;
@@ -298,9 +298,9 @@ static int16_t input_state(unsigned port, unsigned device, unsigned index, unsig
 			case RETRO_DEVICE_ID_POINTER_PRESSED:
 				return CTX.pointer.pressed;
 			case RETRO_DEVICE_ID_POINTER_X:
-				return CTX.pointer.x;
+				return (((double) CTX.pointer.x * 0x10000) / (double) CTX.frame.width) - 0x8000;
 			case RETRO_DEVICE_ID_POINTER_Y:
-				return CTX.pointer.y;
+				return (((double) CTX.pointer.y * 0x10000) / (double) CTX.frame.height) - 0x8000;
 		}
 	}
 
@@ -575,10 +575,10 @@ void JUN_CoreSetInput(uint8_t device, uint8_t id, int16_t value)
 				CTX.pointer.pressed = value;
 				break;
 			case RETRO_DEVICE_ID_POINTER_X:
-				CTX.pointer.x = (((double) value * 0x10000) / (double) CTX.frame.width) - 0x8000;
+				CTX.pointer.x = value;
 				break;
 			case RETRO_DEVICE_ID_POINTER_Y:
-				CTX.pointer.y = (((double) value * 0x10000) / (double) CTX.frame.height) - 0x8000;
+				CTX.pointer.y = value;
 				break;
 		}
 	}
