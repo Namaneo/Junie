@@ -45,21 +45,31 @@ games
 ## Prerequisites
 
 Junie is composed of 3 main components:
+* The **Cores**: the libretro cores that are being pulled and built.
+* The **Frontend**: developed in C, located in the [app](app) folder.
 * The **UI**: developed in JSX using React and Ionic, located in the [ui](ui) folder.
-* The **Emulator**: developed in C, located in the [app](app) folder.
 
 ## Build
 
-First, install the following dependencies: **yarn**, **make** and **zip**. Then follow the instructions to install and setup [emscripten](https://emscripten.org/docs/getting_started/downloads.html).
+First install the following dependencies: **yarn**, **make** and **zip**.
 
+Then extract the latest [WASI-SDK](https://github.com/WebAssembly/wasi-sdk) to you home directory:
 ```bash
-emmake make       # Build cores, libraries and the application
-emmake make pack  # Same as `make`, but also outputs binaries in a zip file
-emmake make watch # Same as `make`, but also rebuild on source file changes
+cd ~
+wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-20/wasi-sdk-20.0-linux.tar.gz
+tar xvf wasi-sdk-20.0-linux.tar.gz
+```
+
+Finally you can build the application:
+```bash
+make       # Build cores, libraries and the application
+make pack  # Same as `make`, but also outputs binaries in a zip file
+make watch # Same as `make`, but also rebuild on source file changes
 
 # Additional flags:
-# * DEBUG=1 : build app and ui in debug mode
-# * QUIET=  : enable verbose build mode
+# * DEBUG=1   : build app and ui in debug mode
+# * UI_ONLY=1 : rebuild only on UI changes when watching
+# * QUIET=    : enable verbose build mode
 ```
 
 ## Docker
