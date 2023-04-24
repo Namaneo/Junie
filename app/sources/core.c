@@ -317,8 +317,11 @@ static void save_memory(uint32_t type, const char *path)
 	if (!size)
 		return;
 
-	JUN_File *file = JUN_FilesystemReadFile(path);
-	if (!file || file->size != size || memcmp(file->buffer, buffer, size))
+	int32_t index = JUN_FilesystemGetFileIndex(path);
+	uint32_t previous_size = JUN_FilesystemGetFileLength(index);
+	const void *file_buffer = JUN_FilesystemReadFile(index);
+
+	if (index == -1 || previous_size != size || memcmp(file_buffer, buffer, size))
 		JUN_FilesystemSaveFile(path, buffer, size);
 }
 
@@ -346,11 +349,12 @@ static void restore_memory(uint32_t type, const char *path)
 	if (!size)
 		return;
 
-	JUN_File *file = JUN_FilesystemReadFile(path);
-	if (!file)
+	int32_t index = JUN_FilesystemGetFileIndex(path);
+	if (index == -1)
 		return;
 
-	memcpy(buffer, file->buffer, file->size);
+	const void *file_buffer = JUN_FilesystemReadFile(index);
+	memcpy(buffer, file_buffer, size);
 }
 
 static void restore_memories()
@@ -439,44 +443,12 @@ void JUN_CoreCreate(const char *system, const char *rom)
 	CTX.sym.retro_set_audio_sample_batch(audio_sample_batch);
 }
 
-void *JUN_CoreGetFileBuffer(const char *path, uint32_t length)
-{
-	return JUN_FilesystemGetNewFile(path, length)->buffer;
-}
-
-uint32_t JUN_CoreCountFiles()
-{
-	return JUN_FilesystemCountFiles();
-}
-
-uint8_t JUN_CoreIsFileUpdated(uint32_t index)
-{
-	return JUN_FilesystemGetFile(index)->updated;
-}
-
-const char *JUN_CoreGetFilePath(uint32_t index)
-{
-	return JUN_FilesystemGetFile(index)->path;
-}
-
-uint32_t JUN_CoreGetFileLength(uint32_t index)
-{
-	return JUN_FilesystemGetFile(index)->size;
-}
-
-const void *JUN_CoreReadFile(uint32_t index)
-{
-	JUN_File *file = JUN_FilesystemGetFile(index);
-	file->updated = false;
-	return file->buffer;
-}
-
 void JUN_CoreResetCheats()
 {
 	CTX.sym.retro_cheat_reset();
 }
 
-void JUN_CoreSetCheat(uint32_t index, uint8_t enabled, const char *code)
+void JUN_CoreSetCheat(uint32_t index, bool enabled, const char *code)
 {
 	char *value = strdup(code);
 	for (size_t i = 0; i < strlen(value); i++)
@@ -488,20 +460,20 @@ void JUN_CoreSetCheat(uint32_t index, uint8_t enabled, const char *code)
 	free(value);
 }
 
-uint8_t JUN_CoreStartGame()
+bool JUN_CoreStartGame()
 {
 	CTX.sym.retro_init();
 
 	CTX.sym.retro_get_system_info(&CTX.system);
 
 	const char *game_path = CTX.paths[JUN_PATH_GAME];
-	JUN_File *game = JUN_FilesystemReadFile(game_path);
+	int32_t index = JUN_FilesystemGetFileIndex(game_path);
 
-	CTX.game.path = game->path;
-	CTX.game.size = game->size;
+	CTX.game.path = JUN_FilesystemGetFilePath(index);
+	CTX.game.size = JUN_FilesystemGetFileLength(index);
 
 	if (!CTX.system.need_fullpath)
-		CTX.game.data = game->buffer;
+		CTX.game.data = JUN_FilesystemReadFile(index);
 
 	CTX.initialized = CTX.sym.retro_load_game(&CTX.game);
 
@@ -641,13 +613,16 @@ void JUN_CoreSaveState()
 void JUN_CoreRestoreState()
 {
 	size_t size = CTX.sym.retro_serialize_size();
-
-	const char *state_path = CTX.paths[JUN_PATH_STATE];
-	JUN_File *file = JUN_FilesystemReadFile(state_path);
-	if (!file)
+	if (!size)
 		return;
 
-	CTX.sym.retro_unserialize(file->buffer, size);
+	const char *state_path = CTX.paths[JUN_PATH_STATE];
+	int32_t index = JUN_FilesystemGetFileIndex(state_path);
+	if (index == -1)
+		return;
+
+	const void *buffer = JUN_FilesystemReadFile(index);
+	CTX.sym.retro_unserialize(buffer, size);
 }
 
 void JUN_CoreDestroy()

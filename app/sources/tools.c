@@ -6,18 +6,23 @@
 #include <string.h>
 #include <time.h>
 
-void JUN_Log(const char *fmt, ...)
+void JUN_LogParams(const char *func, const char *fmt, ...)
 {
 #if defined(DEBUG)
 	va_list args = {0};
 	va_start(args, fmt);
 
+	size_t func_len = strlen(func);
 	size_t format_len = strlen(fmt);
-	char *format = calloc(format_len + 2, 1);
-	memcpy(format, fmt, format_len);
+	char *format = calloc(func_len + format_len + 4, 1);
 
-	if (format[format_len - 1] != '\n')
-		format[format_len] = '\n';
+	memcpy(format, func, func_len);
+	memcpy(format + func_len, ": ", 2);
+	memcpy(format + func_len + 2, fmt, format_len);
+
+	size_t length = strlen(format);
+	if (format[length - 1] != '\n')
+		format[length] = '\n';
 
 	vfprintf(stdout, format, args);
 	fflush(stdout);

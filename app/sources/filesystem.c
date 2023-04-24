@@ -13,6 +13,19 @@ static struct CTX {
 	JUN_File *files;
 } CTX;
 
+struct retro_vfs_file_handle {
+	bool exists;
+	bool updated;
+
+	char *path;
+	unsigned mode;
+	unsigned hints;
+
+	uint32_t size;
+	unsigned offset;
+	void *buffer;
+};
+
 /* V1 */
 
 static const char *fs_get_path(JUN_File *stream);
@@ -84,7 +97,7 @@ uint32_t JUN_FilesystemGetInterfaceVersion()
 	return VFS_INTERFACE_VERSION;
 }
 
-JUN_File *JUN_FilesystemGetNewFile(const char *path, uint32_t length)
+static JUN_File *filesystem_get_new_file(const char *path, uint32_t length)
 {
 	for (int i = 0; i < MAX_FILES; ++i) {
 		if (!CTX.files[i].exists) {
@@ -103,21 +116,7 @@ JUN_File *JUN_FilesystemGetNewFile(const char *path, uint32_t length)
 	return NULL;
 }
 
-uint32_t JUN_FilesystemCountFiles()
-{
-	for (int i = 0; i < MAX_FILES; ++i)
-		if (!CTX.files[i].exists)
-			return i;
-
-	return 0;
-}
-
-JUN_File *JUN_FilesystemGetFile(uint32_t index)
-{
-	return &CTX.files[index];
-}
-
-JUN_File *JUN_FilesystemReadFile(const char *path)
+static JUN_File *filesystem_get_file(const char *path)
 {
 	for (int i = 0; i < MAX_FILES; ++i)
 		if (CTX.files[i].exists && !strcmp(CTX.files[i].path, path))
@@ -126,12 +125,60 @@ JUN_File *JUN_FilesystemReadFile(const char *path)
 	return NULL;
 }
 
+void *JUN_FilesystemGetFileBuffer(const char *path, uint32_t length)
+{
+	return filesystem_get_new_file(path, length)->buffer;
+}
+
+int32_t JUN_FilesystemCountFiles()
+{
+	for (int i = 0; i < MAX_FILES; ++i)
+		if (!CTX.files[i].exists)
+			return i;
+
+	return 0;
+}
+
+int32_t JUN_FilesystemGetFileIndex(const char *path)
+{
+	for (int i = 0; i < MAX_FILES; ++i)
+		if (CTX.files[i].exists && !strcmp(CTX.files[i].path, path))
+			return i;
+
+	return -1;
+}
+
+bool JUN_FilesystemIsFileUpdated(int32_t index)
+{
+	return CTX.files[index].updated;
+}
+
+const char *JUN_FilesystemGetFilePath(int32_t index)
+{
+	return CTX.files[index].path;
+}
+
+uint32_t JUN_FilesystemGetFileLength(int32_t index)
+{
+	return CTX.files[index].size;
+}
+
+const void *JUN_FilesystemReadFile(int32_t index)
+{
+	return CTX.files[index].buffer;
+}
+
+void JUN_FilesystemSeenFile(int32_t index)
+{
+	CTX.files[index].updated = false;
+}
+
 void JUN_FilesystemSaveFile(const char *path, const void *buffer, uint32_t length)
 {
-	JUN_File *file = JUN_FilesystemReadFile(path);
+	JUN_File *file = filesystem_get_file(path);
 
 	if (!file) {
-		file = JUN_FilesystemGetNewFile(path, length);
+		file = filesystem_get_new_file(path, length);
 
 	} else {
 		file->size = length;
@@ -170,18 +217,14 @@ static JUN_File *fs_open(const char *path, unsigned mode, unsigned hints)
 {
 	JUN_Log("%s (mode: %d)", path, mode);
 
-	// XXX Skip melonDS firmware file to avoid conflicts between runs
-	if (strstr(path, "firmware.bin"))
-		return NULL;
-
-	JUN_File *file = JUN_FilesystemReadFile(path);
+	JUN_File *file = filesystem_get_file(path);
 	if (file)
 		return file;
 
 	if (!(mode & RETRO_VFS_FILE_ACCESS_WRITE))
 		return NULL;
 
-	file = JUN_FilesystemGetNewFile(path, 0);
+	file = filesystem_get_new_file(path, 0);
 
 	file->mode = mode;
 	file->hints = hints;
@@ -262,20 +305,14 @@ static int fs_remove(const char *path)
 {
 	JUN_Log("%s", path);
 
-	JUN_File *file = JUN_FilesystemReadFile(path);
+	JUN_File *file = filesystem_get_file(path);
 	if (!file)
 		return -1;
 
-	file->exists = false;
-	file->path = NULL;
-	file->mode = 0;
-	file->hints = 0;
-	file->size = 0;
-	file->offset = 0;
-
 	if (file->buffer)
 		free(file->buffer);
-	file->buffer = NULL;
+
+	*file = (JUN_File) {0};
 
 	return 0;
 }
@@ -284,7 +321,7 @@ static int fs_rename(const char *old_path, const char *new_path)
 {
 	JUN_Log("%s -> %s", old_path, new_path);
 
-	JUN_File *file = JUN_FilesystemReadFile(old_path);
+	JUN_File *file = filesystem_get_file(old_path);
 	if (!file)
 		return -1;
 

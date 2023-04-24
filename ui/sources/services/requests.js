@@ -98,7 +98,7 @@ export default class Requests {
 			const reader = response.body.getReader();
 
 			const length = response.headers.get('Content-Length');
-			const buffer = new Uint8Array(new ArrayBuffer(length));
+			const buffer = new Uint8Array(length);
 
 			let offset = 0
 			return reader.read().then(function process({ done, value }) {

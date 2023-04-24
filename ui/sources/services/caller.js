@@ -131,12 +131,10 @@ export default class Caller {
 	static async receive(worker, object, callback) {
 		/** @type {MessageListener<WorkerRequest>} */
 		const on_message = (event) => {
-			if (event.data.type != 'request')
+			if (event.data.type != 'request' || !object[event.data.name])
 				return;
 
-			let result = null;
-			if (object[event.data.name])
-				result = object[event.data.name](...event.data.parameters)
+			const result = object[event.data.name](...event.data.parameters)
 
 			if (event.data.sync) {
 				Atomics.store(event.data.sync, 0, result);

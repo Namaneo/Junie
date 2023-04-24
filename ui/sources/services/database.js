@@ -1,7 +1,11 @@
 export default class Database {
+	/** @type {IDBDatabase} */
 	static #db = null;
 
+	/** @type {string} */
 	static get #name() { return 'Junie'; };
+
+	/** @type {string} */
 	static get #store() { return 'FILE_DATA'; };
 
 	/**
@@ -91,9 +95,21 @@ export default class Database {
 	 */
 	static async read(path) {
 		const file = await this.file(path);
-		const buffer = await file?.arrayBuffer();
+		if (!file) return null;
 
-		return buffer ? new Uint8Array(buffer) : null;
+		const reader = file.stream().getReader();
+		const buffer = new Uint8Array(file.size);
+
+		let offset = 0
+		return reader.read().then(function process({ done, value }) {
+			if (done)
+				return buffer;
+
+			buffer.set(value, offset);
+			offset += value.length;
+
+			return reader.read().then(process);
+		});
 	}
 
 	/**

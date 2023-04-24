@@ -31,7 +31,7 @@ const fs = `
 	}
 `;
 
-class CoreAPI {
+class Interop {
 	/** @type {string} */
 	static #name = null;
 
@@ -44,8 +44,8 @@ class CoreAPI {
 	/** @type {Worker[]} */
 	static #threads = [];
 
-	/** @type {boolean} */
-	static get ready() { return !!this.#worker; }
+	/** @type {Worker} */
+	static get worker() { return this.#worker; }
 
 	/**
 	 * @param {string} name
@@ -57,8 +57,8 @@ class CoreAPI {
 		this.#memory = memory;
 		this.#worker = new Worker('worker.js', { name, type: 'module' });
 
-		Caller.receive(this.#worker, CoreAPI);
-		await Caller.call(this.#worker, 'init', memory);
+		Caller.receive(Interop.worker, Interop);
+		await Caller.call(Interop.worker, 'init', memory);
 	}
 
 	/**
@@ -67,12 +67,12 @@ class CoreAPI {
 	 * @returns {number}
 	 */
 	static async spawn(start_arg) {
-		const id = Math.floor(Math.random() * 90000) + 10000;
+		const id = this.#threads.length + 1;
 
 		const name = `${this.#name}-${id}`;
 		const worker = new Worker('worker.js', { name, type: 'module' });
 
-		Caller.receive(worker, CoreAPI);
+		Caller.receive(worker, Interop);
 		Caller.call(worker, 'init', this.#memory, start_arg);
 
 		this.#threads.push(worker);
@@ -84,7 +84,7 @@ class CoreAPI {
 	 * @returns {Promise<void>}
 	 */
 	static async terminate() {
-		await CoreAPI.Destroy();
+		await Interop.Core.Destroy();
 
 		this.#worker.terminate();
 		this.#worker = null;
@@ -93,83 +93,90 @@ class CoreAPI {
 		this.#threads = [];
 	}
 
-	/** @param {string} system @param {string} rom @returns {Promise<void>} */
-	static Create(system, rom) { return Caller.call(this.#worker, 'Create', system, rom); }
+	static Core = class {
+		/** @param {string} system @param {string} rom @returns {Promise<void>} */
+		static Create(system, rom) { return Caller.call(Interop.worker, 'JUN_CoreCreate', system, rom); }
 
-	/** @param {string} path @param {number} length @returns {Promise<number>} */
-	static GetFileBuffer(path, length) { return Caller.call(this.#worker, 'GetFileBuffer', path, length); }
+		/** @returns {Promise<void>} */
+		static ResetCheats() { return Caller.call(Interop.worker, 'JUN_CoreResetCheats'); }
 
-	/** @returns {Promise<number>} */
-	static CountFiles() { return Caller.call(this.#worker, 'CountFiles'); }
+		/** @param {number} index @param {number} enabled @param {string} code @returns {Promise<void>} */
+		static SetCheat(index, enabled, code) { return Caller.call(Interop.worker, 'JUN_CoreSetCheat', index, enabled, code); }
 
-	/** @param {number} index @returns {Promise<number>} */
-	static IsFileUpdated(index) { return Caller.call(this.#worker, 'IsFileUpdated', index); }
+		/** @returns {Promise<number>} */
+		static StartGame() { return Caller.call(Interop.worker, 'JUN_CoreStartGame'); }
 
-	/** @param {number} index @returns {Promise<string>} */
-	static GetFilePath(index) { return Caller.call(this.#worker, 'GetFilePath', index); }
+		/** @returns {Promise<number>} */
+		static GetSampleRate() { return Caller.call(Interop.worker, 'JUN_CoreGetSampleRate'); }
 
-	/** @param {number} index @returns {Promise<number>} */
-	static GetFileLength(index) { return Caller.call(this.#worker, 'GetFileLength', index); }
+		/** @returns {Promise<number>} */
+		static GetVariableCount() { return Caller.call(Interop.worker, 'JUN_CoreGetVariableCount'); }
 
-	/** @param {number} index @returns {Promise<number>} */
-	static ReadFile(index) { return Caller.call(this.#worker, 'ReadFile', index); }
+		/** @param {number} index @returns {Promise<string>} */
+		static GetVariableKey(index) { return Caller.call(Interop.worker, 'JUN_CoreGetVariableKey', index); }
 
-	/** @returns {Promise<void>} */
-	static ResetCheats() { return Caller.call(this.#worker, 'ResetCheats'); }
+		/** @param {number} index @returns {Promise<string>} */
+		static GetVariableName(index) { return Caller.call(Interop.worker, 'JUN_CoreGetVariableName', index); }
 
-	/** @param {number} index @param {number} enabled @param {string} code @returns {Promise<void>} */
-	static SetCheat(index, enabled, code) { return Caller.call(this.#worker, 'SetCheat', index, enabled, code); }
+		/** @param {number} index @returns {Promise<string>} */
+		static GetVariableOptions(index) { return Caller.call(Interop.worker, 'JUN_CoreGetVariableOptions', index); }
 
-	/** @returns {Promise<number>} */
-	static StartGame() { return Caller.call(this.#worker, 'StartGame'); }
+		/** @param {string} key @param {string} value @returns {Promise<void>} */
+		static SetVariable(key, value) { return Caller.call(Interop.worker, 'JUN_CoreSetVariable', key, value); }
 
-	/** @returns {Promise<number>} */
-	static GetSampleRate() { return Caller.call(this.#worker, 'GetSampleRate'); }
+		/** @param {number} device @param {number} id @param {number} value @returns {Promise<void>} */
+		static SetInput(device, id, value) { return Caller.call(Interop.worker, 'JUN_CoreSetInput', device, id, value); }
 
-	/** @returns {Promise<number>} */
-	static GetVariableCount() { return Caller.call(this.#worker, 'GetVariableCount'); }
+		/** @param {number} fast_forward @returns {Promise<void>} */
+		static Run(fast_forward) { return Caller.call(Interop.worker, 'JUN_CoreRun', fast_forward); }
 
-	/** @param {number} index @returns {Promise<string>} */
-	static GetVariableKey(index) { return Caller.call(this.#worker, 'GetVariableKey', index); }
+		/** @returns {Promise<number>} */
+		static GetFrameData() { return Caller.call(Interop.worker, 'JUN_CoreGetFrameData'); }
 
-	/** @param {number} index @returns {Promise<string>} */
-	static GetVariableName(index) { return Caller.call(this.#worker, 'GetVariableName', index); }
+		/** @returns {Promise<number>} */
+		static GetFrameWidth() { return Caller.call(Interop.worker, 'JUN_CoreGetFrameWidth'); }
 
-	/** @param {number} index @returns {Promise<string>} */
-	static GetVariableOptions(index) { return Caller.call(this.#worker, 'GetVariableOptions', index); }
+		/** @returns {Promise<number>} */
+		static GetFrameHeight() { return Caller.call(Interop.worker, 'JUN_CoreGetFrameHeight'); }
 
-	/** @param {string} key @param {string} value @returns {Promise<void>} */
-	static SetVariable(key, value) { return Caller.call(this.#worker, 'SetVariable', key, value); }
+		/** @returns {Promise<number>} */
+		static GetAudioData() { return Caller.call(Interop.worker, 'JUN_CoreGetAudioData'); }
 
-	/** @param {number} device @param {number} id @param {number} value @returns {Promise<void>} */
-	static SetInput(device, id, value) { return Caller.call(this.#worker, 'SetInput', device, id, value); }
+		/** @returns {Promise<number>} */
+		static GetAudioFrames() { return Caller.call(Interop.worker, 'JUN_CoreGetAudioFrames'); }
 
-	/** @param {number} fast_forward @returns {Promise<void>} */
-	static Run(fast_forward) { return Caller.call(this.#worker, 'Run', fast_forward); }
+		/** @returns {Promise<void>} */
+		static SaveState() { return Caller.call(Interop.worker, 'JUN_CoreSaveState'); }
 
-	/** @returns {Promise<number>} */
-	static GetFrameData() { return Caller.call(this.#worker, 'GetFrameData'); }
+		/** @returns {Promise<void>} */
+		static RestoreState() { return Caller.call(Interop.worker, 'JUN_CoreRestoreState'); }
 
-	/** @returns {Promise<number>} */
-	static GetFrameWidth() { return Caller.call(this.#worker, 'GetFrameWidth'); }
+		/** @returns {Promise<void>} */
+		static Destroy() { return Caller.call(Interop.worker, 'JUN_CoreDestroy'); }
+	}
 
-	/** @returns {Promise<number>} */
-	static GetFrameHeight() { return Caller.call(this.#worker, 'GetFrameHeight'); }
+	static Filesystem = class {
+		/** @param {string} path @param {number} length @returns {Promise<number>} */
+		static GetFileBuffer(path, length) { return Caller.call(Interop.worker, 'JUN_FilesystemGetFileBuffer', path, length); }
 
-	/** @returns {Promise<number>} */
-	static GetAudioData() { return Caller.call(this.#worker, 'GetAudioData'); }
+		/** @returns {Promise<number>} */
+		static CountFiles() { return Caller.call(Interop.worker, 'JUN_FilesystemCountFiles'); }
 
-	/** @returns {Promise<number>} */
-	static GetAudioFrames() { return Caller.call(this.#worker, 'GetAudioFrames'); }
+		/** @param {number} index @returns {Promise<number>} */
+		static IsFileUpdated(index) { return Caller.call(Interop.worker, 'JUN_FilesystemIsFileUpdated', index); }
 
-	/** @returns {Promise<void>} */
-	static SaveState() { return Caller.call(this.#worker, 'SaveState'); }
+		/** @param {number} index @returns {Promise<string>} */
+		static GetFilePath(index) { return Caller.call(Interop.worker, 'JUN_FilesystemGetFilePath', index); }
 
-	/** @returns {Promise<void>} */
-	static RestoreState() { return Caller.call(this.#worker, 'RestoreState'); }
+		/** @param {number} index @returns {Promise<number>} */
+		static GetFileLength(index) { return Caller.call(Interop.worker, 'JUN_FilesystemGetFileLength', index); }
 
-	/** @returns {Promise<void>} */
-	static Destroy() { return Caller.call(this.#worker, 'Destroy'); }
+		/** @param {number} index @returns {Promise<number>} */
+		static ReadFile(index) { return Caller.call(Interop.worker, 'JUN_FilesystemReadFile', index); }
+
+		/** @param {number} index @returns {Promise<void>} */
+		static SeenFile(index) { return Caller.call(Interop.worker, 'JUN_FilesystemSeenFile', index); }
+	}
 }
 
 export default class Core {
@@ -240,7 +247,7 @@ export default class Core {
 	async init(canvas) {
 		this.#canvas = canvas;
 
-		await CoreAPI.init(this.#name, Core.#memory);
+		await Interop.init(this.#name, Core.#memory);
 
 		const state = this.#state_gl;
 		const gl = this.#canvas.getContext('webgl2');
@@ -277,7 +284,7 @@ export default class Core {
 	async #read(path) {
 		const file = await Database.file(path);
 		const reader = file.stream().getReader();
-		const pointer = await CoreAPI.GetFileBuffer(path, file.size);
+		const pointer = await Interop.Filesystem.GetFileBuffer(path, file.size);
 		const data = new Uint8Array(Core.#memory.buffer, pointer, file.size);
 
 		let offset = 0;
@@ -302,7 +309,7 @@ export default class Core {
 
 		state.rom = Path.game(system, rom);
 
-		await CoreAPI.Create(system, rom);
+		await Interop.Core.Create(system, rom);
 
 		const game_path = Path.game(system, rom.replace(/\.[^/.]+$/, ''));
 		for (const path of await Database.list(game_path))
@@ -315,16 +322,18 @@ export default class Core {
 	async #sync() {
 		const state = this.#state;
 
-		for (let i = 0; i < await CoreAPI.CountFiles(); i++) {
-			const path = await CoreAPI.GetFilePath(i);
-			if (path == state.rom || !await CoreAPI.IsFileUpdated(i))
+		for (let i = 0; i < await Interop.Filesystem.CountFiles(); i++) {
+			const path = await Interop.Filesystem.GetFilePath(i);
+			if (path == state.rom || !await Interop.Filesystem.IsFileUpdated(i))
 				continue;
 
-			const data = await CoreAPI.ReadFile(i);
-			const length = await CoreAPI.GetFileLength(i);
+			const data = await Interop.Filesystem.ReadFile(i);
+			const length = await Interop.Filesystem.GetFileLength(i);
 
 			const view = new Uint8Array(Core.#memory.buffer, data, length);
 			await Database.write(path, new Uint8Array(view));
+
+			await Interop.Filesystem.SeenFile(i);
 		}
 	}
 
@@ -365,30 +374,27 @@ export default class Core {
 		const state = this.#state;
 
 		await this.settings(settings);
-		await CoreAPI.StartGame();
+		await Interop.Core.StartGame();
 		await this.cheats(cheats);
 
 		state.stop = false;
 		state.running = new Promise((resolve) => {
 			const step = async () => {
-				if (!CoreAPI.ready)
-					return;
+				await Interop.Core.Run(state.speed);
 
-				await CoreAPI.Run(state.speed);
-
-				const frame = await CoreAPI.GetFrameData();
-				const width = await CoreAPI.GetFrameWidth();
-				const height = await CoreAPI.GetFrameHeight();
+				const frame = await Interop.Core.GetFrameData();
+				const width = await Interop.Core.GetFrameWidth();
+				const height = await Interop.Core.GetFrameHeight();
 
 				if (width != 0 && height != 0)
 					this.#draw(frame, width, height);
 
-				const sample_rate = await CoreAPI.GetSampleRate();
+				const sample_rate = await Interop.Core.GetSampleRate();
 				Audio.update(sample_rate * state.speed, 2);
 
 				if (state.audio) {
-					const audio = await CoreAPI.GetAudioData();
-					const frames = await CoreAPI.GetAudioFrames();
+					const audio = await Interop.Core.GetAudioData();
+					const frames = await Interop.Core.GetAudioFrames();
 					const audio_view = new Float32Array(Core.#memory.buffer, audio, frames * 2);
 					Audio.queue(audio_view);
 				}
@@ -411,7 +417,7 @@ export default class Core {
 		state.stop = true;
 		await state.running;
 
-		await CoreAPI.terminate();
+		await Interop.terminate();
 		new Uint8Array(Core.#memory.buffer).fill(0);
 	}
 
@@ -421,10 +427,10 @@ export default class Core {
 	async variables() {
 		const variables = [];
 
-		for (let i = 0; i < await CoreAPI.GetVariableCount(); i++) {
-			const key = await CoreAPI.GetVariableKey(i);
-			const name = await CoreAPI.GetVariableName(i);
-			const options = (await CoreAPI.GetVariableOptions(i)).split('|');
+		for (let i = 0; i < await Interop.Core.GetVariableCount(); i++) {
+			const key = await Interop.Core.GetVariableKey(i);
+			const name = await Interop.Core.GetVariableName(i);
+			const options = (await Interop.Core.GetVariableOptions(i)).split('|');
 
 			variables.push({ key, name, options });
 		}
@@ -438,7 +444,7 @@ export default class Core {
 	 */
 	async settings(settings) {
 		for (const key in settings)
-			await CoreAPI.SetVariable(key, settings[key]);
+			await Interop.Core.SetVariable(key, settings[key]);
 	}
 
 	/**
@@ -446,10 +452,10 @@ export default class Core {
 	 * @returns {Promise<void>}
 	 */
 	async cheats(cheats) {
-		await CoreAPI.ResetCheats();
+		await Interop.Core.ResetCheats();
 		const filtered = cheats?.filter(x => x.enabled).sort((x, y) => x.order - y.order);
 		for (const cheat of filtered ?? [])
-			await CoreAPI.SetCheat(cheat.order, true, cheat.value);
+			await Interop.Core.SetCheat(cheat.order, true, cheat.value);
 	}
 
 	/**
@@ -459,21 +465,21 @@ export default class Core {
 	 * @returns {Promise<void>}
 	 */
 	async send(device, id, value) {
-		await CoreAPI.SetInput(device, id, value);
+		await Interop.Core.SetInput(device, id, value);
 	}
 
 	/**
 	 * @returns {Promise<void>}
 	 */
 	async save() {
-		await CoreAPI.SaveState();
+		await Interop.Core.SaveState();
 	}
 
 	/**
 	 * @returns {Promise<void>}
 	 */
 	async restore() {
-		await CoreAPI.RestoreState();
+		await Interop.Core.RestoreState();
 	}
 
 	/**

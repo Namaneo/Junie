@@ -103,7 +103,7 @@ class Core {
 	#wrap(name, type, types) {
 		this[name] = (...parameters) => {
 			parameters = parameters.map((parameter, i) => this.#serialize(parameter, types[i]));
-			const result = this.#instance.exports[`JUN_Core${name}`](...parameters);
+			const result = this.#instance.exports[name](...parameters);
 			parameters.forEach((parameter, i) => this.#free(parameter, types[i]));
 
 			return this.#deserialize(result, type);
@@ -135,32 +135,34 @@ class Core {
 
 		this.#wasi.initialize(source.instance);
 
-		this.#wrap('Create',             null,     ['string', 'string']);
-		this.#wrap('GetFileBuffer',      'number', ['string', 'number']),
-		this.#wrap('CountFiles',         'number', []),
-		this.#wrap('IsFileUpdated',      'number', ['number']),
-		this.#wrap('GetFilePath',        'string', ['number']),
-		this.#wrap('GetFileLength',      'number', ['number']),
-		this.#wrap('ReadFile',           'number', ['number']),
-		this.#wrap('ResetCheats',        null,     []);
-		this.#wrap('SetCheat',           null,     ['number', 'number', 'string']);
-		this.#wrap('StartGame',          'number', []);
-		this.#wrap('GetSampleRate',      'number', []);
-		this.#wrap('GetVariableCount',   'number', []);
-		this.#wrap('GetVariableKey',     'string', ['number']);
-		this.#wrap('GetVariableName',    'string', ['number']);
-		this.#wrap('GetVariableOptions', 'string', ['number']);
-		this.#wrap('SetVariable',        null,     ['string', 'string']);
-		this.#wrap('SetInput',           null,     ['number', 'number', 'number']);
-		this.#wrap('Run',                null,     ['number']);
-		this.#wrap('GetFrameData',       'number', []);
-		this.#wrap('GetFrameWidth',      'number', []);
-		this.#wrap('GetFrameHeight',     'number', []);
-		this.#wrap('GetAudioData',       'number', []);
-		this.#wrap('GetAudioFrames',     'number', []);
-		this.#wrap('SaveState',          null,     []);
-		this.#wrap('RestoreState',       null,     []);
-		this.#wrap('Destroy',            null,     []);
+		this.#wrap('JUN_CoreCreate',             null,     ['string', 'string']);
+		this.#wrap('JUN_CoreResetCheats',        null,     []);
+		this.#wrap('JUN_CoreSetCheat',           null,     ['number', 'number', 'string']);
+		this.#wrap('JUN_CoreStartGame',          'number', []);
+		this.#wrap('JUN_CoreGetSampleRate',      'number', []);
+		this.#wrap('JUN_CoreGetVariableCount',   'number', []);
+		this.#wrap('JUN_CoreGetVariableKey',     'string', ['number']);
+		this.#wrap('JUN_CoreGetVariableName',    'string', ['number']);
+		this.#wrap('JUN_CoreGetVariableOptions', 'string', ['number']);
+		this.#wrap('JUN_CoreSetVariable',        null,     ['string', 'string']);
+		this.#wrap('JUN_CoreSetInput',           null,     ['number', 'number', 'number']);
+		this.#wrap('JUN_CoreRun',                null,     ['number']);
+		this.#wrap('JUN_CoreGetFrameData',       'number', []);
+		this.#wrap('JUN_CoreGetFrameWidth',      'number', []);
+		this.#wrap('JUN_CoreGetFrameHeight',     'number', []);
+		this.#wrap('JUN_CoreGetAudioData',       'number', []);
+		this.#wrap('JUN_CoreGetAudioFrames',     'number', []);
+		this.#wrap('JUN_CoreSaveState',          null,     []);
+		this.#wrap('JUN_CoreRestoreState',       null,     []);
+		this.#wrap('JUN_CoreDestroy',            null,     []);
+
+		this.#wrap('JUN_FilesystemGetFileBuffer', 'number', ['string', 'number']);
+		this.#wrap('JUN_FilesystemCountFiles',    'number', []);
+		this.#wrap('JUN_FilesystemIsFileUpdated', 'number', ['number']);
+		this.#wrap('JUN_FilesystemGetFilePath',   'string', ['number']);
+		this.#wrap('JUN_FilesystemGetFileLength', 'number', ['number']);
+		this.#wrap('JUN_FilesystemReadFile',      'number', ['number']);
+		this.#wrap('JUN_FilesystemSeenFile',      null,     ['number']);
 	}
 
 	print() {
