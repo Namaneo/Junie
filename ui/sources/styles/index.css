@@ -28,6 +28,10 @@ html, body {
 	display: none;
 }
 
+#root ion-card {
+	margin: 12px 16px;
+}
+
 
 /*
  * Home
