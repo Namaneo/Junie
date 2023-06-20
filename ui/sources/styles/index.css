@@ -37,11 +37,6 @@ html, body {
     background: transparent;
 }
 
-#root .home img {
-    width: 25%;
-    object-fit: fill;
-}
-
 #root .home ion-item {
 	--padding-start: 0;
 }
@@ -108,12 +103,6 @@ html, body {
     cursor: pointer;
 }
 
-#root .systems img {
-    display: inline-block;
-    max-width: 80%;
-    margin: 36px 8px 8px 8px;
-}
-
 
 /*
  * Games
@@ -127,25 +116,17 @@ html, body {
     cursor: pointer;
 }
 
-#root .games img {
-    width: 25%;
-    object-fit: fill;
-}
-
 #root .games ion-item {
     width: 100%;
 	--padding-start: 0;
 }
 
 #root .games ion-label {
-    height: 50%;
-	position: relative;
     margin-left: 16px;
 }
 
 #root .games ion-progress-bar {
-    position: absolute;
-    bottom: 0;
+    max-width: 50px;
 }
 
 

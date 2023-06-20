@@ -1,4 +1,4 @@
-import { IonButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonContent, IonHeader, IonIcon, IonLoading, IonPage, IonTitle, IonToolbar, useIonModal, useIonViewWillEnter } from '@ionic/react';
+import { IonButton, IonButtons, IonCard, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonLoading, IonPage, IonTitle, IonToolbar, useIonModal, useIonViewWillEnter } from '@ionic/react';
 import { useState } from 'react';
 import { refreshOutline } from 'ionicons/icons';
 import { GamesModal } from '../modals/games-modal';
@@ -67,8 +67,8 @@ export const InstallPage = () => {
 				<IonLoading isOpen={loading} message="Refreshing..." spinner={null} />
 				{systems.filter(filterSystem).map(system =>
 					<IonCard key={system.name} onClick={() => showModal(system)}>
-						<img src={system.cover} style={{filter: Requests.shouldInvertCover(system) && 'invert(1)'}} />
 						<IonCardHeader>
+							<IonCardTitle>{system.name}</IonCardTitle>
 							<IonCardSubtitle>{system.core_name}</IonCardSubtitle>
 						</IonCardHeader>
 					</IonCard>

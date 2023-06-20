@@ -93,7 +93,6 @@ docker run \
 - [Nestopia](https://github.com/libretro/Nestopia) for NES emulation.
 - [Snes9x](https://github.com/libretro/snes9x) for SNES emulation.
 - [Genesis Plus GX](https://github.com/libretro/Genesis-Plus-GX) for Master System and Mega Drive emulation.
-- [libretro-thumbnails](https://github.com/libretro-thumbnails/libretro-thumbnails) for game covers.
 
 # License
 

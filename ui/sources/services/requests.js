@@ -61,29 +61,6 @@ export default class Requests {
 	};
 
 	/**
-	 * @param {System} system
-	 * @returns {boolean}
-	 */
-	static shouldInvertCover(system) {
-		return system.cover_dark && window.matchMedia('(prefers-color-scheme: dark)').matches;
-	}
-
-	/**
-	 * @param {System} system
-	 * @param {string} rom
-	 * @returns {string}
-	 */
-	static getGameCover(system, rom) {
-		const system_name = system.full_name.replaceAll(' ', '_');
-		const cover = rom.substring(0, rom.lastIndexOf('.')) + '.png';
-
-		const host = 'https://raw.githubusercontent.com';
-		const path = `/libretro-thumbnails/${system_name}/master/Named_Boxarts/${cover}`;
-
-		return host + path;
-	}
-
-	/**
 	 *
 	 * @param {System} system
 	 * @param {Game} game

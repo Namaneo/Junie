@@ -87,7 +87,6 @@ export default class Files {
 						...system,
 						lib_name: core,
 						core_name: cores[core].name,
-						cover: `assets/covers/${system.name}.png`,
 						games: stored.find(x => x.name == system.name)?.games,
 					});
 				}

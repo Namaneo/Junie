@@ -1,4 +1,5 @@
-import { IonBackButton, IonButton, IonButtons, IonCard, IonContent, IonHeader, IonItem, IonLabel, IonPage, IonProgressBar, IonTitle, IonToolbar, useIonAlert, useIonViewWillEnter } from '@ionic/react';
+import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonPage, IonProgressBar, IonTitle, IonToolbar, useIonAlert } from '@ionic/react';
+import { cloudDownloadOutline } from 'ionicons/icons';
 import { useState } from 'react';
 import { useToast } from '../hooks/toast';
 import { Game } from '../entities/game';
@@ -61,15 +62,20 @@ export const GamesModal = ({ system, close }) => {
 
 			<IonContent className="games">
 				{system.games.filter(game => !game.installed).map(game =>
-					<IonCard key={game.rom} onClick={() => !download.game && install(game)}>
+					<IonCard key={game.rom}>
 						<IonItem color="light">
-							<img src={Requests.getGameCover(system, game.rom)} onError={(e) => e.target.src = 'assets/placeholder.png'} crossOrigin="anonymous" />
 							<IonLabel>
 								<h2>{game.name}</h2>
-								{download.game == game.name &&
-									<IonProgressBar value={download.progress}></IonProgressBar>
-								}
+								<h3>{game.system}</h3>
 							</IonLabel>
+							{download.game == game.name &&
+								<IonProgressBar value={download.progress}></IonProgressBar>
+							}
+							{download.game != game.name &&
+								<IonButton onClick={() => install(game)} disabled={!!download.game} fill="clear">
+									<IonIcon slot="icon-only" icon={cloudDownloadOutline} />
+								</IonButton>
+							}
 						</IonItem>
 					</IonCard>
 				)}

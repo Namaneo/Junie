@@ -11,9 +11,6 @@ export class Game {
 	/** @type {String} */
 	name;
 
-	/** @type {String} */
-	cover;
-
 	/** @type {Boolean} */
 	installed;
 
@@ -25,6 +22,5 @@ export class Game {
 		this.system = system.name;
 		this.rom = rom;
 		this.name = rom.substring(0, rom.lastIndexOf('.')).replaceAll(/ \(.*\).*/g, '');
-		this.cover = Requests.getGameCover(system, rom);
 	}
 }

@@ -16,12 +16,6 @@ export class System {
 	/** @type {string} */
 	extension;
 
-	/** @type {string} */
-	cover;
-
-	/** @type {boolean} */
-	cover_dark;
-
 	/** @type {Game[]} */
 	games;
 }

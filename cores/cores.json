@@ -34,8 +34,7 @@
 			{
 				"name": "Nintendo DS",
 				"full_name": "Nintendo - Nintendo DS",
-				"extension": "nds",
-				"cover_dark": true
+				"extension": "nds"
 			}
 		]
 	},

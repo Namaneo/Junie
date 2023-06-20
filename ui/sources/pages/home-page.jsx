@@ -103,7 +103,6 @@ export const HomePage = () => {
 						<IonCard key={game.rom}>
 							<IonItemSliding>
 								<IonItem color="light">
-									<img src={game.cover} onError={(e) => e.target.src = 'assets/placeholder.png'} crossOrigin="anonymous" />
 									<IonLabel>
 										<h2>{game.name}</h2>
 										<h3>{game.system}</h3>
