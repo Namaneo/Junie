@@ -42,10 +42,9 @@ export class CheatList {
 	}
 
 	/**
-	 *
 	 * @param {string} path
 	 * @param {Cheat[]} cheats
-	 * @returns
+	 * @returns {CheatList}
 	 */
 	static fromFile(path, cheats) {
 		const object = new CheatList();

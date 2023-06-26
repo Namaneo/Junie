@@ -7,6 +7,7 @@ import { Settings } from '../entities/settings';
 import Path from './path';
 
 export default class Files {
+	static #cores = null;
 	static #encoder = new TextEncoder();
 	static #decoder = new TextDecoder();
 
@@ -77,16 +78,17 @@ export default class Files {
 		 * @returns {Promise<System[]>}
 		 */
 		static async get() {
-			const cores = await fetch('cores.json').then(res => res.json());
+			if (!Files.#cores)
+				Files.#cores = await fetch('cores.json').then(res => res.json());
 			const stored = await Files.read_json(Path.library()) ?? [];
 
 			const systems = [];
-			for (const core of Object.keys(cores)) {
-				for (const system of cores[core].systems) {
+			for (const core of Object.keys(Files.#cores)) {
+				for (const system of Files.#cores[core].systems) {
 					systems.push({
 						...system,
 						lib_name: core,
-						core_name: cores[core].name,
+						core_name: Files.#cores[core].name,
 						games: stored.find(x => x.name == system.name)?.games,
 					});
 				}

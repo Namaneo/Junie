@@ -35,7 +35,7 @@ void JUN_LogParams(const char *func, const char *fmt, ...)
 uint64_t JUN_GetTicks()
 {
 	struct timespec now = {0};
-	clock_gettime(CLOCK_MONOTONIC, &now);
+	clock_gettime(CLOCK_REALTIME, &now);
 	return now.tv_sec * 1000.0 + now.tv_nsec / 1000000.0;
 }
 

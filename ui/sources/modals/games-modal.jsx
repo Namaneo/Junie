@@ -1,5 +1,5 @@
 import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonPage, IonProgressBar, IonTitle, IonToolbar, useIonAlert } from '@ionic/react';
-import { cloudDownloadOutline } from 'ionicons/icons';
+import { cloudDownloadOutline, trashOutline } from 'ionicons/icons';
 import { useState } from 'react';
 import { useToast } from '../hooks/toast';
 import { Game } from '../entities/game';
@@ -39,11 +39,21 @@ export const GamesModal = ({ system, close }) => {
 		}
 
 		await Files.Games.add(system.name, game.rom, data);
-
-		system.games = system.games.filter(x => x.rom != game.rom);
+		game.installed = true;
 
 		dismiss();
 		present(`${game.name} (${system.name})`);
+
+		setDownload({ game: null, progress: 0 });
+	}
+
+	/**
+	 * @param {Game} game
+	 * @returns {Promise<void>}
+	 */
+	const remove = async (game) => {
+		await Files.Games.remove(game.system, game.rom);
+		game.installed = false;
 
 		setDownload({ game: null, progress: 0 });
 	}
@@ -61,7 +71,7 @@ export const GamesModal = ({ system, close }) => {
 			</IonHeader>
 
 			<IonContent className="games">
-				{system.games.filter(game => !game.installed).map(game =>
+				{system.games.map(game =>
 					<IonCard key={game.rom}>
 						<IonItem color="light">
 							<IonLabel>
@@ -71,9 +81,14 @@ export const GamesModal = ({ system, close }) => {
 							{download.game == game.name &&
 								<IonProgressBar value={download.progress}></IonProgressBar>
 							}
-							{download.game != game.name &&
+							{download.game != game.name && !game.installed &&
 								<IonButton onClick={() => install(game)} disabled={!!download.game} fill="clear">
 									<IonIcon slot="icon-only" icon={cloudDownloadOutline} />
+								</IonButton>
+							}
+							{download.game != game.name && game.installed &&
+								<IonButton onClick={() => remove(game)} disabled={!!download.game} fill="clear">
+									<IonIcon slot="icon-only" icon={trashOutline} color="medium" />
 								</IonButton>
 							}
 						</IonItem>

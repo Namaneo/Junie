@@ -14,14 +14,6 @@ export const InstallPage = () => {
 	const [loading, setLoading] = useState(/** @type {boolean}  */ (false));
 
 	/**
-	 * @param {System} system
-	 * @returns {boolean}
-	 */
-	const filterSystem = (system) => {
-		return system.games.length && system.games.find(game => !game.installed);
-	}
-
-	/**
 	 * @returns {Promise<void>}
 	 */
 	const refreshLibrary = async () => {
@@ -65,11 +57,11 @@ export const InstallPage = () => {
 
 			<IonContent className="systems">
 				<IonLoading isOpen={loading} message="Refreshing..." spinner={null} />
-				{systems.filter(filterSystem).map(system =>
+				{systems.map(system =>
 					<IonCard key={system.name} onClick={() => showModal(system)}>
 						<IonCardHeader>
 							<IonCardTitle>{system.name}</IonCardTitle>
-							<IonCardSubtitle>{system.core_name}</IonCardSubtitle>
+							<IonCardSubtitle>{system.core_name} - {system.games.length} games</IonCardSubtitle>
 						</IonCardHeader>
 					</IonCard>
 				)}

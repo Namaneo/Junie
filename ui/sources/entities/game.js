@@ -1,5 +1,4 @@
 import { System } from "./system";
-import Requests from "../services/requests";
 
 export class Game {
 	/** @type {String} */
