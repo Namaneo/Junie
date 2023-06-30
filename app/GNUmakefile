@@ -21,6 +21,7 @@ CFLAGS  := \
 	-I$(SRC_DIR)
 
 LDFLAGS := \
+	-lwasi-emulated-mman \
 	-mexec-model=reactor -Wl,--no-entry \
 	$(EXPORTS) -Wl,--export=calloc,--export=free \
 	-Wl,--initial-memory=$$((450 * 1024 * 1024)) \
