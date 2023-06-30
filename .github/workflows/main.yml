@@ -3,7 +3,7 @@ name: Docker Image CI
 on:
   push:
     branches:
-      - 'emscripten'
+      - 'main'
 
 jobs:
   docker:
@@ -18,14 +18,14 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: namaneo/junie:emscripten
+          tags: namaneo/junie
 
   upload:
     needs: docker
     runs-on: ubuntu-latest
     steps:
       - name: Extract binaries
-        run: docker run --rm -v `pwd`/build:/build namaneo/junie:emscripten cp -R /junie /build
+        run: docker run --rm -v `pwd`/build:/build namaneo/junie cp -R /junie /build
       - name: Upload Pages artifacts
         uses: actions/upload-pages-artifact@v1
         with:
