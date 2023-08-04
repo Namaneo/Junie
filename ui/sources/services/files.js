@@ -1,22 +1,41 @@
-import Database from './database';
 import { Save } from '../entities/save';
 import { CheatList } from '../entities/cheat';
 import { System } from '../entities/system';
 import { Game } from '../entities/game';
 import { Settings } from '../entities/settings';
 import Path from './path';
+import Parallel from './parallel';
+import Filesystem from './filesystem';
 
 export default class Files {
+	/** @type {Object} */
 	static #cores = null;
+
+	/** @type {TextEncoder} */
 	static #encoder = new TextEncoder();
+
+	/** @type {TextDecoder} */
 	static #decoder = new TextDecoder();
+
+	/** @type {Filesystem} */
+	static #filesystem = null
+
+	static async #fs() {
+		if (!this.#filesystem)
+			this.#filesystem = await Parallel.create(Filesystem, false);
+		return this.#filesystem;
+	}
 
 	/**
 	 * @param {string[]} suffixes
 	 * @returns {Promise<string[]>}
 	 */
 	static async list(...suffixes) {
-		const paths = await Database.list();
+		const fs = await this.#fs();
+
+		const buffer = new SharedArrayBuffer(0, { maxByteLength: 4096 });
+		await fs.list(buffer);
+		const paths = JSON.parse(new TextDecoder().decode(new Uint8Array(buffer).slice()));
 
 		return suffixes
 			? paths.filter(p => suffixes.some(s => p.endsWith(s)))
@@ -28,7 +47,16 @@ export default class Files {
 	 * @returns {Promise<Uint8Array>}
 	 */
 	static async read(path) {
-		return await Database.read(path);
+		const fs = await this.#fs();
+
+		const size = await fs.size(path);
+		if (size < 0)
+			return null;
+
+		const buffer = new Uint8Array(new SharedArrayBuffer(size));
+		await fs.read(path, buffer, 0);
+
+		return buffer.slice();
 	}
 
 	/**
@@ -50,7 +78,13 @@ export default class Files {
 	 * @returns {Promise<void>}
 	 */
 	static async write(path, data) {
-		await Database.write(path, data);
+		const fs = await this.#fs();
+
+		await Files.remove(path);
+
+		const buffer = new Uint8Array(new SharedArrayBuffer(data.byteLength));
+		buffer.set(data);
+		await fs.write(path, buffer, 0);
 	}
 
 	/**
@@ -69,7 +103,9 @@ export default class Files {
 	 * @returns {Promise<void>}
 	 */
 	static async remove(path) {
-		await Database.remove(path);
+		const fs = await this.#fs();
+
+		await fs.remove(path);
 	}
 
 	static Library = class {
@@ -125,7 +161,7 @@ export default class Files {
 
 	static Saves = class {
 		/**
-		 * @returns {Promise<Save>}
+		 * @returns {Promise<Save[]>}
 		 */
 		static async get() {
 			const paths = await Files.list('.sav', '.dsv', '.srm', '.rtc', '.state', '.cht');

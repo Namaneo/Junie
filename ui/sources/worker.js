@@ -1,7 +1,9 @@
 /// <reference lib="webworker" />
 
-import { File, OpenFile, WASI } from '@bjorn3/browser_wasi_shim';
+import { JUN, WASI_ENV } from './services/wasi';
 import Caller from './services/caller';
+import Parallel from './services/parallel';
+import Filesystem from './services/filesystem';
 
 /** @type {WorkerGlobalScope} */
 const worker = self;
@@ -22,31 +24,12 @@ class Core {
 	/** @type {WebAssembly.Instance} */
 	#instance = null;
 
-	/** @type {WASI} */
-	#wasi = null;
-
-	#std = {
-		/** @type {File} */
-		in: new File([]),
-
-		/** @type {File} */
-		out: new File([]),
-
-		/** @type {File} */
-		err: new File([]),
-	}
-
 	/**
 	 * @param {string} name
 	 */
 	constructor(name) {
 		this.#id = Number(name.split('-')[1] ?? 0);
 		this.#name = name.split('-')[0];
-		this.#wasi = new WASI([], [], [
-			new OpenFile(this.#std.in),
-			new OpenFile(this.#std.out),
-			new OpenFile(this.#std.err),
-		]);
 	}
 
 	/**
@@ -116,10 +99,13 @@ class Core {
 	 * @returns {Promise<void>}
 	 */
 	async init(memory, start_arg) {
+		JUN.memory = memory.buffer;
+		JUN.filesystem = await Parallel.create(Filesystem, true);
+
 		const origin = location.origin + location.pathname.substring(0, location.pathname.lastIndexOf('/'));
 		const source = await WebAssembly.instantiateStreaming(fetch(`${origin}/modules/lib${this.#name}.wasm`), {
 			env: { memory },
-			wasi_snapshot_preview1: this.#wasi.wasiImport,
+			wasi_snapshot_preview1: WASI_ENV,
 			wasi: { 'thread-spawn': (start_arg) => {
 				return Caller.callSync(self, 'spawn', start_arg);
 			}},
@@ -128,12 +114,11 @@ class Core {
 		this.#instance = source.instance;
 
 		if (start_arg) {
-			this.#wasi.inst = source.instance;
 			this.#instance.exports.wasi_thread_start(this.#id, start_arg);
 			return;
 		}
 
-		this.#wasi.initialize(source.instance);
+		this.#instance.exports._initialize();
 
 		this.#wrap('JUN_CoreCreate',             null,     ['string', 'string']);
 		this.#wrap('JUN_CoreResetCheats',        null,     []);
@@ -155,29 +140,8 @@ class Core {
 		this.#wrap('JUN_CoreSaveState',          null,     []);
 		this.#wrap('JUN_CoreRestoreState',       null,     []);
 		this.#wrap('JUN_CoreDestroy',            null,     []);
-
-		this.#wrap('JUN_FilesystemGetFileBuffer', 'number', ['string', 'number']);
-		this.#wrap('JUN_FilesystemCountFiles',    'number', []);
-		this.#wrap('JUN_FilesystemIsFileUpdated', 'number', ['number']);
-		this.#wrap('JUN_FilesystemGetFilePath',   'string', ['number']);
-		this.#wrap('JUN_FilesystemGetFileLength', 'number', ['number']);
-		this.#wrap('JUN_FilesystemReadFile',      'number', ['number']);
-		this.#wrap('JUN_FilesystemSeenFile',      null,     ['number']);
-	}
-
-	print() {
-		if (!this.#std.out.size)
-			return;
-
-		Core.#decoder.decode(this.#std.out.data)
-			.split('\n')
-			.map(line => line.trim().replaceAll('\x00', ''))
-			.filter(line => !!line)
-			.forEach(line => console.log(line));
-
-		this.#std.out.truncate();
 	}
 }
 
 const core = new Core(worker.name);
-Caller.receive(self, core, () => core.print());
+Caller.receive(self, core);

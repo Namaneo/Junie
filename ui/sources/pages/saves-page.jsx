@@ -5,7 +5,6 @@ import { FixSaveModal } from '../modals/fix-save-modal';
 import { System } from '../entities/system';
 import { Game } from '../entities/game';
 import { Save } from '../entities/save';
-import Database from '../services/database';
 import Requests from '../services/requests';
 import Files from '../services/files';
 import Zip from '../services/zip';
@@ -41,9 +40,9 @@ export const SavesPage = () => {
 		document.body.appendChild(a);
 
 		const files = []
-		for (const save of saves)
-			for (const path of save.paths)
-				files.push(await Database.file(path));
+		// for (const save of saves)
+		// 	for (const path of save.paths)
+		// 		files.push(await Database.file(path));
 
 		const blob = await Zip.compress(files);
 
@@ -67,8 +66,8 @@ export const SavesPage = () => {
 
 		fileInput.current.value = '';
 
-		for (const file of files)
-			await Database.add(file.name, file);
+		// for (const file of files)
+		// 	await Database.add(file.name, file);
 
 		setSaves(await Files.Saves.get());
 	}

@@ -2,7 +2,6 @@ import { Cheat } from '../entities/cheat';
 import { Settings } from '../entities/settings';
 import { Variable } from '../entities/variable';
 import Audio from './audio';
-import Database from './database'
 import Interop from './interop';
 import Path from './path';
 
@@ -130,28 +129,6 @@ export default class Core {
 	}
 
 	/**
-	 * @param {string} path
-	 * @returns {Promise<void>}
-	 */
-	async #read(path) {
-		const file = await Database.file(path);
-		const reader = file.stream().getReader();
-		const pointer = await Interop.Filesystem.GetFileBuffer(path, file.size);
-		const data = new Uint8Array(Core.#memory.buffer, pointer, file.size);
-
-		let offset = 0;
-		await reader.read().then(function process({ done, value }) {
-			if (done)
-				return;
-
-			data.set(value, offset);
-			offset += value.length;
-
-			return reader.read().then(process);
-		});
-	}
-
-	/**
 	 * @param {string} system
 	 * @param {string} rom
 	 * @returns {Promise<void>}
@@ -160,33 +137,7 @@ export default class Core {
 		const state = this.#state;
 
 		state.rom = Path.game(system, rom);
-
 		await Interop.Core.Create(system, rom);
-
-		const game_path = Path.game(system, rom.replace(/\.[^/.]+$/, ''));
-		for (const path of await Database.list(game_path))
-			await this.#read(path);
-	}
-
-	/**
-	 * @returns {Promise<void>}
-	 */
-	async #sync() {
-		const state = this.#state;
-
-		for (let i = 0; i < await Interop.Filesystem.CountFiles(); i++) {
-			const path = await Interop.Filesystem.GetFilePath(i);
-			if (path == state.rom || !await Interop.Filesystem.IsFileUpdated(i))
-				continue;
-
-			const data = await Interop.Filesystem.ReadFile(i);
-			const length = await Interop.Filesystem.GetFileLength(i);
-
-			const view = new Uint8Array(Core.#memory.buffer, data, length);
-			await Database.write(path, new Uint8Array(view));
-
-			await Interop.Filesystem.SeenFile(i);
-		}
 	}
 
 	/**
@@ -250,8 +201,6 @@ export default class Core {
 					const audio_view = new Float32Array(Core.#memory.buffer, audio, frames * 2);
 					Audio.queue(audio_view);
 				}
-
-				await this.#sync();
 
 				state.stop ? resolve() : requestAnimationFrame(step);
 			}

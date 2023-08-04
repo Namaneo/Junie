@@ -9,11 +9,6 @@
   dependencies:
     regenerator-runtime "^0.13.11"
 
-"@bjorn3/browser_wasi_shim@^0.2.8":
-  version "0.2.14"
-  resolved "https://registry.yarnpkg.com/@bjorn3/browser_wasi_shim/-/browser_wasi_shim-0.2.14.tgz#80d56f8992d16fe1218c3879f0793879c8543de8"
-  integrity sha512-1S0NNBgFqkogICDL7DOYmXLvxv4tlrjNZps6XNB7P8rr3XwXG1DqtfgYImERUzz71GirexUVrD/jQZht7swCzw==
-
 "@esbuild/android-arm64@0.17.19":
   version "0.17.19"
   resolved "https://registry.yarnpkg.com/@esbuild/android-arm64/-/android-arm64-0.17.19.tgz#bafb75234a5d3d1b690e7c2956a599345e84a2fd"

@@ -8,8 +8,6 @@ import { Game } from '../entities/game';
 import Audio from '../services/audio';
 import Requests from '../services/requests';
 import Files from '../services/files';
-import Database from '../services/database';
-import Path from '../services/path';
 
 /**
  * @returns {JSX.Element}
@@ -41,8 +39,8 @@ export const HomePage = () => {
 		if (!system)
 			return;
 
-		const path = Path.game(system.name, file.name);
-		await Database.add(new File([file], path));
+		const buffer = new Uint8Array(await file.arrayBuffer())
+		Files.Games.add(system.name, file.name, buffer);
 
 		setGames(await Files.Games.get());
 	}

@@ -123,27 +123,4 @@ export default class Interop {
 		/** @returns {Promise<void>} */
 		static Destroy() { return Caller.call(Interop.worker, 'JUN_CoreDestroy'); }
 	}
-
-	static Filesystem = class {
-		/** @param {string} path @param {number} length @returns {Promise<number>} */
-		static GetFileBuffer(path, length) { return Caller.call(Interop.worker, 'JUN_FilesystemGetFileBuffer', path, length); }
-
-		/** @returns {Promise<number>} */
-		static CountFiles() { return Caller.call(Interop.worker, 'JUN_FilesystemCountFiles'); }
-
-		/** @param {number} index @returns {Promise<number>} */
-		static IsFileUpdated(index) { return Caller.call(Interop.worker, 'JUN_FilesystemIsFileUpdated', index); }
-
-		/** @param {number} index @returns {Promise<string>} */
-		static GetFilePath(index) { return Caller.call(Interop.worker, 'JUN_FilesystemGetFilePath', index); }
-
-		/** @param {number} index @returns {Promise<number>} */
-		static GetFileLength(index) { return Caller.call(Interop.worker, 'JUN_FilesystemGetFileLength', index); }
-
-		/** @param {number} index @returns {Promise<number>} */
-		static ReadFile(index) { return Caller.call(Interop.worker, 'JUN_FilesystemReadFile', index); }
-
-		/** @param {number} index @returns {Promise<void>} */
-		static SeenFile(index) { return Caller.call(Interop.worker, 'JUN_FilesystemSeenFile', index); }
-	}
 }

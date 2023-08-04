@@ -12,7 +12,6 @@ BINARIES  := $(LIBRARIES:%=$(OUT_DIR)/lib%.wasm)
 SRC := \
 	$(SRC_DIR)/core.c \
 	$(SRC_DIR)/tools.c \
-	$(SRC_DIR)/filesystem.c \
 	$(SRC_DIR)/wasi.c
 
 OBJ := $(SRC:.c=.o)

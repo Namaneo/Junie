@@ -18,10 +18,3 @@ JUN_CoreGetAudioFrames
 JUN_CoreSaveState
 JUN_CoreRestoreState
 JUN_CoreDestroy
-JUN_FilesystemGetFileBuffer
-JUN_FilesystemCountFiles
-JUN_FilesystemIsFileUpdated
-JUN_FilesystemGetFilePath
-JUN_FilesystemGetFileLength
-JUN_FilesystemReadFile
-JUN_FilesystemSeenFile

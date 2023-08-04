@@ -7,7 +7,6 @@
 
 #include "libretro.h"
 
-#include "filesystem.h"
 #include "tools.h"
 
 typedef enum {
@@ -61,6 +60,9 @@ static struct CTX {
 
 	uint8_t fast_forward;
 	uint64_t last_save;
+
+	void *memory;
+	size_t memory_size;
 
 	bool inputs[UINT8_MAX];
 
@@ -148,10 +150,7 @@ static bool environment(unsigned cmd, void *data)
 		case RETRO_ENVIRONMENT_GET_VFS_INTERFACE & ~RETRO_ENVIRONMENT_EXPERIMENTAL: {
 			struct retro_vfs_interface_info *vfs = data;
 
-			vfs->iface = JUN_FilesystemGetInterface();
-			vfs->required_interface_version = JUN_FilesystemGetInterfaceVersion();
-
-			return true;
+			return false;
 		}
 		case RETRO_ENVIRONMENT_SET_MESSAGE: {
 			struct retro_message *message = data;
@@ -317,12 +316,16 @@ static void save_memory(uint32_t type, const char *path)
 	if (!size)
 		return;
 
-	int32_t index = JUN_FilesystemGetFileIndex(path);
-	uint32_t previous_size = JUN_FilesystemGetFileLength(index);
-	const void *file_buffer = JUN_FilesystemReadFile(index);
+	if (CTX.memory == NULL || CTX.memory_size != size || memcmp(CTX.memory, buffer, size)) {
+		FILE *file = fopen(path, "w+");
+		fwrite(buffer, 1, size, file);
+		fclose(file);
 
-	if (index == -1 || previous_size != size || memcmp(file_buffer, buffer, size))
-		JUN_FilesystemSaveFile(path, buffer, size);
+		free(CTX.memory);
+		CTX.memory = calloc(size, 1);
+		CTX.memory_size = size;
+		memcpy(CTX.memory, buffer, size);
+	}
 }
 
 static void save_memories()
@@ -349,12 +352,12 @@ static void restore_memory(uint32_t type, const char *path)
 	if (!size)
 		return;
 
-	int32_t index = JUN_FilesystemGetFileIndex(path);
-	if (index == -1)
+	FILE *file = fopen(path, "r");
+	if (!file)
 		return;
 
-	const void *file_buffer = JUN_FilesystemReadFile(index);
-	memcpy(buffer, file_buffer, size);
+	fread(buffer, 1, size, file);
+	fclose(file);
 }
 
 static void restore_memories()
@@ -430,7 +433,7 @@ static void create_paths(const char *system, const char *rom)
 
 void JUN_CoreCreate(const char *system, const char *rom)
 {
-	JUN_FilesystemCreate();
+	setbuf(stdout, NULL);
 
 	create_paths(system, rom);
 	initialize_symbols();
@@ -463,17 +466,21 @@ void JUN_CoreSetCheat(uint32_t index, bool enabled, const char *code)
 bool JUN_CoreStartGame()
 {
 	CTX.sym.retro_init();
-
 	CTX.sym.retro_get_system_info(&CTX.system);
 
-	const char *game_path = CTX.paths[JUN_PATH_GAME];
-	int32_t index = JUN_FilesystemGetFileIndex(game_path);
+	CTX.game.path = CTX.paths[JUN_PATH_GAME];
 
-	CTX.game.path = JUN_FilesystemGetFilePath(index);
-	CTX.game.size = JUN_FilesystemGetFileLength(index);
+	FILE *file = fopen(CTX.game.path, "r");
+	fseek(file, 0, SEEK_END);
+	CTX.game.size = ftell(file);
 
-	if (!CTX.system.need_fullpath)
-		CTX.game.data = JUN_FilesystemReadFile(index);
+	if (!CTX.system.need_fullpath) {
+		fseek(file, 0, SEEK_SET);
+		CTX.game.data = calloc(CTX.game.size, 1);
+		fread((void *) CTX.game.data, 1, CTX.game.size, file);
+	}
+
+	fclose(file);
 
 	CTX.initialized = CTX.sym.retro_load_game(&CTX.game);
 
@@ -604,8 +611,9 @@ void JUN_CoreSaveState()
 
 	CTX.sym.retro_serialize(data, size);
 
-	const char *state_path = CTX.paths[JUN_PATH_STATE];
-	JUN_FilesystemSaveFile(state_path, data, size);
+	FILE *file = fopen(CTX.paths[JUN_PATH_STATE], "w+");
+	fwrite(data, 1, size, file);
+	fclose(file);
 
 	free(data);
 }
@@ -616,13 +624,16 @@ void JUN_CoreRestoreState()
 	if (!size)
 		return;
 
-	const char *state_path = CTX.paths[JUN_PATH_STATE];
-	int32_t index = JUN_FilesystemGetFileIndex(state_path);
-	if (index == -1)
+	FILE *file = fopen(CTX.paths[JUN_PATH_STATE], "r");
+	if (!file)
 		return;
 
-	const void *buffer = JUN_FilesystemReadFile(index);
+	void *buffer = calloc(size, 1);
+	fread(buffer, 1, size, file);
 	CTX.sym.retro_unserialize(buffer, size);
+
+	free(buffer);
+	fclose(file);
 }
 
 void JUN_CoreDestroy()
@@ -642,9 +653,8 @@ void JUN_CoreDestroy()
 	for (size_t i = 0; i < JUN_PATH_MAX; i++)
 		free(CTX.paths[i]);
 
+	free(CTX.memory);
 	free((void *) CTX.game.data);
 
 	CTX = (struct CTX) {0};
-
-	JUN_FilesystemDestroy();
 }
