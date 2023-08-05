@@ -128,7 +128,7 @@ export const WASI_ENV = {
 	},
 	fd_read: (fd, iovs, iovs_len, nread) => {
 		if (fd < 3)
-			return __WASI_ERRNO_SUCCESS;
+			return __WASI_ERRNO_BADF;
 
 		const size = JUN.filesystem.size(JUN.fds[fd].path);
 		if (size == -1)
@@ -171,7 +171,7 @@ export const WASI_ENV = {
 				JUN.fds[fd].offset += Number(offset);
 				break;
 			case WHENCE_END:
-				JUN.fds[fd].offset = size - Number(offset);
+				JUN.fds[fd].offset = size + Number(offset);
 				break;
 		}
 

@@ -24,8 +24,9 @@ fetch-%:
 	@target=`pwd`/lib$*.a && \
 	name=`jq -r '."$*".repository // "$*"' cores.json` && \
 	owner=`jq -r '."$*".owner // "libretro"' cores.json` && \
+	branch=`jq -r '."$*".branch // "master"' cores.json` && \
 	echo Fetching $$name... && \
-	git -C $$name pull $(QUIET) || git clone https://github.com/$$owner/$$name.git $(QUIET)
+	git -C $$name pull $(QUIET) || git clone -b $$branch https://github.com/$$owner/$$name.git $(QUIET)
 
 build-%: fetch-%
 	@target=`pwd`/lib$*.a && \

@@ -40,9 +40,9 @@ export const SavesPage = () => {
 		document.body.appendChild(a);
 
 		const files = []
-		// for (const save of saves)
-		// 	for (const path of save.paths)
-		// 		files.push(await Database.file(path));
+		for (const save of saves)
+			for (const path of save.paths)
+				files.push(new File([await Files.read(path)], path));
 
 		const blob = await Zip.compress(files);
 
@@ -66,8 +66,10 @@ export const SavesPage = () => {
 
 		fileInput.current.value = '';
 
-		// for (const file of files)
-		// 	await Database.add(file.name, file);
+		for (const file of files) {
+			const buffer = new Uint8Array(await file.arrayBuffer());
+			await Files.write(file.name, buffer);
+		}
 
 		setSaves(await Files.Saves.get());
 	}

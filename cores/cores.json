@@ -30,6 +30,8 @@
 	"desmume": {
 		"name": "DeSmuME",
 		"directory": "desmume/src/frontend/libretro",
+		"owner": "Namaneo",
+		"branch": "advsc_has-database",
 		"systems": [
 			{
 				"name": "Nintendo DS",
