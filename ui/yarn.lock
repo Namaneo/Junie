@@ -3,9 +3,9 @@
 
 
 "@babel/runtime@^7.1.2", "@babel/runtime@^7.12.13":
-  version "7.22.5"
-  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.22.5.tgz#8564dd588182ce0047d55d7a75e93921107b57ec"
-  integrity sha512-ecjvYlnAaZ/KVneE/OdKYBYfgXV3Ptu6zQWmgEF7vwKhQnvVS6bjMD2XYgj+SNvQ1GfK/pjgokfPkC/2CO8CuA==
+  version "7.22.6"
+  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.22.6.tgz#57d64b9ae3cff1d67eb067ae117dac087f5bd438"
+  integrity sha512-wDb5pWm4WDdF6LFUde3Jl8WzPA+3ZbxYqkC6xAXuD3irdEHN1k0NfTRrJD8ZD378SJ61miMLCqIOXYhd8x+AJQ==
   dependencies:
     regenerator-runtime "^0.13.11"
 
@@ -119,29 +119,29 @@
   resolved "https://registry.yarnpkg.com/@esbuild/win32-x64/-/win32-x64-0.17.19.tgz#8cfaf2ff603e9aabb910e9c0558c26cf32744061"
   integrity sha512-lAhycmKnVOuRYNtRtatQR1LPQf2oYCkRGkSFnseDAKPl8lu5SOsK/e1sXe5a0Pc5kHIHe6P2I/ilntNv2xf3cA==
 
-"@ionic/core@7.1.0":
-  version "7.1.0"
-  resolved "https://registry.yarnpkg.com/@ionic/core/-/core-7.1.0.tgz#6a4650b35f208cf6f3b1b3eec4432df9747ac310"
-  integrity sha512-1W8i9GLhuakeN2z9AeVSSll40BQC2HL4wEscqMM5aD/firotwbX3gdiiNgj2NkoNNgs2hsqcZOJe2sLcU39LTQ==
+"@ionic/core@7.2.2":
+  version "7.2.2"
+  resolved "https://registry.yarnpkg.com/@ionic/core/-/core-7.2.2.tgz#1a5032acff06d30e9fb22746b4fb03c5126c02aa"
+  integrity sha512-KD+dZrrIpKs1BlE3Ffp05yrejSvurUhr0OWP2P/NRax5Dld8wSZj+ETOMkV8uiIPbOTOUbLaAQ7m5ZXduMCYhQ==
   dependencies:
     "@stencil/core" "^3.4.0"
-    ionicons "^7.1.0"
+    ionicons "7.1.0"
     tslib "^2.1.0"
 
 "@ionic/react-router@^7.0.0":
-  version "7.1.0"
-  resolved "https://registry.yarnpkg.com/@ionic/react-router/-/react-router-7.1.0.tgz#ed2e5ed07ad04b263bc13f0b99b0fe355d585dcf"
-  integrity sha512-kHRkLePH3d8WksCnmzL9sqRcbRBKsTizsiNw/rNQl7ATL0coVaYVqm6r594Kd/1MkoyO+L1MdbPFDJhAoHFYRg==
+  version "7.2.2"
+  resolved "https://registry.yarnpkg.com/@ionic/react-router/-/react-router-7.2.2.tgz#105a01e8ae3030623a93a7afa3c622968a43d0fd"
+  integrity sha512-WSr5K1CUO4irE2TdXR8R818iuG1iEGveJeEZ0oPqjqBlKh2EiFzNjJWbu1r0lXGArUtXTTqJ0WLhxKTRyJCY/g==
   dependencies:
-    "@ionic/react" "7.1.0"
+    "@ionic/react" "7.2.2"
     tslib "*"
 
-"@ionic/react@7.1.0", "@ionic/react@^7.0.0":
-  version "7.1.0"
-  resolved "https://registry.yarnpkg.com/@ionic/react/-/react-7.1.0.tgz#3cda118d8b882b0cd29a2e66860af5ae4a228776"
-  integrity sha512-Pv4Q1fBrn67CIHm/mJj8xPWHOU4IXjaQRoOzD9KWeRbSNPbnFRk6rf6iPLlYgIQwAVXnj4KFV9E2kBCJjtXQ2A==
+"@ionic/react@7.2.2", "@ionic/react@^7.0.0":
+  version "7.2.2"
+  resolved "https://registry.yarnpkg.com/@ionic/react/-/react-7.2.2.tgz#faf1b317ed184a2d5e2ff7e93d7f6dbc99051401"
+  integrity sha512-QFvLTCw/9/7aBFooRUZFD/pIOLgMO5E7AzW9DeJoyjenVp3TBbhKvlz275+2Z4Nmj82nXMZs2xWnmuzgweb2sQ==
   dependencies:
-    "@ionic/core" "7.1.0"
+    "@ionic/core" "7.2.2"
     ionicons "^7.0.0"
     tslib "*"
 
@@ -177,9 +177,9 @@
   integrity sha512-kmVA0M/HojwsfkeHsifvHVIYe4l5tin7J5+DLgtl8h6WWfiMClND5K3ifCXXI2ETDNKiEk21p6jql3Fx9o2rng==
 
 "@stencil/core@^3.4.0":
-  version "3.4.0"
-  resolved "https://registry.yarnpkg.com/@stencil/core/-/core-3.4.0.tgz#8cdfccb5fa9fb3fd2fc63c60c5552b650e9eac21"
-  integrity sha512-kEtPtV6QegME8YgMjWrhS7KktItbhqOpAuK9aXypDdI/7bLU9iM/4DtnQGWY/DARBophk+XRBfNXcE62Bmi0dw==
+  version "3.4.2"
+  resolved "https://registry.yarnpkg.com/@stencil/core/-/core-3.4.2.tgz#57ce7f71fe18c2ec0967821bec667fc453cca962"
+  integrity sha512-FAUhUVaakCy29nU2GwO/HQBRV1ihPRvncz3PUc8oR+UJLAxGabTmP8PLY7wvHfbw+Cvi4VXfJFTBvdfDu6iKPQ==
 
 ansi-styles@^4.1.0:
   version "4.3.0"
@@ -311,9 +311,9 @@ esbuild@^0.17.5:
     "@esbuild/win32-x64" "0.17.19"
 
 fast-glob@^3.2.9:
-  version "3.2.12"
-  resolved "https://registry.yarnpkg.com/fast-glob/-/fast-glob-3.2.12.tgz#7f39ec99c2e6ab030337142da9e0c18f37afae80"
-  integrity sha512-DVj4CQIYYow0BlaelwK1pHl5n5cRSJfM60UA0zK891sVInoPri2Ekj7+e1CT3/3qxXenpI+nBBmQAcJPJgaj4w==
+  version "3.3.1"
+  resolved "https://registry.yarnpkg.com/fast-glob/-/fast-glob-3.3.1.tgz#784b4e897340f3dbbef17413b3f11acf03c874c4"
+  integrity sha512-kNFPyjhh5cKjrUltxs+wFx+ZkbRaxxmZ+X0ZU31SOsxCEtP9VPgtq2teZw1DebupL5GmDaNQ6yKMMVcM41iqDg==
   dependencies:
     "@nodelib/fs.stat" "^2.0.2"
     "@nodelib/fs.walk" "^1.2.3"
@@ -436,7 +436,14 @@ inherits@2, inherits@~2.0.3:
   resolved "https://registry.yarnpkg.com/inherits/-/inherits-2.0.4.tgz#0fa2c64f932917c3433a0ded55363aae37416b7c"
   integrity sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==
 
-ionicons@^7.0.0, ionicons@^7.1.0:
+ionicons@7.1.0:
+  version "7.1.0"
+  resolved "https://registry.yarnpkg.com/ionicons/-/ionicons-7.1.0.tgz#25daa91345acedcb0f4fb7da670f5aff2e1f266a"
+  integrity sha512-iE4GuEdEHARJpp0sWL7WJZCzNCf5VxpNRhAjW0fLnZPnNL5qZOJUcfup2Z2Ty7Jk8Q5hacrHfGEB1lCwOdXqGg==
+  dependencies:
+    "@stencil/core" "^2.18.0"
+
+ionicons@^7.0.0:
   version "7.1.2"
   resolved "https://registry.yarnpkg.com/ionicons/-/ionicons-7.1.2.tgz#fdf47afdad980349803a705473f51697370b3dad"
   integrity sha512-zZ4njAqSP39H8RRvZhJvkHsv7cBjYE/VfInH218Osf2UVxJITSOutTTd25MW+tAXKN5fheYzclUXUsF55JHUDg==
@@ -573,18 +580,6 @@ picomatch@^2.0.4, picomatch@^2.2.1, picomatch@^2.3.1:
   version "2.3.1"
   resolved "https://registry.yarnpkg.com/picomatch/-/picomatch-2.3.1.tgz#3ba3833733646d9d3e4995946c1365a67fb07a42"
   integrity sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==
-
-playwright-core@1.35.1:
-  version "1.35.1"
-  resolved "https://registry.yarnpkg.com/playwright-core/-/playwright-core-1.35.1.tgz#52c1e6ffaa6a8c29de1a5bdf8cce0ce290ffb81d"
-  integrity sha512-pNXb6CQ7OqmGDRspEjlxE49w+4YtR6a3X6mT1hZXeJHWmsEz7SunmvZeiG/+y1yyMZdHnnn73WKYdtV1er0Xyg==
-
-playwright@^1.30.0:
-  version "1.35.1"
-  resolved "https://registry.yarnpkg.com/playwright/-/playwright-1.35.1.tgz#f991d0c76ae517d4a0023d9428b09d19d5e87128"
-  integrity sha512-NbwBeGJLu5m7VGM0+xtlmLAH9VUfWwYOhUi/lSEDyGg46r1CA9RWlvoc5yywxR9AzQb0mOCm7bWtOXV7/w43ZA==
-  dependencies:
-    playwright-core "1.35.1"
 
 process-nextick-args@~2.0.0:
   version "2.0.1"
@@ -749,9 +744,9 @@ to-regex-range@^5.0.1:
     is-number "^7.0.0"
 
 tslib@*, tslib@^2.1.0:
-  version "2.5.3"
-  resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.5.3.tgz#24944ba2d990940e6e982c4bea147aba80209913"
-  integrity sha512-mSxlJJwl3BMEQCUNnxXBU9jP4JBktcEGhURcPR6VQVlnP0FdDEsIaz0C35dXNGLyRfrATNofF0F5p2KPxQgB+w==
+  version "2.6.1"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.6.1.tgz#fd8c9a0ff42590b25703c0acb3de3d3f4ede0410"
+  integrity sha512-t0hLfiEKfMUoqhG+U1oid7Pva4bbDPHYfJNiB7BiIjRkj1pyC++4N3huJfqY6aRH6VTB0rvtzQwjM4K6qpfOig==
 
 universalify@^2.0.0:
   version "2.0.0"
