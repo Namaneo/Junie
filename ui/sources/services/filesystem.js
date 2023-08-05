@@ -45,13 +45,13 @@ export default class Filesystem {
 	 * @param {() => Promise<number>} action
 	 * @returns {Promise<number>}
 	 */
-	async #catch(action) {
+	async #catch(action, err_val) {
 		try {
 			return await action();
 
 		} catch (e) {
 			console.error(e);
-			return -1;
+			return err_val;
 		}
 	}
 
@@ -93,18 +93,12 @@ export default class Filesystem {
 	  };
 
 	/**
-	 * @param {SharedArrayBuffer} root
-	 * @param {string} path
-	 * @returns {number | Promise<number>}
+	 * @returns {string[] | Promise<string[]>}
 	 */
-	list(buffer, path) {
+	list() {
 		return this.#catch(async () => {
-			const files = (await this.#list()).filter(x => !path || x.startsWith(path));
-			const encoded = new TextEncoder().encode(JSON.stringify(files));
-			buffer.grow(encoded.byteLength - buffer.byteLength);
-			new Uint8Array(buffer).set(encoded);
-			return encoded.byteLength;
-		});
+			return await this.#list();
+		}, []);
 	}
 
 	/**
@@ -114,7 +108,7 @@ export default class Filesystem {
 	size(path) {
 		return this.#catch(async () => {
 			return await this.#exec(path, false, (file) => file.getSize());
-		});
+		}, -1);
 	}
 
 	/**
@@ -125,7 +119,7 @@ export default class Filesystem {
 	read(path, buffer, offset) {
 		return this.#catch(async () => {
 			return await this.#exec(path, false, (file) => file.read(buffer, { at: offset }));
-		});
+		}, -1);
 	}
 
 	/**
@@ -136,7 +130,7 @@ export default class Filesystem {
 	write(path, buffer, offset) {
 		return this.#catch(async () => {
 			return await this.#exec(path, true, (file) => file.write(buffer, { at: offset }));
-		});
+		}, -1);
 	}
 
 	/**
@@ -147,6 +141,8 @@ export default class Filesystem {
 		return this.#catch(async () => {
 			const handle = await this.#directory(path);
 			await handle.removeEntry(this.#parse(path).filename);
-		});
+
+			return 0;
+		}, -1);
 	}
 }

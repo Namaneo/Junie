@@ -33,9 +33,7 @@ export default class Files {
 	static async list(...suffixes) {
 		const fs = await this.#fs();
 
-		const buffer = new SharedArrayBuffer(0, { maxByteLength: 4096 });
-		await fs.list(buffer);
-		const paths = JSON.parse(new TextDecoder().decode(new Uint8Array(buffer).slice()));
+		const paths = await fs.list();
 
 		return suffixes
 			? paths.filter(p => suffixes.some(s => p.endsWith(s)))

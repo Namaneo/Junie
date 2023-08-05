@@ -1,3 +1,7 @@
+const TYPE_NUMBER = 1;
+const TYPE_STRING = 2;
+const TYPE_OBJECT = 3;
+
 /**
  * @param {MessageEvent} message
  */
@@ -8,7 +12,29 @@ async function thread(message) {
 
 	const result = name != '-ready-' ? await context[name](...args) : 0;
 
-	Atomics.store(sab, 1, result);
+	switch (typeof result) {
+		case 'number':
+			Atomics.store(sab, 1, TYPE_NUMBER);
+			Atomics.store(sab, 2, result);
+			break;
+		case 'string':
+			const encoded_str = new TextEncoder().encode(result);
+			sab.buffer.grow(sab.byteLength + encoded_str.byteLength);
+
+			Atomics.store(sab, 1, TYPE_STRING);
+			Atomics.store(sab, 2, encoded_str.byteLength);
+			new Uint8Array(sab.buffer).set(encoded_str, 12);
+			break;
+		case 'object':
+			const encoded_obj = new TextEncoder().encode(JSON.stringify(result));
+			sab.buffer.grow(sab.byteLength + encoded_obj.byteLength);
+
+			Atomics.store(sab, 1, TYPE_OBJECT);
+			Atomics.store(sab, 2, encoded_obj.byteLength);
+			new Uint8Array(sab.buffer).set(encoded_obj, 12);
+			break;
+	}
+
 	Atomics.store(sab, 0, 1);
 	Atomics.notify(sab, 0, 1);
 }
@@ -32,7 +58,13 @@ export default class Parallel {
 	static async create(cls, sync) {
 		const parallel = new Parallel();
 
-		const script = `const context = new (${cls}); onmessage = ${thread};`;
+		const script = `
+			const TYPE_NUMBER = ${TYPE_NUMBER};
+			const TYPE_STRING = ${TYPE_STRING};
+			const TYPE_OBJECT = ${TYPE_OBJECT};
+			const context = new (${cls});
+			onmessage = ${thread};
+		`;
 		const blob = new Blob([script], { type: 'text/javascript' });
 		parallel.#worker = new Worker(URL.createObjectURL(blob), { name: 'Parallel' });
 
@@ -62,6 +94,19 @@ export default class Parallel {
 		}
 	}
 
+	#parse(sab) {
+		switch (sab[1]) {
+			case TYPE_NUMBER:
+				return sab[2];
+			case TYPE_STRING:
+				const str_buf = new Uint8Array(sab.buffer, 12, sab[2]).slice();
+				return new TextDecoder().decode(str_buf);
+			case TYPE_OBJECT:
+				const obj_buf = new Uint8Array(sab.buffer, 12, sab[2]).slice();
+				return JSON.parse(new TextDecoder().decode(obj_buf));
+		}
+	}
+
 	/**
 	 * @param {string} name
 	 * @param {Array} args
@@ -72,17 +117,19 @@ export default class Parallel {
 		if (!args) args = [];
 		if (!transfer) transfer = [];
 
-		const sab = new Int32Array(new SharedArrayBuffer(8));
+		const sab = new Int32Array(new SharedArrayBuffer(12, { maxByteLength: 4096 }));
 
 		const message = { name, args: [sab, ...args] };
 		this.#worker.postMessage(message, transfer);
 
 		if (sync) {
 			Atomics.wait(sab, 0, 0);
-			return sab[1];
+			return this.#parse(sab);
 		}
 
 		const result = Atomics.waitAsync(sab, 0, 0);
-		return result.async ? result.value.then(() => sab[1]) : sab[1];
+		return result.async
+			? result.value.then(() => this.#parse(sab))
+			: this.#parse(sab);
 	}
 }
