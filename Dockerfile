@@ -15,7 +15,7 @@ ADD GNUmakefile .
 ADD GNUmakefile.common .
 
 ADD ./ui/package.json ./ui/package.json
-RUN make prepare
+RUN make prepare QUIET=
 
 ADD ./cores ./cores
 RUN make cores
