@@ -24,6 +24,9 @@ class Core {
 	/** @type {WebAssembly.Instance} */
 	#instance = null;
 
+	/** @type {Worker[]} */
+	#threads = [];
+
 	/**
 	 * @param {string} name
 	 */
@@ -99,15 +102,23 @@ class Core {
 	 * @returns {Promise<void>}
 	 */
 	async init(memory, start_arg) {
-		JUN.memory = memory.buffer;
-		JUN.filesystem = await Parallel.create(Filesystem, true);
+		JUN.memory = memory;
+		JUN.filesystem = await Parallel.create('Filesystem', Filesystem, true);
 
 		const origin = location.origin + location.pathname.substring(0, location.pathname.lastIndexOf('/'));
 		const source = await WebAssembly.instantiateStreaming(fetch(`${origin}/modules/lib${this.#name}.wasm`), {
 			env: { memory },
 			wasi_snapshot_preview1: WASI_ENV,
 			wasi: { 'thread-spawn': (start_arg) => {
-				return Caller.callSync(self, 'spawn', start_arg);
+				const id = this.#threads.length + 1;
+				const name = `${this.#name}-${id}`;
+				const worker = new Worker('worker.js', { name, type: 'module' });
+
+				Caller.call(worker, 'init', memory, start_arg);
+
+				this.#threads.push(worker);
+
+				return id;
 			}},
 		});
 

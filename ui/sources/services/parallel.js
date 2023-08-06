@@ -51,13 +51,12 @@ export default class Parallel {
 
 	/**
 	 * @template T
+	 * @param {string} name
 	 * @param {new() => T} cls
 	 * @param {boolean} sync
 	 * @returns {Promise<T>}
 	 */
-	static async create(cls, sync) {
-		const parallel = new Parallel();
-
+	static async create(name, cls, sync) {
 		const script = `
 			const TYPE_NUMBER = ${TYPE_NUMBER};
 			const TYPE_STRING = ${TYPE_STRING};
@@ -65,20 +64,24 @@ export default class Parallel {
 			const context = new (${cls});
 			onmessage = ${thread};
 		`;
+
+		const parallel = new Parallel();
 		const blob = new Blob([script], { type: 'text/javascript' });
-		parallel.#worker = new Worker(URL.createObjectURL(blob), { name: 'Parallel' });
+		parallel.#worker = new Worker(URL.createObjectURL(blob), { name });
+
+		await parallel.#call('-ready-', [], false);
 
 		const instance = new cls();
 		parallel.#proxy = new Proxy(instance, {
 			get: (_, name) => {
 				if (instance[name])
-					return function() { return parallel.#call(name, arguments, [], sync); };
+					return function() { return parallel.#call(name, arguments, sync); };
 				return Reflect.get(instance, ...arguments);
 			}
 		});
 
 		Parallel.#instances.push(parallel);
-		await parallel.#call('-ready-', [], [], false);
+
 		return parallel.#proxy;
 	}
 
@@ -110,17 +113,15 @@ export default class Parallel {
 	/**
 	 * @param {string} name
 	 * @param {Array} args
-	 * @param {Array} transfer
-	 * @returns {number | Promise<number>}
+	 * @returns {any | Promise<any>}
 	 */
-	#call(name, args, transfer, sync) {
+	#call(name, args, sync) {
 		if (!args) args = [];
-		if (!transfer) transfer = [];
 
 		const sab = new Int32Array(new SharedArrayBuffer(12, { maxByteLength: 4096 }));
 
 		const message = { name, args: [sab, ...args] };
-		this.#worker.postMessage(message, transfer);
+		this.#worker.postMessage(message);
 
 		if (sync) {
 			Atomics.wait(sab, 0, 0);

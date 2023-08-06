@@ -32,12 +32,12 @@ const fs = `
 
 export default class Core {
 	/** @type {number} */
-	static #INITIAL_MEMORY = 450 * 1024 * 1024;
+	static #INITIAL_MEMORY = 100 * 1024 * 1024;
 
 	/** @type {WebAssembly.Memory} */
 	static #memory = new WebAssembly.Memory({
-		initial: this.#INITIAL_MEMORY / 65536,
-		maximum: this.#INITIAL_MEMORY / 65536,
+		initial: (this.#INITIAL_MEMORY * 1) / 65536,
+		maximum: (this.#INITIAL_MEMORY * 6) / 65536,
 		shared: true,
 	});
 

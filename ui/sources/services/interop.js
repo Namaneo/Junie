@@ -10,9 +10,6 @@ export default class Interop {
 	/** @type {Worker} */
 	static #worker = null;
 
-	/** @type {Worker[]} */
-	static #threads = [];
-
 	/** @type {Worker} */
 	static get worker() { return this.#worker; }
 
@@ -26,27 +23,7 @@ export default class Interop {
 		this.#memory = memory;
 		this.#worker = new Worker('worker.js', { name, type: 'module' });
 
-		Caller.receive(Interop.worker, Interop);
 		await Caller.call(Interop.worker, 'init', memory);
-	}
-
-	/**
-	 * @param {number} start_arg
-	 * @param {Int32Array} sync
-	 * @returns {number}
-	 */
-	static async spawn(start_arg) {
-		const id = this.#threads.length + 1;
-
-		const name = `${this.#name}-${id}`;
-		const worker = new Worker('worker.js', { name, type: 'module' });
-
-		Caller.receive(worker, Interop);
-		Caller.call(worker, 'init', this.#memory, start_arg);
-
-		this.#threads.push(worker);
-
-		return id;
 	}
 
 	/**
@@ -57,9 +34,6 @@ export default class Interop {
 
 		this.#worker.terminate();
 		this.#worker = null;
-
-		this.#threads.forEach(thread => thread.terminate());
-		this.#threads = [];
 	}
 
 	static Core = class {

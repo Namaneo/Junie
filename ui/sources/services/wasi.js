@@ -12,7 +12,7 @@ const WHENCE_END = 2;
 const O_CREAT = 9;
 
 export const JUN = {
-	/** @type {SharedArrayBuffer} */
+	/** @type {WebAssembly.Memory} */
 	memory: null,
 
 	/** @type {Filesystem} */
@@ -35,7 +35,7 @@ export const JUN = {
 	 * @returns {number}
 	 */
 	get_uint32: (ptr) => {
-		return new DataView(JUN.memory).getUint32(ptr, true);
+		return new DataView(JUN.memory.buffer).getUint32(ptr, true);
 	},
 
 	/**
@@ -43,7 +43,7 @@ export const JUN = {
 	 * @param {number} value
 	 */
 	set_uint32: (ptr, value) => {
-		new DataView(JUN.memory).setUint32(ptr, value, true);
+		new DataView(JUN.memory.buffer).setUint32(ptr, value, true);
 	},
 
 	/**
@@ -51,7 +51,7 @@ export const JUN = {
 	 * @returns {number}
 	 */
 	get_uint64: (ptr) => {
-		return new DataView(JUN.memory).getBigUint64(ptr, true);
+		return new DataView(JUN.memory.buffer).getBigUint64(ptr, true);
 	},
 
 	/**
@@ -59,7 +59,7 @@ export const JUN = {
 	 * @param {number} value
 	 */
 	set_uint64: (ptr, value) => {
-		new DataView(JUN.memory).setBigUint64(ptr, BigInt(value), true);
+		new DataView(JUN.memory.buffer).setBigUint64(ptr, BigInt(value), true);
 	},
 
 	/**
@@ -67,7 +67,7 @@ export const JUN = {
 	 * @returns {string}
 	 */
 	str_to_js: (ptr) => {
-		const buf = new Uint8Array(JUN.memory, ptr);
+		const buf = new Uint8Array(JUN.memory.buffer, ptr);
 		let length = 0; for (; buf[length] != 0; length++);
 		return new TextDecoder().decode(buf.slice(0, length));
 	},
@@ -78,7 +78,7 @@ export const JUN = {
 	 */
 	str_to_c: (ptr, str) => {
 		const buf = new TextEncoder().encode(str);
-		new Uint8Array(JUN.memory, ptr).set([...buf, 0]);
+		new Uint8Array(JUN.memory.buffer, ptr).set([...buf, 0]);
 	},
 }
 
@@ -141,7 +141,7 @@ export const WASI_ENV = {
 			const buf_len = JUN.get_uint32(ptr + 4);
 			const len = buf_len < size - offset ? buf_len : size - offset;
 
-			const sab = new Uint8Array(JUN.memory, buf_ptr, len);
+			const sab = new Uint8Array(JUN.memory.buffer, buf_ptr, len);
 			JUN.filesystem.read(JUN.fds[fd].path, sab, offset);
 
 			offset += len;
@@ -195,7 +195,7 @@ export const WASI_ENV = {
 			const buf_ptr = JUN.get_uint32(ptr);
 			const buf_len = JUN.get_uint32(ptr + 4);
 
-			write(new Uint8Array(JUN.memory, buf_ptr, buf_len), offset);
+			write(new Uint8Array(JUN.memory.buffer, buf_ptr, buf_len), offset);
 
 			offset += buf_len;
 		}

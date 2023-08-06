@@ -23,7 +23,8 @@ LDFLAGS := \
 	-lwasi-emulated-mman \
 	-mexec-model=reactor -Wl,--no-entry \
 	$(EXPORTS) -Wl,--export=calloc,--export=free \
-	-Wl,--initial-memory=$$((450 * 1024 * 1024)) \
+	-Wl,--initial-memory=$$((100 * 1024 * 1024)) \
+	-Wl,--max-memory=$$((600 * 1024 * 1024)) \
 	-Wl,--import-memory,--export-memory
 
 ifeq ($(DEBUG), 1)

@@ -22,7 +22,7 @@ export default class Files {
 
 	static async #fs() {
 		if (!this.#filesystem)
-			this.#filesystem = await Parallel.create(Filesystem, false);
+			this.#filesystem = await Parallel.create('Filesystem', Filesystem, false);
 		return this.#filesystem;
 	}
 
