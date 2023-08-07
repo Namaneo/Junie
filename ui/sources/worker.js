@@ -1,12 +1,9 @@
 /// <reference lib="webworker" />
 
 import WASI from './services/wasi';
-import Caller from './services/caller';
-import Parallel from './services/parallel';
+import Parallel, { instrumentContext } from './services/parallel';
 import Filesystem from './services/filesystem';
-
-/** @type {WorkerGlobalScope} */
-const worker = self;
+import { CoreInterface } from './services/interop';
 
 class Core {
 	/** @type {TextEncoder} */
@@ -24,7 +21,7 @@ class Core {
 	/** @type {WebAssembly.Instance} */
 	#instance = null;
 
-	/** @type {Worker[]} */
+	/** @type {Parallel[]} */
 	#threads = [];
 
 	/** @type {WASI} */
@@ -92,7 +89,7 @@ class Core {
 	#wrap(name, type, types) {
 		this[name] = (...parameters) => {
 			parameters = parameters.map((parameter, i) => this.#serialize(parameter, types[i]));
-			const result = this.#instance.exports[name](...parameters);
+			const result = this.#instance.exports[`JUN_Core${name}`](...parameters);
 			parameters.forEach((parameter, i) => this.#free(parameter, types[i]));
 
 			return this.#deserialize(result, type);
@@ -106,21 +103,28 @@ class Core {
 	 * @returns {Promise<void>}
 	 */
 	async init(memory, port, start_arg) {
-		const parallel = new Parallel(Filesystem, true);
-		this.#wasi = new WASI(memory, await parallel.link(port));
+		const fs = new Parallel(Filesystem, true);
+		this.#wasi = new WASI(memory, fs.link(port));
 
-		const origin = location.origin + location.pathname.substring(0, location.pathname.lastIndexOf('/'));
+		const url = new URL(location.href.replace('blob:', ''));
+		const origin = url.origin + url.pathname.substring(0, url.pathname.lastIndexOf('/'));
 		const source = await WebAssembly.instantiateStreaming(fetch(`${origin}/modules/lib${this.#name}.wasm`), {
 			env: { memory },
 			wasi_snapshot_preview1: this.#wasi.environment,
 			wasi: { 'thread-spawn': (start_arg) => {
 				const id = this.#threads.length + 1;
 				const name = `${this.#name}-${id}`;
-				const worker = new Worker('worker.js', { name, type: 'module' });
 
-				Caller.call(worker, 'init', memory, parallel.open(), start_arg);
+				const parallel = new Parallel(CoreInterface, false);
+				this.#threads.push(parallel);
 
-				this.#threads.push(worker);
+				const start = async () => {
+					const script = await (await fetch(`${origin}/worker.js`)).text();
+					const core = await parallel.create(name, script);
+					await core.init(memory, await parallel.open(), start_arg);
+				}
+
+				start();
 
 				return id;
 			}},
@@ -135,28 +139,27 @@ class Core {
 
 		this.#instance.exports._initialize();
 
-		this.#wrap('JUN_CoreCreate',             null,     ['string', 'string']);
-		this.#wrap('JUN_CoreResetCheats',        null,     []);
-		this.#wrap('JUN_CoreSetCheat',           null,     ['number', 'number', 'string']);
-		this.#wrap('JUN_CoreStartGame',          'number', []);
-		this.#wrap('JUN_CoreGetSampleRate',      'number', []);
-		this.#wrap('JUN_CoreGetVariableCount',   'number', []);
-		this.#wrap('JUN_CoreGetVariableKey',     'string', ['number']);
-		this.#wrap('JUN_CoreGetVariableName',    'string', ['number']);
-		this.#wrap('JUN_CoreGetVariableOptions', 'string', ['number']);
-		this.#wrap('JUN_CoreSetVariable',        null,     ['string', 'string']);
-		this.#wrap('JUN_CoreSetInput',           null,     ['number', 'number', 'number']);
-		this.#wrap('JUN_CoreRun',                null,     ['number']);
-		this.#wrap('JUN_CoreGetFrameData',       'number', []);
-		this.#wrap('JUN_CoreGetFrameWidth',      'number', []);
-		this.#wrap('JUN_CoreGetFrameHeight',     'number', []);
-		this.#wrap('JUN_CoreGetAudioData',       'number', []);
-		this.#wrap('JUN_CoreGetAudioFrames',     'number', []);
-		this.#wrap('JUN_CoreSaveState',          null,     []);
-		this.#wrap('JUN_CoreRestoreState',       null,     []);
-		this.#wrap('JUN_CoreDestroy',            null,     []);
+		this.#wrap('Create',             null,     ['string', 'string']);
+		this.#wrap('ResetCheats',        null,     []);
+		this.#wrap('SetCheat',           null,     ['number', 'number', 'string']);
+		this.#wrap('StartGame',          'number', []);
+		this.#wrap('GetSampleRate',      'number', []);
+		this.#wrap('GetVariableCount',   'number', []);
+		this.#wrap('GetVariableKey',     'string', ['number']);
+		this.#wrap('GetVariableName',    'string', ['number']);
+		this.#wrap('GetVariableOptions', 'string', ['number']);
+		this.#wrap('SetVariable',        null,     ['string', 'string']);
+		this.#wrap('SetInput',           null,     ['number', 'number', 'number']);
+		this.#wrap('Run',                null,     ['number']);
+		this.#wrap('GetFrameData',       'number', []);
+		this.#wrap('GetFrameWidth',      'number', []);
+		this.#wrap('GetFrameHeight',     'number', []);
+		this.#wrap('GetAudioData',       'number', []);
+		this.#wrap('GetAudioFrames',     'number', []);
+		this.#wrap('SaveState',          null,     []);
+		this.#wrap('RestoreState',       null,     []);
+		this.#wrap('Destroy',            null,     []);
 	}
 }
 
-const core = new Core(worker.name);
-Caller.receive(self, core);
+onmessage = instrumentContext(new Core(self.name));

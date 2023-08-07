@@ -1,93 +1,98 @@
-import Caller from './caller';
 import Files from './files';
+import Parallel from './parallel';
+
+export class CoreInterface {
+	/** @param {WebAssembly.Memory} memory @param {MessagePort} port @param {number} start_arg @returns {Promise<void>} */
+	init(memory, port, start_arg) { }
+
+	/** @param {string} system @param {string} rom @returns {Promise<void>} */
+	Create(system, rom) { }
+
+	/** @returns {Promise<void>} */
+	ResetCheats() { }
+
+	/** @param {number} index @param {number} enabled @param {string} code @returns {Promise<void>} */
+	SetCheat(index, enabled, code) { }
+
+	/** @returns {Promise<number>} */
+	StartGame() { }
+
+	/** @returns {Promise<number>} */
+	GetSampleRate() { }
+
+	/** @returns {Promise<number>} */
+	GetVariableCount() { }
+
+	/** @param {number} index @returns {Promise<string>} */
+	GetVariableKey(index) { }
+
+	/** @param {number} index @returns {Promise<string>} */
+	GetVariableName(index) { }
+
+	/** @param {number} index @returns {Promise<string>} */
+	GetVariableOptions(index) { }
+
+	/** @param {string} key @param {string} value @returns {Promise<void>} */
+	SetVariable(key, value) { }
+
+	/** @param {number} device @param {number} id @param {number} value @returns {Promise<void>} */
+	SetInput(device, id, value) { }
+
+	/** @param {number} fast_forward @returns {Promise<void>} */
+	Run(fast_forward) { }
+
+	/** @returns {Promise<number>} */
+	GetFrameData() { }
+
+	/** @returns {Promise<number>} */
+	GetFrameWidth() { }
+
+	/** @returns {Promise<number>} */
+	GetFrameHeight() { }
+
+	/** @returns {Promise<number>} */
+	GetAudioData() { }
+
+	/** @returns {Promise<number>} */
+	GetAudioFrames() { }
+
+	/** @returns {Promise<void>} */
+	SaveState() { }
+
+	/** @returns {Promise<void>} */
+	RestoreState() { }
+
+	/** @returns {Promise<void>} */
+	Destroy() { }
+}
 
 export default class Interop {
-	/** @type {Worker} */
-	static #worker = null;
+	/** @type {Parallel<CoreInterface>} */
+	static #parallel = null;
 
-	/** @type {Worker} */
-	static get worker() { return this.#worker; }
+	/** @type {CoreInterface} */
+	static #core = null;
 
 	/**
 	 * @param {string} name
 	 * @param {WebAssembly.Memory} memory
-	 * @returns {Promise<void>}
+	 * @returns {Promise<CoreInterface>}
 	 */
 	static async init(name, memory) {
-		this.#worker = new Worker('worker.js', { name, type: 'module' });
+		this.#parallel = new Parallel(CoreInterface, false);
 
-		await Caller.call(Interop.worker, 'init', memory, await Files.clone());
+		const script = await (await fetch('worker.js')).text();
+		const core = await this.#parallel.create(name, script);
+		await core.init(memory, await Files.clone());
+
+		return core;
 	}
 
 	/**
 	 * @returns {Promise<void>}
 	 */
 	static async terminate() {
-		await Interop.Core.Destroy();
-
-		this.#worker.terminate();
-		this.#worker = null;
-	}
-
-	static Core = class {
-		/** @param {string} system @param {string} rom @returns {Promise<void>} */
-		static Create(system, rom) { return Caller.call(Interop.worker, 'JUN_CoreCreate', system, rom); }
-
-		/** @returns {Promise<void>} */
-		static ResetCheats() { return Caller.call(Interop.worker, 'JUN_CoreResetCheats'); }
-
-		/** @param {number} index @param {number} enabled @param {string} code @returns {Promise<void>} */
-		static SetCheat(index, enabled, code) { return Caller.call(Interop.worker, 'JUN_CoreSetCheat', index, enabled, code); }
-
-		/** @returns {Promise<number>} */
-		static StartGame() { return Caller.call(Interop.worker, 'JUN_CoreStartGame'); }
-
-		/** @returns {Promise<number>} */
-		static GetSampleRate() { return Caller.call(Interop.worker, 'JUN_CoreGetSampleRate'); }
-
-		/** @returns {Promise<number>} */
-		static GetVariableCount() { return Caller.call(Interop.worker, 'JUN_CoreGetVariableCount'); }
-
-		/** @param {number} index @returns {Promise<string>} */
-		static GetVariableKey(index) { return Caller.call(Interop.worker, 'JUN_CoreGetVariableKey', index); }
-
-		/** @param {number} index @returns {Promise<string>} */
-		static GetVariableName(index) { return Caller.call(Interop.worker, 'JUN_CoreGetVariableName', index); }
-
-		/** @param {number} index @returns {Promise<string>} */
-		static GetVariableOptions(index) { return Caller.call(Interop.worker, 'JUN_CoreGetVariableOptions', index); }
-
-		/** @param {string} key @param {string} value @returns {Promise<void>} */
-		static SetVariable(key, value) { return Caller.call(Interop.worker, 'JUN_CoreSetVariable', key, value); }
-
-		/** @param {number} device @param {number} id @param {number} value @returns {Promise<void>} */
-		static SetInput(device, id, value) { return Caller.call(Interop.worker, 'JUN_CoreSetInput', device, id, value); }
-
-		/** @param {number} fast_forward @returns {Promise<void>} */
-		static Run(fast_forward) { return Caller.call(Interop.worker, 'JUN_CoreRun', fast_forward); }
-
-		/** @returns {Promise<number>} */
-		static GetFrameData() { return Caller.call(Interop.worker, 'JUN_CoreGetFrameData'); }
-
-		/** @returns {Promise<number>} */
-		static GetFrameWidth() { return Caller.call(Interop.worker, 'JUN_CoreGetFrameWidth'); }
-
-		/** @returns {Promise<number>} */
-		static GetFrameHeight() { return Caller.call(Interop.worker, 'JUN_CoreGetFrameHeight'); }
-
-		/** @returns {Promise<number>} */
-		static GetAudioData() { return Caller.call(Interop.worker, 'JUN_CoreGetAudioData'); }
-
-		/** @returns {Promise<number>} */
-		static GetAudioFrames() { return Caller.call(Interop.worker, 'JUN_CoreGetAudioFrames'); }
-
-		/** @returns {Promise<void>} */
-		static SaveState() { return Caller.call(Interop.worker, 'JUN_CoreSaveState'); }
-
-		/** @returns {Promise<void>} */
-		static RestoreState() { return Caller.call(Interop.worker, 'JUN_CoreRestoreState'); }
-
-		/** @returns {Promise<void>} */
-		static Destroy() { return Caller.call(Interop.worker, 'JUN_CoreDestroy'); }
+		this.#parallel.close();
+		this.#parallel = null;
 	}
 }

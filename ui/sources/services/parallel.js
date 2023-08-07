@@ -1,4 +1,69 @@
-import WorkerMessage from "./serializer";
+/**
+ * @param {any} context
+ */
+export function instrumentContext(context) {
+	const TYPE_NUMBER = 1;
+	const TYPE_STRING = 2;
+	const TYPE_OBJECT = 3;
+
+	context['-ready-'] = () => { return 0; };
+	context['-port-'] = (port) => { port.onmessage = onmessage; return 0; };
+
+	return async (message) => {
+		const sab = message.data.args.shift();
+		const name = message.data.name;
+		const args = message.data.args;
+
+		const result = await context[name](...args);
+
+		switch (typeof result) {
+			case 'number':
+				Atomics.store(sab, 1, TYPE_NUMBER);
+				Atomics.store(sab, 2, result);
+				break;
+			case 'string':
+				const encoded_str = new TextEncoder().encode(result);
+				sab.buffer.grow(sab.byteLength + encoded_str.byteLength);
+
+				Atomics.store(sab, 1, TYPE_STRING);
+				Atomics.store(sab, 2, encoded_str.byteLength);
+				new Uint8Array(sab.buffer).set(encoded_str, 12);
+				break;
+			case 'object':
+				const encoded_obj = new TextEncoder().encode(JSON.stringify(result));
+				sab.buffer.grow(sab.byteLength + encoded_obj.byteLength);
+
+				Atomics.store(sab, 1, TYPE_OBJECT);
+				Atomics.store(sab, 2, encoded_obj.byteLength);
+				new Uint8Array(sab.buffer).set(encoded_obj, 12);
+				break;
+		}
+
+		Atomics.store(sab, 0, 1);
+		Atomics.notify(sab, 0, 1);
+	}
+}
+
+/**
+ * @param {SharedArrayBuffer} sab
+ * @returns {any}
+ */
+export function parseMessage(sab) {
+	const TYPE_NUMBER = 1;
+	const TYPE_STRING = 2;
+	const TYPE_OBJECT = 3;
+
+	switch (sab[1]) {
+		case TYPE_NUMBER:
+			return sab[2];
+		case TYPE_STRING:
+			const str_buf = new Uint8Array(sab.buffer, 12, sab[2]).slice();
+			return new TextDecoder().decode(str_buf);
+		case TYPE_OBJECT:
+			const obj_buf = new Uint8Array(sab.buffer, 12, sab[2]).slice();
+			return JSON.parse(new TextDecoder().decode(obj_buf));
+	}
+}
 
 /**
  * @template T
@@ -30,7 +95,7 @@ export default class Parallel {
 			get: (_, name) => {
 				if (instance[name]) {
 					const parallel = this;
-					return function() { return parallel.#call(name, arguments, [], sync); };
+					return function() { return parallel.#call(name, [...arguments], sync); };
 				}
 				return Reflect.get(instance, ...arguments);
 			}
@@ -39,45 +104,25 @@ export default class Parallel {
 
 	/**
 	 * @param {string} name
+	 * @param {string} script
 	 * @returns {Promise<T>}
 	 */
-	async create(name) {
-		/** @param {MessageEvent} message */
-		const process = async (message) => {
-			const sab = message.data.args.shift();
-			const name = message.data.name;
-			const args = message.data.args;
-
-			WorkerMessage.serialize(sab, await context[name](...args));
-
-			Atomics.store(sab, 0, 1);
-			Atomics.notify(sab, 0, 1);
-		};
-
-		const script = `
-			const ${WorkerMessage.name} = ${WorkerMessage};
-			const ${Parallel.name} = ${Parallel};
-
-			const context = new (${this.#cls});
-			context['-ready-'] = () => { return 0; };
-			context['-port-'] = (port) => { port.onmessage = onmessage; return 0; }
-
-			onmessage = ${process};
-		`;
+	async create(name, script) {
+		if (!script)
+			script = `onmessage = (${instrumentContext})(new (${this.#cls}));`;
 
 		const blob = new Blob([script], { type: 'text/javascript' });
 		this.#worker = new Worker(URL.createObjectURL(blob), { name });
-		await this.#call('-ready-', [], [], false);
+		await this.#call('-ready-', [], false);
 		return this.#proxy;
 	}
 
 	/**
 	 * @param {MessagePort} port
-	 * @returns {Promise<T>}
+	 * @returns {T}
 	 */
-	async link(port) {
+	link(port) {
 		this.#worker = port;
-		await this.#call('-ready-', [], [], false);
 		return this.#proxy;
 	}
 
@@ -88,11 +133,11 @@ export default class Parallel {
 		const channel = new MessageChannel();
 
 		if (this.#sync) {
-			this.#call('-port-', [channel.port1], [channel.port1]);
+			this.#call('-port-', [channel.port1]);
 			return channel.port2;
 		}
 
-		return this.#call('-port-', [channel.port1], [channel.port1]).then(() => channel.port2);
+		return this.#call('-port-', [channel.port1]).then(() => channel.port2);
 	}
 
 	/**
@@ -107,27 +152,26 @@ export default class Parallel {
 	/**
 	 * @param {string} name
 	 * @param {any[]} args
-	 * @param {any[]} transfer
 	 * @param {boolean} sync
 	 * @returns {any | Promise<any>}
 	 */
-	#call(name, args, transfer, sync) {
+	#call(name, args, sync) {
 		if (!args) args = [];
-		if (!transfer) transfer = [];
 
 		const sab = new Int32Array(new SharedArrayBuffer(12, { maxByteLength: 4096 }));
 
 		const message = { name, args: [sab, ...args] };
+		const transfer = args.filter(x => x.constructor.name == 'MessagePort');
 		this.#worker.postMessage(message, transfer);
 
 		if (sync) {
 			Atomics.wait(sab, 0, 0);
-			return WorkerMessage.parse(sab);
+			return parseMessage(sab);
 		}
 
 		const result = Atomics.waitAsync(sab, 0, 0);
 		return result.async
-			? result.value.then(() => WorkerMessage.parse(sab))
-			: WorkerMessage.parse(sab);
+			? result.value.then(() => parseMessage(sab))
+			: parseMessage(sab);
 	}
 }

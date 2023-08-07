@@ -1,8 +1,8 @@
 import { Cheat } from '../entities/cheat';
 import { Settings } from '../entities/settings';
 import { Variable } from '../entities/variable';
+import Interop, { CoreInterface } from './interop';
 import Audio from './audio';
-import Interop from './interop';
 import Path from './path';
 
 const vs = `
@@ -43,6 +43,9 @@ export default class Core {
 
 	/** @type {{[name: string]: Core}} */
 	static #cores = {};
+
+	/** @type {CoreInterface} */
+	#interop = null;
 
 	/** @type {string} */
 	#name = null;
@@ -98,7 +101,7 @@ export default class Core {
 	async init(canvas) {
 		this.#canvas = canvas;
 
-		await Interop.init(this.#name, Core.#memory);
+		this.#interop = await Interop.init(this.#name, Core.#memory);
 
 		const state = this.#state_gl;
 		const gl = this.#canvas.getContext('webgl2');
@@ -137,7 +140,7 @@ export default class Core {
 		const state = this.#state;
 
 		state.rom = Path.game(system, rom);
-		await Interop.Core.Create(system, rom);
+		await this.#interop.Create(system, rom);
 	}
 
 	/**
@@ -177,27 +180,27 @@ export default class Core {
 		const state = this.#state;
 
 		await this.settings(settings);
-		await Interop.Core.StartGame();
+		await this.#interop.StartGame();
 		await this.cheats(cheats);
 
 		state.stop = false;
 		state.running = new Promise((resolve) => {
 			const step = async () => {
-				await Interop.Core.Run(state.speed);
+				await this.#interop.Run(state.speed);
 
-				const frame = await Interop.Core.GetFrameData();
-				const width = await Interop.Core.GetFrameWidth();
-				const height = await Interop.Core.GetFrameHeight();
+				const frame = await this.#interop.GetFrameData();
+				const width = await this.#interop.GetFrameWidth();
+				const height = await this.#interop.GetFrameHeight();
 
 				if (width != 0 && height != 0)
 					this.#draw(frame, width, height);
 
-				const sample_rate = await Interop.Core.GetSampleRate();
+				const sample_rate = await this.#interop.GetSampleRate();
 				Audio.update(sample_rate * state.speed, 2);
 
 				if (state.audio) {
-					const audio = await Interop.Core.GetAudioData();
-					const frames = await Interop.Core.GetAudioFrames();
+					const audio = await this.#interop.GetAudioData();
+					const frames = await this.#interop.GetAudioFrames();
 					const audio_view = new Float32Array(Core.#memory.buffer, audio, frames * 2);
 					Audio.queue(audio_view);
 				}
@@ -218,6 +221,7 @@ export default class Core {
 		state.stop = true;
 		await state.running;
 
+		await this.#interop.Destroy();
 		await Interop.terminate();
 		new Uint8Array(Core.#memory.buffer).fill(0);
 	}
@@ -228,10 +232,10 @@ export default class Core {
 	async variables() {
 		const variables = [];
 
-		for (let i = 0; i < await Interop.Core.GetVariableCount(); i++) {
-			const key = await Interop.Core.GetVariableKey(i);
-			const name = await Interop.Core.GetVariableName(i);
-			const options = (await Interop.Core.GetVariableOptions(i)).split('|');
+		for (let i = 0; i < await this.#interop.GetVariableCount(); i++) {
+			const key = await this.#interop.GetVariableKey(i);
+			const name = await this.#interop.GetVariableName(i);
+			const options = (await this.#interop.GetVariableOptions(i)).split('|');
 
 			variables.push({ key, name, options });
 		}
@@ -245,7 +249,7 @@ export default class Core {
 	 */
 	async settings(settings) {
 		for (const key in settings)
-			await Interop.Core.SetVariable(key, settings[key]);
+			await this.#interop.SetVariable(key, settings[key]);
 	}
 
 	/**
@@ -253,10 +257,10 @@ export default class Core {
 	 * @returns {Promise<void>}
 	 */
 	async cheats(cheats) {
-		await Interop.Core.ResetCheats();
+		await this.#interop.ResetCheats();
 		const filtered = cheats?.filter(x => x.enabled).sort((x, y) => x.order - y.order);
 		for (const cheat of filtered ?? [])
-			await Interop.Core.SetCheat(cheat.order, true, cheat.value);
+			await this.#interop.SetCheat(cheat.order, true, cheat.value);
 	}
 
 	/**
@@ -266,21 +270,24 @@ export default class Core {
 	 * @returns {Promise<void>}
 	 */
 	async send(device, id, value) {
-		await Interop.Core.SetInput(device, id, value);
+		if (this.#interop)
+			await this.#interop.SetInput(device, id, value);
 	}
 
 	/**
 	 * @returns {Promise<void>}
 	 */
 	async save() {
-		await Interop.Core.SaveState();
+		if (this.#interop)
+			await this.#interop.SaveState();
 	}
 
 	/**
 	 * @returns {Promise<void>}
 	 */
 	async restore() {
-		await Interop.Core.RestoreState();
+		if (this.#interop)
+			await this.#interop.RestoreState();
 	}
 
 	/**
