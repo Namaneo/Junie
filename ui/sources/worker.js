@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 
-import { JUN, WASI_ENV } from './services/wasi';
+import WASI from './services/wasi';
 import Caller from './services/caller';
 import Parallel from './services/parallel';
 import Filesystem from './services/filesystem';
@@ -26,6 +26,9 @@ class Core {
 
 	/** @type {Worker[]} */
 	#threads = [];
+
+	/** @type {WASI} */
+	#wasi = null;
 
 	/**
 	 * @param {string} name
@@ -98,23 +101,24 @@ class Core {
 
 	/**
 	 * @param {WebAssembly.Memory} memory
+	 * @param {MessagePort} port
 	 * @param {number} start_arg
 	 * @returns {Promise<void>}
 	 */
-	async init(memory, start_arg) {
-		JUN.memory = memory;
-		JUN.filesystem = await Parallel.create('Filesystem', Filesystem, true);
+	async init(memory, port, start_arg) {
+		const parallel = new Parallel(Filesystem, true);
+		this.#wasi = new WASI(memory, await parallel.link(port));
 
 		const origin = location.origin + location.pathname.substring(0, location.pathname.lastIndexOf('/'));
 		const source = await WebAssembly.instantiateStreaming(fetch(`${origin}/modules/lib${this.#name}.wasm`), {
 			env: { memory },
-			wasi_snapshot_preview1: WASI_ENV,
+			wasi_snapshot_preview1: this.#wasi.environment,
 			wasi: { 'thread-spawn': (start_arg) => {
 				const id = this.#threads.length + 1;
 				const name = `${this.#name}-${id}`;
 				const worker = new Worker('worker.js', { name, type: 'module' });
 
-				Caller.call(worker, 'init', memory, start_arg);
+				Caller.call(worker, 'init', memory, parallel.open(), start_arg);
 
 				this.#threads.push(worker);
 

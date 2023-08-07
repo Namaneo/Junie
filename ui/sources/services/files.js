@@ -17,13 +17,25 @@ export default class Files {
 	/** @type {TextDecoder} */
 	static #decoder = new TextDecoder();
 
+	/** @type {Parallel<Filesystem>} */
+	static #parallel = null
+
 	/** @type {Filesystem} */
 	static #filesystem = null
 
 	static async #fs() {
-		if (!this.#filesystem)
-			this.#filesystem = await Parallel.create('Filesystem', Filesystem, false);
+		if (!this.#filesystem) {
+			this.#parallel = new Parallel(Filesystem, false);
+			this.#filesystem = await this.#parallel.create('filesystem');
+		}
 		return this.#filesystem;
+	}
+
+	/**
+	 * @returns {Promise<MessagePort>}
+	 */
+	static async clone() {
+		return this.#parallel.open();
 	}
 
 	/**

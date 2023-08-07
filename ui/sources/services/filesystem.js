@@ -90,7 +90,7 @@ export default class Filesystem {
 				files.push(...await this.#list(handle, `${path}/${handle.name}`));
 		}
 		return files;
-	  };
+	};
 
 	/**
 	 * @returns {string[] | Promise<string[]>}

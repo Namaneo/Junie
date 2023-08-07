@@ -60,32 +60,18 @@ class WorkerResponse extends WorkerMessage {
 	}
 }
 
-/**
- * @template T
- * @typedef {(event: MessageEvent<T>) => void} MessageListener
- */
-class WorkerLike {
-	/** @type {(message: WorkerMessage) => void} */
-	postMessage;
-
-	/** @type {(type: 'message', listener: MessageListener<WorkerMessage>) => void} */
-	addEventListener;
-
-	/** @type {(type: 'message', listener: MessageListener<WorkerMessage>) => void} */
-	removeEventListener;
-}
-
 export default class Caller {
 	/**
-	 * @param {WorkerLike} worker
+	 * @param {Worker} worker
 	 * @param {string} name
-	 * @param {...(string | number)} parameters
+	 * @param {...({constructor: Function})} parameters
 	 * @returns {Promise<any>}
 	 */
 	static call(worker, name, ...parameters) {
 		if (!worker) return;
 		if (!parameters) parameters = [];
 
+		const transfer = parameters.filter(x => x.constructor.name == 'MessagePort');
 		const request = new WorkerRequest(name, parameters);
 
 		return new Promise(resolve => {
@@ -99,31 +85,12 @@ export default class Caller {
 			}
 
 			worker.addEventListener('message', on_message);
-			worker.postMessage(request);
+			worker.postMessage(request, transfer);
 		});
 	}
 
 	/**
-	 * @param {WorkerLike} worker
-	 * @param {string} name
-	 * @param {...(string | number)} parameters
-	 * @returns {number}
-	 */
-	static callSync(worker, name, ...parameters) {
-		if (!worker) return;
-		if (!parameters) parameters = [];
-
-		const sync = new Int32Array(new SharedArrayBuffer(4), 0, 1);
-		const request = new WorkerRequest(name, parameters, sync);
-
-		worker.postMessage(request);
-
-		Atomics.wait(sync, 0, 0);
-		return Atomics.load(sync, 0);
-	}
-
-	/**
-	 * @param {WorkerLike} worker
+	 * @param {Worker} worker
 	 * @param {any} object
 	 * @param {() => void} callback
 	 * @returns {Promise<WorkerResponse>}

@@ -1,12 +1,7 @@
 import Caller from './caller';
+import Files from './files';
 
 export default class Interop {
-	/** @type {string} */
-	static #name = null;
-
-	/** @type {WebAssembly.Memory} */
-	static #memory = null;
-
 	/** @type {Worker} */
 	static #worker = null;
 
@@ -19,11 +14,9 @@ export default class Interop {
 	 * @returns {Promise<void>}
 	 */
 	static async init(name, memory) {
-		this.#name = name;
-		this.#memory = memory;
 		this.#worker = new Worker('worker.js', { name, type: 'module' });
 
-		await Caller.call(Interop.worker, 'init', memory);
+		await Caller.call(Interop.worker, 'init', memory, await Files.clone());
 	}
 
 	/**
