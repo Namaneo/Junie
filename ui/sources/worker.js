@@ -99,10 +99,11 @@ class Core {
 	/**
 	 * @param {WebAssembly.Memory} memory
 	 * @param {MessagePort} port
+	 * @param {string} script
 	 * @param {number} start_arg
 	 * @returns {Promise<void>}
 	 */
-	async init(memory, port, start_arg) {
+	async init(memory, port, script, start_arg) {
 		const fs = new Parallel(Filesystem, true);
 		this.#wasi = new WASI(memory, fs.link(port));
 
@@ -119,9 +120,8 @@ class Core {
 				this.#threads.push(parallel);
 
 				const start = async () => {
-					const script = await (await fetch(`${origin}/worker.js`)).text();
 					const core = await parallel.create(name, script);
-					await core.init(memory, await parallel.open(), start_arg);
+					await core.init(memory, await parallel.open(), script, start_arg);
 				}
 
 				start();

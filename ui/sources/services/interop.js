@@ -2,8 +2,8 @@ import Files from './files';
 import Parallel from './parallel';
 
 export class CoreInterface {
-	/** @param {WebAssembly.Memory} memory @param {MessagePort} port @param {number} start_arg @returns {Promise<void>} */
-	init(memory, port, start_arg) { }
+	/** @param {WebAssembly.Memory} memory @param {MessagePort} port @param {number} start_arg @param {string} script @returns {Promise<void>} */
+	init(memory, port, script, start_arg) { }
 
 	/** @param {string} system @param {string} rom @returns {Promise<void>} */
 	Create(system, rom) { }
@@ -83,7 +83,7 @@ export default class Interop {
 
 		const script = await (await fetch('worker.js')).text();
 		const core = await this.#parallel.create(name, script);
-		await core.init(memory, await Files.clone());
+		await core.init(memory, await Files.clone(), script);
 
 		return core;
 	}
