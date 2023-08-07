@@ -22,6 +22,8 @@
         <div id="root"></div>
 
 		<script>
+			const error = console.error;
+			console.error = (e) => { alert(e); error(e); };
 			window.junie_build = null;
 		</script>
 
