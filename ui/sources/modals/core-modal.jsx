@@ -1,4 +1,4 @@
-import { IonAccordion, IonAccordionGroup, IonButton, IonButtons, IonCheckbox, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonMenu, IonMenuButton, IonPage, IonSegment, IonSegmentButton, IonSelect, IonSelectOption, IonTitle, IonToolbar } from '@ionic/react';
+import { IonAccordion, IonAccordionGroup, IonButton, IonButtons, IonCheckbox, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonMenu, IonMenuButton, IonPage, IonSegment, IonSegmentButton, IonSelect, IonSelectOption, IonTitle, IonToolbar, useIonAlert } from '@ionic/react';
 import { useEffect, useRef, useState } from 'react';
 import { checkmarkOutline } from 'ionicons/icons';
 import { useSize } from '../hooks/size';
@@ -9,6 +9,7 @@ import { Variable } from '../entities/variable';
 import { Settings } from '../entities/settings';
 import { Cheat } from '../entities/cheat';
 import Core from '../services/core';
+
 /**
  * @param {Object} parameters
  * @param {Variable[]} parameters.variables
@@ -143,6 +144,8 @@ export const CoreModal = ({ system, game, close }) => {
 	const [window_w, window_h] = useSize({ current: document.body });
 	const [canvas_w, canvas_h] = useSize(canvas);
 
+	const [confirm] = useIonAlert();
+
 	/**
 	 * @returns {void}
 	 */
@@ -177,6 +180,16 @@ export const CoreModal = ({ system, game, close }) => {
 		event.preventDefault();
 	}
 
+	const save = () => confirm('Current state will be saved.', [
+		{ text: 'Confirm', handler: () => core.current.save() },
+		{ text: 'Cancel' },
+	]);
+
+	const restore = () => confirm('Saved state will be restored.', [
+		{ text: 'Confirm', handler: () => core.current.restore() },
+		{ text: 'Cancel' },
+	]);
+
 	useEffect(() => {
 		core.init(system.name, game.rom, canvas.current).then(() => resize());
 
@@ -209,8 +222,8 @@ export const CoreModal = ({ system, game, close }) => {
 				<IonContent>
 					<IonList lines="none">
 						<IonItem>
-							<IonButton fill="outline" onClick={() => core.current.save()}>Save state</IonButton>
-							<IonButton fill="outline" onClick={() => core.current.restore()}>Restore state</IonButton>
+							<IonButton fill="outline" onClick={() => save()}>Save state</IonButton>
+							<IonButton fill="outline" onClick={() => restore()}>Restore state</IonButton>
 						</IonItem>
 						<IonSegment value={speed.value} onIonChange={e => speed.set(e.detail.value)}>
 							<IonSegmentButton value={1}><IonLabel>1x</IonLabel></IonSegmentButton>

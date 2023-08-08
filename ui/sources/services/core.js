@@ -190,14 +190,9 @@ export default class Core {
 	/**
 	 * @param {string} system
 	 * @param {string} rom
-	 * @param {Settings} settings
-	 * @param {Cheat[]} cheats
 	 * @param {HTMLCanvasElement} canvas
-	 * @returns {Promise<void>}
 	 */
-	async start(system, rom, settings, cheats, canvas) {
-		const state = this.#state;
-
+	async create(system, rom, canvas) {
 		this.#canvas = canvas;
 		this.#parallel = new Parallel(Interop, false);
 
@@ -207,6 +202,16 @@ export default class Core {
 
 		await this.#interop.init(Core.#memory, await Files.clone(), origin);
 		await this.#interop.Create(system, rom);
+	}
+
+	/**
+	 * @param {Settings} settings
+	 * @param {Cheat[]} cheats
+	 * @returns {Promise<void>}
+	 */
+	async start(settings, cheats) {
+		const state = this.#state;
+
 		await this.settings(settings);
 		await this.#interop.StartGame();
 		await this.cheats(cheats);
