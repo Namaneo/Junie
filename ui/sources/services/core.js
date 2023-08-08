@@ -43,9 +43,6 @@ export default class Core {
 		shared: true,
 	});
 
-	/** @type {{[name: string]: Core}} */
-	static #cores = {};
-
 	/** @type {Parallel<Interop>} */
 	#parallel = null;
 
@@ -216,6 +213,7 @@ export default class Core {
 
 		const pixel_format = await this.#interop.GetPixelFormat();
 		const sample_rate = await this.#interop.GetSampleRate();
+		const media_view = new DataView(Core.#memory.buffer, await this.#interop.GetMedia());
 
 		this.#initCanvas(pixel_format);
 
@@ -224,22 +222,18 @@ export default class Core {
 			const step = async () => {
 				await this.#interop.Run(state.speed);
 
-				const [
-					frame, width, height, pitch,
-					audio, frames
-				] = await Promise.all([
-					this.#interop.GetFrameData(),
-					this.#interop.GetFrameWidth(),
-					this.#interop.GetFrameHeight(),
-					this.#interop.GetFramePitch(),
-					this.#interop.GetAudioData(),
-					this.#interop.GetAudioFrames(),
-				])
+				const frame = media_view.getUint32(0, true);
 
-				if (frame)
+				if (frame) {
+					const width = media_view.getUint32(4, true);
+					const height = media_view.getUint32(8, true);
+					const pitch = media_view.getUint32(12, true);
 					this.#draw(frame, width, height, pitch);
+				}
 
 				if (state.audio) {
+					const audio = media_view.getUint32(16, true);
+					const frames = media_view.getUint32(20, true);
 					const audio_view = new Float32Array(Core.#memory.buffer, audio, frames * 2);
 					Audio.queue(audio_view, sample_rate * state.speed, 2);
 				}
@@ -343,16 +337,6 @@ export default class Core {
 	 */
 	audio(enable) {
 		this.#state.audio = enable;
-	}
-
-	/**
-	 * @param {string} name
-	 * @returns {Core}
-	 */
-	static create(name) {
-		if (!this.#cores[name])
-			this.#cores[name] = new Core(name);
-		return this.#cores[name];
 	}
 
 	static Device = class {

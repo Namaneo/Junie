@@ -138,27 +138,26 @@ class Core {
 		this.#instance.exports._initialize();
 
 		this.#wrap('Create',             null,     ['string', 'string']);
-		this.#wrap('ResetCheats',        null,     []);
-		this.#wrap('SetCheat',           null,     ['number', 'number', 'string']);
 		this.#wrap('StartGame',          'number', []);
+		this.#wrap('Run',                null,     ['number']);
+		this.#wrap('SetInput',           null,     ['number', 'number', 'number']);
+		this.#wrap('Destroy',            null,     []);
+
 		this.#wrap('GetPixelFormat',     'number', []);
 		this.#wrap('GetSampleRate',      'number', []);
+		this.#wrap('GetMedia',       	 'number', []);
+
+		this.#wrap('SaveState',          null,     []);
+		this.#wrap('RestoreState',       null,     []);
+
+		this.#wrap('ResetCheats',        null,     []);
+		this.#wrap('SetCheat',           null,     ['number', 'number', 'string']);
+
 		this.#wrap('GetVariableCount',   'number', []);
 		this.#wrap('GetVariableKey',     'string', ['number']);
 		this.#wrap('GetVariableName',    'string', ['number']);
 		this.#wrap('GetVariableOptions', 'string', ['number']);
 		this.#wrap('SetVariable',        null,     ['string', 'string']);
-		this.#wrap('SetInput',           null,     ['number', 'number', 'number']);
-		this.#wrap('Run',                null,     ['number']);
-		this.#wrap('GetFrameData',       'number', []);
-		this.#wrap('GetFrameWidth',      'number', []);
-		this.#wrap('GetFrameHeight',     'number', []);
-		this.#wrap('GetFramePitch',      'number', []);
-		this.#wrap('GetAudioData',       'number', []);
-		this.#wrap('GetAudioFrames',     'number', []);
-		this.#wrap('SaveState',          null,     []);
-		this.#wrap('RestoreState',       null,     []);
-		this.#wrap('Destroy',            null,     []);
 	}
 }
 

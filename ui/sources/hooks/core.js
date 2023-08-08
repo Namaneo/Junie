@@ -78,7 +78,7 @@ class CoreState {
  * ]}
  */
 export const useCore = (lib) => {
-	const [core] = useState(Core.create(lib));
+	const [core] = useState(new Core(lib));
 
 	const [variables, setVariables] = useState(/** @type {Variable[]} */ (null));
 	const [settings,  setSettings]  = useState(/** @type {Settings}   */ (null));
