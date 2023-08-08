@@ -1,7 +1,7 @@
 LIBRARIES := $(shell jq -r 'keys[]' cores.json)
 
 WASI_FLAGS = \
-	-I$(shell pwd)/include -flto \
+	-I$(shell pwd)/include -flto -msimd128 \
 	-D'__EMSCRIPTEN__' -D'_WASI_EMULATED_MMAN' \
 	-D'thread_local=' -D'SCHED_RR=0' \
 	-D'sched_param={int sched_priority;}' \

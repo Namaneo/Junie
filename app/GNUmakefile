@@ -24,7 +24,7 @@ ifeq ($(DEBUG), 1)
 CFLAGS  += -O0 -ferror-limit=0 -DDEBUG
 LDFLAGS += -O0 -g -Wl,--error-limit=0
 else
-CFLAGS  += -O3 -flto
+CFLAGS  += -O3 -flto -msimd128
 LDFLAGS += -O3 -flto
 endif
 
