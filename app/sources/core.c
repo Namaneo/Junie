@@ -4,10 +4,12 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <pthread.h>
+#include <time.h>
 
 #include "libretro.h"
 
-#include "tools.h"
+#define LOG(msg, ...) core_log_params(__FUNCTION__, msg, __VA_ARGS__)
 
 typedef enum {
 	JUN_PATH_GAME   = 0,
@@ -75,9 +77,10 @@ static struct CTX {
 	bool variables_update;
 
 	struct {
-		void *data;
+		const void *data;
 		uint32_t width;
 		uint32_t height;
+		uint32_t pitch;
 	} frame;
 
 	struct {
@@ -96,14 +99,67 @@ static struct CTX {
 	struct jun_core_sym sym;
 } CTX;
 
-static void core_log(enum retro_log_level level, const char *fmt, ...)
+
+static void core_log_params(const char *func, const char *fmt, ...)
+{
+#if defined(DEBUG)
+	va_list args = {0};
+	va_start(args, fmt);
+
+	size_t func_len = strlen(func);
+	size_t format_len = strlen(fmt);
+	char *format = calloc(func_len + format_len + 4, 1);
+
+	memcpy(format, func, func_len);
+	memcpy(format + func_len, ": ", 2);
+	memcpy(format + func_len + 2, fmt, format_len);
+
+	size_t length = strlen(format);
+	if (format[length - 1] != '\n')
+		format[length] = '\n';
+
+	vfprintf(stdout, format, args);
+	fflush(stdout);
+
+	free(format);
+	va_end(args);
+#endif
+}
+
+static uint64_t core_get_ticks()
+{
+	struct timespec now = {0};
+	clock_gettime(CLOCK_REALTIME, &now);
+	return now.tv_sec * 1000.0 + now.tv_nsec / 1000000.0;
+}
+
+static char *core_strfmt(const char *fmt, ...)
+{
+	va_list args;
+	va_list args_copy;
+
+	va_start(args, fmt);
+	va_copy(args_copy, args);
+
+	size_t size = vsnprintf(NULL, 0, fmt, args_copy) + 1;
+
+	char *str = calloc(size, 1);
+	vsnprintf(str, size, fmt, args);
+
+	va_end(args_copy);
+	va_end(args);
+
+	return str;
+}
+
+static void core_log_cb(enum retro_log_level level, const char *fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
 
 	char buffer[4096] = {0};
 	vsnprintf(buffer, sizeof(buffer), fmt, args);
-	JUN_Log("%s", buffer);
+	LOG("%s", buffer);
 
 	va_end(args);
 }
@@ -129,7 +185,7 @@ static bool environment(unsigned cmd, void *data)
 		case RETRO_ENVIRONMENT_GET_LOG_INTERFACE: {
 			struct retro_log_callback *callback = data;
 
-			callback->log = core_log;
+			callback->log = core_log_cb;
 
 			return true;
 		}
@@ -155,7 +211,7 @@ static bool environment(unsigned cmd, void *data)
 		case RETRO_ENVIRONMENT_SET_MESSAGE: {
 			struct retro_message *message = data;
 
-			JUN_Log("%s", message->msg);
+			LOG("%s", message->msg);
 
 			return true;
 		}
@@ -168,7 +224,7 @@ static bool environment(unsigned cmd, void *data)
 				if (!variable->key || !variable->value)
 					break;
 
-				JUN_Log("SET -> %s: %s", variable->key, variable->value);
+				LOG("SET -> %s: %s", variable->key, variable->value);
 
 				char *value = strdup(variable->value);
 
@@ -199,7 +255,7 @@ static bool environment(unsigned cmd, void *data)
 				break;
 			}
 
-			JUN_Log("GET -> %s: %s", variable->key, variable->value);
+			LOG("GET -> %s: %s", variable->key, variable->value);
 
 			return variable->value != NULL;
 		}
@@ -221,7 +277,7 @@ static bool environment(unsigned cmd, void *data)
 			return true;
 		}
 		default: {
-			JUN_Log("Unhandled command: %d", command);
+			LOG("Unhandled command: %d", command);
 
 			return false;
 		}
@@ -233,24 +289,10 @@ static void video_refresh(const void *data, unsigned width, unsigned height, siz
 	if (CTX.fast_forward || !data)
 		return;
 
-	if (width * height * sizeof(uint32_t) > CTX.frame.width * CTX.frame.height * sizeof(uint32_t))
-		CTX.frame.data = realloc(CTX.frame.data, width * height * sizeof(uint32_t));
-
-	switch (CTX.format) {
-		case RETRO_PIXEL_FORMAT_UNKNOWN:
-		case RETRO_PIXEL_FORMAT_0RGB1555:
-			JUN_ConvertARGB1555(data, width, height, pitch, CTX.frame.data);
-			break;
-		case RETRO_PIXEL_FORMAT_XRGB8888:
-			JUN_ConvertARGB8888(data, width, height, pitch, CTX.frame.data);
-			break;
-		case RETRO_PIXEL_FORMAT_RGB565:
-			JUN_ConvertRGB565(data, width, height, pitch, CTX.frame.data);
-			break;
-	}
-
+	CTX.frame.data = data;
 	CTX.frame.width = width;
 	CTX.frame.height = height;
+	CTX.frame.pitch = (uint32_t) pitch;
 }
 
 static size_t audio_sample_batch(const int16_t *data, size_t frames)
@@ -267,7 +309,9 @@ static size_t audio_sample_batch(const int16_t *data, size_t frames)
 	}
 
 	size_t offset = CTX.audio.frames * 2 * sizeof(float);
-	JUN_ConvertPCM16(data, frames, &CTX.audio.data[offset]);
+	float *converted = &CTX.audio.data[offset];
+	for (size_t i = 0; i < frames * 2; i++)
+		converted[i] = data[i] / 32768.0f;
 
 	CTX.audio.frames += frames;
 
@@ -330,10 +374,10 @@ static void save_memory(uint32_t type, const char *path)
 
 static void save_memories()
 {
-	if (JUN_GetTicks() - CTX.last_save < 1000)
+	if (core_get_ticks() - CTX.last_save < 1000)
 		return;
 
-	CTX.last_save = JUN_GetTicks();
+	CTX.last_save = core_get_ticks();
 
 	const char *sram_path = CTX.paths[JUN_PATH_SRAM];
 	const char *rtc_path = CTX.paths[JUN_PATH_RTC];
@@ -420,13 +464,13 @@ static void create_paths(const char *system, const char *rom)
 {
 	char *game = remove_extension(rom);
 
-	CTX.paths[JUN_PATH_SYSTEM] = JUN_Strfmt("/%s",             system);
-	CTX.paths[JUN_PATH_GAME] =   JUN_Strfmt("/%s/%s",          system, rom);
-	CTX.paths[JUN_PATH_SAVES] =  JUN_Strfmt("/%s/%s",          system, game);
-	CTX.paths[JUN_PATH_STATE] =  JUN_Strfmt("/%s/%s/%s.state", system, game, game);
-	CTX.paths[JUN_PATH_SRAM] =   JUN_Strfmt("/%s/%s/%s.srm",   system, game, game);
-	CTX.paths[JUN_PATH_RTC] =    JUN_Strfmt("/%s/%s/%s.rtc",   system, game, game);
-	CTX.paths[JUN_PATH_CHEATS] = JUN_Strfmt("/%s/%s/%s.cht",   system, game, game);
+	CTX.paths[JUN_PATH_SYSTEM] = core_strfmt("/%s",             system);
+	CTX.paths[JUN_PATH_GAME] =   core_strfmt("/%s/%s",          system, rom);
+	CTX.paths[JUN_PATH_SAVES] =  core_strfmt("/%s/%s",          system, game);
+	CTX.paths[JUN_PATH_STATE] =  core_strfmt("/%s/%s/%s.state", system, game, game);
+	CTX.paths[JUN_PATH_SRAM] =   core_strfmt("/%s/%s/%s.srm",   system, game, game);
+	CTX.paths[JUN_PATH_RTC] =    core_strfmt("/%s/%s/%s.rtc",   system, game, game);
+	CTX.paths[JUN_PATH_CHEATS] = core_strfmt("/%s/%s/%s.cht",   system, game, game);
 
 	free(game);
 }
@@ -493,6 +537,11 @@ bool JUN_CoreStartGame()
 	restore_memories();
 
 	return CTX.initialized;
+}
+
+uint32_t JUN_CoreGetPixelFormat()
+{
+	return CTX.format;
 }
 
 double JUN_CoreGetSampleRate()
@@ -593,6 +642,11 @@ uint32_t JUN_CoreGetFrameHeight()
 	return CTX.frame.height;
 }
 
+uint32_t JUN_CoreGetFramePitch()
+{
+	return CTX.frame.pitch;
+}
+
 const int16_t *JUN_CoreGetAudioData()
 {
 	return CTX.audio.data;
@@ -658,3 +712,11 @@ void JUN_CoreDestroy()
 
 	CTX = (struct CTX) {0};
 }
+
+
+// WASI stubs
+clock_t clock(void) { return 0; }
+int pthread_attr_setschedpolicy(pthread_attr_t *attr, int policy) { return 1; }
+int pthread_attr_getschedpolicy(const pthread_attr_t *restrict attr, int *restrict policy) { return 1; }
+void *__cxa_allocate_exception(size_t thrown_size) { abort(); }
+void __cxa_throw(void *thrown_object, void *tinfo, void (*dest)(void *)) { abort(); }

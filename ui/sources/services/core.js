@@ -3,9 +3,8 @@ import { Settings } from '../entities/settings';
 import { Variable } from '../entities/variable';
 import Interop, { CoreInterface } from './interop';
 import Audio from './audio';
-import Path from './path';
 
-const vs = `
+const vs = () => `
 	attribute vec2 a_position;
 
 	uniform vec2 u_resolution;
@@ -18,7 +17,7 @@ const vs = `
 		v_texCoord = a_position;
 	}
 `;
-const fs = `
+const fs = (invert) => `
 	precision mediump float;
 
 	uniform sampler2D u_image;
@@ -27,6 +26,7 @@ const fs = `
 
 	void main() {
 		gl_FragColor = texture2D(u_image, v_texCoord);
+		if (${invert}) gl_FragColor = gl_FragColor.bgra;
 	}
 `;
 
@@ -54,9 +54,6 @@ export default class Core {
 	#canvas = null;
 
 	#state = {
-		/** @type {string} */
-		rom: null,
-
 		/** @type {number} */
 		speed: 1,
 
@@ -71,6 +68,15 @@ export default class Core {
 	}
 
 	#state_gl = {
+		/** @type {number} */
+		type: 0,
+
+		/** @type {number} */
+		format: 0,
+
+		/** @type {number} */
+		bpp: 0,
+
 		/** @type {WebGLProgram} */
 		program: null,
 
@@ -83,7 +89,7 @@ export default class Core {
 		/** @type {number} */
 		position_location: 0,
 
-		/** @type {number} */
+		/** co@type {number} */
 		matrix_location: 0,
 	}
 
@@ -95,23 +101,39 @@ export default class Core {
 	}
 
 	/**
-	 * @param {HTMLCanvasElement} canvas
+	 * @param {number} format
 	 * @returns {Promise<void>}
 	 */
-	async init(canvas) {
-		this.#canvas = canvas;
-
-		this.#interop = await Interop.init(this.#name, Core.#memory);
-
+	async #initCanvas(format) {
 		const state = this.#state_gl;
+
 		const gl = this.#canvas.getContext('webgl2');
 
+		switch (format) {
+			default:
+			case 0:
+				state.type = gl.UNSIGNED_SHORT_5_5_5_1;
+				state.format = gl.RGBA;
+				state.bpp = 2;
+				break;
+			case 1:
+				state.type = gl.UNSIGNED_BYTE;
+				state.format = gl.RGBA;
+				state.bpp = 4;
+				break;
+			case 2:
+				state.type = gl.UNSIGNED_SHORT_5_6_5;
+				state.format = gl.RGB;
+				state.bpp = 2;
+				break;
+		}
+
 		const vertex_shader = gl.createShader(gl.VERTEX_SHADER);
-		gl.shaderSource(vertex_shader, vs);
+		gl.shaderSource(vertex_shader, vs());
 		gl.compileShader(vertex_shader);
 
 		const fragment_shader = gl.createShader(gl.FRAGMENT_SHADER);
-		gl.shaderSource(fragment_shader, fs);
+		gl.shaderSource(fragment_shader, fs(state.type != gl.UNSIGNED_SHORT_5_6_5));
 		gl.compileShader(fragment_shader);
 
 		state.program = gl.createProgram();
@@ -121,7 +143,7 @@ export default class Core {
 
 		state.texture = gl.createTexture();
 		gl.bindTexture(gl.TEXTURE_2D, state.texture);
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+		gl.texImage2D(gl.TEXTURE_2D, 0, state.format, 0, 0, 0, state.format, state.type, null);
 
 		state.position_location = gl.getAttribLocation(state.program, "a_position");
 		state.matrix_location = gl.getUniformLocation(state.program, "u_matrix");
@@ -132,23 +154,12 @@ export default class Core {
 	}
 
 	/**
-	 * @param {string} system
-	 * @param {string} rom
-	 * @returns {Promise<void>}
-	 */
-	async prepare(system, rom) {
-		const state = this.#state;
-
-		state.rom = Path.game(system, rom);
-		await this.#interop.Create(system, rom);
-	}
-
-	/**
 	 * @param {number} frame
 	 * @param {number} width
 	 * @param {number} height
+	 * @param {number} pitch
 	 */
-	#draw(frame, width, height) {
+	#draw(frame, width, height, pitch) {
 		const state = this.#state_gl;
 		const gl = this.#canvas.getContext('webgl2');
 
@@ -162,9 +173,12 @@ export default class Core {
 		gl.enableVertexAttribArray(state.position_location);
 		gl.vertexAttribPointer(state.position_location, 2, gl.FLOAT, false, 0, 0);
 
-		const frame_view = new Uint8Array(Core.#memory.buffer, frame, width * height * 4);
+		const frame_view = state.type == gl.UNSIGNED_BYTE
+			? new Uint8Array(Core.#memory.buffer, frame, (pitch / state.bpp) * height * 4)
+			: new Uint16Array(Core.#memory.buffer, frame, (pitch / state.bpp) * height);
 		gl.bindTexture(gl.TEXTURE_2D, state.texture);
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, frame_view);
+		gl.pixelStorei(gl.UNPACK_ROW_LENGTH, pitch / state.bpp);
+		gl.texImage2D(gl.TEXTURE_2D, 0, state.format, width, height, 0, state.format, state.type, frame_view);
 		gl.generateMipmap(gl.TEXTURE_2D);
 
 		gl.uniformMatrix3fv(state.matrix_location, false, [ 2, 0, 0, 0, -2, 0, -1, 1, 1 ]);
@@ -172,16 +186,25 @@ export default class Core {
 	}
 
 	/**
+	 * @param {string} system
+	 * @param {string} rom
 	 * @param {Settings} settings
 	 * @param {Cheat[]} cheats
+	 * @param {HTMLCanvasElement} canvas
 	 * @returns {Promise<void>}
 	 */
-	async start(settings, cheats) {
+	async start(system, rom, settings, cheats, canvas) {
 		const state = this.#state;
 
+		this.#canvas = canvas;
+		this.#interop = await Interop.init(this.#name, Core.#memory);
+
+		await this.#interop.Create(system, rom);
 		await this.settings(settings);
 		await this.#interop.StartGame();
 		await this.cheats(cheats);
+
+		this.#initCanvas(await this.#interop.GetPixelFormat());
 
 		state.stop = false;
 		state.running = new Promise((resolve) => {
@@ -191,9 +214,10 @@ export default class Core {
 				const frame = await this.#interop.GetFrameData();
 				const width = await this.#interop.GetFrameWidth();
 				const height = await this.#interop.GetFrameHeight();
+				const pitch = await this.#interop.GetFramePitch();
 
-				if (width != 0 && height != 0)
-					this.#draw(frame, width, height);
+				if (width != 0 && height != 0 && pitch != 0)
+					this.#draw(frame, width, height, pitch);
 
 				const sample_rate = await this.#interop.GetSampleRate();
 				Audio.update(sample_rate * state.speed, 2);

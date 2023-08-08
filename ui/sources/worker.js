@@ -142,6 +142,7 @@ class Core {
 		this.#wrap('ResetCheats',        null,     []);
 		this.#wrap('SetCheat',           null,     ['number', 'number', 'string']);
 		this.#wrap('StartGame',          'number', []);
+		this.#wrap('GetPixelFormat',     'number', []);
 		this.#wrap('GetSampleRate',      'number', []);
 		this.#wrap('GetVariableCount',   'number', []);
 		this.#wrap('GetVariableKey',     'string', ['number']);
@@ -153,6 +154,7 @@ class Core {
 		this.#wrap('GetFrameData',       'number', []);
 		this.#wrap('GetFrameWidth',      'number', []);
 		this.#wrap('GetFrameHeight',     'number', []);
+		this.#wrap('GetFramePitch',      'number', []);
 		this.#wrap('GetAudioData',       'number', []);
 		this.#wrap('GetAudioFrames',     'number', []);
 		this.#wrap('SaveState',          null,     []);

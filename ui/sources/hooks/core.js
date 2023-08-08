@@ -132,9 +132,7 @@ export const useCore = (lib) => {
 		setSettings(settings);
 		setCheats(cheats);
 
-		await core.init(canvas);
-		await core.prepare(system, rom);
-		await core.start(settings, cheats);
+		await core.start(system, rom, settings, cheats, canvas);
 
 		setVariables(await core.variables());
 	}

@@ -9,13 +9,6 @@ CORES_DIR := ../cores
 LIBRARIES := $(shell jq -r 'keys[]' $(CORES_DIR)/cores.json)
 BINARIES  := $(LIBRARIES:%=$(OUT_DIR)/lib%.wasm)
 
-SRC := \
-	$(SRC_DIR)/core.c \
-	$(SRC_DIR)/tools.c \
-	$(SRC_DIR)/wasi.c
-
-OBJ := $(SRC:.c=.o)
-
 CFLAGS  := \
 	-I$(SRC_DIR)
 
@@ -38,11 +31,9 @@ endif
 QUIET := > /dev/null 2>&1
 MAKEFLAGS += --no-print-directory
 
-.SECONDARY: $(OBJ)
-
 all: clean prepare
 	@echo Building objects...
-	@$(MAKE) -s $(OBJ)
+	@$(MAKE) -s $(SRC_DIR)/core.o
 	@$(MAKE) -s $(BINARIES)
 
 prepare:
@@ -50,10 +41,10 @@ prepare:
 
 $(OUT_DIR)/lib%.wasm:
 	@echo Building lib$*.wasm...
-	@$(CXX) -o $(OUT_DIR)/lib$*.wasm $(OBJ) -L$(CORES_DIR) -l$* $(LDFLAGS) $(QUIET)
+	@$(CXX) -o $(OUT_DIR)/lib$*.wasm $(SRC_DIR)/core.o -L$(CORES_DIR) -l$* $(LDFLAGS) $(QUIET)
 
 clean:
-	@rm -rf $(OBJ) $(OUT_DIR)
+	@rm -rf $(SRC_DIR)/core.o $(OUT_DIR)
 
 %.o: %.c
 	@$(CC) -c $(CFLAGS) -o $@ $^ $(QUIET)

@@ -2,6 +2,7 @@ JUN_CoreCreate
 JUN_CoreResetCheats
 JUN_CoreSetCheat
 JUN_CoreStartGame
+JUN_CoreGetPixelFormat
 JUN_CoreGetSampleRate
 JUN_CoreGetVariableCount
 JUN_CoreGetVariableKey
@@ -13,6 +14,7 @@ JUN_CoreRun
 JUN_CoreGetFrameData
 JUN_CoreGetFrameWidth
 JUN_CoreGetFrameHeight
+JUN_CoreGetFramePitch
 JUN_CoreGetAudioData
 JUN_CoreGetAudioFrames
 JUN_CoreSaveState

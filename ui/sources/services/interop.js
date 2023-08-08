@@ -18,6 +18,9 @@ export class CoreInterface {
 	StartGame() { }
 
 	/** @returns {Promise<number>} */
+	GetPixelFormat() { }
+
+	/** @returns {Promise<number>} */
 	GetSampleRate() { }
 
 	/** @returns {Promise<number>} */
@@ -49,6 +52,9 @@ export class CoreInterface {
 
 	/** @returns {Promise<number>} */
 	GetFrameHeight() { }
+
+	/** @returns {Promise<number>} */
+	GetFramePitch() { }
 
 	/** @returns {Promise<number>} */
 	GetAudioData() { }
