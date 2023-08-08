@@ -23,7 +23,8 @@ export function instrumentContext(context) {
 				break;
 			case 'string':
 				const encoded_str = new TextEncoder().encode(result);
-				sab.buffer.grow(sab.byteLength + encoded_str.byteLength);
+				if (sab.buffer.byteLength < 12 + encoded_str.byteLength)
+					sab.buffer.grow(12 + encoded_str.byteLength);
 
 				Atomics.store(sab, 1, TYPE_STRING);
 				Atomics.store(sab, 2, encoded_str.byteLength);
@@ -31,7 +32,8 @@ export function instrumentContext(context) {
 				break;
 			case 'object':
 				const encoded_obj = new TextEncoder().encode(JSON.stringify(result));
-				sab.buffer.grow(sab.byteLength + encoded_obj.byteLength);
+				if (sab.buffer.byteLength < 12 + encoded_obj.byteLength)
+					sab.buffer.grow(12 + encoded_obj.byteLength);
 
 				Atomics.store(sab, 1, TYPE_OBJECT);
 				Atomics.store(sab, 2, encoded_obj.byteLength);
@@ -80,6 +82,9 @@ export default class Parallel {
 
 	/** @type {Worker | MessagePort} */
 	#worker = null;
+
+	/** @type {Int32Array} */
+	#sab = new Int32Array(new SharedArrayBuffer(12, { maxByteLength: 4096 }));
 
 	/**
 	 * @param {new() => T} cls
@@ -158,20 +163,20 @@ export default class Parallel {
 	#call(name, args, sync) {
 		if (!args) args = [];
 
-		const sab = new Int32Array(new SharedArrayBuffer(12, { maxByteLength: 4096 }));
+		this.#sab.fill(0);
 
-		const message = { name, args: [sab, ...args] };
+		const message = { name, args: [this.#sab, ...args] };
 		const transfer = args.filter(x => x.constructor.name == 'MessagePort');
 		this.#worker.postMessage(message, transfer);
 
 		if (sync) {
-			Atomics.wait(sab, 0, 0);
-			return parseMessage(sab);
+			Atomics.wait(this.#sab, 0, 0);
+			return parseMessage(this.#sab);
 		}
 
-		const result = Atomics.waitAsync(sab, 0, 0);
+		const result = Atomics.waitAsync(this.#sab, 0, 0);
 		return result.async
-			? result.value.then(() => parseMessage(sab))
-			: parseMessage(sab);
+			? result.value.then(() => parseMessage(this.#sab))
+			: parseMessage(this.#sab);
 	}
 }

@@ -60,11 +60,9 @@ static struct CTX {
 	struct retro_system_av_info av;
 	enum retro_pixel_format format;
 
-	uint8_t fast_forward;
-	uint64_t last_save;
-
 	void *memory;
 	size_t memory_size;
+	uint64_t last_save;
 
 	bool inputs[UINT8_MAX];
 
@@ -286,7 +284,7 @@ static bool environment(unsigned cmd, void *data)
 
 static void video_refresh(const void *data, unsigned width, unsigned height, size_t pitch)
 {
-	if (CTX.fast_forward || !data)
+	if (!data)
 		return;
 
 	CTX.frame.data = data;
@@ -614,14 +612,8 @@ void JUN_CoreSetInput(uint8_t device, uint8_t id, int16_t value)
 
 void JUN_CoreRun(uint8_t fast_forward)
 {
-	CTX.fast_forward = 0;
-
-	for (size_t i = 0; i < fast_forward - 1; i++) {
+	for (size_t i = 0; i < fast_forward; i++)
 		CTX.sym.retro_run();
-		CTX.fast_forward++;
-	}
-
-	CTX.sym.retro_run();
 
 	CTX.audio.finalized = true;
 	save_memories();
