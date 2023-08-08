@@ -8,6 +8,8 @@ bool JUN_CoreStartGame();
 void JUN_CoreRun(uint8_t fast_forward);
 void JUN_CoreDestroy();
 
+uint32_t JUN_CoreGetPixelFormat();
+uint32_t JUN_CoreGetSampleRate();
 void JUN_CoreSetInput(uint8_t device, uint8_t id, int16_t value);
 
 void JUN_CoreSaveState();
@@ -22,8 +24,6 @@ const char *JUN_CoreGetVariableName(uint32_t index);
 const char *JUN_CoreGetVariableOptions(uint32_t index);
 void JUN_CoreSetVariable(const char *key, const char *value);
 
-uint32_t JUN_CoreGetPixelFormat();
-uint32_t JUN_CoreGetSampleRate();
 const void *JUN_CoreGetFrameData();
 uint32_t JUN_CoreGetFrameWidth();
 uint32_t JUN_CoreGetFrameHeight();

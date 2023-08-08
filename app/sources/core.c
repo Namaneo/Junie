@@ -488,23 +488,6 @@ void JUN_CoreCreate(const char *system, const char *rom)
 	CTX.sym.retro_set_audio_sample_batch(audio_sample_batch);
 }
 
-void JUN_CoreResetCheats()
-{
-	CTX.sym.retro_cheat_reset();
-}
-
-void JUN_CoreSetCheat(uint32_t index, bool enabled, const char *code)
-{
-	char *value = strdup(code);
-	for (size_t i = 0; i < strlen(value); i++)
-		if (value[i] == ' ' || value[i] == '\n')
-			value[i] = '+';
-
-	CTX.sym.retro_cheat_set(index, enabled, value);
-
-	free(value);
-}
-
 bool JUN_CoreStartGame()
 {
 	CTX.sym.retro_init();
@@ -537,6 +520,38 @@ bool JUN_CoreStartGame()
 	return CTX.initialized;
 }
 
+void JUN_CoreRun(uint8_t fast_forward)
+{
+	for (size_t i = 0; i < fast_forward; i++)
+		CTX.sym.retro_run();
+
+	CTX.audio.finalized = true;
+	save_memories();
+}
+
+void JUN_CoreDestroy()
+{
+	CTX.sym.retro_deinit();
+
+	for (int8_t i = 0; i < INT8_MAX; i++) {
+		if (!CTX.variables[i].key)
+			break;
+
+		free(CTX.variables[i].key);
+		free(CTX.variables[i].name);
+		free(CTX.variables[i].options);
+		free(CTX.variables[i].value);
+	}
+
+	for (size_t i = 0; i < JUN_PATH_MAX; i++)
+		free(CTX.paths[i]);
+
+	free(CTX.memory);
+	free((void *) CTX.game.data);
+
+	CTX = (struct CTX) {0};
+}
+
 uint32_t JUN_CoreGetPixelFormat()
 {
 	return CTX.format;
@@ -545,6 +560,76 @@ uint32_t JUN_CoreGetPixelFormat()
 uint32_t JUN_CoreGetSampleRate()
 {
 	return (CTX.av.timing.sample_rate / CTX.av.timing.fps) * 60.0;
+}
+
+void JUN_CoreSetInput(uint8_t device, uint8_t id, int16_t value)
+{
+	if (device == RETRO_DEVICE_JOYPAD)
+		CTX.inputs[id] = value;
+
+	if (device == RETRO_DEVICE_POINTER) {
+		switch (id) {
+			case RETRO_DEVICE_ID_POINTER_PRESSED:
+				CTX.pointer.pressed = value;
+				break;
+			case RETRO_DEVICE_ID_POINTER_X:
+				CTX.pointer.x = value;
+				break;
+			case RETRO_DEVICE_ID_POINTER_Y:
+				CTX.pointer.y = value;
+				break;
+		}
+	}
+}
+
+void JUN_CoreSaveState()
+{
+	size_t size = CTX.sym.retro_serialize_size();
+
+	void *data = calloc(size, 1);
+
+	CTX.sym.retro_serialize(data, size);
+
+	FILE *file = fopen(CTX.paths[JUN_PATH_STATE], "w+");
+	fwrite(data, 1, size, file);
+	fclose(file);
+
+	free(data);
+}
+
+void JUN_CoreResetCheats()
+{
+	CTX.sym.retro_cheat_reset();
+}
+
+void JUN_CoreSetCheat(uint32_t index, bool enabled, const char *code)
+{
+	char *value = strdup(code);
+	for (size_t i = 0; i < strlen(value); i++)
+		if (value[i] == ' ' || value[i] == '\n')
+			value[i] = '+';
+
+	CTX.sym.retro_cheat_set(index, enabled, value);
+
+	free(value);
+}
+
+void JUN_CoreRestoreState()
+{
+	size_t size = CTX.sym.retro_serialize_size();
+	if (!size)
+		return;
+
+	FILE *file = fopen(CTX.paths[JUN_PATH_STATE], "r");
+	if (!file)
+		return;
+
+	void *buffer = calloc(size, 1);
+	fread(buffer, 1, size, file);
+	CTX.sym.retro_unserialize(buffer, size);
+
+	free(buffer);
+	fclose(file);
 }
 
 uint32_t JUN_CoreGetVariableCount()
@@ -590,35 +675,6 @@ void JUN_CoreSetVariable(const char *key, const char *value)
 	}
 }
 
-void JUN_CoreSetInput(uint8_t device, uint8_t id, int16_t value)
-{
-	if (device == RETRO_DEVICE_JOYPAD)
-		CTX.inputs[id] = value;
-
-	if (device == RETRO_DEVICE_POINTER) {
-		switch (id) {
-			case RETRO_DEVICE_ID_POINTER_PRESSED:
-				CTX.pointer.pressed = value;
-				break;
-			case RETRO_DEVICE_ID_POINTER_X:
-				CTX.pointer.x = value;
-				break;
-			case RETRO_DEVICE_ID_POINTER_Y:
-				CTX.pointer.y = value;
-				break;
-		}
-	}
-}
-
-void JUN_CoreRun(uint8_t fast_forward)
-{
-	for (size_t i = 0; i < fast_forward; i++)
-		CTX.sym.retro_run();
-
-	CTX.audio.finalized = true;
-	save_memories();
-}
-
 const void *JUN_CoreGetFrameData()
 {
 	return CTX.frame.data;
@@ -647,62 +703,6 @@ const int16_t *JUN_CoreGetAudioData()
 uint32_t JUN_CoreGetAudioFrames()
 {
 	return CTX.audio.frames;
-}
-
-void JUN_CoreSaveState()
-{
-	size_t size = CTX.sym.retro_serialize_size();
-
-	void *data = calloc(size, 1);
-
-	CTX.sym.retro_serialize(data, size);
-
-	FILE *file = fopen(CTX.paths[JUN_PATH_STATE], "w+");
-	fwrite(data, 1, size, file);
-	fclose(file);
-
-	free(data);
-}
-
-void JUN_CoreRestoreState()
-{
-	size_t size = CTX.sym.retro_serialize_size();
-	if (!size)
-		return;
-
-	FILE *file = fopen(CTX.paths[JUN_PATH_STATE], "r");
-	if (!file)
-		return;
-
-	void *buffer = calloc(size, 1);
-	fread(buffer, 1, size, file);
-	CTX.sym.retro_unserialize(buffer, size);
-
-	free(buffer);
-	fclose(file);
-}
-
-void JUN_CoreDestroy()
-{
-	CTX.sym.retro_deinit();
-
-	for (int8_t i = 0; i < INT8_MAX; i++) {
-		if (!CTX.variables[i].key)
-			break;
-
-		free(CTX.variables[i].key);
-		free(CTX.variables[i].name);
-		free(CTX.variables[i].options);
-		free(CTX.variables[i].value);
-	}
-
-	for (size_t i = 0; i < JUN_PATH_MAX; i++)
-		free(CTX.paths[i]);
-
-	free(CTX.memory);
-	free((void *) CTX.game.data);
-
-	CTX = (struct CTX) {0};
 }
 
 

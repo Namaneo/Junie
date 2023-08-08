@@ -214,21 +214,23 @@ export default class Core {
 			const step = async () => {
 				await this.#interop.Run(state.speed);
 
-				const frame = await this.#interop.GetFrameData();
+				const [
+					frame, width, height, pitch,
+					audio, frames
+				] = await Promise.all([
+					this.#interop.GetFrameData(),
+					this.#interop.GetFrameWidth(),
+					this.#interop.GetFrameHeight(),
+					this.#interop.GetFramePitch(),
+					this.#interop.GetAudioData(),
+					this.#interop.GetAudioFrames(),
+				])
 
-				if (frame) {
-					const width = await this.#interop.GetFrameWidth();
-					const height = await this.#interop.GetFrameHeight();
-					const pitch = await this.#interop.GetFramePitch();
-
+				if (frame)
 					this.#draw(frame, width, height, pitch);
-				}
 
 				if (state.audio) {
-					const audio = await this.#interop.GetAudioData();
-					const frames = await this.#interop.GetAudioFrames();
 					const audio_view = new Float32Array(Core.#memory.buffer, audio, frames * 2);
-
 					Audio.queue(audio_view, sample_rate * state.speed, 2);
 				}
 
