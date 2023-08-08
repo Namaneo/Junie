@@ -1,8 +1,10 @@
 import { Cheat } from '../entities/cheat';
 import { Settings } from '../entities/settings';
 import { Variable } from '../entities/variable';
-import Interop, { CoreInterface } from './interop';
+import Files from './files';
 import Audio from './audio';
+import Parallel from './parallel';
+import Interop from './interop';
 
 const vs = () => `
 	attribute vec2 a_position;
@@ -44,7 +46,10 @@ export default class Core {
 	/** @type {{[name: string]: Core}} */
 	static #cores = {};
 
-	/** @type {CoreInterface} */
+	/** @type {Parallel<Interop>} */
+	#parallel = null;
+
+	/** @type {Interop} */
 	#interop = null;
 
 	/** @type {string} */
@@ -197,8 +202,13 @@ export default class Core {
 		const state = this.#state;
 
 		this.#canvas = canvas;
-		this.#interop = await Interop.init(this.#name, Core.#memory);
+		this.#parallel = new Parallel(Interop, false);
 
+		const origin = location.origin + location.pathname.substring(0, location.pathname.lastIndexOf('/'));
+		const script = await (await fetch('worker.js')).text();
+		this.#interop = await this.#parallel.create(this.#name, script);
+
+		await this.#interop.init(Core.#memory, await Files.clone(), origin);
 		await this.#interop.Create(system, rom);
 		await this.settings(settings);
 		await this.#interop.StartGame();
@@ -251,7 +261,7 @@ export default class Core {
 		await state.running;
 
 		await this.#interop.Destroy();
-		await Interop.terminate();
+		this.#parallel.close();
 		new Uint8Array(Core.#memory.buffer).fill(0);
 	}
 

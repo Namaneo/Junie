@@ -3,7 +3,7 @@
 import WASI from './services/wasi';
 import Parallel, { instrumentContext } from './services/parallel';
 import Filesystem from './services/filesystem';
-import { CoreInterface } from './services/interop';
+import Interop from './services/interop';
 
 class Core {
 	/** @type {TextEncoder} */
@@ -60,9 +60,8 @@ class Core {
 		if (type == null || type == 'number')
 			return parameter;
 
-		let length = 0;
 		let view = new Uint8Array(this.#instance.exports.memory.buffer, parameter);
-		for (length; view[length] != 0; length++);
+		let length = 0; for (; view[length] != 0; length++);
 		view = new Uint8Array(this.#instance.exports.memory.buffer, parameter, length);
 
 		return Core.#decoder.decode(new Uint8Array(view));
@@ -114,7 +113,7 @@ class Core {
 				const id = this.#threads.length + 1;
 				const name = `${this.#name}-${id}`;
 
-				const parallel = new Parallel(CoreInterface, false);
+				const parallel = new Parallel(Interop, false);
 				this.#threads.push(parallel);
 
 				const start = async () => {

@@ -1,7 +1,4 @@
-import Files from './files';
-import Parallel from './parallel';
-
-export class CoreInterface {
+export default class Interop {
 	/** @param {WebAssembly.Memory} memory @param {MessagePort} port @param {number} start_arg @param {string} origin @returns {Promise<void>} */
 	init(memory, port, origin, start_arg) { }
 
@@ -70,34 +67,4 @@ export class CoreInterface {
 
 	/** @returns {Promise<void>} */
 	Destroy() { }
-}
-
-export default class Interop {
-	/** @type {Parallel<CoreInterface>} */
-	static #parallel = null;
-
-	/**
-	 * @param {string} name
-	 * @param {WebAssembly.Memory} memory
-	 * @returns {Promise<CoreInterface>}
-	 */
-	static async init(name, memory) {
-		this.#parallel = new Parallel(CoreInterface, false);
-
-		const origin = location.origin + location.pathname.substring(0, location.pathname.lastIndexOf('/'));
-
-		const script = await (await fetch('worker.js')).text();
-		const core = await this.#parallel.create(name, script);
-		await core.init(memory, await Files.clone(), origin);
-
-		return core;
-	}
-
-	/**
-	 * @returns {Promise<void>}
-	 */
-	static async terminate() {
-		this.#parallel.close();
-		this.#parallel = null;
-	}
 }
