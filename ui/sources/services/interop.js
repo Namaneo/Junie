@@ -76,9 +76,6 @@ export default class Interop {
 	/** @type {Parallel<CoreInterface>} */
 	static #parallel = null;
 
-	/** @type {CoreInterface} */
-	static #core = null;
-
 	/**
 	 * @param {string} name
 	 * @param {WebAssembly.Memory} memory

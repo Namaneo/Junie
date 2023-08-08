@@ -542,7 +542,7 @@ uint32_t JUN_CoreGetPixelFormat()
 	return CTX.format;
 }
 
-double JUN_CoreGetSampleRate()
+uint32_t JUN_CoreGetSampleRate()
 {
 	return (CTX.av.timing.sample_rate / CTX.av.timing.fps) * 60.0;
 }

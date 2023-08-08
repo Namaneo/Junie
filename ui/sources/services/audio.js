@@ -51,7 +51,7 @@ export default class Audio {
 	 * @param {number} channels
 	 * @returns {void}
 	 */
-	static update(sampleRate, channels) {
+	static #update(sampleRate, channels) {
 		const state = this.#state;
 
 		if (state.sample_rate == sampleRate && state.channels == channels)
@@ -59,28 +59,30 @@ export default class Audio {
 
 		const framesPerSecond = Math.round(sampleRate / 1000.0);
 
-		this.#state =  {
-			flushing: false,
-			playing: false,
-			sample_rate: sampleRate,
-			channels: channels,
+		this.#state.flushing = false;
+		this.#state.playing = false;
+		this.#state.sample_rate = sampleRate;
+		this.#state.channels = channels;
 
-			frames_per_ms: framesPerSecond,
-			min_buffer: framesPerSecond * 75,
-			max_buffer: framesPerSecond * 150,
+		this.#state.frames_per_ms = framesPerSecond;
+		this.#state.min_buffer = framesPerSecond * 75;
+		this.#state.max_buffer = framesPerSecond * 150;
 
-			offset: 0,
-			next_time: 0,
-			buffer: new Float32Array(sampleRate * channels),
-		}
+		this.#state.offset = 0;
+		this.#state.next_time = 0;
+		this.#state.buffer = new Float32Array(sampleRate * channels);
 	}
 
 	/**
+	 * @param {number} sampleRate
+	 * @param {number} channels
 	 * @param {Float32Array} frames
 	 * @returns {void}
 	 */
-	static queue(frames) {
+	static queue(frames, sampleRate, channels) {
 		const state = this.#state;
+
+		this.#update(sampleRate, channels);
 
 		const queued = Math.round((state.next_time - this.#context.currentTime) * 1000.0);
 		const buffered = Math.round((state.offset / state.channels) / state.frames_per_ms);

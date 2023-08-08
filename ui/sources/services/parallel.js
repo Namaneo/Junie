@@ -83,8 +83,8 @@ export default class Parallel {
 	/** @type {Worker | MessagePort} */
 	#worker = null;
 
-	/** @type {Int32Array} */
-	#sab = new Int32Array(new SharedArrayBuffer(12, { maxByteLength: 4096 }));
+	/** @type {Int32Array[]} */
+	#buffers = [];
 
 	/**
 	 * @param {new() => T} cls
@@ -163,20 +163,25 @@ export default class Parallel {
 	#call(name, args, sync) {
 		if (!args) args = [];
 
-		this.#sab.fill(0);
+		const sab = this.#buffers.length == 0
+			? new Int32Array(new SharedArrayBuffer(12, { maxByteLength: 4096 }))
+			: this.#buffers.pop().fill(0);
 
-		const message = { name, args: [this.#sab, ...args] };
+		const message = { name, args: [sab, ...args] };
 		const transfer = args.filter(x => x.constructor.name == 'MessagePort');
 		this.#worker.postMessage(message, transfer);
 
-		if (sync) {
-			Atomics.wait(this.#sab, 0, 0);
-			return parseMessage(this.#sab);
-		}
+		if (sync)
+			Atomics.wait(sab, 0, 0);
 
-		const result = Atomics.waitAsync(this.#sab, 0, 0);
-		return result.async
-			? result.value.then(() => parseMessage(this.#sab))
-			: parseMessage(this.#sab);
+		const wait = sync ? { async: false } : Atomics.waitAsync(sab, 0, 0);
+
+		const parse = () => {
+			const result = parseMessage(sab);
+			this.#buffers.push(sab);
+			return result;
+		};
+
+		return wait.async ? wait.value.then(() => parse()) : parse();
 	}
 }

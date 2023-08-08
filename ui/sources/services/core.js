@@ -204,7 +204,10 @@ export default class Core {
 		await this.#interop.StartGame();
 		await this.cheats(cheats);
 
-		this.#initCanvas(await this.#interop.GetPixelFormat());
+		const pixel_format = await this.#interop.GetPixelFormat();
+		const sample_rate = await this.#interop.GetSampleRate();
+
+		this.#initCanvas(pixel_format);
 
 		state.stop = false;
 		state.running = new Promise((resolve) => {
@@ -212,21 +215,21 @@ export default class Core {
 				await this.#interop.Run(state.speed);
 
 				const frame = await this.#interop.GetFrameData();
-				const width = await this.#interop.GetFrameWidth();
-				const height = await this.#interop.GetFrameHeight();
-				const pitch = await this.#interop.GetFramePitch();
 
-				if (width != 0 && height != 0 && pitch != 0)
+				if (frame) {
+					const width = await this.#interop.GetFrameWidth();
+					const height = await this.#interop.GetFrameHeight();
+					const pitch = await this.#interop.GetFramePitch();
+
 					this.#draw(frame, width, height, pitch);
-
-				const sample_rate = await this.#interop.GetSampleRate();
-				Audio.update(sample_rate * state.speed, 2);
+				}
 
 				if (state.audio) {
 					const audio = await this.#interop.GetAudioData();
 					const frames = await this.#interop.GetAudioFrames();
 					const audio_view = new Float32Array(Core.#memory.buffer, audio, frames * 2);
-					Audio.queue(audio_view);
+
+					Audio.queue(audio_view, sample_rate * state.speed, 2);
 				}
 
 				state.stop ? resolve() : requestAnimationFrame(step);
