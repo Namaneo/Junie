@@ -81,10 +81,10 @@ const CheatsView = ({ cheats }) => {
  */
 const Control = ({ core, name, device, id, type, inset }) => {
 	/** @param {Event} event @returns {void} */
-	const down = (event) => { core.send(device, id, 1); event.preventDefault(); };
+	const down = (event) => { core.send(device, id, 1); event.preventDefault(); event.stopPropagation(); };
 
 	/** @param {Event} event @returns {void} */
-	const up = (event) => { core.send(device, id, 0); event.preventDefault(); };
+	const up = (event) => { core.send(device, id, 0); event.preventDefault(); event.stopPropagation(); };
 
 	const unit = window.innerWidth < window.innerHeight ? 'vw' : 'vh'
 
@@ -146,9 +146,7 @@ export const CoreModal = ({ system, game, close }) => {
 
 	const [confirm] = useIonAlert();
 
-	/**
-	 * @returns {void}
-	 */
+	/** @returns {void} */
 	const resize = () => {
 		const rect = content.current.getBoundingClientRect();
 
@@ -180,11 +178,13 @@ export const CoreModal = ({ system, game, close }) => {
 		event.preventDefault();
 	}
 
+	/** @returns {void} */
 	const save = () => confirm('Current state will be saved.', [
 		{ text: 'Confirm', handler: () => core.current.save() },
 		{ text: 'Cancel' },
 	]);
 
+	/** @returns {void} */
 	const restore = () => confirm('Saved state will be restored.', [
 		{ text: 'Confirm', handler: () => core.current.restore() },
 		{ text: 'Cancel' },
@@ -209,6 +209,24 @@ export const CoreModal = ({ system, game, close }) => {
 	}, [pointer]);
 
 	useEffect(() => resize(), [window_w, window_h, canvas_w, canvas_h]);
+
+	/** @param {Event} event @returns {void} */
+	const dispatch = (event) => [...event.target.children].reduce((value, current) => {
+		if (!value) return current;
+
+		const prev_rect = value.getBoundingClientRect();
+		const prev_x = prev_rect.left + prev_rect.width  / 2;
+		const prev_y = prev_rect.top  + prev_rect.height / 2;
+
+		const curr_rect = current.getBoundingClientRect();
+		const curr_x = curr_rect.left + curr_rect.width  / 2;
+		const curr_y = curr_rect.top  + curr_rect.height / 2;
+
+		const prev_dist = Math.sqrt(Math.pow(event.clientX - prev_x, 2) + Math.pow(event.clientY - prev_y, 2));
+		const curr_dist = Math.sqrt(Math.pow(event.clientX - curr_x, 2) + Math.pow(event.clientY - curr_y, 2));
+
+		return curr_dist < prev_dist ? current : value;
+	}).dispatchEvent(new event.nativeEvent.constructor(event.type, { bubbles: true }));
 
 	return (
 		<>
@@ -268,7 +286,7 @@ export const CoreModal = ({ system, game, close }) => {
 						onMouseUp={    (event) => touch(event, pointer.x,                pointer.y,                false)       }
 					/>
 
-					{gamepad.value && <div className="controls"><div>
+					{gamepad.value && <div className="controls"><div onTouchStart={dispatch} onTouchEnd={dispatch} onTouchCancel={dispatch} onMouseDown={dispatch} onMouseUp={dispatch}>
 						<Control core={core.current} name="A"        device={Core.Device.JOYPAD} id={Core.Joypad.A}     type='generic'  inset={{bottom: 30, right: 4 }} />
 						<Control core={core.current} name="B"        device={Core.Device.JOYPAD} id={Core.Joypad.B}     type='generic'  inset={{bottom: 18, right: 16}} />
 						<Control core={core.current} name="X"        device={Core.Device.JOYPAD} id={Core.Joypad.X}     type='generic'  inset={{bottom: 42, right: 16}} />
