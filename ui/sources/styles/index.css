@@ -80,9 +80,9 @@ html, body {
 #root .core button {
 	position: absolute;
 	padding: 0;
-	color: white;
-    background: transparent;
-    border: 2px solid white;
+	color: var(--ion-color-dark);
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid var(--ion-color-dark);
 }
 
 #root .core button:active {
