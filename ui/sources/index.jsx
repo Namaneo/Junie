@@ -9,6 +9,8 @@ import { HomePage } from './pages/home-page';
 import { InstallPage } from './pages/install-page';
 import { SavesPage } from './pages/saves-page';
 import { CheatsPage } from './pages/cheats-page';
+import Database from './services/database';
+import Files from './services/files';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -93,6 +95,17 @@ function Junie() {
 			</IonReactMemoryRouter>
 		</IonApp>
 	);
+}
+
+try {
+	const paths = await Database.list();
+	for (const path of paths) {
+		const buffer = await Database.read(path);
+		await Files.write(path, buffer);
+		await Database.remove(path);
+	}
+} catch (e) {
+	console.error(e);
 }
 
 createRoot(document.getElementById('root')).render(<Junie />);
