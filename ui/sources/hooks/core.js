@@ -133,7 +133,7 @@ export const useCore = (lib) => {
 		setCheats(cheats);
 
 		await core.create(system, rom, canvas);
-		setVariables(await core.variables());
+		setVariables(core.variables());
 		await core.start(settings, cheats);
 	}
 

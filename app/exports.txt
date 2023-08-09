@@ -8,15 +8,11 @@ JUN_CoreGetPixelFormat
 JUN_CoreGetSampleRate
 JUN_CoreGetMedia
 
+JUN_CoreGetVariables
+JUN_CoreSetVariable
+
 JUN_CoreSaveState
 JUN_CoreRestoreState
 
 JUN_CoreResetCheats
 JUN_CoreSetCheat
-
-JUN_CoreGetVariableCount
-JUN_CoreGetVariableKey
-JUN_CoreGetVariableName
-JUN_CoreGetVariableOptions
-JUN_CoreSetVariable
-

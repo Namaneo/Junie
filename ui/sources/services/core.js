@@ -5,6 +5,7 @@ import Files from './files';
 import Audio from './audio';
 import Parallel from './parallel';
 import Interop from './interop';
+import NativeData from './native';
 
 const vs = () => `
 	attribute vec2 a_position;
@@ -54,6 +55,9 @@ export default class Core {
 
 	/** @type {HTMLCanvasElement} */
 	#canvas = null;
+
+	/** @type {NativeData} */
+	#native = null;
 
 	#state = {
 		/** @type {number} */
@@ -202,6 +206,11 @@ export default class Core {
 
 		await this.#interop.init(Core.#memory, await Files.clone(), origin);
 		await this.#interop.Create(system, rom);
+
+		this.#native = new NativeData(Core.#memory,
+			await this.#interop.GetVariables(),
+			await this.#interop.GetMedia()
+		);
 	}
 
 	/**
@@ -218,7 +227,6 @@ export default class Core {
 
 		const pixel_format = await this.#interop.GetPixelFormat();
 		const sample_rate = await this.#interop.GetSampleRate();
-		const media_view = new DataView(Core.#memory.buffer, await this.#interop.GetMedia());
 
 		this.#initCanvas(pixel_format);
 
@@ -227,19 +235,13 @@ export default class Core {
 			const step = async () => {
 				await this.#interop.Run(state.speed);
 
-				const frame = media_view.getUint32(0, true);
+				const { video, audio } = this.#native.media();
 
-				if (frame) {
-					const width = media_view.getUint32(4, true);
-					const height = media_view.getUint32(8, true);
-					const pitch = media_view.getUint32(12, true);
-					this.#draw(frame, width, height, pitch);
-				}
+				if (video.frame)
+					this.#draw(video.frame, video.width, video.height, video.pitch);
 
 				if (state.audio) {
-					const audio = media_view.getUint32(16, true);
-					const frames = media_view.getUint32(20, true);
-					const audio_view = new Float32Array(Core.#memory.buffer, audio, frames * 2);
+					const audio_view = new Float32Array(Core.#memory.buffer, audio.data, audio.frames * 2);
 					Audio.queue(audio_view, sample_rate * state.speed, 2);
 				}
 
@@ -265,20 +267,10 @@ export default class Core {
 	}
 
 	/**
-	 * @returns {Promise<Variable[]>}
+	 * @returns {Variable[]}
 	 */
-	async variables() {
-		const variables = [];
-
-		for (let i = 0; i < await this.#interop.GetVariableCount(); i++) {
-			const key = await this.#interop.GetVariableKey(i);
-			const name = await this.#interop.GetVariableName(i);
-			const options = (await this.#interop.GetVariableOptions(i)).split('|');
-
-			variables.push({ key, name, options });
-		}
-
-		return variables;
+	variables() {
+		return this.#native.variables();
 	}
 
 	/**

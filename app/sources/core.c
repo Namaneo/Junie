@@ -590,6 +590,30 @@ const void *JUN_CoreGetMedia()
 	return &CTX.media;
 }
 
+const void *JUN_CoreGetVariables()
+{
+	return &CTX.variables;
+}
+
+void JUN_CoreSetVariable(const char *key, const char *value)
+{
+	for (int8_t i = 0; i < INT8_MAX; i++) {
+		if (!CTX.variables[i].key)
+			break;
+
+		if (strcmp(CTX.variables[i].key, key))
+			continue;
+
+		if (strcmp(CTX.variables[i].value, value)) {
+			free(CTX.variables[i].value);
+			CTX.variables[i].value = strdup(value);
+			CTX.variables_update = true;
+		}
+
+		break;
+	}
+}
+
 void JUN_CoreSaveState()
 {
 	size_t size = CTX.sym.retro_serialize_size();
@@ -638,49 +662,6 @@ void JUN_CoreRestoreState()
 
 	free(buffer);
 	fclose(file);
-}
-
-uint32_t JUN_CoreGetVariableCount()
-{
-	for (int8_t count = 0; count < INT8_MAX; count++)
-		if (!CTX.variables[count].key)
-			return count;
-
-	return 0;
-}
-
-const char *JUN_CoreGetVariableKey(uint32_t index)
-{
-	return CTX.variables[index].key;
-}
-
-const char *JUN_CoreGetVariableName(uint32_t index)
-{
-	return CTX.variables[index].name;
-}
-
-const char *JUN_CoreGetVariableOptions(uint32_t index)
-{
-	return CTX.variables[index].options;
-}
-
-void JUN_CoreSetVariable(const char *key, const char *value)
-{
-	for (int8_t i = 0; i < INT8_MAX; i++) {
-		if (!CTX.variables[i].key)
-			break;
-
-		if (strcmp(CTX.variables[i].key, key))
-			continue;
-
-		if (strcmp(CTX.variables[i].value, value)) {
-			free(CTX.variables[i].value);
-			CTX.variables[i].value = strdup(value);
-			CTX.variables_update = true;
-		}
-
-		break;
-	}
 }
 
 

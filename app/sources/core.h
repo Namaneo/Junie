@@ -15,14 +15,11 @@ uint32_t JUN_CoreGetPixelFormat();
 uint32_t JUN_CoreGetSampleRate();
 const void *JUN_CoreGetMedia();
 
+const void *JUN_CoreGetVariables();
+void JUN_CoreSetVariable(const char *key, const char *value);
+
 void JUN_CoreSaveState();
 void JUN_CoreRestoreState();
 
 void JUN_CoreResetCheats();
 void JUN_CoreSetCheat(uint32_t index, bool enabled, const char *code);
-
-uint32_t JUN_CoreGetVariableCount();
-const char *JUN_CoreGetVariableKey(uint32_t index);
-const char *JUN_CoreGetVariableName(uint32_t index);
-const char *JUN_CoreGetVariableOptions(uint32_t index);
-void JUN_CoreSetVariable(const char *key, const char *value);

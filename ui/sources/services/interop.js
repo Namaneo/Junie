@@ -28,6 +28,13 @@ export default class Interop {
 	GetMedia() { }
 
 
+	/** @returns {Promise<number>} */
+	GetVariables() { }
+
+	/** @param {string} key @param {string} value @returns {Promise<void>} */
+	SetVariable(key, value) { }
+
+
 	/** @returns {Promise<void>} */
 	SaveState() { }
 
@@ -40,20 +47,4 @@ export default class Interop {
 
 	/** @param {number} index @param {number} enabled @param {string} code @returns {Promise<void>} */
 	SetCheat(index, enabled, code) { }
-
-
-	/** @returns {Promise<number>} */
-	GetVariableCount() { }
-
-	/** @param {number} index @returns {Promise<string>} */
-	GetVariableKey(index) { }
-
-	/** @param {number} index @returns {Promise<string>} */
-	GetVariableName(index) { }
-
-	/** @param {number} index @returns {Promise<string>} */
-	GetVariableOptions(index) { }
-
-	/** @param {string} key @param {string} value @returns {Promise<void>} */
-	SetVariable(key, value) { }
 }

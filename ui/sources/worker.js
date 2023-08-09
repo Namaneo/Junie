@@ -147,17 +147,14 @@ class Core {
 		this.#wrap('GetSampleRate',      'number', []);
 		this.#wrap('GetMedia',       	 'number', []);
 
+		this.#wrap('GetVariables',       'number', []);
+		this.#wrap('SetVariable',        null,     ['string', 'string']);
+
 		this.#wrap('SaveState',          null,     []);
 		this.#wrap('RestoreState',       null,     []);
 
 		this.#wrap('ResetCheats',        null,     []);
 		this.#wrap('SetCheat',           null,     ['number', 'number', 'string']);
-
-		this.#wrap('GetVariableCount',   'number', []);
-		this.#wrap('GetVariableKey',     'string', ['number']);
-		this.#wrap('GetVariableName',    'string', ['number']);
-		this.#wrap('GetVariableOptions', 'string', ['number']);
-		this.#wrap('SetVariable',        null,     ['string', 'string']);
 	}
 }
 

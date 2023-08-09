@@ -3,7 +3,6 @@
  */
 html, body {
 	touch-action: none;
-	background: var(--ion-color-light-shade);
 }
 
 
