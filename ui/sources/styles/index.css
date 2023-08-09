@@ -3,6 +3,7 @@
  */
 html, body {
 	touch-action: none;
+	background: var(--ion-color-light-shade);
 }
 
 
@@ -81,12 +82,12 @@ html, body {
 	position: absolute;
 	padding: 0;
 	color: var(--ion-color-dark);
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(var(--ion-color-light-rgb), 0.3);
     border: 2px solid var(--ion-color-dark);
 }
 
 #root .core button:active {
-	background: rgba(255, 255, 255, 0.1)
+	background: rgba(var(--ion-color-light-rgb), 0.1)
 }
 
 #root .core-settings {
