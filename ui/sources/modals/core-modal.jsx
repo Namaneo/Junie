@@ -81,10 +81,10 @@ const CheatsView = ({ cheats }) => {
  */
 const Control = ({ core, name, device, id, type, inset }) => {
 	/** @param {Event} event @returns {void} */
-	const down = (event) => { core.send(device, id, 1); event.preventDefault(); event.stopPropagation(); };
+	const down = (event) => { core.send(device, id, 1); event.stopPropagation(); };
 
 	/** @param {Event} event @returns {void} */
-	const up = (event) => { core.send(device, id, 0); event.preventDefault(); event.stopPropagation(); };
+	const up = (event) => { core.send(device, id, 0); event.stopPropagation(); };
 
 	const unit = window.innerWidth < window.innerHeight ? 'vw' : 'vh'
 
@@ -141,6 +141,7 @@ export const CoreModal = ({ system, game, close }) => {
 
 	const [core, audio, speed, gamepad] = useCore(system.lib_name);
 	const [pointer, setPointer] = useState({ x: 0, y: 0, down: false });
+	const [gesture, setGesture] = useState({ x: 0, y: 0 });
 	const [window_w, window_h] = useSize({ current: document.body });
 	const [canvas_w, canvas_h] = useSize(canvas);
 
@@ -171,11 +172,36 @@ export const CoreModal = ({ system, game, close }) => {
 	 * @returns {void}
 	 */
 	const touch = (event, x, y, down) => {
+		if (system.lib_name == '2048') {
+			if (event.type == 'touchstart' || event.type == 'mousedown') {
+				setGesture({ x, y });
+
+			} else if (gesture.x > 0 && gesture.y > 0) {
+				const move_x = x - gesture.x;
+				const move_y = y - gesture.y;
+
+				if (Math.abs(move_x) < 25 && Math.abs(move_y) < 25)
+					return;
+
+				const direction =
+					Math.abs(move_x) > Math.abs(move_y) && move_x < 0 ? Core.Joypad.LEFT  :
+					Math.abs(move_x) > Math.abs(move_y) && move_x > 0 ? Core.Joypad.RIGHT :
+					Math.abs(move_x) < Math.abs(move_y) && move_y < 0 ? Core.Joypad.UP    :
+					Math.abs(move_x) < Math.abs(move_y) && move_y > 0 ? Core.Joypad.DOWN  :
+					0;
+
+				core.current.send(Core.Device.JOYPAD, direction, 1);
+				setTimeout(() => core.current.send(Core.Device.JOYPAD, direction, 0), 250);
+
+				setGesture({ x: 0, y: 0 });
+			}
+		}
+
 		if (gamepad.value)
 			return;
 
 		setPointer({ x, y, down });
-		event.preventDefault();
+		event.stopPropagation();
 	}
 
 	/** @returns {void} */
@@ -278,16 +304,15 @@ export const CoreModal = ({ system, game, close }) => {
 					</IonToolbar>
 				</IonHeader>
 
-				<IonContent ref={content} className="core">
-					<canvas ref={canvas}
-						onTouchStart={ (event) => touch(event, event.touches[0].clientX, event.touches[0].clientY, true)        }
-						onTouchMove={  (event) => touch(event, event.touches[0].clientX, event.touches[0].clientY, pointer.down)}
-						onTouchEnd={   (event) => touch(event, pointer.x,                pointer.y,                false)       }
-						onTouchCancel={(event) => touch(event, pointer.x,                pointer.y,                false)       }
-						onMouseDown={  (event) => touch(event, event.clientX,            event.clientY,            true)        }
-						onMouseMove={  (event) => touch(event, event.clientX,            event.clientY,            pointer.down)}
-						onMouseUp={    (event) => touch(event, pointer.x,                pointer.y,                false)       }
-					/>
+				<IonContent ref={content} className="core"
+					onTouchStart={ (event) => touch(event, event.touches[0].clientX, event.touches[0].clientY, true)        }
+					onTouchMove={  (event) => touch(event, event.touches[0].clientX, event.touches[0].clientY, pointer.down)}
+					onTouchEnd={   (event) => touch(event, pointer.x,                pointer.y,                false)       }
+					onTouchCancel={(event) => touch(event, pointer.x,                pointer.y,                false)       }
+					onMouseDown={  (event) => touch(event, event.clientX,            event.clientY,            true)        }
+					onMouseMove={  (event) => touch(event, event.clientX,            event.clientY,            pointer.down)}
+					onMouseUp={    (event) => touch(event, pointer.x,                pointer.y,                false)       }>
+					<canvas ref={canvas} />
 
 					{gamepad.value && <div className="controls"><div onTouchStart={dispatch} onTouchEnd={dispatch} onTouchCancel={dispatch} onMouseDown={dispatch} onMouseUp={dispatch}>
 						<Control core={core.current} name="A"        device={Core.Device.JOYPAD} id={Core.Joypad.A}     type='generic'  inset={{bottom: 30, right: 4 }} />
