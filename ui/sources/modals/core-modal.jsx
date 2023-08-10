@@ -181,11 +181,14 @@ export const CoreModal = ({ system, game, close }) => {
 
 	/** @param {Event} event @returns {void} */
 	const dispatch = (event) => [...event.target.children].reduce((value, current) => {
+		const x = event.clientX || event.touches[0]?.clientX || 0;
+		const y = event.clientY || event.touches[0]?.clientY || 0;
+
 		const curr_rect = current.getBoundingClientRect();
 		const curr_center_x = curr_rect.left + curr_rect.width  / 2;
 		const curr_center_y = curr_rect.top  + curr_rect.height / 2;
-		const curr_dist_x = Math.max(Math.abs(event.clientX - curr_center_x) - curr_rect.width  / 2, 0);
-		const curr_dist_y = Math.max(Math.abs(event.clientY - curr_center_y) - curr_rect.height / 2, 0);
+		const curr_dist_x = Math.max(Math.abs(x - curr_center_x) - curr_rect.width  / 2, 0);
+		const curr_dist_y = Math.max(Math.abs(y - curr_center_y) - curr_rect.height / 2, 0);
 		const curr_dist = Math.sqrt(Math.pow(curr_dist_x, 2) + Math.pow(curr_dist_y, 2));
 
 		if (!value)
@@ -194,8 +197,8 @@ export const CoreModal = ({ system, game, close }) => {
 		const prev_rect = value.getBoundingClientRect();
 		const prev_center_x = prev_rect.left + prev_rect.width  / 2;
 		const prev_center_y = prev_rect.top  + prev_rect.height / 2;
-		const prev_dist_x = Math.max(Math.abs(event.clientX - prev_center_x) - prev_rect.width  / 2, 0);
-		const prev_dist_y = Math.max(Math.abs(event.clientY - prev_center_y) - prev_rect.height / 2, 0);
+		const prev_dist_x = Math.max(Math.abs(x - prev_center_x) - prev_rect.width  / 2, 0);
+		const prev_dist_y = Math.max(Math.abs(y - prev_center_y) - prev_rect.height / 2, 0);
 		const prev_dist = Math.sqrt(Math.pow(prev_dist_x, 2) + Math.pow(prev_dist_y, 2));
 
 		if (prev_dist > 25 && curr_dist > 25)
