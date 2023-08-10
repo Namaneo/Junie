@@ -81,10 +81,10 @@ const CheatsView = ({ cheats }) => {
  */
 const Control = ({ core, name, device, id, type, inset }) => {
 	/** @param {Event} event @returns {void} */
-	const down = (event) => { core.send(device, id, 1); event.stopPropagation(); };
+	const down = (event) => { core.send(device, id, 1); event.preventDefault(); event.stopPropagation(); };
 
 	/** @param {Event} event @returns {void} */
-	const up = (event) => { core.send(device, id, 0); event.stopPropagation(); };
+	const up = (event) => { core.send(device, id, 0); event.preventDefault(); event.stopPropagation(); };
 
 	const unit = window.innerWidth < window.innerHeight ? 'vw' : 'vh'
 
@@ -175,6 +175,7 @@ export const CoreModal = ({ system, game, close }) => {
 		const move = !!['mousemove', 'touchmove'].find(event.type);
 		setPointer({ x, y, down: start || (move && pointer.down) });
 
+		event.preventDefault();
 		event.stopPropagation();
 	}
 
@@ -287,7 +288,7 @@ export const CoreModal = ({ system, game, close }) => {
 					onTouchStart={touch} onTouchMove={touch} onTouchEnd={touch} onTouchCancel={touch}>
 					<canvas ref={canvas} />
 
-					{gamepad.value && <div className="controls"><div onMouseDown={dispatch} onMouseUp={dispatch}>
+					{gamepad.value && <div className="controls"><div onMouseDown={dispatch} onMouseUp={dispatch} onTouchStart={dispatch} onTouchEnd={dispatch} onTouchCancel={dispatch}>
 						<Control core={core.current} name="A"        device={Core.Device.JOYPAD} id={Core.Joypad.A}     type='generic'  inset={{bottom: 30, right: 4 }} />
 						<Control core={core.current} name="B"        device={Core.Device.JOYPAD} id={Core.Joypad.B}     type='generic'  inset={{bottom: 18, right: 16}} />
 						<Control core={core.current} name="X"        device={Core.Device.JOYPAD} id={Core.Joypad.X}     type='generic'  inset={{bottom: 42, right: 16}} />
