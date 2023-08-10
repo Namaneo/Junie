@@ -254,6 +254,11 @@ export default class Files {
 			const paths = await Files.list(...extensions);
 
 			const files = [];
+
+			for (const system of systems)
+				if (system.standalone)
+					files.push(new Game(system, system.core_name));
+
 			for (const path of paths) {
 				const [system_name, rom_name] = Path.parse(path);
 

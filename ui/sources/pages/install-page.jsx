@@ -57,7 +57,7 @@ export const InstallPage = () => {
 
 			<IonContent className="systems">
 				<IonLoading isOpen={loading} message="Refreshing..." spinner={null} />
-				{systems.map(system =>
+				{systems.filter(system => !system.standalone).map(system =>
 					<IonCard key={system.name} onClick={() => showModal(system)}>
 						<IonCardHeader>
 							<IonCardTitle>{system.name}</IonCardTitle>

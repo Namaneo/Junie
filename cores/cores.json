@@ -1,16 +1,25 @@
 {
+	"2048": {
+		"name": "2048",
+		"repository": "libretro-2048",
+		"makefile": "Makefile.libretro",
+		"systems": [
+			{
+				"name": "A libretro port of the famous game",
+				"standalone": true
+			}
+		]
+	},
 	"gambatte": {
 		"name": "Gambatte",
 		"repository": "gambatte-libretro",
 		"systems": [
 			{
 				"name": "Game Boy",
-				"full_name": "Nintendo - Game Boy",
 				"extension": "gb"
 			},
 			{
 				"name": "Game Boy Color",
-				"full_name": "Nintendo - Game Boy Color",
 				"extension": "gbc"
 			}
 		]
@@ -22,7 +31,6 @@
 		"systems": [
 			{
 				"name": "Game Boy Advance",
-				"full_name": "Nintendo - Game Boy Advance",
 				"extension": "gba"
 			}
 		]
@@ -35,7 +43,6 @@
 		"systems": [
 			{
 				"name": "Nintendo DS",
-				"full_name": "Nintendo - Nintendo DS",
 				"extension": "nds"
 			}
 		]
@@ -46,7 +53,6 @@
 		"systems": [
 			{
 				"name": "NES",
-				"full_name": "Nintendo - Nintendo Entertainment System",
 				"extension": "nes"
 			}
 		]
@@ -57,7 +63,6 @@
 		"systems": [
 			{
 				"name": "SNES",
-				"full_name": "Nintendo - Super Nintendo Entertainment System",
 				"extension": "smc"
 			}
 		]
@@ -69,12 +74,10 @@
 		"systems": [
 			{
 				"name": "Master System",
-				"full_name": "Sega - Master System - Mark III",
 				"extension": "sms"
 			},
 			{
 				"name": "Mega Drive",
-				"full_name": "Sega - Mega Drive - Genesis",
 				"extension": "bin"
 			}
 		]

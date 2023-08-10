@@ -454,7 +454,11 @@ static char *remove_extension(const char *str)
 	if (!str)
 		return NULL;
 
-	size_t length = (uint64_t) strrchr(str, '.') - (uint64_t) str;
+	char *dot = strrchr(str, '.');
+	if (dot == NULL)
+		return strdup(str);
+
+	size_t length = (size_t) dot - (size_t) str;
 	char *result = calloc(length + 1, 1);
 	memcpy(result, str, length);
 
@@ -499,16 +503,18 @@ bool JUN_CoreStartGame()
 	CTX.game.path = CTX.paths[JUN_PATH_GAME];
 
 	FILE *file = fopen(CTX.game.path, "r");
-	fseek(file, 0, SEEK_END);
-	CTX.game.size = ftell(file);
+	if (file) {
+		fseek(file, 0, SEEK_END);
+		CTX.game.size = ftell(file);
 
-	if (!CTX.system.need_fullpath) {
-		fseek(file, 0, SEEK_SET);
-		CTX.game.data = calloc(CTX.game.size, 1);
-		fread((void *) CTX.game.data, 1, CTX.game.size, file);
+		if (!CTX.system.need_fullpath) {
+			fseek(file, 0, SEEK_SET);
+			CTX.game.data = calloc(CTX.game.size, 1);
+			fread((void *) CTX.game.data, 1, CTX.game.size, file);
+		}
+
+		fclose(file);
 	}
-
-	fclose(file);
 
 	CTX.initialized = CTX.sym.retro_load_game(&CTX.game);
 

@@ -5,9 +5,6 @@ export class System {
 	name;
 
 	/** @type {string} */
-	full_name;
-
-	/** @type {string} */
 	lib_name;
 
 	/** @type {string} */
@@ -15,6 +12,9 @@ export class System {
 
 	/** @type {string} */
 	extension;
+
+	/** @type {boolean} */
+	standalone;
 
 	/** @type {Game[]} */
 	games;

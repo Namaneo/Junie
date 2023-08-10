@@ -20,6 +20,8 @@ export class Game {
 	constructor(system, rom) {
 		this.system = system.name;
 		this.rom = rom;
-		this.name = rom.substring(0, rom.lastIndexOf('.')).replaceAll(/ \(.*\).*/g, '');
+		this.name = rom.lastIndexOf('.') != -1
+			? rom.substring(0, rom.lastIndexOf('.')).replaceAll(/ \(.*\).*/g, '')
+			: rom;
 	}
 }

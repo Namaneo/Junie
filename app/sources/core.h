@@ -3,8 +3,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-
-
 void JUN_CoreCreate(const char *system, const char *rom);
 bool JUN_CoreStartGame();
 void JUN_CoreRun(uint8_t fast_forward);
