@@ -141,7 +141,6 @@ export const CoreModal = ({ system, game, close }) => {
 
 	const [core, audio, speed, gamepad] = useCore(system.lib_name);
 	const [pointer, setPointer] = useState({ x: 0, y: 0, down: false });
-	const [gesture, setGesture] = useState({ x: 0, y: 0 });
 	const [window_w, window_h] = useSize({ current: document.body });
 	const [canvas_w, canvas_h] = useSize(canvas);
 
@@ -164,45 +163,45 @@ export const CoreModal = ({ system, game, close }) => {
 		}
 	};
 
-	/**
-	 * @param {Event} event
-	 * @param {number} x
-	 * @param {number} y
-	 * @param {boolean} down
-	 * @returns {void}
-	 */
-	const touch = (event, x, y, down) => {
-		if (system.lib_name == '2048') {
-			if (event.type == 'touchstart' || event.type == 'mousedown') {
-				setGesture({ x, y });
-
-			} else if (gesture.x > 0 && gesture.y > 0) {
-				const move_x = x - gesture.x;
-				const move_y = y - gesture.y;
-
-				if (Math.abs(move_x) < 25 && Math.abs(move_y) < 25)
-					return;
-
-				const direction =
-					Math.abs(move_x) > Math.abs(move_y) && move_x < 0 ? Core.Joypad.LEFT  :
-					Math.abs(move_x) > Math.abs(move_y) && move_x > 0 ? Core.Joypad.RIGHT :
-					Math.abs(move_x) < Math.abs(move_y) && move_y < 0 ? Core.Joypad.UP    :
-					Math.abs(move_x) < Math.abs(move_y) && move_y > 0 ? Core.Joypad.DOWN  :
-					0;
-
-				core.current.send(Core.Device.JOYPAD, direction, 1);
-				setTimeout(() => core.current.send(Core.Device.JOYPAD, direction, 0), 250);
-
-				setGesture({ x: 0, y: 0 });
-			}
-		}
-
+	/** @param {Event} event @returns {void} */
+	const touch = (event) => {
 		if (gamepad.value)
 			return;
 
-		setPointer({ x, y, down });
+		const x = event.clientX || event.touches[0]?.clientX || 0;
+		const y = event.clientY || event.touches[0]?.clientY || 0;
+
+		const start = !!['mousedown', 'mousestart'].find(event.type);
+		const move = !!['mousemove', 'touchmove'].find(event.type);
+		setPointer({ x, y, down: start || (move && pointer.down) });
+
 		event.stopPropagation();
 	}
+
+	/** @param {Event} event @returns {void} */
+	const dispatch = (event) => [...event.target.children].reduce((value, current) => {
+		const curr_rect = current.getBoundingClientRect();
+		const curr_center_x = curr_rect.left + curr_rect.width  / 2;
+		const curr_center_y = curr_rect.top  + curr_rect.height / 2;
+		const curr_dist_x = Math.max(Math.abs(event.clientX - curr_center_x) - curr_rect.width  / 2, 0);
+		const curr_dist_y = Math.max(Math.abs(event.clientY - curr_center_y) - curr_rect.height / 2, 0);
+		const curr_dist = Math.sqrt(Math.pow(curr_dist_x, 2) + Math.pow(curr_dist_y, 2));
+
+		if (!value)
+			return curr_dist < 25 ? current : null;
+
+		const prev_rect = value.getBoundingClientRect();
+		const prev_center_x = prev_rect.left + prev_rect.width  / 2;
+		const prev_center_y = prev_rect.top  + prev_rect.height / 2;
+		const prev_dist_x = Math.max(Math.abs(event.clientX - prev_center_x) - prev_rect.width  / 2, 0);
+		const prev_dist_y = Math.max(Math.abs(event.clientY - prev_center_y) - prev_rect.height / 2, 0);
+		const prev_dist = Math.sqrt(Math.pow(prev_dist_x, 2) + Math.pow(prev_dist_y, 2));
+
+		if (prev_dist > 25 && curr_dist > 25)
+			return null;
+
+		return curr_dist < prev_dist ? current : value;
+	})?.dispatchEvent(new event.nativeEvent.constructor(event.type, { bubbles: true }));
 
 	/** @returns {void} */
 	const save = () => confirm('Current state will be saved.', [
@@ -235,27 +234,6 @@ export const CoreModal = ({ system, game, close }) => {
 	}, [pointer]);
 
 	useEffect(() => resize(), [window_w, window_h, canvas_w, canvas_h]);
-
-	/** @param {Event} event @returns {void} */
-	const dispatch = (event) => [...event.target.children].reduce((value, current) => {
-		if (!value) return current;
-
-		const prev_rect = value.getBoundingClientRect();
-		const prev_center_x = prev_rect.left + prev_rect.width  / 2;
-		const prev_center_y = prev_rect.top  + prev_rect.height / 2;
-		const prev_dist_x = Math.max(Math.abs(event.clientX - prev_center_x) - prev_rect.width  / 2, 0);
-		const prev_dist_y = Math.max(Math.abs(event.clientY - prev_center_y) - prev_rect.height / 2, 0);
-		const prev_dist = Math.pow(prev_dist_x, 2) + Math.pow(prev_dist_y, 2);
-
-		const curr_rect = current.getBoundingClientRect();
-		const curr_center_x = curr_rect.left + curr_rect.width  / 2;
-		const curr_center_y = curr_rect.top  + curr_rect.height / 2;
-		const curr_dist_x = Math.max(Math.abs(event.clientX - curr_center_x) - curr_rect.width  / 2, 0);
-		const curr_dist_y = Math.max(Math.abs(event.clientY - curr_center_y) - curr_rect.height / 2, 0);
-		const curr_dist = Math.pow(curr_dist_x, 2) + Math.pow(curr_dist_y, 2);
-
-		return curr_dist < prev_dist ? current : value;
-	}).dispatchEvent(new event.nativeEvent.constructor(event.type, { bubbles: true }));
 
 	return (
 		<>
@@ -305,16 +283,11 @@ export const CoreModal = ({ system, game, close }) => {
 				</IonHeader>
 
 				<IonContent ref={content} className="core"
-					onTouchStart={ (event) => touch(event, event.touches[0].clientX, event.touches[0].clientY, true)        }
-					onTouchMove={  (event) => touch(event, event.touches[0].clientX, event.touches[0].clientY, pointer.down)}
-					onTouchEnd={   (event) => touch(event, pointer.x,                pointer.y,                false)       }
-					onTouchCancel={(event) => touch(event, pointer.x,                pointer.y,                false)       }
-					onMouseDown={  (event) => touch(event, event.clientX,            event.clientY,            true)        }
-					onMouseMove={  (event) => touch(event, event.clientX,            event.clientY,            pointer.down)}
-					onMouseUp={    (event) => touch(event, pointer.x,                pointer.y,                false)       }>
+					onMouseDown={touch} onMouseMove={touch} onMouseUp={touch}
+					onTouchStart={touch} onTouchMove={touch} onTouchEnd={touch} onTouchCancel={touch}>
 					<canvas ref={canvas} />
 
-					{gamepad.value && <div className="controls"><div onTouchStart={dispatch} onTouchEnd={dispatch} onTouchCancel={dispatch} onMouseDown={dispatch} onMouseUp={dispatch}>
+					{gamepad.value && <div className="controls"><div onMouseDown={dispatch} onMouseUp={dispatch}>
 						<Control core={core.current} name="A"        device={Core.Device.JOYPAD} id={Core.Joypad.A}     type='generic'  inset={{bottom: 30, right: 4 }} />
 						<Control core={core.current} name="B"        device={Core.Device.JOYPAD} id={Core.Joypad.B}     type='generic'  inset={{bottom: 18, right: 16}} />
 						<Control core={core.current} name="X"        device={Core.Device.JOYPAD} id={Core.Joypad.X}     type='generic'  inset={{bottom: 42, right: 16}} />
