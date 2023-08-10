@@ -16,7 +16,7 @@ BUILD_FLAGS := \
 MAKEFLAGS += --no-print-directory
 QUIET := > /dev/null 2>&1
 
-all: $(LIBRARIES:%=build-%)
+all: $(LIBRARIES:%=lib%.a)
 
 clean: $(LIBRARIES:%=clean-%)
 
@@ -28,7 +28,7 @@ fetch-%:
 	echo Fetching $$name... && \
 	git -C $$name pull $(QUIET) || git clone -b $$branch https://github.com/$$owner/$$name.git $(QUIET)
 
-build-%: fetch-%
+lib%.a: fetch-%
 	@target=`pwd`/lib$*.a && \
 	name=`jq -r '."$*".repository // "$*"' cores.json` && \
 	makedir=`jq -r '."$*".directory // ""' cores.json` && \

@@ -41,7 +41,7 @@ ui:
 
 # Watch
 
-watch: clean prepare cores app
+watch: clean prepare cores
 	@( cd ui && node esbuild.mjs --watch $(UI_FLAGS) )
 
 # Common
