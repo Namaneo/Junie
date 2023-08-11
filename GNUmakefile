@@ -19,7 +19,9 @@ UI_FLAGS := --version $(VERSION)
 ifeq ($(DEBUG), 1)
 UI_FLAGS += --debug
 endif
-ifneq ($(UI_ONLY), 1)
+ifeq ($(UI_ONLY), 1)
+WATCH_CMD := $(MAKE) -C $(APP_DIR) DEBUG=$(DEBUG)
+else
 UI_FLAGS += --command "$(MAKE) -C ../$(APP_DIR) DEBUG=$(DEBUG)"
 endif
 
@@ -42,6 +44,7 @@ ui:
 # Watch
 
 watch: clean prepare cores
+	@$(WATCH_CMD)
 	@( cd ui && node esbuild.mjs --watch $(UI_FLAGS) )
 
 # Common
