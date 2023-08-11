@@ -1,7 +1,7 @@
 // Reworked from: https://github.com/chrisd1100/libmatoya/blob/main/src/unix/web/matoya.js
 
 export default class Audio {
-	static #context = new AudioContext();
+	static #context = null;
 
 	static #state = {
 		/** @type {boolean} */
@@ -43,12 +43,6 @@ export default class Audio {
 	static unlock() {
 		window.addEventListener('blur', () => this.#context = null);
 
-		window.addEventListener('focus', () => {
-			this.#context = new AudioContext();
-			this.#state.sample_rate = 0;
-			this.#state.channels = 0;
-		});
-
 		const unlock = () => this.#context.state == 'suspended' && this.#context.resume();
 		window.addEventListener('keydown', unlock);
 		window.addEventListener('mousedown', unlock);
@@ -62,6 +56,9 @@ export default class Audio {
 	 */
 	static #update(sampleRate, channels) {
 		const state = this.#state;
+
+		if (!this.#context)
+			this.#context = new AudioContext();
 
 		if (state.sample_rate == sampleRate && state.channels == channels)
 			return;
