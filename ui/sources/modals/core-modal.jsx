@@ -120,9 +120,7 @@ const Control = ({ core, name, device, id, type, inset }) => {
 	}
 
 	return (
-		<button style={style}
-			onTouchStart={down} onTouchEnd={up} onTouchCancel={up}
-			onMouseDown={down} onMouseUp={up}>
+		<button style={style} onTouchStart={down} onTouchEnd={up} onTouchCancel={up} onMouseDown={down} onMouseUp={up}>
 			{name}
 		</button>
 	);
@@ -168,8 +166,8 @@ export const CoreModal = ({ system, game, close }) => {
 		if (gamepad.value)
 			return;
 
-		const x = event.clientX || event.touches[0]?.clientX || 0;
-		const y = event.clientY || event.touches[0]?.clientY || 0;
+		const x = event.clientX || event.changedTouches[0].clientX;
+		const y = event.clientY || event.changedTouches[0].clientY;
 
 		const start = !!['mousedown', 'mousestart'].find(event.type);
 		const move = !!['mousemove', 'touchmove'].find(event.type);
@@ -180,32 +178,39 @@ export const CoreModal = ({ system, game, close }) => {
 	}
 
 	/** @param {Event} event @returns {void} */
-	const dispatch = (event) => [...event.target.children].reduce((value, current) => {
-		const x = event.clientX || event.touches[0]?.clientX || 0;
-		const y = event.clientY || event.touches[0]?.clientY || 0;
+	const dispatch = (event) => {
+		/** @param {HTMLElement} element @param {number} x @param {number} y @returns {number} */
+		const distance = (element, x, y) => {
+			const rect = element.getBoundingClientRect();
+			const center_x = rect.left + rect.width  / 2;
+			const center_y = rect.top  + rect.height / 2;
+			const dist_x = Math.max(Math.abs(x - center_x) - rect.width  / 2, 0);
+			const dist_y = Math.max(Math.abs(y - center_y) - rect.height / 2, 0);
+			return Math.sqrt(Math.pow(dist_x, 2) + Math.pow(dist_y, 2));
+		}
 
-		const curr_rect = current.getBoundingClientRect();
-		const curr_center_x = curr_rect.left + curr_rect.width  / 2;
-		const curr_center_y = curr_rect.top  + curr_rect.height / 2;
-		const curr_dist_x = Math.max(Math.abs(x - curr_center_x) - curr_rect.width  / 2, 0);
-		const curr_dist_y = Math.max(Math.abs(y - curr_center_y) - curr_rect.height / 2, 0);
-		const curr_dist = Math.sqrt(Math.pow(curr_dist_x, 2) + Math.pow(curr_dist_y, 2));
+		/** @param {number} x @param {number} y @returns {void} */
+		const send = (x, y) => {
+			[...event.target.children].reduce((value, current) => {
+				const curr_dist = distance(current, x, y);
+				if (!value)
+					return curr_dist < 25 ? current : null;
 
-		if (!value)
-			return curr_dist < 25 ? current : null;
+				const prev_dist = distance(value, x, y);
+				if (prev_dist > 25 && curr_dist > 25)
+					return null;
 
-		const prev_rect = value.getBoundingClientRect();
-		const prev_center_x = prev_rect.left + prev_rect.width  / 2;
-		const prev_center_y = prev_rect.top  + prev_rect.height / 2;
-		const prev_dist_x = Math.max(Math.abs(x - prev_center_x) - prev_rect.width  / 2, 0);
-		const prev_dist_y = Math.max(Math.abs(y - prev_center_y) - prev_rect.height / 2, 0);
-		const prev_dist = Math.sqrt(Math.pow(prev_dist_x, 2) + Math.pow(prev_dist_y, 2));
+				return curr_dist < prev_dist ? current : value;
+			})?.dispatchEvent(new event.nativeEvent.constructor(event.type, { bubbles: true }));
+		}
 
-		if (prev_dist > 25 && curr_dist > 25)
-			return null;
+		if (event.type.startsWith('mouse'))
+			send(event.clientX, event.clientY);
 
-		return curr_dist < prev_dist ? current : value;
-	})?.dispatchEvent(new event.nativeEvent.constructor(event.type, { bubbles: true }));
+		if (event.type.startsWith('touch'))
+			for (const touch of event.changedTouches)
+				send(touch.clientX, touch.clientY);
+	}
 
 	/** @returns {void} */
 	const save = () => confirm('Current state will be saved.', [
