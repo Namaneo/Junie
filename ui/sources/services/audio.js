@@ -41,9 +41,14 @@ export default class Audio {
 	 * @return {void}
 	 */
 	static unlock() {
+		const suspend = () => this.#context.state != 'suspended' && this.#context.suspend();
+		window.addEventListener('blur', suspend);
+
 		const unlock = () => this.#context.state == 'suspended' && this.#context.resume();
-		const events = ['touchstart', 'touchend', 'mousedown', 'keydown'];
-		events.forEach(e => document.body.addEventListener(e, unlock));
+		window.addEventListener('focus', unlock);
+		window.addEventListener('keydown', unlock);
+		window.addEventListener('mousedown', unlock);
+		window.addEventListener('touchstart', unlock);
 	}
 
 	/**
