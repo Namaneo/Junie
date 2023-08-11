@@ -41,14 +41,13 @@ export default class Audio {
 	 * @return {void}
 	 */
 	static unlock() {
-		window.addEventListener('blur', () => {
+		window.addEventListener('focus', () => {
 			this.#context = new AudioContext();
 			this.#state.sample_rate = 0;
 			this.#state.channels = 0;
 		});
 
 		const unlock = () => this.#context.state == 'suspended' && this.#context.resume();
-		window.addEventListener('focus', unlock);
 		window.addEventListener('keydown', unlock);
 		window.addEventListener('mousedown', unlock);
 		window.addEventListener('touchstart', unlock);
