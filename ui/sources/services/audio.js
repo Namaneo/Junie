@@ -41,8 +41,11 @@ export default class Audio {
 	 * @return {void}
 	 */
 	static unlock() {
-		const suspend = () => this.#context.state != 'suspended' && this.#context.suspend();
-		window.addEventListener('blur', suspend);
+		window.addEventListener('blur', () => {
+			this.#context = new AudioContext();
+			this.#state.sample_rate = 0;
+			this.#state.channels = 0;
+		});
 
 		const unlock = () => this.#context.state == 'suspended' && this.#context.resume();
 		window.addEventListener('focus', unlock);
