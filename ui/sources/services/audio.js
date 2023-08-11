@@ -41,6 +41,8 @@ export default class Audio {
 	 * @return {void}
 	 */
 	static unlock() {
+		window.addEventListener('blur', () => this.#context = null);
+
 		window.addEventListener('focus', () => {
 			this.#context = new AudioContext();
 			this.#state.sample_rate = 0;
