@@ -169,8 +169,8 @@ export const CoreModal = ({ system, game, close }) => {
 		const x = event.clientX || event.changedTouches[0].clientX;
 		const y = event.clientY || event.changedTouches[0].clientY;
 
-		const start = !!['mousedown', 'mousestart'].find(event.type);
-		const move = !!['mousemove', 'touchmove'].find(event.type);
+		const start = !!['mousedown', 'mousestart'].find(type => event.type == type);
+		const move = !!['mousemove', 'touchmove'].find(type => event.type == type);
 		setPointer({ x, y, down: start || (move && pointer.down) });
 
 		event.preventDefault();
