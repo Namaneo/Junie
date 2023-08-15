@@ -166,8 +166,8 @@ export const CoreModal = ({ system, game, close }) => {
 		if (gamepad.value)
 			return;
 
-		const x = event.clientX || event.changedTouches[0].clientX;
-		const y = event.clientY || event.changedTouches[0].clientY;
+		const x = event.clientX || (event.changedTouches && event.changedTouches[0].clientX);
+		const y = event.clientY || (event.changedTouches && event.changedTouches[0].clientY);
 
 		const start = !!['mousedown', 'touchstart'].find(type => event.type == type);
 		const move = !!['mousemove', 'touchmove'].find(type => event.type == type);

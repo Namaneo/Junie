@@ -205,10 +205,12 @@ export default class WASI {
 
 				switch (fd) {
 					case 1:
-						console.log(new TextDecoder().decode(buf_log));
+						const log = new TextDecoder().decode(buf_log).trim();
+						if (log) console.log(log);
 						break;
 					case 2:
-						console.error(new TextDecoder().decode(buf_log));
+						const error = new TextDecoder().decode(buf_log).trim();
+						if (error) console.error(error);
 						break;
 					default:
 						this.#fds[fd].offset = offset;
