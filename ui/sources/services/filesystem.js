@@ -1,6 +1,9 @@
 /// <reference lib="webworker" />
 
 export default class Filesystem {
+	/** @type {{ [path: string]: FileSystemSyncAccessHandle[] }} */
+	#handles = [];
+
 	/**
 	 * @param {string} path
 	 * @returns {{ directories: string[], filename: string }}
@@ -30,46 +33,6 @@ export default class Filesystem {
 	}
 
 	/**
-	 * @param {string} path
-	 * @returns {Promise<FileSystemFileHandle>}
-	 */
-	async #file(path, create) {
-		const directory = await this.#directory(path, create);
-		const filename = this.#parse(path).filename;
-		return await directory.getFileHandle(filename, { create });
-	}
-
-	/**
-	 * @param {() => Promise<number>} action
-	 * @returns {Promise<number>}
-	 */
-	async #catch(action, err_val) {
-		try {
-			return await action();
-
-		} catch (e) {
-			return err_val;
-		}
-	}
-
-	/**
-	 * @param {string} path
-	 * @param {(file: FileSystemSyncAccessHandle) => number} action
-	 * @returns {Promise<number>}
-	 */
-	async #exec(path, create, action) {
-		const handle = await this.#file(path, create);
-		const file = await handle.createSyncAccessHandle();
-
-		const result = action(file);
-
-		file.flush();
-		file.close();
-
-		return result;
-	}
-
-	/**
 	 * @param {FileSystemDirectoryHandle} root
 	 * @param {string} path
 	 * @returns {Promise<string[]>}
@@ -88,6 +51,43 @@ export default class Filesystem {
 		}
 		return files;
 	};
+
+	/**
+	 * @param {string} path
+	 * @returns {Promise<FileSystemFileHandle>}
+	 */
+	async #file(path, create) {
+		const directory = await this.#directory(path, create);
+		const filename = this.#parse(path).filename;
+		return await directory.getFileHandle(filename, { create });
+	}
+
+	/**
+	 * @param {string} path
+	 * @param {(file: FileSystemSyncAccessHandle) => number} action
+	 * @returns {Promise<number>}
+	 */
+	async #exec(path, create, action) {
+		if (!this.#handles[path]) {
+			const handle = await this.#file(path, create);
+			this.#handles[path] = await handle.createSyncAccessHandle();
+		}
+
+		return action(this.#handles[path]);
+	}
+
+	/**
+	 * @param {() => Promise<number>} action
+	 * @returns {Promise<number>}
+	 */
+	async #catch(action, err_val) {
+		try {
+			return await action();
+
+		} catch (e) {
+			return err_val;
+		}
+	}
 
 	/**
 	 * @returns {string[] | Promise<string[]>}
@@ -136,6 +136,11 @@ export default class Filesystem {
 	 */
 	remove(path) {
 		return this.#catch(async () => {
+			if (this.#handles[path]) {
+				file.flush(); file.close();
+				delete this.#handles[path];
+			}
+
 			const handle = await this.#directory(path);
 			await handle.removeEntry(this.#parse(path).filename);
 

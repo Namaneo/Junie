@@ -119,7 +119,7 @@ class Core {
 				const start = async () => {
 					const script = await (await fetch(`${origin}/worker.js`)).text();
 					const core = await parallel.create(name, script);
-					await core.init(memory, await parallel.open(), origin, start_arg);
+					await core.init(memory, await fs.open(), origin, start_arg);
 				}
 
 				start();
