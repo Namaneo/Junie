@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 
 export default class Filesystem {
-	/** @type {{ [path: string]: FileSystemSyncAccessHandle[] }} */
+	/** @type {{ [path: string]: FileSystemSyncAccessHandle }} */
 	#handles = [];
 
 	/**
@@ -137,7 +137,8 @@ export default class Filesystem {
 	remove(path) {
 		return this.#catch(async () => {
 			if (this.#handles[path]) {
-				file.flush(); file.close();
+				this.#handles[path].flush();
+				this.#handles[path].close();
 				delete this.#handles[path];
 			}
 

@@ -77,9 +77,12 @@ export default class Files {
 	static async read_json(path) {
 		const file = await Files.read(path);
 
-		return file
-			? JSON.parse(this.#decoder.decode(file))
-			: null;
+		try {
+			return JSON.parse(this.#decoder.decode(file));
+		} catch (e) {
+			console.error(e);
+			return null;
+		}
 	}
 
 	/**
