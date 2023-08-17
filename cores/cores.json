@@ -5,7 +5,7 @@
 		"makefile": "Makefile.libretro",
 		"systems": [
 			{
-				"name": "A libretro port of the famous game",
+				"name": "Get to the 2048 tile!",
 				"standalone": true
 			}
 		]
@@ -38,8 +38,6 @@
 	"desmume": {
 		"name": "DeSmuME",
 		"directory": "desmume/src/frontend/libretro",
-		"owner": "Namaneo",
-		"branch": "advsc_has-database",
 		"systems": [
 			{
 				"name": "Nintendo DS",

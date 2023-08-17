@@ -34,7 +34,7 @@ export class Save {
 
 		const game = system.games.find(game => game.rom == `${this.game}.${system.extension}`);
 		if (!game)
-			return false;
+			return system.standalone;
 
 		return true;
 	}
