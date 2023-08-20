@@ -168,7 +168,7 @@ export default class Parallel {
 			: this.#buffers.pop().fill(0);
 
 		const message = { name, args: [sab, ...args] };
-		const transfer = args.filter(x => x.constructor.name == 'MessagePort');
+		const transfer = args.filter(arg => arg && arg.constructor.name == 'MessagePort');
 		this.#worker.postMessage(message, transfer);
 
 		if (sync)

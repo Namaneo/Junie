@@ -105,9 +105,8 @@ class Core {
 	 */
 	async init(memory, path, port, origin, start_arg) {
 		const fs = new Parallel(Filesystem, true);
-		this.#wasi = new WASI(memory, fs.link(port), {
-			[path]: await Filesystem.open(path, false),
-		});
+		const preopens = path ? { [path]: await Filesystem.open(path, false) } : {};
+		this.#wasi = new WASI(memory, fs.link(port), preopens);
 
 		const source = await WebAssembly.instantiateStreaming(fetch(`${origin}/modules/lib${this.#name}.wasm`), {
 			env: { memory },
@@ -119,13 +118,11 @@ class Core {
 				const parallel = new Parallel(Interop, false);
 				this.#threads.push(parallel);
 
-				const start = async () => {
+				(async () => {
 					const script = await (await fetch(`${origin}/worker.js`)).text();
 					const core = await parallel.create(name, script);
-					await core.init(memory, path, await fs.open(), origin, start_arg);
-				}
-
-				start();
+					await core.init(memory, null, await fs.open(), origin, start_arg);
+				})()
 
 				return id;
 			}},
