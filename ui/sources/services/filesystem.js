@@ -82,6 +82,21 @@ export default class Filesystem {
 	}
 
 	/**
+	 * @param {string} path
+	 * @param {boolean} create
+	 * @returns {Promise<FileSystemSyncAccessHandle>}
+	 */
+	static async open(path, create) {
+		if (path.startsWith('/'))
+			path = path.substring(1);
+
+		const directory = await Filesystem.#directory(path, create);
+		const filename = Filesystem.#parse(path).filename;
+		const handle = await directory.getFileHandle(filename, { create });
+		return await handle.createSyncAccessHandle();
+	}
+
+	/**
 	 * @returns {string[] | Promise<string[]>}
 	 */
 	list() {

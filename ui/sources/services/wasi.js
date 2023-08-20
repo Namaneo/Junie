@@ -1,5 +1,58 @@
 import Filesystem from './filesystem';
 
+/** @typedef {{ [path: string]: FileSystemSyncAccessHandle }} Preopens */
+
+class FS {
+	/** @type {Filesystem} */
+	#filesystem = null;
+
+	/** @type {Preopens} */
+	#preopens = {}
+
+	/**
+	 * @param {Filesystem} filesystem
+	 * @param {Preopens} preopens
+	 */
+	constructor(filesystem, preopens) {
+		this.#filesystem = filesystem;
+		this.#preopens = preopens;
+	}
+
+	/**
+	 * @param {string} path
+	 * @returns {number}
+	 */
+	size(path) {
+		if (this.#preopens[path])
+			return this.#preopens[path].getSize();
+		return this.#filesystem.size(path);
+	}
+
+	/**
+	 * @param {string} path
+	 * @param {Uint8Array} buffer
+	 * @param {number} offset
+	 * @returns {number}
+	 */
+	read(path, buffer, offset) {
+		if (this.#preopens[path])
+			return this.#preopens[path].read(buffer, { at: offset });
+		return this.#filesystem.read(path, buffer, offset);
+	}
+
+	/**
+	 * @param {string} path
+	 * @param {Uint8Array} buffer
+	 * @param {number} offset
+	 * @returns {number}
+	 */
+	write(path, buffer, offset) {
+		if (this.#preopens[path])
+			return this.#preopens[path].write(buffer, { at: offset });
+		return this.#filesystem.write(path, buffer, offset);
+	}
+}
+
 export default class WASI {
 	get #WASI_ERRNO_SUCCESS() { return 0; }
 	get #WASI_ERRNO_BADF()    { return 8; }
@@ -15,7 +68,7 @@ export default class WASI {
 	/** @type {WebAssembly.Memory} */
 	#memory = null;
 
-	/** @type {Filesystem} */
+	/** @type {FS} */
 	#filesystem = null;
 
 	/** @type {number} */
@@ -33,10 +86,11 @@ export default class WASI {
 	/**
 	 * @param {WebAssembly.Memory} memory
 	 * @param {Filesystem} filesystem
+	 * @param {Preopens} preopens
 	 */
-	constructor(memory, filesystem) {
+	constructor(memory, filesystem, preopens) {
 		this.#memory = memory;
-		this.#filesystem = filesystem;
+		this.#filesystem = new FS(filesystem, preopens);
 	}
 
 	/**

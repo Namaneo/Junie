@@ -1,6 +1,7 @@
 import { Cheat } from '../entities/cheat';
 import { Settings } from '../entities/settings';
 import { Variable } from '../entities/variable';
+import Path from './path';
 import Files from './files';
 import Audio from './audio';
 import Parallel from './parallel';
@@ -204,7 +205,8 @@ export default class Core {
 		const script = await (await fetch('worker.js')).text();
 		this.#interop = await this.#parallel.create(this.#name, script);
 
-		await this.#interop.init(Core.#memory, await Files.clone(), origin);
+		const path = Path.game(system, rom).substring(1);
+		await this.#interop.init(Core.#memory, path, await Files.clone(), origin);
 		await this.#interop.Create(system, rom);
 
 		this.#native = new NativeData(Core.#memory,
