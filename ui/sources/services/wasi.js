@@ -23,9 +23,10 @@ class FS {
 	 * @returns {number}
 	 */
 	size(path) {
-		if (this.#preopens[path])
-			return this.#preopens[path].getSize();
-		return this.#filesystem.size(path);
+		const file = Filesystem.parse(path);
+		if (this.#preopens[file.path])
+			return this.#preopens[file.path].getSize();
+		return this.#filesystem.size(file.path);
 	}
 
 	/**
@@ -35,9 +36,10 @@ class FS {
 	 * @returns {number}
 	 */
 	read(path, buffer, offset) {
-		if (this.#preopens[path])
-			return this.#preopens[path].read(buffer, { at: offset });
-		return this.#filesystem.read(path, buffer, offset);
+		const file = Filesystem.parse(path);
+		if (this.#preopens[file.path])
+			return this.#preopens[file.path].read(buffer, { at: offset });
+		return this.#filesystem.read(file.path, buffer, offset);
 	}
 
 	/**
@@ -47,9 +49,10 @@ class FS {
 	 * @returns {number}
 	 */
 	write(path, buffer, offset) {
-		if (this.#preopens[path])
-			return this.#preopens[path].write(buffer, { at: offset });
-		return this.#filesystem.write(path, buffer, offset);
+		const file = Filesystem.parse(path);
+		if (this.#preopens[file.path])
+			return this.#preopens[file.path].write(buffer, { at: offset });
+		return this.#filesystem.write(file.path, buffer, offset);
 	}
 }
 

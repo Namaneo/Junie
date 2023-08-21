@@ -4,6 +4,7 @@ import WASI from './services/wasi';
 import Parallel, { instrumentContext } from './services/parallel';
 import Filesystem from './services/filesystem';
 import Interop from './services/interop';
+import Path from './services/path';
 
 class Core {
 	/** @type {TextEncoder} */
@@ -97,31 +98,39 @@ class Core {
 
 	/**
 	 * @param {WebAssembly.Memory} memory
-	 * @param {string} path
+	 * @param {string} system
+	 * @param {string} rom
 	 * @param {MessagePort} port
 	 * @param {string} origin
 	 * @param {number} start_arg
 	 * @returns {Promise<void>}
 	 */
-	async init(memory, path, port, origin, start_arg) {
-		const fs = new Parallel(Filesystem, true);
-		const preopens = path ? { [path]: await Filesystem.open(path, false) } : {};
-		this.#wasi = new WASI(memory, fs.link(port), preopens);
+	async init(memory, system, rom, port, origin, start_arg) {
+		const parallel = new Parallel(Filesystem, true);
+
+		const preopens = {};
+		const directory = `/${system}/${rom?.split('.').slice(0, -1).join('.')}/`;
+		const filesystem = parallel.link(port);
+		for (const path of filesystem.list()) {
+			if (path == Path.game(system, rom) || path.startsWith(directory)) {
+				filesystem.close(path);
+				preopens[path] = await Filesystem.open(path, false);
+			}
+		}
+
+		this.#wasi = new WASI(memory, filesystem, preopens);
 
 		const source = await WebAssembly.instantiateStreaming(fetch(`${origin}/modules/lib${this.#name}.wasm`), {
 			env: { memory },
 			wasi_snapshot_preview1: this.#wasi.environment,
 			wasi: { 'thread-spawn': (start_arg) => {
-				const id = this.#threads.length + 1;
-				const name = `${this.#name}-${id}`;
-
-				const parallel = new Parallel(Interop, false);
-				this.#threads.push(parallel);
+				const child = new Parallel(Interop, false);
+				const id = this.#threads.push(child);
 
 				(async () => {
 					const script = await (await fetch(`${origin}/worker.js`)).text();
-					const core = await parallel.create(name, script);
-					await core.init(memory, null, await fs.open(), origin, start_arg);
+					const core = await child.create(`${this.#name}-${id}`, script);
+					await core.init(memory, null, null, await parallel.open(), origin, start_arg);
 				})()
 
 				return id;

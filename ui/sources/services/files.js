@@ -76,11 +76,11 @@ export default class Files {
 	 */
 	static async read_json(path) {
 		const file = await Files.read(path);
+		if (!file) return null;
 
 		try {
 			return JSON.parse(this.#decoder.decode(file));
 		} catch (e) {
-			console.error(e);
 			return null;
 		}
 	}

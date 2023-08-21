@@ -6,16 +6,17 @@ export default class Filesystem {
 
 	/**
 	 * @param {string} path
-	 * @returns {{ directories: string[], filename: string }}
+	 * @returns {{ path: string, filename: string, directories: string[] }}
 	 */
-	static #parse(path) {
-		if (path.indexOf('/') == -1)
-			return { directories: [], filename: path };
+	static parse(path) {
+		path = `/${path}`.replace(/^\/+/, '/');
 
-		const directories = path.substring(0, path.lastIndexOf('/')).split('/');
 		const filename = path.substring(path.lastIndexOf('/') + 1);
+		const directories = path.substring(1).indexOf('/') != -1
+			? path.substring(1, path.lastIndexOf('/')).split('/')
+			: [];
 
-		return { directories, filename };
+		return { path, directories, filename };
 	}
 
 	/**
@@ -24,7 +25,7 @@ export default class Filesystem {
 	 */
 	static async #directory(path, create) {
 		let directory = await navigator.storage.getDirectory();
-		for (const component of Filesystem.#parse(path).directories)
+		for (const component of Filesystem.parse(path).directories)
 			directory = await directory.getDirectoryHandle(component, { create });
 		return directory;
 	}
@@ -55,14 +56,12 @@ export default class Filesystem {
 	 * @returns {Promise<number>}
 	 */
 	static async #exec(path, create, action) {
-		if (path.startsWith('/'))
-			path = path.substring(1);
+		const file = Filesystem.parse(path);
 
-		if (!Filesystem.#handles[path]) {
-			const directory = await Filesystem.#directory(path, create);
-			const filename = Filesystem.#parse(path).filename;
-			const handle = await directory.getFileHandle(filename, { create });
-			Filesystem.#handles[path] = await handle.createSyncAccessHandle();
+		if (!Filesystem.#handles[file.path]) {
+			const directory = await Filesystem.#directory(file.path, create);
+			const handle = await directory.getFileHandle(file.filename, { create });
+			Filesystem.#handles[file.path] = await handle.createSyncAccessHandle();
 		}
 
 		return action(Filesystem.#handles[path]);
@@ -87,11 +86,8 @@ export default class Filesystem {
 	 * @returns {Promise<FileSystemSyncAccessHandle>}
 	 */
 	static async open(path, create) {
-		if (path.startsWith('/'))
-			path = path.substring(1);
-
 		const directory = await Filesystem.#directory(path, create);
-		const filename = Filesystem.#parse(path).filename;
+		const filename = Filesystem.parse(path).filename;
 		const handle = await directory.getFileHandle(filename, { create });
 		return await handle.createSyncAccessHandle();
 	}
@@ -145,17 +141,28 @@ export default class Filesystem {
 	 */
 	remove(path) {
 		return Filesystem.#catch(async () => {
-			if (path.startsWith('/'))
-				path = path.substring(1);
+			this.close(path);
+
+			const handle = await Filesystem.#directory(path);
+			await handle.removeEntry(Filesystem.parse(path).filename);
+
+			return 0;
+		}, -1);
+	}
+
+	/**
+	 * @param {string} path
+	 * @returns {void | Promise<void>}
+	 */
+	close(path) {
+		return Filesystem.#catch(() => {
+			path = Filesystem.parse(path).path;
 
 			if (Filesystem.#handles[path]) {
 				Filesystem.#handles[path].flush();
 				Filesystem.#handles[path].close();
 				delete Filesystem.#handles[path];
 			}
-
-			const handle = await Filesystem.#directory(path);
-			await handle.removeEntry(Filesystem.#parse(path).filename);
 
 			return 0;
 		}, -1);
