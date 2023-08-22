@@ -1,16 +1,13 @@
 LIBRARIES := $(shell jq -r 'keys[]' cores.json)
 
 WASI_FLAGS = \
-	-I$(shell pwd)/include -flto -msimd128 \
-	-D'__EMSCRIPTEN__' -D'_WASI_EMULATED_MMAN' \
-	-D'thread_local=' -D'SCHED_RR=0' \
-	-D'sched_param={int sched_priority;}' \
-	-D'pthread_attr_setschedparam(...)=1'
+	-flto -msimd128 -D__EMSCRIPTEN__
+
 include ../GNUmakefile.common
 
 BUILD_FLAGS := \
-	-j 8 platform=emscripten \
-	STATIC_LINKING=0 STATIC_LINKING_LINK=0 LINKOUT="rcs " LIBS= \
+	-j 8 platform=emscripten ARCH=wasm32 LDFLAGS= SHARED= LIBS= \
+	STATIC_LINKING=0 STATIC_LINKING_LINK=0 LINKOUT="rcs " \
 	CC="$(CC)" CXX="$(CXX)" LD="$(AR)" RANLIB="$(RANLIB)"
 
 MAKEFLAGS += --no-print-directory
@@ -20,15 +17,20 @@ all: $(LIBRARIES:%=lib%.a)
 
 clean: $(LIBRARIES:%=clean-%)
 
+emsdk:
+	@git -C emsdk pull $(QUIET) || git clone --recurse https://github.com/emscripten-core/emsdk.git $(QUIET) && \
+	( cd emsdk && ./emsdk install latest $(QUIET) )
+
 fetch-%:
 	@target=`pwd`/lib$*.a && \
 	name=`jq -r '."$*".repository // "$*"' cores.json` && \
 	owner=`jq -r '."$*".owner // "libretro"' cores.json` && \
 	branch=`jq -r '."$*".branch // "master"' cores.json` && \
 	echo Fetching $$name... && \
-	git -C $$name pull $(QUIET) || git clone -b $$branch https://github.com/$$owner/$$name.git $(QUIET)
+	git -C $$name pull $(QUIET) || git clone -b $$branch --recurse https://github.com/$$owner/$$name.git $(QUIET)
 
 lib%.a: fetch-%
+	@$(MAKE) emsdk $(QUIET)
 	@target=`pwd`/lib$*.a && \
 	name=`jq -r '."$*".repository // "$*"' cores.json` && \
 	makedir=`jq -r '."$*".directory // ""' cores.json` && \
@@ -43,3 +45,5 @@ clean-%:
 	makefile=`jq -r '."$*".makefile // "Makefile"' cores.json` && \
 	test ! -d $$name || \
 	$(MAKE) -C $$name/$$makedir -f $$makefile clean TARGET=$$target $(BUILD_FLAGS) $(QUIET)
+
+.PHONY: emsdk

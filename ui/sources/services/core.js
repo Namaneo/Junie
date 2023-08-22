@@ -40,7 +40,7 @@ export default class Core {
 
 	/** @type {WebAssembly.Memory} */
 	static #memory = new WebAssembly.Memory({
-		initial: (this.#INITIAL_MEMORY * 1) / 65536,
+		initial: (this.#INITIAL_MEMORY * 2) / 65536,
 		maximum: (this.#INITIAL_MEMORY * 6) / 65536,
 		shared: true,
 	});

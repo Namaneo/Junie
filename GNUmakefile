@@ -32,7 +32,7 @@ endif
 all: clean prepare cores app ui
 
 cores:
-	@$(MAKE) -C $(CORES_DIR) DEBUG=$(DEBUG)
+	@$(MAKE) -C $(CORES_DIR)
 
 app:
 	@$(MAKE) -C $(APP_DIR) DEBUG=$(DEBUG)
