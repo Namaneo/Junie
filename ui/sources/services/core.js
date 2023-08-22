@@ -205,7 +205,7 @@ export default class Core {
 		const script = await (await fetch('worker.js')).text();
 		this.#interop = await this.#parallel.create(this.#name, script);
 
-		await this.#interop.init(Core.#memory, system, rom, await Files.clone(), origin);
+		await this.#interop.init(Core.#memory, await Files.clone(), origin);
 		await this.#interop.Create(system, rom);
 
 		this.#native = new NativeData(Core.#memory,

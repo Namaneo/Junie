@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useIonLoading } from "@ionic/react";
 import { Variable } from "../entities/variable";
 import { Cheat } from "../entities/cheat";
 import { Settings } from "../entities/settings";
@@ -84,6 +85,8 @@ export const useCore = (lib) => {
 	const [settings,  setSettings]  = useState(/** @type {Settings}   */ (null));
 	const [cheats,    setCheats]    = useState(/** @type {Cheat[]}    */ (null));
 
+	const [load, loaded] = useIonLoading();
+
 	/**
 	 * @param {string} key
 	 * @param {string} value
@@ -132,9 +135,13 @@ export const useCore = (lib) => {
 		setSettings(settings);
 		setCheats(cheats);
 
+		await load('Starting game...');
+
 		await core.create(system, rom, canvas);
 		setVariables(core.variables());
 		await core.start(settings, cheats);
+
+		await loaded();
 	}
 
 	return [

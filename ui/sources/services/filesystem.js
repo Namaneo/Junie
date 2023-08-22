@@ -64,7 +64,7 @@ export default class Filesystem {
 			Filesystem.#handles[file.path] = await handle.createSyncAccessHandle();
 		}
 
-		return action(Filesystem.#handles[path]);
+		return action(Filesystem.#handles[file.path]);
 	}
 
 	/**

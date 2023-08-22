@@ -98,27 +98,15 @@ class Core {
 
 	/**
 	 * @param {WebAssembly.Memory} memory
-	 * @param {string} system
-	 * @param {string} rom
 	 * @param {MessagePort} port
 	 * @param {string} origin
 	 * @param {number} start_arg
 	 * @returns {Promise<void>}
 	 */
-	async init(memory, system, rom, port, origin, start_arg) {
-		const parallel = new Parallel(Filesystem, true);
-
-		const preopens = {};
-		const directory = `/${system}/${rom?.split('.').slice(0, -1).join('.')}/`;
-		const filesystem = parallel.link(port);
-		for (const path of filesystem.list()) {
-			if (path == Path.game(system, rom) || path.startsWith(directory)) {
-				filesystem.close(path);
-				preopens[path] = await Filesystem.open(path, false);
-			}
-		}
-
-		this.#wasi = new WASI(memory, filesystem, preopens);
+	async init(memory, port, origin, start_arg) {
+		const filesystem = new Parallel(Filesystem, true);
+		this.#wasi = new WASI(memory, filesystem.link(port));
+		if (!start_arg) await this.#wasi.load();
 
 		const source = await WebAssembly.instantiateStreaming(fetch(`${origin}/modules/lib${this.#name}.wasm`), {
 			env: { memory },
@@ -130,7 +118,7 @@ class Core {
 				(async () => {
 					const script = await (await fetch(`${origin}/worker.js`)).text();
 					const core = await child.create(`${this.#name}-${id}`, script);
-					await core.init(memory, null, null, await parallel.open(), origin, start_arg);
+					await core.init(memory, filesystem.open(), origin, start_arg);
 				})()
 
 				return id;

@@ -1,3 +1,4 @@
+import Path from './path';
 import Filesystem from './filesystem';
 
 /** @typedef {{ [path: string]: FileSystemSyncAccessHandle }} Preopens */
@@ -11,12 +12,22 @@ class FS {
 
 	/**
 	 * @param {Filesystem} filesystem
-	 * @param {Preopens} preopens
 	 */
-	constructor(filesystem, preopens) {
+	constructor(filesystem) {
 		this.#filesystem = filesystem;
-		this.#preopens = preopens;
 	}
+
+	/**
+	 * @returns {Promise<void>}
+	 */
+	async load() {
+		for (const path of this.#filesystem.list()) {
+			if (!this.#preopens[path]) {
+				this.#filesystem.close(path);
+				this.#preopens[path] = await Filesystem.open(path, false);
+			}
+		}
+	};
 
 	/**
 	 * @param {string} path
@@ -89,11 +100,17 @@ export default class WASI {
 	/**
 	 * @param {WebAssembly.Memory} memory
 	 * @param {Filesystem} filesystem
-	 * @param {Preopens} preopens
 	 */
-	constructor(memory, filesystem, preopens) {
+	constructor(memory, filesystem) {
 		this.#memory = memory;
-		this.#filesystem = new FS(filesystem, preopens);
+		this.#filesystem = new FS(filesystem);
+	}
+
+	/**
+	 * @returns {Promise<void>}
+	 */
+	async load() {
+		await this.#filesystem.load();
 	}
 
 	/**
