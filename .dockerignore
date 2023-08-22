@@ -2,6 +2,14 @@
 games
 build
 
+deps/*
+!deps/GNUmakefile
+
+cores/*
+!cores/GNUmakefile
+!cores/cores.json
+!cores/*.a
+
 app/build
 
 ui/node_modules

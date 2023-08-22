@@ -1,6 +1,6 @@
 LIBRARIES := $(shell jq -r 'keys[]' cores.json)
 
-WASI_FLAGS = -flto -msimd128 -D__EMSCRIPTEN__
+DEFINES := -flto -msimd128 -D__EMSCRIPTEN__
 include ../GNUmakefile.common
 
 BUILD_FLAGS := \

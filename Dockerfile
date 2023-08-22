@@ -1,11 +1,6 @@
 # Build
 FROM node AS build
 
-WORKDIR /root
-
-RUN wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-20/wasi-sdk-20.0-linux.tar.gz
-RUN tar xvf wasi-sdk-20.0-linux.tar.gz
-
 WORKDIR /junie
 
 RUN apt update

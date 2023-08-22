@@ -1,12 +1,13 @@
-WASI_SDK     = $(HOME)/wasi-sdk-20.0
-WASI_SYSROOT = --sysroot=$(WASI_SDK)/share/wasi-sysroot
-EMSCRIPTEN = $(shell pwd)/../deps/emsdk/upstream/emscripten/cache/sysroot
+WASI_SDK   := $(shell pwd)/../deps/wasi-sdk
+EMSCRIPTEN := $(shell pwd)/../deps/emsdk/upstream
 
-DEFINES = \
+DEFINES += \
+	--sysroot=$(WASI_SDK)/share/wasi-sysroot \
 	--target=wasm32-wasi-threads -pthread \
-	-I$(EMSCRIPTEN)/include/c++/v1 -I$(EMSCRIPTEN)/include
+	-I$(EMSCRIPTEN)/emscripten/cache/sysroot/include/c++/v1 \
+	-I$(EMSCRIPTEN)/emscripten/cache/sysroot/include
 
-CC     = $(WASI_SDK)/bin/clang $(WASI_SYSROOT) $(DEFINES) $(WASI_FLAGS)
-CXX    = $(WASI_SDK)/bin/clang++ $(WASI_SYSROOT) $(DEFINES) $(WASI_FLAGS)
-AR     = $(WASI_SDK)/bin/ar
-RANLIB = $(WASI_SDK)/bin/ranlib
+CC     := $(WASI_SDK)/bin/clang $(DEFINES)
+CXX    := $(WASI_SDK)/bin/clang++ $(DEFINES)
+AR     := $(WASI_SDK)/bin/ar
+RANLIB := $(WASI_SDK)/bin/ranlib
