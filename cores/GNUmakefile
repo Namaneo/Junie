@@ -1,8 +1,6 @@
 LIBRARIES := $(shell jq -r 'keys[]' cores.json)
 
-WASI_FLAGS = \
-	-flto -msimd128 -D__EMSCRIPTEN__
-
+WASI_FLAGS = -flto -msimd128 -D__EMSCRIPTEN__
 include ../GNUmakefile.common
 
 BUILD_FLAGS := \
@@ -17,10 +15,6 @@ all: $(LIBRARIES:%=lib%.a)
 
 clean: $(LIBRARIES:%=clean-%)
 
-emsdk:
-	@git -C emsdk pull $(QUIET) || git clone --recurse https://github.com/emscripten-core/emsdk.git $(QUIET) && \
-	( cd emsdk && ./emsdk install latest $(QUIET) )
-
 fetch-%:
 	@target=`pwd`/lib$*.a && \
 	name=`jq -r '."$*".repository // "$*"' cores.json` && \
@@ -30,7 +24,6 @@ fetch-%:
 	git -C $$name pull $(QUIET) || git clone -b $$branch --recurse https://github.com/$$owner/$$name.git $(QUIET)
 
 lib%.a: fetch-%
-	@$(MAKE) emsdk $(QUIET)
 	@target=`pwd`/lib$*.a && \
 	name=`jq -r '."$*".repository // "$*"' cores.json` && \
 	makedir=`jq -r '."$*".directory // ""' cores.json` && \

@@ -7,6 +7,7 @@ else
 BUILD := production
 endif
 
+DEPS_DIR  := deps
 CORES_DIR := cores
 APP_DIR   := app
 UI_DIR    := ui
@@ -25,11 +26,14 @@ else
 UI_FLAGS += --command "$(MAKE) -C ../$(APP_DIR) DEBUG=$(DEBUG)"
 endif
 
-.PHONY: cores app ui
+.PHONY: deps cores app ui
 
 # Build
 
-all: clean prepare cores app ui
+all: clean prepare deps cores app ui
+
+deps:
+	@$(MAKE) -C $(DEPS_DIR)
 
 cores:
 	@$(MAKE) -C $(CORES_DIR)

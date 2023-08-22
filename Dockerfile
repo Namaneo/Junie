@@ -17,6 +17,9 @@ ADD GNUmakefile.common .
 ADD ./ui/package.json ./ui/package.json
 RUN make prepare
 
+ADD ./deps ./deps
+RUN make deps
+
 ADD ./cores ./cores
 RUN make cores
 

@@ -1,6 +1,6 @@
 WASI_SDK     = $(HOME)/wasi-sdk-20.0
 WASI_SYSROOT = --sysroot=$(WASI_SDK)/share/wasi-sysroot
-EMSCRIPTEN = $(shell pwd)/../cores/emsdk/upstream/emscripten/cache/sysroot
+EMSCRIPTEN = $(shell pwd)/../deps/emsdk/upstream/emscripten/cache/sysroot
 
 DEFINES = \
 	--target=wasm32-wasi-threads -pthread \
