@@ -81,6 +81,7 @@ export default class Files {
 		try {
 			return JSON.parse(this.#decoder.decode(file));
 		} catch (e) {
+			console.error(e);
 			return null;
 		}
 	}

@@ -1,6 +1,6 @@
 export default class Interop {
-	/** @param {WebAssembly.Memory} memory @param {MessagePort} port @param {number} start_arg @param {string} origin @returns {Promise<void>} */
-	init(memory, port, origin, start_arg) { }
+	/** @param {WebAssembly.Memory} memory @param {string} system @param {string} rom @param {MessagePort} port @param {number} start_arg @param {string} origin @returns {Promise<void>} */
+	init(memory, system, rom, port, origin, start_arg) { }
 
 	/** @param {string} system @param {string} rom @returns {Promise<void>} */
 	Create(system, rom) { }

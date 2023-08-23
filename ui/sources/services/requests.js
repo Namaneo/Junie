@@ -21,6 +21,7 @@ export default class Requests {
 			});
 
 			system.games = games.filter(game => game.rom.endsWith(`.${system.extension}`));
+
 		} catch (e) {
 			system.games = [];
 		}

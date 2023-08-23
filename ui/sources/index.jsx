@@ -104,6 +104,7 @@ try {
 		await Files.write(path, buffer);
 		await Database.remove(path);
 	}
+
 } catch (e) {
 	console.error(e);
 }

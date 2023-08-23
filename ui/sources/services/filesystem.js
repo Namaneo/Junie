@@ -76,6 +76,7 @@ export default class Filesystem {
 			return await action();
 
 		} catch (e) {
+			console.error(e);
 			return err_val;
 		}
 	}

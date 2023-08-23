@@ -18,14 +18,19 @@ class FS {
 	}
 
 	/**
+	 * @param {string} system
+	 * @param {string} rom
 	 * @returns {Promise<void>}
 	 */
-	async load() {
+	async load(system, rom) {
+		const game = rom.substring(0, rom.lastIndexOf('.')) || rom;
+
 		for (const path of this.#filesystem.list()) {
-			if (!this.#preopens[path]) {
-				this.#filesystem.close(path);
-				this.#preopens[path] = await Filesystem.open(path, false);
-			}
+			if (!path.startsWith(`/${system}/${game}`))
+				continue;
+
+			this.#filesystem.close(path);
+			this.#preopens[path] = await Filesystem.open(path, false);
 		}
 	};
 
@@ -107,10 +112,12 @@ export default class WASI {
 	}
 
 	/**
+	 * @param {string} system
+	 * @param {string} rom
 	 * @returns {Promise<void>}
 	 */
-	async load() {
-		await this.#filesystem.load();
+	async load(system, rom) {
+		await this.#filesystem.load(system, rom);
 	}
 
 	/**
