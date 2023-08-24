@@ -83,6 +83,7 @@ html, body {
 	color: var(--ion-color-dark);
     background: rgba(var(--ion-color-light-rgb), 0.3);
     border: 2px solid var(--ion-color-dark);
+	pointer-events: none;
 }
 
 #root .core button:active {

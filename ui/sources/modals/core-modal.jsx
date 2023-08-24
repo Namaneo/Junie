@@ -71,21 +71,13 @@ const CheatsView = ({ cheats }) => {
 
 /**
  * @param {Object} parameters
- * @param {Core} parameters.core
  * @param {string} parameters.name
- * @param {number} parameters.device
  * @param {number} parameters.id
  * @param {('generic' | 'arrow' | 'shoulder' | 'special')} parameters.type
  * @param {{top: number, right: number, bottom: number, left: number}} parameters.inset
  * @returns {JSX.Element}
  */
-const Control = ({ core, name, device, id, type, inset }) => {
-	/** @param {Event} event @returns {void} */
-	const down = (event) => { core.send(device, id, 1); event.preventDefault(); event.stopPropagation(); };
-
-	/** @param {Event} event @returns {void} */
-	const up = (event) => { core.send(device, id, 0); event.preventDefault(); event.stopPropagation(); };
-
+const Control = ({ name, id, type, inset }) => {
 	const unit = window.innerWidth < window.innerHeight ? 'vw' : 'vh'
 
 	const style = {
@@ -119,11 +111,7 @@ const Control = ({ core, name, device, id, type, inset }) => {
 			break;
 	}
 
-	return (
-		<button style={style} onTouchStart={down} onTouchEnd={up} onTouchCancel={up} onMouseDown={down} onMouseUp={up}>
-			{name}
-		</button>
-	);
+	return <button style={style} data-id={id}>{name}</button>;
 }
 
 /**
@@ -138,7 +126,8 @@ export const CoreModal = ({ system, game, close }) => {
 	const canvas  = useRef(/** @type {HTMLCanvasElement}     */ (null));
 
 	const [core, audio, speed, gamepad] = useCore(system.lib_name);
-	const [pointer, setPointer] = useState({ x: 0, y: 0, down: false });
+	const [pointer, setPointer] = useState(false);
+	const [touches, setTouches] = useState({});
 	const [window_w, window_h] = useSize({ current: document.body });
 	const [canvas_w, canvas_h] = useSize(canvas);
 
@@ -161,55 +150,78 @@ export const CoreModal = ({ system, game, close }) => {
 		}
 	};
 
-	/** @param {Event} event @returns {void} */
-	const touch = (event) => {
-		if (gamepad.value)
-			return;
 
-		const x = event.clientX || (event.changedTouches && event.changedTouches[0].clientX);
-		const y = event.clientY || (event.changedTouches && event.changedTouches[0].clientY);
+	/** @param {HTMLElement} element @param {number} x @param {number} y @returns {number} */
+	const distance = (element, x, y) => {
+		const rect = element.getBoundingClientRect();
+		const center_x = rect.left + rect.width  / 2;
+		const center_y = rect.top  + rect.height / 2;
+		const dist_x = Math.max(Math.abs(x - center_x) - rect.width  / 2, 0);
+		const dist_y = Math.max(Math.abs(y - center_y) - rect.height / 2, 0);
+		return Math.sqrt(Math.pow(dist_x, 2) + Math.pow(dist_y, 2));
+	}
 
-		const start = !!['mousedown', 'touchstart'].find(type => event.type == type);
-		const move = !!['mousemove', 'touchmove'].find(type => event.type == type);
-		setPointer({ x, y, down: start || (move && pointer.down) });
+	/** @param {HTMLButtonElement[]} @param {number} identifier @param {number} x @param {number} y @param {string} type @returns {void} */
+	const send = (buttons, identifier, x, y, type) => {
+		const button = buttons.reduce((value, current) => {
+			const curr_dist = distance(current, x, y);
+			if (!value)
+				return curr_dist < 25 ? current : null;
 
-		event.preventDefault();
-		event.stopPropagation();
+			const prev_dist = distance(value, x, y);
+			if (prev_dist > 25 && curr_dist > 25)
+				return null;
+
+			return curr_dist < prev_dist ? current : value;
+		}, null);
+
+		const touch = touches[identifier];
+		if (touch && touch?.id != button?.dataset.id)
+			core.current.send(Core.Device.JOYPAD, touch.id, false);
+
+		const start = !!['mousedown', 'touchstart'].find(t => t == type);
+		const move = !!['mousemove', 'touchmove'].find(t => t == type);
+		const pressed = start || (move && touch.pressed);
+
+		if (button?.dataset.id)
+			core.current.send(Core.Device.JOYPAD, button?.dataset.id, pressed);
+
+		setTouches({ ...touches, [identifier]: { id: button?.dataset.id, pressed } });
 	}
 
 	/** @param {Event} event @returns {void} */
-	const dispatch = (event) => {
-		/** @param {HTMLElement} element @param {number} x @param {number} y @returns {number} */
-		const distance = (element, x, y) => {
-			const rect = element.getBoundingClientRect();
-			const center_x = rect.left + rect.width  / 2;
-			const center_y = rect.top  + rect.height / 2;
-			const dist_x = Math.max(Math.abs(x - center_x) - rect.width  / 2, 0);
-			const dist_y = Math.max(Math.abs(y - center_y) - rect.height / 2, 0);
-			return Math.sqrt(Math.pow(dist_x, 2) + Math.pow(dist_y, 2));
+	const touch = (event) => {
+		if (gamepad.value) {
+			const buttons = [...event.target.children];
+
+			if (event.type.startsWith('mouse'))
+				send(buttons, 0, event.clientX, event.clientY, event.type);
+
+			if (event.type.startsWith('touch'))
+				for (const touch of event.changedTouches)
+					send(buttons, touch.identifier, touch.clientX, touch.clientY, event.type);
+
+		} else {
+			const x = event.clientX || (event.changedTouches && event.changedTouches[0].clientX);
+			const y = event.clientY || (event.changedTouches && event.changedTouches[0].clientY);
+
+			const rect = canvas.current.getBoundingClientRect();
+			const scaled_x = (x - rect.left) / (rect.right  - rect.left) * canvas.current.width;
+			const scaled_y = (y - rect.top ) / (rect.bottom - rect.top ) * canvas.current.height;
+
+			const start = !!['mousedown', 'touchstart'].find(t => t == event.type);
+			const move = !!['mousemove', 'touchmove'].find(t => t == event.type);
+			const pressed = start || (move && pointer);
+
+			core.current.send(Core.Device.POINTER, Core.Pointer.X,       scaled_x);
+			core.current.send(Core.Device.POINTER, Core.Pointer.Y,       scaled_y);
+			core.current.send(Core.Device.POINTER, Core.Pointer.PRESSED, pressed);
+			core.current.send(Core.Device.POINTER, Core.Pointer.COUNT,   1);
+
+			setPointer(pressed);
 		}
 
-		/** @param {number} x @param {number} y @returns {void} */
-		const send = (x, y) => {
-			[...event.target.children].reduce((value, current) => {
-				const curr_dist = distance(current, x, y);
-				if (!value)
-					return curr_dist < 25 ? current : null;
-
-				const prev_dist = distance(value, x, y);
-				if (prev_dist > 25 && curr_dist > 25)
-					return null;
-
-				return curr_dist < prev_dist ? current : value;
-			})?.dispatchEvent(new event.nativeEvent.constructor(event.type, { bubbles: true }));
-		}
-
-		if (event.type.startsWith('mouse'))
-			send(event.clientX, event.clientY);
-
-		if (event.type.startsWith('touch'))
-			for (const touch of event.changedTouches)
-				send(touch.clientX, touch.clientY);
+		event.stopPropagation();
 	}
 
 	/** @returns {void} */
@@ -229,18 +241,6 @@ export const CoreModal = ({ system, game, close }) => {
 
 		return () => core.current.stop();
 	}, []);
-
-	useEffect(() => {
-		const rect = canvas.current.getBoundingClientRect();
-
-		const x = (pointer.x - rect.left) / (rect.right  - rect.left) * canvas.current.width;
-		const y = (pointer.y - rect.top ) / (rect.bottom - rect.top ) * canvas.current.height;
-
-		core.current.send(Core.Device.POINTER, Core.Pointer.X,       x);
-		core.current.send(Core.Device.POINTER, Core.Pointer.Y,       y);
-		core.current.send(Core.Device.POINTER, Core.Pointer.PRESSED, pointer.down);
-		core.current.send(Core.Device.POINTER, Core.Pointer.COUNT,   1);
-	}, [pointer]);
 
 	useEffect(() => resize(), [window_w, window_h, canvas_w, canvas_h]);
 
@@ -296,20 +296,20 @@ export const CoreModal = ({ system, game, close }) => {
 					onTouchStart={touch} onTouchMove={touch} onTouchEnd={touch} onTouchCancel={touch}>
 					<canvas ref={canvas} />
 
-					{gamepad.value && <div className="controls"><div onMouseDown={dispatch} onMouseUp={dispatch} onTouchStart={dispatch} onTouchEnd={dispatch} onTouchCancel={dispatch}>
-						<Control core={core.current} name="A"        device={Core.Device.JOYPAD} id={Core.Joypad.A}     type='generic'  inset={{bottom: 30, right: 4 }} />
-						<Control core={core.current} name="B"        device={Core.Device.JOYPAD} id={Core.Joypad.B}     type='generic'  inset={{bottom: 18, right: 16}} />
-						<Control core={core.current} name="X"        device={Core.Device.JOYPAD} id={Core.Joypad.X}     type='generic'  inset={{bottom: 42, right: 16}} />
-						<Control core={core.current} name="Y"        device={Core.Device.JOYPAD} id={Core.Joypad.Y}     type='generic'  inset={{bottom: 30, right: 28}} />
-						<Control core={core.current} name="R"        device={Core.Device.JOYPAD} id={Core.Joypad.R}     type='shoulder' inset={{bottom: 48, right: 34}} />
-						<Control core={core.current} name="&#x00B7;" device={Core.Device.JOYPAD} id={Core.Joypad.START} type='special'  inset={{bottom: 18, right: 37}} />
+					{gamepad.value && <div className="controls"><div>
+						<Control name="A"        device={Core.Device.JOYPAD} id={Core.Joypad.A}     type='generic'  inset={{bottom: 30, right: 4 }} />
+						<Control name="B"        device={Core.Device.JOYPAD} id={Core.Joypad.B}     type='generic'  inset={{bottom: 18, right: 16}} />
+						<Control name="X"        device={Core.Device.JOYPAD} id={Core.Joypad.X}     type='generic'  inset={{bottom: 42, right: 16}} />
+						<Control name="Y"        device={Core.Device.JOYPAD} id={Core.Joypad.Y}     type='generic'  inset={{bottom: 30, right: 28}} />
+						<Control name="R"        device={Core.Device.JOYPAD} id={Core.Joypad.R}     type='shoulder' inset={{bottom: 48, right: 34}} />
+						<Control name="&#x00B7;" device={Core.Device.JOYPAD} id={Core.Joypad.START} type='special'  inset={{bottom: 18, right: 37}} />
 
-						<Control core={core.current} name="&#x140A;" device={Core.Device.JOYPAD} id={Core.Joypad.LEFT}   type='arrow'    inset={{bottom: 30, left: 4 }} />
-						<Control core={core.current} name="&#x1401;" device={Core.Device.JOYPAD} id={Core.Joypad.DOWN}   type='arrow'    inset={{bottom: 18, left: 16}} />
-						<Control core={core.current} name="&#x1403;" device={Core.Device.JOYPAD} id={Core.Joypad.UP}     type='arrow'    inset={{bottom: 42, left: 16}} />
-						<Control core={core.current} name="&#x1405;" device={Core.Device.JOYPAD} id={Core.Joypad.RIGHT}  type='arrow'    inset={{bottom: 30, left: 28}} />
-						<Control core={core.current} name="L"        device={Core.Device.JOYPAD} id={Core.Joypad.L}      type='shoulder' inset={{bottom: 48, left: 34}} />
-						<Control core={core.current} name="&#x00B7;" device={Core.Device.JOYPAD} id={Core.Joypad.SELECT} type='special'  inset={{bottom: 18, left: 37}} />
+						<Control name="&#x140A;" device={Core.Device.JOYPAD} id={Core.Joypad.LEFT}   type='arrow'    inset={{bottom: 30, left: 4 }} />
+						<Control name="&#x1401;" device={Core.Device.JOYPAD} id={Core.Joypad.DOWN}   type='arrow'    inset={{bottom: 18, left: 16}} />
+						<Control name="&#x1403;" device={Core.Device.JOYPAD} id={Core.Joypad.UP}     type='arrow'    inset={{bottom: 42, left: 16}} />
+						<Control name="&#x1405;" device={Core.Device.JOYPAD} id={Core.Joypad.RIGHT}  type='arrow'    inset={{bottom: 30, left: 28}} />
+						<Control name="L"        device={Core.Device.JOYPAD} id={Core.Joypad.L}      type='shoulder' inset={{bottom: 48, left: 34}} />
+						<Control name="&#x00B7;" device={Core.Device.JOYPAD} id={Core.Joypad.SELECT} type='special'  inset={{bottom: 18, left: 37}} />
 					</div></div>}
 				</IonContent>
 			</IonPage>
