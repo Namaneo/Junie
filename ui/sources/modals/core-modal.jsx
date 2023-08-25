@@ -220,8 +220,6 @@ export const CoreModal = ({ system, game, close }) => {
 
 			setPointer(pressed);
 		}
-
-		event.stopPropagation();
 	}
 
 	/** @returns {void} */
@@ -241,6 +239,13 @@ export const CoreModal = ({ system, game, close }) => {
 
 		return () => core.current.stop();
 	}, []);
+
+	useEffect(() => {
+		content.current.addEventListener('touchstart',  (e) => e.preventDefault());
+		content.current.addEventListener('touchmove',   (e) => e.preventDefault());
+		content.current.addEventListener('touchend',    (e) => e.preventDefault());
+		content.current.addEventListener('touchcancel', (e) => e.preventDefault());
+	}, [content]);
 
 	useEffect(() => resize(), [window_w, window_h, canvas_w, canvas_h]);
 

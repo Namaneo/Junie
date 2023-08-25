@@ -1,12 +1,4 @@
 /*
- * Global
- */
-html, body {
-	touch-action: none;
-}
-
-
-/*
  * Pages
  */
 #root .page {
