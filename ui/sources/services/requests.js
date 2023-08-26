@@ -1,6 +1,7 @@
 import { Game } from '../entities/game';
 import { System } from '../entities/system';
 import Files from './files';
+import Path from './path';
 
 export default class Requests {
 	/**
@@ -15,14 +16,11 @@ export default class Requests {
 			html.innerHTML = await folder.text();
 
 			const elements = Array.from(html.querySelectorAll('a'));
-			const games = elements.map(a => {
-				const name = a.innerText.substring(0, a.innerText.lastIndexOf('.'));
-				return { name: name, rom: a.innerText };
-			});
-
-			system.games = games.filter(game => game.rom.endsWith(`.${system.extension}`));
+			system.games = elements.map(a => new Object({ name: Path.name(a.innerText), rom: a.innerText }))
+				.filter(game => game.rom != '.' && !game.rom.endsWith('/') && !game.rom.endsWith('.png'));
 
 		} catch (e) {
+			console.error(e);
 			system.games = [];
 		}
 	}
@@ -51,11 +49,8 @@ export default class Requests {
 
 			system.games = [
 				...games.filter(x => !system.games.find(y => x.rom == y.rom)),
-				...system.games.map(x => new Game(system, x.rom)),
+				...system.games.map(x => new Game(system, x.rom, false)),
 			];
-
-			for (const game of system.games)
-				game.installed = !!games.find(x => x.rom == game.rom);
 		}
 
 		return systems;

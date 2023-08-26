@@ -26,19 +26,49 @@
 
 
 /*
- * Home
+ * Systems
  */
-#root .home ion-list {
+ #root .home ion-card {
+    text-align: center;
+    cursor: pointer;
+}
+
+
+/*
+ * Games
+ */
+#root .games {
+	--background: var(--ion-background-color);
+}
+
+#root .games .empty {
+	text-align: center;
+    font-style: italic;
+    padding: 18px;
+    color: var(--ion-color-step-400);
+}
+
+#root .games ion-list {
     padding: 0;
     background: transparent;
 }
 
-#root .home ion-item {
+#root .games ion-card {
+    display: flex;
+    cursor: pointer;
+}
+
+#root .games ion-item {
+    width: 100%;
 	--padding-start: 0;
 }
 
-#root .home ion-label {
+#root .games ion-label {
     margin-left: 16px;
+}
+
+#root .games ion-progress-bar {
+    max-width: 50px;
 }
 
 
@@ -89,41 +119,6 @@
 #root .core-settings ion-button {
 	flex: 1;
 	height: 80%;
-}
-
-
-/*
- * Systems
- */
-#root .systems ion-card {
-    text-align: center;
-    cursor: pointer;
-}
-
-
-/*
- * Games
- */
-#root .games {
-	--background: var(--ion-background-color);
-}
-
-#root .games ion-card {
-    display: flex;
-    cursor: pointer;
-}
-
-#root .games ion-item {
-    width: 100%;
-	--padding-start: 0;
-}
-
-#root .games ion-label {
-    margin-left: 16px;
-}
-
-#root .games ion-progress-bar {
-    max-width: 50px;
 }
 
 

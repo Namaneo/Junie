@@ -1,83 +1,34 @@
 {
-	"2048": {
-		"name": "2048",
-		"repository": "libretro-2048",
-		"makefile": "Makefile.libretro",
-		"systems": [
-			{
-				"name": "Get to the 2048 tile!",
-				"standalone": true
-			}
-		]
-	},
 	"gambatte": {
 		"name": "Gambatte",
 		"repository": "gambatte-libretro",
-		"systems": [
-			{
-				"name": "Game Boy",
-				"extension": "gb"
-			},
-			{
-				"name": "Game Boy Color",
-				"extension": "gbc"
-			}
-		]
+		"systems": ["Game Boy", "Game Boy Color"]
 	},
 	"vbam": {
 		"name": "VBA-M",
 		"repository": "vbam-libretro",
 		"directory": "src/libretro",
-		"systems": [
-			{
-				"name": "Game Boy Advance",
-				"extension": "gba"
-			}
-		]
+		"systems": ["Game Boy Advance"]
 	},
 	"desmume": {
 		"name": "DeSmuME",
 		"directory": "desmume/src/frontend/libretro",
-		"systems": [
-			{
-				"name": "Nintendo DS",
-				"extension": "nds"
-			}
-		]
+		"systems": ["Nintendo DS"]
 	},
 	"nestopia": {
 		"name": "Nestopia",
 		"directory": "libretro",
-		"systems": [
-			{
-				"name": "NES",
-				"extension": "nes"
-			}
-		]
+		"systems": ["NES"]
 	},
 	"snes9x": {
 		"name": "Snes9x",
 		"directory": "libretro",
-		"systems": [
-			{
-				"name": "SNES",
-				"extension": "smc"
-			}
-		]
+		"systems": ["SNES"]
 	},
 	"genesis": {
 		"name": "Genesis Plus GX",
 		"repository": "Genesis-Plus-GX",
 		"makefile": "Makefile.libretro",
-		"systems": [
-			{
-				"name": "Master System",
-				"extension": "sms"
-			},
-			{
-				"name": "Mega Drive",
-				"extension": "bin"
-			}
-		]
+		"systems": ["Master System", "Mega Drive"]
 	}
 }

@@ -39,17 +39,11 @@ export default class Files {
 	}
 
 	/**
-	 * @param {string[]} suffixes
 	 * @returns {Promise<string[]>}
 	 */
-	static async list(...suffixes) {
+	static async list() {
 		const fs = await this.#fs();
-
-		const paths = await fs.list();
-
-		return suffixes
-			? paths.filter(p => suffixes.some(s => p.endsWith(s)))
-			: paths;
+		return await fs.list();
 	}
 
 	/**
@@ -136,10 +130,10 @@ export default class Files {
 			for (const core of Object.keys(Files.#cores)) {
 				for (const system of Files.#cores[core].systems) {
 					systems.push({
-						...system,
+						name: system,
 						lib_name: core,
 						core_name: Files.#cores[core].name,
-						games: stored.find(x => x.name == system.name)?.games,
+						games: stored.find(x => x.name == system)?.games,
 					});
 				}
 			}
@@ -178,7 +172,7 @@ export default class Files {
 		 * @returns {Promise<Save[]>}
 		 */
 		static async get() {
-			const paths = await Files.list('.sav', '.dsv', '.srm', '.rtc', '.state', '.cht');
+			const paths = (await Files.list()).filter(path => path.split('/').length == 4);
 
 			return paths.map(path => new Save(path)).reduce((saves, save) => {
 				const found = saves.find(x => x.system == save.system && x.game == save.game);
@@ -196,8 +190,7 @@ export default class Files {
 		 */
 		static async fix(save, system, game) {
 			for (const path of save.paths) {
-				const filename = game.rom.replace(`.${system.extension}`, '');
-				const new_path = path.replace(save.system, system.name).replaceAll(save.game, filename);
+				const new_path = path.replace(save.system, system.name).replaceAll(save.game, game.name);
 
 				const data = await Files.read(path);
 				await Files.remove(path);
@@ -220,7 +213,7 @@ export default class Files {
 		 * @returns {Promise<CheatList[]>}
 		 */
 		static async get() {
-			const paths = await Files.list('.cht');
+			const paths = (await Files.list()).filter(path => path.endsWith('.cht'));
 
 			const files = [];
 			for (const path of paths) {
@@ -254,20 +247,16 @@ export default class Files {
 		 */
 		static async get() {
 			const systems = await Files.Library.get();
-			const extensions = systems.map(x => x.extension);
-			const paths = await Files.list(...extensions);
+			const paths = (await Files.list()).filter(path => path.split('/').length == 3);
 
 			const files = [];
-
-			for (const system of systems)
-				if (system.standalone)
-					files.push(new Game(system, system.core_name));
 
 			for (const path of paths) {
 				const [system_name, rom_name] = Path.parse(path);
 
 				const system = systems.find(x => x.name == system_name);
-				files.push(new Game(system, rom_name));
+				if (system)
+					files.push(new Game(system, rom_name, true));
 			}
 
 			return files;

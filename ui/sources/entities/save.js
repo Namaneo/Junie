@@ -32,10 +32,6 @@ export class Save {
 		if (!system || !system.games)
 			return false;
 
-		const game = system.games.find(game => game.rom == `${this.game}.${system.extension}`);
-		if (!game)
-			return system.standalone;
-
-		return true;
+		return system.games.find(game => game.name == this.game) != null;
 	}
 }

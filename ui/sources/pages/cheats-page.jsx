@@ -7,6 +7,7 @@ import { System } from '../entities/system';
 import { Game } from '../entities/game';
 import Files from '../services/files';
 import Requests from '../services/requests';
+import Path from '../services/path';
 
 /**
  * @returns {JSX.Element}
@@ -105,7 +106,7 @@ export const CheatsPage = () => {
 									}
 									<IonLabel>
 										<h2>{cheat.name}</h2>
-										<h3>{list.game}</h3>
+										<h3>{Path.clean(list.game)}</h3>
 										<h3>{list.system}</h3>
 									</IonLabel>
 									<IonButton onClick={() => showModal(list, cheat)} fill="clear">

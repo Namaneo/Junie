@@ -1,31 +1,86 @@
-import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonPage, IonProgressBar, IonTitle, IonToolbar, useIonAlert } from '@ionic/react';
-import { cloudDownloadOutline, trashOutline } from 'ionicons/icons';
-import { useState } from 'react';
+import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem, IonItemDivider, IonItemGroup, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonPage, IonProgressBar, IonTitle, IonToolbar, useIonAlert, useIonModal } from '@ionic/react';
+import { add, closeOutline, cloudDownloadOutline, playOutline } from 'ionicons/icons';
+import { useRef, useState } from 'react';
 import { useToast } from '../hooks/toast';
+import { CoreModal } from './core-modal';
+import { System } from '../entities/system';
 import { Game } from '../entities/game';
 import Requests from '../services/requests';
 import Files from '../services/files';
+import Path from '../services/path';
+
+const GameCard = ({ game, status, download, play }) => {
+	return (
+		<IonItem color="light">
+			<IonLabel>
+				<h2>{Path.clean(game.name)}</h2>
+				<h3>{game.system}</h3>
+			</IonLabel>
+			{status.game == game.name &&
+				<IonProgressBar value={status.progress}></IonProgressBar>
+			}
+			{status.game != game.name && !game.installed &&
+				<IonButton onClick={() => download(game)} disabled={!!status.game} fill="clear">
+					<IonIcon slot="icon-only" icon={cloudDownloadOutline} />
+				</IonButton>
+			}
+			{status.game != game.name && game.installed &&
+				<IonButton onClick={() => play(game)} disabled={!!status.game} fill="clear">
+					<IonIcon slot="icon-only" icon={playOutline} />
+				</IonButton>
+			}
+		</IonItem>
+	);
+}
 
 /**
  * @param {Object} parameters
- * @param {string} parameters.system
+ * @param {System} parameters.system
  * @param {() => void} parameters.close
  * @returns {JSX.Element}
  */
 export const GamesModal = ({ system, close }) => {
-	const [download, setDownload] = useState({ game: null, progress: 0 });
+	const list  = useRef(/** @type {HTMLIonListElement} */ (null));
+	const input = useRef(/** @type {HTMLInputElement} */ (null));
+
+	const sort = () => [...system.games.sort((g1, g2) => g1.rom < g2.rom ? -1 : 1)];
+
+	const [game,   setGame]   = useState(null);
+	const [games,  setGames]  = useState(sort(system.games));
+	const [status, setStatus] = useState({ game: null, progress: 0 });
+
+	const [start, stop] = useIonModal(CoreModal, { system, game, close: () => stop() });
 
 	const [present, dismiss] = useToast('Game successfully installed!');
 	const [alert] = useIonAlert();
 
 	/**
+	 * @param {FileList} input
+	 * @returns {Promise<void>}
+	 */
+	const install = async (input) => {
+		if (!input?.length)
+			return;
+
+		const file = input[0];
+
+		const buffer = new Uint8Array(await file.arrayBuffer())
+		await Files.Games.add(system.name, file.name, buffer);
+
+		const games = await Files.Games.get();
+		system.games.push(games.find(game => game.rom == file.name));
+
+		setGames(sort(system.games));
+	}
+
+	/**
 	 * @param {Game} game
 	 * @returns {Promise<void>}
 	 */
-	const install = async (game) => {
-		setDownload({ game: game.name, progress: 0 });
+	const download = async (game) => {
+		setStatus({ game: game.name, progress: 0 });
 		const data = await Requests.fetchGame(system, game, progress => {
-			setDownload({ game: game.name, progress });
+			setStatus({ game: game.name, progress });
 		});
 
 		if (!data) {
@@ -34,7 +89,7 @@ export const GamesModal = ({ system, close }) => {
 				message: `${game.name} (${system.name})`,
 				buttons: [ 'OK' ],
 			});
-			setDownload({ game: null, progress: 0 });
+			setStatus({ game: null, progress: 0 });
 			return;
 		}
 
@@ -44,7 +99,8 @@ export const GamesModal = ({ system, close }) => {
 		dismiss();
 		present(`${game.name} (${system.name})`);
 
-		setDownload({ game: null, progress: 0 });
+		setStatus({ game: null, progress: 0 });
+		setGames(sort(system.games));
 	}
 
 	/**
@@ -55,7 +111,17 @@ export const GamesModal = ({ system, close }) => {
 		await Files.Games.remove(game.system, game.rom);
 		game.installed = false;
 
-		setDownload({ game: null, progress: 0 });
+		await list.current.closeSlidingItems();
+		setGames(sort(system.games));
+	}
+
+	/**
+	 * @param {Game} game
+	 * @returns {void}
+	 */
+	const play = (game) => {
+		setGame(game);
+		start({ cssClass: 'fullscreen' });
 	}
 
 	return (
@@ -65,35 +131,62 @@ export const GamesModal = ({ system, close }) => {
 				<IonToolbar>
 					<IonTitle>Games</IonTitle>
 					<IonButtons slot="end">
-						<IonButton onClick={close}>Close</IonButton>
+						<IonButton onClick={() => input.current.click()}>
+							<input type="file" ref={input} onChange={e => install(e.target.files)} hidden />
+							<IonIcon slot="icon-only" icon={add} />
+						</IonButton>
+						<IonButton onClick={close}>
+							<IonIcon slot="icon-only" icon={closeOutline} />
+						</IonButton>
 					</IonButtons>
 				</IonToolbar>
 			</IonHeader>
 
 			<IonContent className="games">
-				{system.games.map(game =>
-					<IonCard key={game.rom}>
-						<IonItem color="light">
-							<IonLabel>
-								<h2>{game.name}</h2>
-								<h3>{game.system}</h3>
+				<IonList lines="none" ref={list}>
+					<IonItemGroup>
+						<IonItemDivider>
+							<IonLabel>Installed</IonLabel>
+						</IonItemDivider>
+
+						{games.filter(game => game.installed).map(game => (
+							<IonCard key={game.rom}>
+								<IonItemSliding>
+									<GameCard game={game} status={status} download={download} play={play} />
+									<IonItemOptions side="end">
+										<IonItemOption color="danger" onClick={() => remove(game)}>Delete</IonItemOption>
+									</IonItemOptions>
+								</IonItemSliding>
+							</IonCard>
+						))}
+
+						{!games.filter(game => game.installed).length &&
+							<IonLabel className="empty">
+								You haven't installed any game yet.
 							</IonLabel>
-							{download.game == game.name &&
-								<IonProgressBar value={download.progress}></IonProgressBar>
-							}
-							{download.game != game.name && !game.installed &&
-								<IonButton onClick={() => install(game)} disabled={!!download.game} fill="clear">
-									<IonIcon slot="icon-only" icon={cloudDownloadOutline} />
-								</IonButton>
-							}
-							{download.game != game.name && game.installed &&
-								<IonButton onClick={() => remove(game)} disabled={!!download.game} fill="clear">
-									<IonIcon slot="icon-only" icon={trashOutline} color="medium" />
-								</IonButton>
-							}
-						</IonItem>
-					</IonCard>
-				)}
+						}
+
+					</IonItemGroup>
+					<IonItemGroup>
+						<IonItemDivider>
+							<IonLabel>Available</IonLabel>
+						</IonItemDivider>
+
+						{games.filter(game => !game.installed).map(game => (
+							<IonCard key={game.rom}>
+								<GameCard game={game} status={status} download={download} play={play} />
+							</IonCard>
+						))}
+
+						{!games.filter(game => !game.installed).length &&
+							<IonLabel className="empty">
+								No game is available to download.<br />
+								Try refreshing the library from the home page.
+							</IonLabel>
+						}
+
+					</IonItemGroup>
+				</IonList>
 			</IonContent>
 
 		</IonPage>

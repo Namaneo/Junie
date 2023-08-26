@@ -39,4 +39,20 @@ export default class Path {
 		const matches = path.match(/\/([^\/]*)\/([^\/]*)/);
 		return [ matches[1], matches[2] ];
 	}
+
+	/**
+	 * @param {string} name
+	 * @returns {string}
+	 */
+	static name(name) {
+		return name.substring(0, name.lastIndexOf('.')) || name;
+	}
+
+	/**
+	 * @param {string} name
+	 * @returns {string}
+	 */
+	static clean(name) {
+		return name.replaceAll(/ \(.*\)/g, '');
+	}
 }

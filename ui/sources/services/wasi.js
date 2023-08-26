@@ -23,10 +23,8 @@ class FS {
 	 * @returns {Promise<void>}
 	 */
 	async load(system, rom) {
-		const game = rom.substring(0, rom.lastIndexOf('.')) || rom;
-
 		for (const path of this.#filesystem.list()) {
-			if (!path.startsWith(`/${system}/${game}`))
+			if (!path.startsWith(`/${system}/${Path.name(rom)}`))
 				continue;
 
 			this.#filesystem.close(path);

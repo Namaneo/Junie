@@ -10,12 +10,6 @@ export class System {
 	/** @type {string} */
 	core_name;
 
-	/** @type {string} */
-	extension;
-
-	/** @type {boolean} */
-	standalone;
-
 	/** @type {Game[]} */
 	games;
 }

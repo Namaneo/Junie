@@ -4,9 +4,8 @@ import { createRoot } from 'react-dom/client';
 import { Redirect, Route } from 'react-router';
 import { IonReactMemoryRouter } from '@ionic/react-router';
 import { IonApp, IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs, setupIonicReact, useIonLoading } from '@ionic/react';
-import { cloudDownload, gameController, keyOutline, save } from 'ionicons/icons';
+import { gameController, keyOutline, save } from 'ionicons/icons';
 import { HomePage } from './pages/home-page';
-import { InstallPage } from './pages/install-page';
 import { SavesPage } from './pages/saves-page';
 import { CheatsPage } from './pages/cheats-page';
 import Database from './services/database';
@@ -67,7 +66,6 @@ function Junie() {
 				<IonTabs>
 					<IonRouterOutlet>
 						<Route exact path="/home" component={HomePage} />
-						<Route exact path="/install" component={InstallPage} />
 						<Route exact path="/saves"  component={SavesPage}  />
 						<Route exact path="/cheats" component={CheatsPage} />
 						<Route exact path="/" render={() => <Redirect to="/home" />} />
@@ -77,10 +75,6 @@ function Junie() {
 						<IonTabButton tab="home" href="/home">
 							<IonIcon icon={gameController} />
 							<IonLabel>Games</IonLabel>
-						</IonTabButton>
-						<IonTabButton tab="install" href="/install">
-							<IonIcon icon={cloudDownload} />
-							<IonLabel>Install</IonLabel>
 						</IonTabButton>
 						<IonTabButton tab="saves" href="/saves">
 							<IonIcon icon={save} />

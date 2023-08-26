@@ -8,6 +8,7 @@ import { Save } from '../entities/save';
 import Requests from '../services/requests';
 import Files from '../services/files';
 import Zip from '../services/zip';
+import Path from '../services/path';
 
 /**
  * @returns {JSX.Element}
@@ -135,7 +136,7 @@ export const SavesPage = () => {
 											<IonIcon color="danger" icon={closeCircleOutline} slot="start"></IonIcon>
 									}
 									<IonLabel>
-										<h2>{save.game?.replaceAll(/ \(.*\)/g, '')}</h2>
+										<h2>{Path.clean(save.game)}</h2>
 										<h3>{save.system}</h3>
 									</IonLabel>
 									<IonButton onClick={() => showModal(save)} fill="clear">
