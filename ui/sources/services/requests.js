@@ -17,7 +17,7 @@ export default class Requests {
 
 			const elements = Array.from(html.querySelectorAll('a'));
 			system.games = elements.map(a => new Object({ name: Path.name(a.innerText), rom: a.innerText }))
-				.filter(game => game.rom != '.' && !game.rom.endsWith('/') && !game.rom.endsWith('.png'));
+				.filter(game => game.rom.includes('.') && game.rom != '.' && !game.rom.endsWith('/') && !game.rom.endsWith('.png'));
 
 		} catch (e) {
 			console.error(e);
