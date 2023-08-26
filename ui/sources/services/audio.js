@@ -1,5 +1,3 @@
-// Reworked from: https://github.com/chrisd1100/libmatoya/blob/main/src/unix/web/matoya.js
-
 export default class Audio {
 	/** @type {AudioContext} */
 	static #context = new AudioContext();
