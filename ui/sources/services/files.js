@@ -129,11 +129,13 @@ export default class Files {
 			const systems = [];
 			for (const core of Object.keys(Files.#cores)) {
 				for (const system of Files.#cores[core].systems) {
+					const games = stored.find(x => x.name == system)?.games ?? [];
+
 					systems.push({
 						name: system,
 						lib_name: core,
 						core_name: Files.#cores[core].name,
-						games: stored.find(x => x.name == system)?.games,
+						games: games.map(game => new Game(system, game.rom, false)),
 					});
 				}
 			}

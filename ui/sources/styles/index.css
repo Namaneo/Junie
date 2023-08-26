@@ -58,15 +58,6 @@
     cursor: pointer;
 }
 
-#root .games ion-item {
-    width: 100%;
-	--padding-start: 0;
-}
-
-#root .games ion-label {
-    margin-left: 16px;
-}
-
 #root .games ion-progress-bar {
     max-width: 50px;
 }

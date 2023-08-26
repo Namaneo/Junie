@@ -42,14 +42,11 @@ export default class Requests {
 		const installed = await Files.Games.get();
 
 		for (const system of systems) {
-			if (!system.games)
-				system.games = [];
-
 			const games = installed.filter(x => x.system == system.name);
 
 			system.games = [
-				...games.filter(x => !system.games.find(y => x.rom == y.rom)),
-				...system.games.map(x => new Game(system, x.rom, false)),
+				...games.filter(x => x.system == system.name),
+				...system.games.filter(game => !games.find(installed => game.rom == installed.rom)),
 			];
 
 			if (system.name == '2048')

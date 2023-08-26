@@ -1,5 +1,5 @@
-import { IonButton, IonButtons, IonCard, IonContent, IonHeader, IonIcon, IonItem, IonItemDivider, IonItemGroup, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonPage, IonProgressBar, IonTitle, IonToolbar, useIonAlert, useIonModal } from '@ionic/react';
-import { add, closeOutline, cloudDownloadOutline, playOutline } from 'ionicons/icons';
+import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonItemDivider, IonItemGroup, IonLabel, IonList, IonPage, IonProgressBar, IonTitle, IonToolbar, useIonAlert, useIonModal } from '@ionic/react';
+import { add, closeOutline, cloudDownloadOutline, playOutline, trashOutline } from 'ionicons/icons';
 import { useRef, useState } from 'react';
 import { useToast } from '../hooks/toast';
 import { CoreModal } from './core-modal';
@@ -15,11 +15,12 @@ import Path from '../services/path';
  * @param {{ game: string, progress: number }} parameters.status
  * @param {(game: Game) => Promise<void>} parameters.download
  * @param {(game: Game) => Promise<void>} parameters.play
+ * @param {(game: Game) => Promise<void>} parameters.remove
  * @returns {JSX.Element}
  */
-const GameCard = ({ game, status, download, play }) => {
+const GameCard = ({ game, status, download, play, remove }) => {
 	return (
-		<IonItem color="light">
+		<IonItem color="transparent">
 			<IonLabel>{Path.clean(game.name)}</IonLabel>
 			{status.game == game.name &&
 				<IonProgressBar value={status.progress}></IonProgressBar>
@@ -27,6 +28,11 @@ const GameCard = ({ game, status, download, play }) => {
 			{status.game != game.name && !game.installed &&
 				<IonButton onClick={() => download(game)} disabled={!!status.game} fill="clear">
 					<IonIcon slot="icon-only" icon={cloudDownloadOutline} />
+				</IonButton>
+			}
+			{status.game != game.name && game.installed && game.name != '2048' &&
+				<IonButton onClick={() => remove(game)} disabled={!!status.game} fill="clear">
+					<IonIcon slot="icon-only" icon={trashOutline} color="medium" />
 				</IonButton>
 			}
 			{status.game != game.name && game.installed &&
@@ -113,11 +119,22 @@ export const GamesModal = ({ system, close }) => {
 	 * @returns {Promise<void>}
 	 */
 	const remove = async (game) => {
-		await Files.Games.remove(game.system, game.rom);
-		game.installed = false;
+		const handler = async () => {
+			await Files.Games.remove(game.system, game.rom);
+			game.installed = false;
 
-		await list.current.closeSlidingItems();
-		setGames(sort(system.games));
+			await list.current.closeSlidingItems();
+			setGames(sort(system.games));
+		};
+
+		alert({
+			header: 'Delete that game?',
+			message: `${game.name} (${system.name})`,
+			buttons: [
+				{ text: 'Confirm', handler },
+				{ text: 'Cancel' },
+			],
+		});
 	}
 
 	/**
@@ -155,14 +172,7 @@ export const GamesModal = ({ system, close }) => {
 						</IonItemDivider>
 
 						{games.filter(game => game.installed).map(game => (
-							<IonCard key={game.rom}>
-								<IonItemSliding disabled={system.name == '2048'}>
-									<GameCard game={game} status={status} download={download} play={play} />
-									<IonItemOptions side="end">
-										<IonItemOption color="danger" onClick={() => remove(game)}>Delete</IonItemOption>
-									</IonItemOptions>
-								</IonItemSliding>
-							</IonCard>
+							<GameCard key={game.rom} game={game} status={status} download={download} play={play} remove={remove} />
 						))}
 
 						{!games.filter(game => game.installed).length &&
@@ -178,9 +188,7 @@ export const GamesModal = ({ system, close }) => {
 						</IonItemDivider>
 
 						{games.filter(game => !game.installed).map(game => (
-							<IonCard key={game.rom}>
-								<GameCard game={game} status={status} download={download} play={play} />
-							</IonCard>
+							<GameCard key={game.rom} game={game} status={status} download={download} play={play} />
 						))}
 
 						{!games.filter(game => !game.installed).length &&
