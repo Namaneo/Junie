@@ -177,9 +177,9 @@ export const GamesModal = ({ system, close }) => {
 						))}
 
 						{!games.filter(game => game.installed).length &&
-							<IonLabel className="empty">
-								You haven't installed any game yet.
-							</IonLabel>
+							<IonItem color="transparent">
+								<IonLabel className="empty">You haven't installed any game yet.</IonLabel>
+							</IonItem>
 						}
 
 					</IonItemGroup>
@@ -193,10 +193,9 @@ export const GamesModal = ({ system, close }) => {
 						))}
 
 						{!games.filter(game => !game.installed).length &&
-							<IonLabel className="empty">
-								No game is available to download.<br />
-								Try refreshing the library from the home page.
-							</IonLabel>
+							<IonItem color="transparent">
+								<IonLabel className="empty">No game is available to download.</IonLabel>
+							</IonItem>
 						}
 
 					</IonItemGroup>

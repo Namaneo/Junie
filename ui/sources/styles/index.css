@@ -44,7 +44,6 @@
 #root .games .empty {
 	text-align: center;
     font-style: italic;
-    padding: 18px;
     color: var(--ion-color-step-400);
 }
 
