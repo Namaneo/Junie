@@ -129,7 +129,7 @@ export const GamesModal = ({ system, close }) => {
 
 		alert({
 			header: 'Delete that game?',
-			message: `${game.name} (${system.name})`,
+			message: game.name,
 			buttons: [
 				{ text: 'Confirm', handler },
 				{ text: 'Cancel' },
