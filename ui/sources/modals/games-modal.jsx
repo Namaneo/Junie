@@ -66,6 +66,15 @@ export const GamesModal = ({ system, close }) => {
 	const [alert] = useIonAlert();
 
 	/**
+	 * @returns {Promise<void>}
+	 */
+	const update = async () => {
+		const systems = await Requests.getSystems();
+		system.games = systems.find(sys => sys.name == system.name).games;
+		setGames(sort(system.games));
+	}
+
+	/**
 	 * @param {FileList} input
 	 * @returns {Promise<void>}
 	 */
@@ -77,11 +86,7 @@ export const GamesModal = ({ system, close }) => {
 
 		const buffer = new Uint8Array(await file.arrayBuffer())
 		await Files.Games.add(system.name, file.name, buffer);
-
-		const games = await Files.Games.get();
-		system.games.push(games.find(game => game.rom == file.name));
-
-		setGames(sort(system.games));
+		await update();
 	}
 
 	/**
@@ -104,14 +109,12 @@ export const GamesModal = ({ system, close }) => {
 			return;
 		}
 
-		await Files.Games.add(system.name, game.rom, data);
-		game.installed = true;
-
 		dismiss();
 		present(`${game.name} (${system.name})`);
-
 		setStatus({ game: null, progress: 0 });
-		setGames(sort(system.games));
+
+		await Files.Games.add(system.name, game.rom, data);
+		await update();
 	}
 
 	/**
@@ -121,14 +124,12 @@ export const GamesModal = ({ system, close }) => {
 	const remove = async (game) => {
 		const handler = async () => {
 			await Files.Games.remove(game.system, game.rom);
-			game.installed = false;
-
 			await list.current.closeSlidingItems();
-			setGames(sort(system.games));
+			await update();
 		};
 
 		alert({
-			header: 'Delete that game?',
+			header: 'Delete this game?',
 			message: game.name,
 			buttons: [
 				{ text: 'Confirm', handler },
