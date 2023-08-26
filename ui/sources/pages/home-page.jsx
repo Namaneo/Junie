@@ -14,6 +14,8 @@ export const HomePage = () => {
 	const [system,  setSystem]  = useState(/** @type {System}   */ (null)   );
 	const [loading, setLoading] = useState(/** @type {boolean}  */ (false));
 
+	const [open, close] = useIonModal(GamesModal, { system, close: () => close() });
+
 	const version = window.junie_build.split('-')[0];
 	const build = window.junie_build.split('-')[1];
 	const date = new Date(build * 1000).toUTCString();
@@ -37,11 +39,8 @@ export const HomePage = () => {
 	 */
 	const showModal = (system) => {
 		setSystem(system);
-
 		open({ cssClass: 'fullscreen' });
 	}
-
-	const [open, close] = useIonModal(GamesModal, { system, close: () => close() });
 
 	useIonViewWillEnter(async () => {
 		setSystems(await Requests.getSystems());
@@ -72,7 +71,7 @@ export const HomePage = () => {
 					<IonCard key={system.name} onClick={() => showModal(system)}>
 						<IonCardHeader>
 							<IonCardTitle>{system.name}</IonCardTitle>
-							<IonCardSubtitle>{system.core_name} - {system.games.length} games</IonCardSubtitle>
+							<IonCardSubtitle>{system.core_name} - {system.games.length} game{system.games.length > 1 && 's'}</IonCardSubtitle>
 						</IonCardHeader>
 					</IonCard>
 				)}

@@ -9,13 +9,18 @@ import Requests from '../services/requests';
 import Files from '../services/files';
 import Path from '../services/path';
 
+/**
+ * @param {Object} parameters
+ * @param {Game} parameters.game
+ * @param {{ game: string, progress: number }} parameters.status
+ * @param {(game: Game) => Promise<void>} parameters.download
+ * @param {(game: Game) => Promise<void>} parameters.play
+ * @returns {JSX.Element}
+ */
 const GameCard = ({ game, status, download, play }) => {
 	return (
 		<IonItem color="light">
-			<IonLabel>
-				<h2>{Path.clean(game.name)}</h2>
-				<h3>{game.system}</h3>
-			</IonLabel>
+			<IonLabel>{Path.clean(game.name)}</IonLabel>
 			{status.game == game.name &&
 				<IonProgressBar value={status.progress}></IonProgressBar>
 			}
@@ -129,7 +134,7 @@ export const GamesModal = ({ system, close }) => {
 
 			<IonHeader>
 				<IonToolbar>
-					<IonTitle>Games</IonTitle>
+					<IonTitle>{system.name}</IonTitle>
 					<IonButtons slot="end">
 						<IonButton onClick={() => input.current.click()}>
 							<input type="file" ref={input} onChange={e => install(e.target.files)} hidden />
@@ -151,7 +156,7 @@ export const GamesModal = ({ system, close }) => {
 
 						{games.filter(game => game.installed).map(game => (
 							<IonCard key={game.rom}>
-								<IonItemSliding>
+								<IonItemSliding disabled={system.name == '2048'}>
 									<GameCard game={game} status={status} download={download} play={play} />
 									<IonItemOptions side="end">
 										<IonItemOption color="danger" onClick={() => remove(game)}>Delete</IonItemOption>

@@ -51,6 +51,9 @@ export default class Requests {
 				...games.filter(x => !system.games.find(y => x.rom == y.rom)),
 				...system.games.map(x => new Game(system, x.rom, false)),
 			];
+
+			if (system.name == '2048')
+				system.games.push(new Game(system, '2048', true));
 		}
 
 		return systems;

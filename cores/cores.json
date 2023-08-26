@@ -1,4 +1,10 @@
 {
+	"2048": {
+		"name": "2048",
+		"repository": "libretro-2048",
+		"makefile": "Makefile.libretro",
+		"systems": ["2048"]
+	},
 	"gambatte": {
 		"name": "Gambatte",
 		"repository": "gambatte-libretro",
