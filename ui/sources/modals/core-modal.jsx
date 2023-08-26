@@ -181,7 +181,7 @@ export const CoreModal = ({ system, game, close }) => {
 
 		const start = !!['mousedown', 'touchstart'].find(t => t == type);
 		const move = !!['mousemove', 'touchmove'].find(t => t == type);
-		const pressed = start || (move && touch.pressed);
+		const pressed = start || (move && touch && touch.pressed);
 
 		if (button?.dataset.id)
 			core.current.send(Core.Device.JOYPAD, button?.dataset.id, pressed);
