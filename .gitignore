@@ -3,7 +3,8 @@
 /data
 /build
 
-deps/wasi-sdk
+deps/*/
+cores/*/
 
 app/build
 app/sources/*.o
