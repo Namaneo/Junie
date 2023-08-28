@@ -1,4 +1,50 @@
 {
+	"2048": {
+		"name": "2048",
+		"repository": "libretro-2048",
+		"makefile": "Makefile.libretro",
+		"systems": ["2048"]
+	},
+	"gambatte": {
+		"name": "Gambatte",
+		"repository": "gambatte-libretro",
+		"systems": ["Game Boy", "Game Boy Color"]
+	},
+	"vbam": {
+		"name": "VBA-M",
+		"repository": "vbam-libretro",
+		"directory": "src/libretro",
+		"systems": ["Game Boy Advance"]
+	},
+	"desmume": {
+		"name": "DeSmuME",
+		"directory": "desmume/src/frontend/libretro",
+		"systems": ["Nintendo DS"]
+	},
+	"nestopia": {
+		"name": "Nestopia",
+		"directory": "libretro",
+		"systems": ["NES"]
+	},
+	"snes9x": {
+		"name": "Snes9x",
+		"directory": "libretro",
+		"systems": ["SNES"]
+	},
+	"genesis": {
+		"name": "Genesis Plus GX",
+		"repository": "Genesis-Plus-GX",
+		"makefile": "Makefile.libretro",
+		"systems": ["Master System", "Mega Drive"]
+	},
+	"pcsx": {
+		"name": "PCSX-ReARMed",
+		"repository": "pcsx_rearmed",
+		"makefile": "Makefile.libretro",
+		"owner": "Namaneo",
+		"branch": "fix_emscripten",
+		"systems": ["PlayStation"]
+	},
 	"parallel": {
 		"name": "ParaLLEl N64",
 		"repository": "parallel-n64",
