@@ -71,4 +71,5 @@ clean:
 	@rm -rf $(OUT_DIR) $(APP_DIR)/$(OUT_DIR) $(UI_DIR)/$(OUT_DIR)
 
 clean-all: clean
+	@$(MAKE) -C $(DEPS_DIR) clean
 	@$(MAKE) -C $(CORES_DIR) clean

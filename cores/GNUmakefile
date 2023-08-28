@@ -4,9 +4,8 @@ DEFINES := -flto -msimd128 -D__EMSCRIPTEN__
 include ../GNUmakefile.common
 
 BUILD_FLAGS := \
-	-j 8 platform=emscripten ARCH=wasm32 LDFLAGS= SHARED= LIBS= \
-	STATIC_LINKING=0 STATIC_LINKING_LINK=0 LINKOUT="rcs " \
-	CC="$(CC)" CXX="$(CXX)" LD="$(AR)" RANLIB="$(RANLIB)"
+	-j 8 platform=emscripten \
+	CC="$(CC)" CXX="$(CXX)" AR="$(AR)" RANLIB="$(RANLIB)"
 
 MAKEFLAGS += --no-print-directory
 QUIET := > /dev/null 2>&1

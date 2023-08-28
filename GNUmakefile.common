@@ -1,11 +1,11 @@
 WASI_SDK   := $(shell pwd)/../deps/wasi-sdk
-EMSCRIPTEN := $(shell pwd)/../deps/emsdk/upstream
+EMSCRIPTEN := $(shell pwd)/../deps/emsdk/upstream/emscripten
 
 DEFINES += \
 	--sysroot=$(WASI_SDK)/share/wasi-sysroot \
 	--target=wasm32-wasi-threads -pthread \
-	-I$(EMSCRIPTEN)/emscripten/cache/sysroot/include/c++/v1 \
-	-I$(EMSCRIPTEN)/emscripten/cache/sysroot/include
+	-I$(EMSCRIPTEN)/cache/sysroot/include/c++/v1 \
+	-I$(EMSCRIPTEN)/cache/sysroot/include
 
 CC     := $(WASI_SDK)/bin/clang $(DEFINES)
 CXX    := $(WASI_SDK)/bin/clang++ $(DEFINES)
