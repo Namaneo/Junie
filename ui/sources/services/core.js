@@ -100,7 +100,7 @@ export default class Core {
 		matrix_location: 0,
 	}
 
-	get aspect_ratio() { return this.#native?.media.video.ratio ?? 1; }
+	get aspect_ratio() { return this.#native?.media.video.ratio || 1; }
 
 	/**
 	 * @param {string} name
