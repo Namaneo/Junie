@@ -15,7 +15,7 @@ CFLAGS := \
 	-I$(SRC_DIR)
 
 LDFLAGS := \
-	-fwasm-exceptions \
+	-lwasi-emulated-mman -fwasm-exceptions \
 	-mexec-model=reactor -Wl,--no-entry \
 	$(EXPORTS) -Wl,--export=calloc,--export=free \
 	-Wl,--initial-memory=$$((200 * 1024 * 1024)) \

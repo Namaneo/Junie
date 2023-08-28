@@ -206,32 +206,6 @@ export default class WASI {
 
 				return this.#WASI_ERRNO_BADF;
 			},
-			fd_read: (fd, iovs, iovs_len, nread) => {
-				if (fd < 3)
-					return this.#WASI_ERRNO_BADF;
-
-				const size = this.#filesystem.size(this.#fds[fd].path);
-				if (size == -1)
-					return this.#WASI_ERRNO_NOENT;
-
-				let offset = this.#fds[fd].offset;
-				for (let x = 0; x < iovs_len; x++) {
-					const ptr = iovs + x * 8;
-					const buf_ptr = this.#get_uint32(ptr);
-					const buf_len = this.#get_uint32(ptr + 4);
-					const len = buf_len < size - offset ? buf_len : size - offset;
-
-					const sab = new Uint8Array(this.#memory.buffer, buf_ptr, len);
-					this.#filesystem.read(this.#fds[fd].path, sab, offset);
-
-					offset += len;
-				}
-
-				this.#set_uint32(nread, Number(offset) - this.#fds[fd].offset);
-				this.#fds[fd].offset = offset;
-
-				return this.#WASI_ERRNO_SUCCESS;
-			},
 			fd_readdir: (fd, buf, buf_len, cookie, bufused) => {
 				return this.#WASI_ERRNO_SUCCESS;
 			},
@@ -263,13 +237,44 @@ export default class WASI {
 				this.#set_uint64(offset, this.#fds[fd].offset);
 				return this.#WASI_ERRNO_SUCCESS;
 			},
-			fd_write: (fd, iovs, iovs_len, nwritten) => {
+			fd_pread: (fd, iovs, iovs_len, offset, nread) => {
+				if (fd < 3)
+					return this.#WASI_ERRNO_BADF;
+
+				const size = this.#filesystem.size(this.#fds[fd].path);
+				if (size == -1)
+					return this.#WASI_ERRNO_NOENT;
+
+				const orig_offset = offset;
+				for (let x = 0; x < iovs_len; x++) {
+					const ptr = iovs + x * 8;
+					const buf_ptr = this.#get_uint32(ptr);
+					const buf_len = this.#get_uint32(ptr + 4);
+					const len = buf_len < size - offset ? buf_len : size - offset;
+
+					const sab = new Uint8Array(this.#memory.buffer, buf_ptr, len);
+					this.#filesystem.read(this.#fds[fd].path, sab, offset);
+
+					offset += len;
+				}
+
+				this.#set_uint32(nread, offset - orig_offset);
+
+				return this.#WASI_ERRNO_SUCCESS;
+			},
+			fd_read: (fd, iovs, iovs_len, nread) => {
+				const errno = this.environment.fd_pread(fd, iovs, iovs_len, this.#fds[fd].offset, nread);
+				if (errno == this.#WASI_ERRNO_SUCCESS)
+					this.#fds[fd].offset += this.#get_uint32(nread);
+				return errno;
+			},
+			fd_pwrite: (fd, iovs, iovs_len, offset, nwritten) => {
 				let buf_log = new Uint8Array();
 				const write = fd < 3
 					? (sab, offset) => buf_log = new Uint8Array([...buf_log, ...sab])
 					: (sab, offset) => this.#filesystem.write(this.#fds[fd].path, sab, offset);
 
-				let offset = this.#fds[fd].offset;
+				const orig_offset = offset;
 				for (let x = 0; x < iovs_len; x++) {
 					const ptr = iovs + x * 8;
 					const buf_ptr = this.#get_uint32(ptr);
@@ -280,7 +285,7 @@ export default class WASI {
 					offset += buf_len;
 				}
 
-				this.#set_uint32(nwritten, offset - this.#fds[fd].offset);
+				this.#set_uint32(nwritten, offset - orig_offset);
 
 				switch (fd) {
 					case 1:
@@ -291,12 +296,15 @@ export default class WASI {
 						const error = new TextDecoder().decode(buf_log).trim();
 						if (error) console.error(error);
 						break;
-					default:
-						this.#fds[fd].offset = offset;
-						break;
 				}
 
 				return this.#WASI_ERRNO_SUCCESS;
+			},
+			fd_write: (fd, iovs, iovs_len, nwritten) => {
+				const errno = this.environment.fd_pwrite(fd, iovs, iovs_len, this.#fds[fd].offset, nwritten)
+				if (errno == this.#WASI_ERRNO_SUCCESS && fd > 2)
+					this.#fds[fd].offset += this.#get_uint32(nwritten);
+				return errno;
 			},
 			path_filestat_get: (fd, flags, path, path_len, buf) => {
 				const size = this.#filesystem.size(this.#str_to_js(path));

@@ -47,7 +47,7 @@ ui:
 
 # Watch
 
-watch: clean prepare cores
+watch: clean prepare deps cores
 	@$(WATCH_CMD)
 	@( cd ui && node esbuild.mjs --watch $(UI_FLAGS) )
 

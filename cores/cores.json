@@ -36,5 +36,13 @@
 		"repository": "Genesis-Plus-GX",
 		"makefile": "Makefile.libretro",
 		"systems": ["Master System", "Mega Drive"]
+	},
+	"pcsx": {
+		"name": "PCSX-ReARMed",
+		"repository": "pcsx_rearmed",
+		"makefile": "Makefile.libretro",
+		"owner": "Namaneo",
+		"branch": "fix_emscripten",
+		"systems": ["PlayStation"]
 	}
 }
