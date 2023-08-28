@@ -250,7 +250,7 @@ export const CoreModal = ({ system, game, close }) => {
 		content.current.addEventListener('touchcancel', (e) => e.preventDefault());
 	}, [content]);
 
-	useEffect(() => resize(), [window_w, window_h, canvas_w, canvas_h]);
+	useEffect(() => resize(), [core.current?.aspect_ratio, window_w, window_h, canvas_w, canvas_h]);
 
 	return (
 		<>

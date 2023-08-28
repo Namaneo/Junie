@@ -29,11 +29,19 @@ libz.a:
 OBJ = \
 	libretro-common/file/file_path.o \
 	libretro-common/file/file_path_io.o \
+	libretro-common/file/config_file.o \
+	libretro-common/file/config_file_userdata.o \
 	libretro-common/streams/file_stream.o \
 	libretro-common/streams/file_stream_transforms.o \
 	libretro-common/vfs/vfs_implementation.o \
 	libretro-common/string/stdstring.o \
-	libretro-common/compat/compat_strl.o
+	libretro-common/lists/string_list.o \
+	libretro-common/compat/compat_strl.o \
+	libretro-common/features/features_cpu.o \
+	libretro-common/audio/conversion/float_to_s16.o \
+	libretro-common/audio/conversion/s16_to_float.o \
+	libretro-common/audio/resampler/audio_resampler.o \
+	libretro-common/audio/resampler/drivers/sinc_resampler.o
 
 libretro.a:
 	@echo Fetching libretro-common...

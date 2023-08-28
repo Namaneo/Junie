@@ -4,7 +4,7 @@ DEFINES := -flto -msimd128 -D__EMSCRIPTEN__
 include ../GNUmakefile.common
 
 BUILD_FLAGS := \
-	-j 8 platform=emscripten \
+	-j 8 platform=emscripten HAVE_OPENGL=0 \
 	CC="$(CC)" CXX="$(CXX)" AR="$(AR)" RANLIB="$(RANLIB)"
 
 MAKEFLAGS += --no-print-directory
