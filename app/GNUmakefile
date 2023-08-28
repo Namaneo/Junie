@@ -36,14 +36,14 @@ MAKEFLAGS += --no-print-directory
 all: clean prepare
 	@echo Building objects...
 	@$(MAKE) -s $(SRC_DIR)/core.o
-	@$(MAKE) -s $(CORES:%=$(OUT_DIR)/lib%.wasm)
+	@$(MAKE) -s $(CORES:%=$(OUT_DIR)/%.wasm)
 
 prepare:
 	@mkdir -p $(OUT_DIR)
 
-$(OUT_DIR)/lib%.wasm:
-	@echo Building lib$*.wasm...
-	@$(CXX) -o $(OUT_DIR)/lib$*.wasm $(SRC_DIR)/core.o $(DEPS) $(CORES_DIR)/lib$*.a $(LDFLAGS) $(QUIET)
+$(OUT_DIR)/%.wasm:
+	@echo Building $*.wasm...
+	@$(CXX) -o $(OUT_DIR)/$*.wasm $(SRC_DIR)/core.o $(DEPS) $(CORES_DIR)/lib$*.a $(LDFLAGS) $(QUIET)
 
 clean:
 	@rm -rf $(SRC_DIR)/core.o $(OUT_DIR)

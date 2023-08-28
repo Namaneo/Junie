@@ -110,7 +110,7 @@ class Core {
 		this.#wasi = new WASI(memory, filesystem.link(port));
 		if (!start_arg) await this.#wasi.load(system, rom);
 
-		const source = await WebAssembly.instantiateStreaming(fetch(`${origin}/modules/lib${this.#name}.wasm`), {
+		const source = await WebAssembly.instantiateStreaming(fetch(`${origin}/modules/${this.#name}.wasm`), {
 			env: { memory },
 			wasi_snapshot_preview1: this.#wasi.environment,
 			wasi: { 'thread-spawn': (start_arg) => {
