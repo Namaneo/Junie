@@ -61,17 +61,18 @@ export default class NativeData {
 	/**
 	 * @returns {Media}
 	 */
-	media() {
+	get media() {
 		return {
 			video: {
-				frame:  this.#media.getUint32(0,  true),
-				width:  this.#media.getUint32(4,  true),
-				height: this.#media.getUint32(8,  true),
+				frame:  this.#media.getUint32(0, true),
+				width:  this.#media.getUint32(4, true),
+				height: this.#media.getUint32(8, true),
 				pitch:  this.#media.getUint32(12, true),
+				ratio:  this.#media.getFloat32(16, true),
 			},
 			audio: {
-				data:   this.#media.getUint32(16, true),
-				frames: this.#media.getUint32(20, true),
+				data:   this.#media.getUint32(20, true),
+				frames: this.#media.getUint32(24, true),
 			}
 		}
 	}

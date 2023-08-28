@@ -137,16 +137,19 @@ export const CoreModal = ({ system, game, close }) => {
 	const resize = () => {
 		const rect = content.current.getBoundingClientRect();
 
+		const core_ratio = core.current?.aspect_ratio ?? 1;
 		const window_ratio = (rect.right - rect.left) / (rect.bottom - rect.top);
-		const canvas_ratio = canvas.current.width / canvas.current.height;
+		const canvas_ratio = canvas.current.width / (canvas.current.width / core_ratio);
 
 		if (window_ratio < canvas_ratio) {
-			canvas.current.style.width  = '100%';
-			canvas.current.style.height = null;
+			const width = rect.right - rect.left;
+			canvas.current.style.width  = `${width}px`;
+			canvas.current.style.height = `${width / core_ratio}px`;
 
 		} else {
-			canvas.current.style.width  = null;
-			canvas.current.style.height = '100%';
+			const height = rect.bottom - rect.top;
+			canvas.current.style.width  = `${height * core_ratio}px`;
+			canvas.current.style.height = `${height}px`;
 		}
 	};
 

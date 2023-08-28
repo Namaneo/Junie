@@ -100,6 +100,8 @@ export default class Core {
 		matrix_location: 0,
 	}
 
+	get aspect_ratio() { return this.#native?.media.video.ratio ?? 1; }
+
 	/**
 	 * @param {string} name
 	 */
@@ -236,7 +238,7 @@ export default class Core {
 			const step = async () => {
 				await this.#interop.Run(state.speed);
 
-				const { video, audio } = this.#native.media();
+				const { video, audio } = this.#native.media;
 
 				if (video.frame)
 					this.#draw(video.frame, video.width, video.height, video.pitch);

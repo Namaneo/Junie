@@ -71,7 +71,7 @@
 }
 
 #root .core canvas {
-	object-fit: contain;
+	object-fit: fill;
 	object-position: 50% 0;
 	image-rendering: pixelated;
 }

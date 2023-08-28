@@ -10,6 +10,9 @@ class Video {
 
 	/** @type {number} */
 	pitch;
+
+	/** @type {number} */
+	ratio;
 }
 
 class Audio {

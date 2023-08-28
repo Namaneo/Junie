@@ -56,6 +56,7 @@ struct jun_core_media {
 		uint32_t width;
 		uint32_t height;
 		uint32_t pitch;
+		float ratio;
 	} frame;
 
 	struct {
@@ -277,6 +278,13 @@ static bool environment(unsigned cmd, void *data)
 
 			return true;
 		}
+		case RETRO_ENVIRONMENT_SET_GEOMETRY: {
+			struct retro_game_geometry *geometry = data;
+
+			CTX.av.geometry = *geometry;
+
+			return false;
+		}
 		default: {
 			LOG("Unhandled command: %d", command);
 
@@ -294,6 +302,8 @@ static void video_refresh(const void *data, unsigned width, unsigned height, siz
 	CTX.media.frame.width = width;
 	CTX.media.frame.height = height;
 	CTX.media.frame.pitch = (uint32_t) pitch;
+	CTX.media.frame.ratio = CTX.av.geometry.aspect_ratio;
+
 }
 
 static size_t audio_sample_batch(const int16_t *data, size_t frames)
