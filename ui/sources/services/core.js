@@ -60,6 +60,9 @@ export default class Core {
 	/** @type {NativeData} */
 	#native = null;
 
+	/** @type {Parallel[]} */
+	#threads = [];
+
 	#state = {
 		/** @type {number} */
 		speed: 1,
@@ -99,8 +102,6 @@ export default class Core {
 		/** co@type {number} */
 		matrix_location: 0,
 	}
-
-	get aspect_ratio() { return this.#native?.media.video.ratio; }
 
 	/**
 	 * @param {string} name
@@ -168,14 +169,14 @@ export default class Core {
 	 * @param {number} height
 	 * @param {number} pitch
 	 */
-	#draw(frame, width, height, pitch) {
+	#draw(frame, width, height, pitch, ratio) {
 		const state = this.#state_gl;
 		const gl = this.#canvas.getContext('webgl2');
 
 		gl.canvas.width = width;
-		gl.canvas.height = height;
+		gl.canvas.height = width / ratio;
 
-		gl.viewport(0, 0, width, height);
+		gl.viewport(0, 0, width, width / ratio);
 		gl.useProgram(state.program);
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, state.position_buffer);
@@ -201,10 +202,22 @@ export default class Core {
 	 */
 	async create(system, rom, canvas) {
 		this.#canvas = canvas;
-		this.#parallel = new Parallel(Interop, false);
 
 		const origin = location.origin + location.pathname.substring(0, location.pathname.lastIndexOf('/'));
 		const script = await (await fetch('worker.js')).text();
+
+		this.#parallel = new Parallel(Interop, false, async message => {
+			const id = message.data.id;
+			const start_arg = message.data.start_arg;
+			const port = message.data.port;
+
+			const child = new Parallel(Interop, false);
+			const core = await child.create(`${this.#name}-${id}`, script);
+			await core.init(Core.#memory, system, rom, port, origin, start_arg);
+
+			this.#threads.push(child);
+		});
+
 		this.#interop = await this.#parallel.create(this.#name, script);
 
 		await this.#interop.init(Core.#memory, system, rom, await Files.clone(), origin);
@@ -241,7 +254,7 @@ export default class Core {
 				const { video, audio } = this.#native.media;
 
 				if (video.frame)
-					this.#draw(video.frame, video.width, video.height, video.pitch);
+					this.#draw(video.frame, video.width, video.height, video.pitch, video.ratio);
 
 				if (state.audio) {
 					const audio_view = new Float32Array(Core.#memory.buffer, audio.data, audio.frames * 2);
@@ -263,9 +276,11 @@ export default class Core {
 
 		state.stop = true;
 		await state.running;
-
 		await this.#interop.Destroy();
+
+		this.#threads.forEach(child => child.close());
 		this.#parallel.close();
+
 		new Uint8Array(Core.#memory.buffer).fill(0);
 	}
 

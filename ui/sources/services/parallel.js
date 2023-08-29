@@ -77,6 +77,9 @@ export default class Parallel {
 	/** @type {boolean} */
 	#sync = false;
 
+	/** @type {(event: MessageEvent) => void} */
+	#handler = false;
+
 	/** @type {T} */
 	#proxy = null;
 
@@ -90,10 +93,12 @@ export default class Parallel {
 	 * @param {new() => T} cls
 	 * @param {Worker | MessagePort} worker
 	 * @param {boolean} sync
+	 * @param {(event: MessageEvent) => void} handler
 	 */
-	constructor(cls, sync) {
+	constructor(cls, sync, handler) {
 		this.#cls = cls;
 		this.#sync = sync;
+		this.#handler = handler
 
 		const instance = new this.#cls();
 		this.#proxy = new Proxy(instance, {
@@ -118,6 +123,7 @@ export default class Parallel {
 
 		const blob = new Blob([script], { type: 'text/javascript' });
 		this.#worker = new Worker(URL.createObjectURL(blob), { name });
+		this.#worker.onmessage = this.#handler;
 		await this.#call('-ready-', [], false);
 		return this.#proxy;
 	}
@@ -128,6 +134,7 @@ export default class Parallel {
 	 */
 	link(port) {
 		this.#worker = port;
+		this.#worker.onmessage = this.#handler;
 		return this.#proxy;
 	}
 

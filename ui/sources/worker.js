@@ -22,8 +22,8 @@ class Core {
 	/** @type {WebAssembly.Instance} */
 	#instance = null;
 
-	/** @type {Parallel[]} */
-	#threads = [];
+	/** @type {number} */
+	#threads = 0;
 
 	/** @type {WASI} */
 	#wasi = null;
@@ -114,15 +114,9 @@ class Core {
 			env: { memory },
 			wasi_snapshot_preview1: this.#wasi.environment,
 			wasi: { 'thread-spawn': (start_arg) => {
-				const child = new Parallel(Interop, false);
-				const id = this.#threads.push(child);
-
-				(async () => {
-					const script = await (await fetch(`${origin}/worker.js`)).text();
-					const core = await child.create(`${this.#name}-${id}`, script);
-					await core.init(memory, system, rom, filesystem.open(), origin, start_arg);
-				})()
-
+				const id = ++this.#threads;
+				const port = filesystem.open();
+				postMessage({ id, start_arg, port }, [port]);
 				return id;
 			}},
 		});

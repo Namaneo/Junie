@@ -46,8 +46,6 @@
 	"parallel": {
 		"name": "ParaLLEl N64",
 		"repository": "parallel-n64",
-		"owner": "Namaneo",
-		"branch": "fix_emscripten",
 		"systems": ["Nintendo 64"]
 	}
 }
