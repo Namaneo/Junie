@@ -41,8 +41,6 @@
 		"name": "PCSX-ReARMed",
 		"repository": "pcsx_rearmed",
 		"makefile": "Makefile.libretro",
-		"owner": "Namaneo",
-		"branch": "fix_emscripten",
 		"systems": ["PlayStation"]
 	},
 	"parallel": {

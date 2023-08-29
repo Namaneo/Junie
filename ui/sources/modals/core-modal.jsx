@@ -137,7 +137,7 @@ export const CoreModal = ({ system, game, close }) => {
 	const resize = () => {
 		const rect = content.current.getBoundingClientRect();
 
-		const core_ratio = core.current?.aspect_ratio || 1;
+		const core_ratio = core.current?.aspect_ratio || (canvas.current.width / canvas.current.height);
 		const window_ratio = (rect.right - rect.left) / (rect.bottom - rect.top);
 		const canvas_ratio = canvas.current.width / (canvas.current.width / core_ratio);
 

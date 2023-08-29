@@ -302,7 +302,10 @@ static void video_refresh(const void *data, unsigned width, unsigned height, siz
 	CTX.media.frame.width = width;
 	CTX.media.frame.height = height;
 	CTX.media.frame.pitch = (uint32_t) pitch;
-	CTX.media.frame.ratio = CTX.av.geometry.aspect_ratio;
+
+	CTX.media.frame.ratio = CTX.av.geometry.aspect_ratio <= 0
+		? (float) width / (float) height
+		: CTX.av.geometry.aspect_ratio;
 
 }
 
