@@ -207,7 +207,7 @@ export default class WASI {
 				return this.#WASI_ERRNO_BADF;
 			},
 			fd_readdir: (fd, buf, buf_len, cookie, bufused) => {
-				return this.#WASI_ERRNO_SUCCESS;
+				return this.#WASI_ERRNO_NOENT;
 			},
 			fd_seek: (fd, offset, whence, newoffset) => {
 				if (fd < 3)
@@ -306,11 +306,17 @@ export default class WASI {
 					this.#fds[fd].offset += this.#get_uint32(nwritten);
 				return errno;
 			},
+			path_create_directory: (fd, path, path_len) => {
+				return this.#WASI_ERRNO_SUCCESS;
+			},
 			path_filestat_get: (fd, flags, path, path_len, buf) => {
 				const size = this.#filesystem.size(this.#str_to_js(path));
 				if (size == -1)
 					return this.#WASI_ERRNO_NOENT;
 
+				return this.#WASI_ERRNO_SUCCESS;
+			},
+			path_readlink: (dir_fd, path, path_len, buf, buf_len, buf_used) => {
 				return this.#WASI_ERRNO_SUCCESS;
 			},
 			path_open: (dirfd, dirflags, path, path_len, o_flags, fs_rights_base, fs_rights_inheriting, fs_flags, fd) => {

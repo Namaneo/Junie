@@ -4,6 +4,7 @@ import Filesystem from './filesystem';
 import { Settings } from '../entities/settings';
 import { Cheat } from '../entities/cheat';
 import { Native } from '../entities/native';
+import WASI_GL from './wasi-gl';
 
 export default class Interop {
 	/** @type {TextEncoder} */
@@ -26,6 +27,9 @@ export default class Interop {
 
 	/** @type {WASI} */
 	#wasi = null;
+
+	/** @type {WASI_GL} */
+	#wasi_gl = null;
 
 	/**
 	 * @param {string} name
@@ -107,10 +111,11 @@ export default class Interop {
 	async init(system, rom, memory, port, origin, start_arg) {
 		const filesystem = new Parallel(Filesystem, true);
 		this.#wasi = new WASI(memory, filesystem.link(port));
+		this.#wasi_gl = new WASI_GL(null);
 
 		const source = await WebAssembly.instantiateStreaming(fetch(`${origin}/modules/${this.#name}.wasm`), {
-			env: { memory },
-			wasi_snapshot_preview1: this.#wasi.environment,
+			env: { memory, ...this.#wasi_gl.environment },
+			wasi_snapshot_preview1: { ...this.#wasi.environment },
 			wasi: { 'thread-spawn': (start_arg) => {
 				const id = ++this.#threads;
 				const port = filesystem.open();

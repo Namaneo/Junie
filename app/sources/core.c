@@ -7,6 +7,8 @@
 #include <pthread.h>
 #include <time.h>
 
+#include <EGL/egl.h>
+
 #include "libretro.h"
 
 #define LOG(msg, ...) core_log_params(__FUNCTION__, msg, __VA_ARGS__)
@@ -281,6 +283,14 @@ static bool environment(unsigned cmd, void *data)
 			CTX.av.geometry = *geometry;
 
 			return false;
+		}
+		case RETRO_ENVIRONMENT_SET_HW_RENDER: {
+			struct retro_hw_render_callback *hw = data;
+
+			hw->get_current_framebuffer = NULL;
+			hw->get_proc_address = eglGetProcAddress;
+
+			return true;
 		}
 		default: {
 			LOG("Unhandled command: %d", command);
@@ -684,36 +694,3 @@ void JUN_CoreRestoreState()
 	free(buffer);
 	fclose(file);
 }
-
-
-// socket.h
-
-#include <sys/socket.h>
-
-int socket(int domain, int type, int protocol) { return -1; }
-int setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t optlen) { return -1; }
-int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen) { return -1; }
-ssize_t sendto(int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen) { return -1; }
-ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen) { return -1; }
-
-
-// thread.h
-
-#include <pthread.h>
-
-int pthread_attr_setschedpolicy(pthread_attr_t *attr, int policy) { return -1; }
-int pthread_attr_setschedparam(pthread_attr_t *attr, const struct sched_param *param) { return -1; }
-
-
-// setjmp.h
-
-#include <setjmp.h>
-
-int setjmp(jmp_buf env) { return 0; }
-void longjmp(jmp_buf env, int val) { abort(); }
-
-
-// WASI
-
-void *__cxa_allocate_exception(size_t thrown_size) { abort(); }
-void __cxa_throw(void *thrown_object, void *tinfo, void (*dest)(void *)) { abort(); }

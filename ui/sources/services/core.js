@@ -96,7 +96,7 @@ export default class Core {
 	async start(settings, cheats) {
 		await this.settings(settings);
 		await this.#interop.start();
-		await this.cheats(cheats);
+		// await this.cheats(cheats);
 
 		const pixel_format = await this.#interop.pixel_format();
 		const sample_rate = await this.#interop.sample_rate();
