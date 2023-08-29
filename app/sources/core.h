@@ -11,7 +11,8 @@ void JUN_CoreDestroy();
 
 uint32_t JUN_CoreGetPixelFormat();
 uint32_t JUN_CoreGetSampleRate();
-const void *JUN_CoreGetMedia();
+const void *JUN_CoreGetVideo();
+const void *JUN_CoreGetAudio();
 
 const void *JUN_CoreGetVariables();
 void JUN_CoreSetVariable(const char *key, const char *value);

@@ -6,7 +6,8 @@ JUN_CoreDestroy
 
 JUN_CoreGetPixelFormat
 JUN_CoreGetSampleRate
-JUN_CoreGetMedia
+JUN_CoreGetVideo
+JUN_CoreGetAudio
 
 JUN_CoreGetVariables
 JUN_CoreSetVariable

@@ -138,7 +138,7 @@ export const useCore = (lib) => {
 		await load('Starting game...');
 
 		await core.create(system, rom, canvas);
-		setVariables(core.variables());
+		setVariables(core.variables);
 		await core.start(settings, cheats);
 
 		await loaded();

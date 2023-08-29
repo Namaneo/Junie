@@ -1,12 +1,14 @@
 import { Cheat } from '../entities/cheat';
 import { Settings } from '../entities/settings';
+import { Native } from '../entities/native';
 import { Variable } from '../entities/variable';
+import { Video } from '../entities/video';
+import { Audio } from '../entities/audio';
 import Files from './files';
-import Audio from './audio';
 import Parallel from './parallel';
-import Interop from './interop';
-import NativeData from './native';
 import Graphics from './graphics';
+import AudioPlayer from './audio';
+import Interop from './interop';
 
 export default class Core {
 	/** @type {number} */
@@ -31,25 +33,25 @@ export default class Core {
 	/** @type {Graphics} */
 	#graphics = null;
 
-	/** @type {NativeData} */
-	#native = null;
+	/** @type {Native} */
+	#data = null;
 
 	/** @type {Parallel[]} */
 	#threads = [];
 
-	#state = {
-		/** @type {number} */
-		speed: 1,
+	/** @type {number} */
+	#speed = 1;
 
-		/** @type {boolean} */
-		audio: true,
+	/** @type {boolean} */
+	#audio = true;
 
-		/** @type {boolean} */
-		stop: false,
+	/** @type {boolean} */
+	#stop = false;
 
-		/** @type {Promise} */
-		running: null,
-	}
+	/** @type {Promise} */
+	#running = null;
+
+	get variables() { return Variable.parse(Core.#memory, this.#data.variables); }
 
 	/**
 	 * @param {string} name
@@ -76,20 +78,14 @@ export default class Core {
 
 			const child = new Parallel(Interop, false);
 			const core = await child.create(`${this.#name}-${id}`, script);
-			await core.init(Core.#memory, system, rom, port, origin, start_arg);
+			await core.init(system, rom, Core.#memory, port, origin, start_arg);
 
 			this.#threads.push(child);
 		});
 
 		this.#interop = await this.#parallel.create(this.#name, script);
-
-		await this.#interop.init(Core.#memory, system, rom, await Files.clone(), origin);
-		await this.#interop.Create(system, rom);
-
-		this.#native = new NativeData(Core.#memory,
-			await this.#interop.GetVariables(),
-			await this.#interop.GetMedia()
-		);
+		await this.#interop.init(system, rom, Core.#memory, await Files.clone(), origin);
+		this.#data = await this.#interop.data();
 	}
 
 	/**
@@ -98,33 +94,32 @@ export default class Core {
 	 * @returns {Promise<void>}
 	 */
 	async start(settings, cheats) {
-		const state = this.#state;
-
 		await this.settings(settings);
-		await this.#interop.StartGame();
+		await this.#interop.start();
 		await this.cheats(cheats);
 
-		const pixel_format = await this.#interop.GetPixelFormat();
-		const sample_rate = await this.#interop.GetSampleRate();
+		const pixel_format = await this.#interop.pixel_format();
+		const sample_rate = await this.#interop.sample_rate();
 
 		this.#graphics.init(pixel_format);
 
-		state.stop = false;
-		state.running = new Promise((resolve) => {
+		this.#stop = false;
+		this.#running = new Promise((resolve) => {
 			const step = async () => {
-				await this.#interop.Run(state.speed);
+				await this.#interop.run(this.#speed);
 
-				const { video, audio } = this.#native.media;
+				const video = Video.parse(Core.#memory, this.#data.video);
+				const audio = Audio.parse(Core.#memory, this.#data.audio);
 
-				if (video.frame)
-					this.#graphics.draw(video.frame, video.width, video.height, video.pitch, video.ratio);
+				if (video.data)
+					this.#graphics.draw(video.data, video.width, video.height, video.pitch, video.ratio);
 
-				if (state.audio) {
+				if (this.#audio) {
 					const audio_view = new Float32Array(Core.#memory.buffer, audio.data, audio.frames * 2);
-					Audio.queue(audio_view, sample_rate * state.speed, 2);
+					AudioPlayer.queue(audio_view, sample_rate * this.#speed, 2);
 				}
 
-				state.stop ? resolve() : requestAnimationFrame(step);
+				this.#stop ? resolve() : requestAnimationFrame(step);
 			}
 
 			requestAnimationFrame(step);
@@ -135,87 +130,36 @@ export default class Core {
 	 * @returns {Promise<void>}
 	 */
 	async stop() {
-		const state = this.#state;
+		this.#stop = true;
+		await this.#running;
 
-		state.stop = true;
-		await state.running;
-		await this.#interop.Destroy();
-
+		await this.#interop.stop();
 		this.#threads.forEach(child => child.close());
 		this.#parallel.close();
 
 		new Uint8Array(Core.#memory.buffer).fill(0);
 	}
 
-	/**
-	 * @returns {Variable[]}
-	 */
-	variables() {
-		return this.#native.variables();
-	}
+	/** @param {Settings} settings @returns {Promise<void>} */
+	async settings(settings) { if (this.#interop) await this.#interop.settings(settings); }
 
-	/**
-	 * @param {Settings} settings
-	 * @returns {Promise<void>}
-	 */
-	async settings(settings) {
-		for (const key in settings)
-			await this.#interop.SetVariable(key, settings[key]);
-	}
+	/** @param {Cheat[]} cheats @returns {Promise<void>} */
+	async cheats(cheats) { if (this.#interop) await this.#interop.cheats(cheats); }
 
-	/**
-	 * @param {Cheat[]} cheats
-	 * @returns {Promise<void>}
-	 */
-	async cheats(cheats) {
-		await this.#interop.ResetCheats();
-		const filtered = cheats?.filter(x => x.enabled).sort((x, y) => x.order - y.order);
-		for (const cheat of filtered ?? [])
-			await this.#interop.SetCheat(cheat.order, true, cheat.value);
-	}
+	/** @param {number} device @param {number} id @param {number} value @returns {Promise<void>} */
+	async send(device, id, value) { if (this.#interop) await this.#interop.send(device, id, value); }
 
-	/**
-	 * @param {number} device
-	 * @param {number} id
-	 * @param {number} value
-	 * @returns {Promise<void>}
-	 */
-	async send(device, id, value) {
-		if (this.#interop)
-			await this.#interop.SetInput(device, id, value);
-	}
+	/** @returns {Promise<void>} */
+	async save() { if (this.#interop) await this.#interop.save(); }
 
-	/**
-	 * @returns {Promise<void>}
-	 */
-	async save() {
-		if (this.#interop)
-			await this.#interop.SaveState();
-	}
+	/** @returns {Promise<void>} */
+	async restore() { if (this.#interop) await this.#interop.restore(); }
 
-	/**
-	 * @returns {Promise<void>}
-	 */
-	async restore() {
-		if (this.#interop)
-			await this.#interop.RestoreState();
-	}
+	/** @param {number} value @returns {void} */
+	speed(value) { this.#speed = value; }
 
-	/**
-	 * @param {number} value
-	 * @returns {void}
-	 */
-	speed(value) {
-		this.#state.speed = value;
-	}
-
-	/**
-	 * @param {boolean} enable
-	 * @returns {void}
-	 */
-	audio(enable) {
-		this.#state.audio = enable;
-	}
+	/** @param {boolean} enable @returns {void} */
+	audio(enable) { this.#audio = enable; }
 
 	static Device = class {
 		static get JOYPAD()  { return 1; }

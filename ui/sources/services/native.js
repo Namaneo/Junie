@@ -1,79 +1,44 @@
-import { Media } from "../entities/media";
-import { Variable } from "../entities/variable";
+import { Video } from "../entities/video";
+import { Audio } from "../entities/audio";
 
-export default class NativeData {
-	/** @type {WebAssembly.Memory} */
-	#memory;
+export default class Native {
+	/** @type {DataView} */
+	#video;
 
 	/** @type {DataView} */
-	#variables;
-
-	/** @type {DataView} */
-	#media;
+	#audio;
 
 	/**
 	 * @param {WebAssembly.Memory} memory
 	 * @param {number} variables
-	 * @param {number} media
+	 * @param {number} video
+	 * @param {number} audio
 	 */
-	constructor(memory, variables, media) {
-		this.#memory = memory;
-		this.#variables = new DataView(memory.buffer, variables);
-		this.#media = new DataView(memory.buffer, media);
+	constructor(memory, video, audio) {
+		this.#video = new DataView(memory.buffer, video);
+		this.#audio = new DataView(memory.buffer, audio);
 	}
 
 	/**
-	 * @param {number} ptr
-	 * @returns {string}
+	 * @returns {Video}
 	 */
-	#str_to_js(ptr) {
-		const buf = new Uint8Array(this.#memory.buffer, ptr);
-		let length = 0; for (; buf[length] != 0; length++);
-		return new TextDecoder().decode(buf.slice(0, length));
-	}
-
-	/**
-	 * @returns {Variable[]}
-	 */
-	variables() {
-		let offset = 0;
-		const results = [];
-		while (true) {
-			const key     = this.#variables.getUint32(offset + 0, true);
-			const name    = this.#variables.getUint32(offset + 4, true);
-			const options = this.#variables.getUint32(offset + 8, true);
-
-			if (!key)
-				break;
-
-			results.push({
-				key: this.#str_to_js(key),
-				name: this.#str_to_js(name),
-				options: this.#str_to_js(options).split('|'),
-			});
-
-			offset += 16;
-		}
-
-		return results;
-	}
-
-	/**
-	 * @returns {Media}
-	 */
-	get media() {
+	video() {
 		return {
-			video: {
-				frame:  this.#media.getUint32(0, true),
-				width:  this.#media.getUint32(4, true),
-				height: this.#media.getUint32(8, true),
-				pitch:  this.#media.getUint32(12, true),
-				ratio:  this.#media.getFloat32(16, true),
-			},
-			audio: {
-				data:   this.#media.getUint32(20, true),
-				frames: this.#media.getUint32(24, true),
-			}
+			data:   this.#video.getUint32(0, true),
+			width:  this.#video.getUint32(4, true),
+			height: this.#video.getUint32(8, true),
+			pitch:  this.#video.getUint32(12, true),
+			ratio:  this.#video.getFloat32(16, true),
+		}
+	}
+
+	/**
+	 * @returns {Audio}
+	 */
+	audio() {
+		return {
+			data:   this.#audio.getUint32(0, true),
+			frames: this.#audio.getUint32(4, true),
 		}
 	}
 }

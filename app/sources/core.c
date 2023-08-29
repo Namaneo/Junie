@@ -50,23 +50,6 @@ struct jun_core_sym {
 	void (*retro_deinit)(void);
 };
 
-struct jun_core_media {
-	struct {
-		const void *data;
-		uint32_t width;
-		uint32_t height;
-		uint32_t pitch;
-		float ratio;
-	} frame;
-
-	struct {
-		void *data;
-		size_t frames;
-		size_t max_size;
-		bool finalized;
-	} audio;
-};
-
 static struct CTX {
 	bool initialized;
 
@@ -92,13 +75,27 @@ static struct CTX {
 	bool variables_update;
 
 	struct {
+		const void *data;
+		uint32_t width;
+		uint32_t height;
+		uint32_t pitch;
+		float ratio;
+	} video;
+
+	struct {
+		void *data;
+		size_t frames;
+		size_t max_size;
+		bool finalized;
+	} audio;
+
+	struct {
 		bool pressed;
 		int16_t x;
 		int16_t y;
 	} pointer;
 
 	struct jun_core_sym sym;
-	struct jun_core_media media;
 } CTX;
 
 
@@ -298,12 +295,12 @@ static void video_refresh(const void *data, unsigned width, unsigned height, siz
 	if (!data)
 		return;
 
-	CTX.media.frame.data = data;
-	CTX.media.frame.width = width;
-	CTX.media.frame.height = height;
-	CTX.media.frame.pitch = (uint32_t) pitch;
+	CTX.video.data = data;
+	CTX.video.width = width;
+	CTX.video.height = height;
+	CTX.video.pitch = (uint32_t) pitch;
 
-	CTX.media.frame.ratio = CTX.av.geometry.aspect_ratio <= 0
+	CTX.video.ratio = CTX.av.geometry.aspect_ratio <= 0
 		? (float) width / (float) height
 		: CTX.av.geometry.aspect_ratio;
 
@@ -311,23 +308,23 @@ static void video_refresh(const void *data, unsigned width, unsigned height, siz
 
 static size_t audio_sample_batch(const int16_t *data, size_t frames)
 {
-	if (CTX.media.audio.finalized) {
-		CTX.media.audio.frames = 0;
-		CTX.media.audio.finalized = false;
+	if (CTX.audio.finalized) {
+		CTX.audio.frames = 0;
+		CTX.audio.finalized = false;
 	}
 
-	size_t new_size = (CTX.media.audio.frames + frames) * 2 * sizeof(float);
-	if (new_size > CTX.media.audio.max_size) {
-		CTX.media.audio.data = realloc(CTX.media.audio.data, new_size);
-		CTX.media.audio.max_size = new_size;
+	size_t new_size = (CTX.audio.frames + frames) * 2 * sizeof(float);
+	if (new_size > CTX.audio.max_size) {
+		CTX.audio.data = realloc(CTX.audio.data, new_size);
+		CTX.audio.max_size = new_size;
 	}
 
-	size_t offset = CTX.media.audio.frames * 2 * sizeof(float);
-	float *converted = &CTX.media.audio.data[offset];
+	size_t offset = CTX.audio.frames * 2 * sizeof(float);
+	float *converted = &CTX.audio.data[offset];
 	for (size_t i = 0; i < frames * 2; i++)
 		converted[i] = data[i] / 32768.0f;
 
-	CTX.media.audio.frames += frames;
+	CTX.audio.frames += frames;
 
 	return frames;
 }
@@ -355,9 +352,9 @@ static int16_t input_state(unsigned port, unsigned device, unsigned index, unsig
 			case RETRO_DEVICE_ID_POINTER_PRESSED:
 				return CTX.pointer.pressed;
 			case RETRO_DEVICE_ID_POINTER_X:
-				return (((double) CTX.pointer.x * 0x10000) / (double) CTX.media.frame.width) - 0x8000;
+				return (((double) CTX.pointer.x * 0x10000) / (double) CTX.video.width) - 0x8000;
 			case RETRO_DEVICE_ID_POINTER_Y:
-				return (((double) CTX.pointer.y * 0x10000) / (double) CTX.media.frame.height) - 0x8000;
+				return (((double) CTX.pointer.y * 0x10000) / (double) CTX.video.height) - 0x8000;
 		}
 	}
 
@@ -547,7 +544,7 @@ void JUN_CoreRun(uint8_t fast_forward)
 	for (size_t i = 0; i < fast_forward; i++)
 		CTX.sym.retro_run();
 
-	CTX.media.audio.finalized = true;
+	CTX.audio.finalized = true;
 	save_memories();
 }
 
@@ -604,9 +601,14 @@ uint32_t JUN_CoreGetSampleRate()
 	return (CTX.av.timing.sample_rate / CTX.av.timing.fps) * 60.0;
 }
 
-const void *JUN_CoreGetMedia()
+const void *JUN_CoreGetVideo()
 {
-	return &CTX.media;
+	return &CTX.video;
+}
+
+const void *JUN_CoreGetAudio()
+{
+	return &CTX.audio;
 }
 
 const void *JUN_CoreGetVariables()

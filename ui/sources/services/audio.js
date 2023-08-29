@@ -1,4 +1,4 @@
-export default class Audio {
+export default class AudioPlayer {
 	/** @type {AudioContext} */
 	static #context = new AudioContext();
 
