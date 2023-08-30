@@ -191,6 +191,9 @@ export const CoreModal = ({ system, game, close }) => {
 
 	/** @param {Event} event @returns {void} */
 	const touch = (event) => {
+		if (event.type == 'mousemove' && event.buttons == 0)
+			return;
+
 		if (gamepad.value) {
 			const buttons = [...event.target.children];
 

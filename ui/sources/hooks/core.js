@@ -128,18 +128,19 @@ export const useCore = (lib) => {
 		const settings = await Files.Settings.get();
 		const cheats = (await Files.Cheats.get()).find(x => x.system == system && x.game == game)?.cheats;
 
-		initAudio(settings);
-		initSpeed(settings);
-		initGamepad(settings);
-
 		setSettings(settings);
 		setCheats(cheats);
 
 		await load('Starting game...');
 
-		await core.create(system, rom, canvas);
-		setVariables(core.variables);
-		await core.start(settings, cheats);
+		await core.create(system, rom);
+		setVariables(await core.variables());
+		await core.start(settings, cheats, canvas);
+		await core.speed(speed);
+
+		initAudio(settings);
+		initSpeed(settings);
+		initGamepad(settings);
 
 		await loaded();
 	}

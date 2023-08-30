@@ -28,9 +28,6 @@ export default class Graphics {
 	/** @type {WebAssembly.Memory} */
 	#memory = null;
 
-	/** @type {HTMLCanvasElement | OffscreenCanvas} */
-	#canvas = null;
-
 	/** @type {WebGL2RenderingContext} */
 	#gl = null;
 
@@ -64,7 +61,6 @@ export default class Graphics {
 	 */
 	constructor(memory, canvas) {
 		this.#memory = memory;
-		this.#canvas = canvas;
 		this.#gl = canvas.getContext('webgl2');
 	}
 

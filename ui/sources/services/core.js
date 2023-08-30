@@ -2,11 +2,9 @@ import { Cheat } from '../entities/cheat';
 import { Settings } from '../entities/settings';
 import { Native } from '../entities/native';
 import { Variable } from '../entities/variable';
-import { Video } from '../entities/video';
 import { Audio } from '../entities/audio';
 import Files from './files';
 import Parallel from './parallel';
-import Graphics from './graphics';
 import AudioPlayer from './audio';
 import Interop from './interop';
 
@@ -30,28 +28,11 @@ export default class Core {
 	/** @type {string} */
 	#name = null;
 
-	/** @type {Graphics} */
-	#graphics = null;
-
-	/** @type {Native} */
-	#data = null;
-
 	/** @type {Parallel[]} */
 	#threads = [];
 
-	/** @type {number} */
-	#speed = 1;
-
 	/** @type {boolean} */
 	#audio = true;
-
-	/** @type {boolean} */
-	#stop = false;
-
-	/** @type {Promise} */
-	#running = null;
-
-	get variables() { return Variable.parse(Core.#memory, this.#data.variables); }
 
 	/**
 	 * @param {string} name
@@ -63,76 +44,46 @@ export default class Core {
 	/**
 	 * @param {string} system
 	 * @param {string} rom
-	 * @param {HTMLCanvasElement} canvas
 	 */
-	async create(system, rom, canvas) {
-		this.#graphics = new Graphics(Core.#memory, canvas);
-
+	async create(system, rom) {
 		const origin = location.origin + location.pathname.substring(0, location.pathname.lastIndexOf('/'));
 		const script = await (await fetch('worker.js')).text();
 
 		this.#parallel = new Parallel(Interop, false, async message => {
-			const id = message.data.id;
-			const start_arg = message.data.start_arg;
-			const port = message.data.port;
-
-			const child = new Parallel(Interop, false);
-			const core = await child.create(`${this.#name}-${id}`, script);
-			await core.init(system, rom, Core.#memory, port, origin, start_arg);
-
-			this.#threads.push(child);
+			switch (message.data.type) {
+				case 'thread':
+					const child = new Parallel(Interop, false);
+					const core = await child.create(`${this.#name}-${message.data.id}`, script);
+					await core.init(system, rom, Core.#memory, message.data.port, origin, message.data.start_arg);
+					this.#threads.push(child);
+					break;
+				case 'audio':
+					if (this.#audio)
+						AudioPlayer.queue(message.data.buffer, message.data.sample_rate, 2);
+					break;
+			}
 		});
 
 		this.#interop = await this.#parallel.create(this.#name, script);
 		await this.#interop.init(system, rom, Core.#memory, await Files.clone(), origin);
-		this.#data = await this.#interop.data();
 	}
 
 	/**
 	 * @param {Settings} settings
 	 * @param {Cheat[]} cheats
+	 * @param {HTMLCanvasElement} canvas
 	 * @returns {Promise<void>}
 	 */
-	async start(settings, cheats) {
+	async start(settings, cheats, canvas) {
 		await this.settings(settings);
-		await this.#interop.start();
+		await this.#interop.start(canvas.transferControlToOffscreen());
 		await this.cheats(cheats);
-
-		const pixel_format = await this.#interop.pixel_format();
-		const sample_rate = await this.#interop.sample_rate();
-
-		this.#graphics.init(pixel_format);
-
-		this.#stop = false;
-		this.#running = new Promise((resolve) => {
-			const step = async () => {
-				await this.#interop.run(this.#speed);
-
-				const video = Video.parse(Core.#memory, this.#data.video);
-				const audio = Audio.parse(Core.#memory, this.#data.audio);
-
-				if (video.data)
-					this.#graphics.draw(video.data, video.width, video.height, video.pitch, video.ratio);
-
-				if (this.#audio) {
-					const audio_view = new Float32Array(Core.#memory.buffer, audio.data, audio.frames * 2);
-					AudioPlayer.queue(audio_view, sample_rate * this.#speed, 2);
-				}
-
-				this.#stop ? resolve() : requestAnimationFrame(step);
-			}
-
-			requestAnimationFrame(step);
-		});
 	}
 
 	/**
 	 * @returns {Promise<void>}
 	 */
 	async stop() {
-		this.#stop = true;
-		await this.#running;
-
 		await this.#interop.stop();
 		this.#threads.forEach(child => child.close());
 		this.#parallel.close();
@@ -140,23 +91,26 @@ export default class Core {
 		new Uint8Array(Core.#memory.buffer).fill(0);
 	}
 
+	/** @returns {Promise<Variable[]>} */
+	async variables() { return this.#interop?.variables(); }
+
 	/** @param {Settings} settings @returns {Promise<void>} */
-	async settings(settings) { if (this.#interop) await this.#interop.settings(settings); }
+	async settings(settings) { await this.#interop?.settings(settings); }
 
 	/** @param {Cheat[]} cheats @returns {Promise<void>} */
-	async cheats(cheats) { if (this.#interop) await this.#interop.cheats(cheats); }
+	async cheats(cheats) { await this.#interop?.cheats(cheats); }
+
+	/** @param {number} value @returns {Promise<void>} */
+	async speed(value) { await this.#interop?.speed(value); }
 
 	/** @param {number} device @param {number} id @param {number} value @returns {Promise<void>} */
-	async send(device, id, value) { if (this.#interop) await this.#interop.send(device, id, value); }
+	async send(device, id, value) { await this.#interop?.send(device, id, value); }
 
 	/** @returns {Promise<void>} */
-	async save() { if (this.#interop) await this.#interop.save(); }
+	async save() { await this.#interop?.save(); }
 
 	/** @returns {Promise<void>} */
-	async restore() { if (this.#interop) await this.#interop.restore(); }
-
-	/** @param {number} value @returns {void} */
-	speed(value) { this.#speed = value; }
+	async restore() { await this.#interop?.restore(); }
 
 	/** @param {boolean} enable @returns {void} */
 	audio(enable) { this.#audio = enable; }

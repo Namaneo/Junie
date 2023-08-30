@@ -171,7 +171,7 @@ export default class Parallel {
 		if (!args) args = [];
 
 		const sab = this.#buffers.length == 0
-			? new Int32Array(new SharedArrayBuffer(12, { maxByteLength: 4096 }))
+			? new Int32Array(new SharedArrayBuffer(12, { maxByteLength: 8192 }))
 			: this.#buffers.pop().fill(0);
 
 		const message = { name, args: [sab, ...args] };
