@@ -26,8 +26,8 @@ ifeq ($(DEBUG), 1)
 CFLAGS  += -O0 -ferror-limit=0 -DDEBUG
 LDFLAGS += -O0 -g -Wl,--error-limit=0
 else
-CFLAGS  += -O3 -msimd128
-LDFLAGS += -O3
+CFLAGS  += -O3 -flto -msimd128
+LDFLAGS += -O3 -flto -mavx -mfpu=neon
 endif
 
 QUIET := > /dev/null 2>&1

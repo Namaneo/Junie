@@ -5,6 +5,7 @@ DEFINES += \
 	--sysroot=$(WASI_SDK)/share/wasi-sysroot \
 	--target=wasm32-wasi-threads -pthread \
 	-I$(EMSCRIPTEN)/cache/sysroot/include/c++/v1 \
+	-I$(EMSCRIPTEN)/cache/sysroot/include/compat \
 	-I$(EMSCRIPTEN)/cache/sysroot/include
 
 CC     := $(WASI_SDK)/bin/clang $(DEFINES)
