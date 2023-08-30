@@ -1,12 +1,11 @@
 import { Cheat } from '../entities/cheat';
 import { Settings } from '../entities/settings';
-import { Native } from '../entities/native';
 import { Variable } from '../entities/variable';
-import { Audio } from '../entities/audio';
 import Files from './files';
 import Parallel from './parallel';
 import AudioPlayer from './audio';
 import Interop from './interop';
+import Graphics from './graphics';
 
 export default class Core {
 	/** @type {number} */
@@ -31,9 +30,6 @@ export default class Core {
 	/** @type {Parallel[]} */
 	#threads = [];
 
-	/** @type {boolean} */
-	#audio = true;
-
 	/**
 	 * @param {string} name
 	 */
@@ -44,8 +40,11 @@ export default class Core {
 	/**
 	 * @param {string} system
 	 * @param {string} rom
+	 * @param {HTMLCanvasElement} canvas
 	 */
-	async create(system, rom) {
+	async create(system, rom, canvas) {
+		const graphics = new Graphics(Core.#memory, canvas);
+
 		const origin = location.origin + location.pathname.substring(0, location.pathname.lastIndexOf('/'));
 		const script = await (await fetch('worker.js')).text();
 
@@ -57,9 +56,13 @@ export default class Core {
 					await core.init(system, rom, Core.#memory, message.data.port, origin, message.data.start_arg);
 					this.#threads.push(child);
 					break;
+				case 'video':
+					graphics.init(message.data.pixel_format);
+					graphics.draw(message.data.video.data, message.data.video.width, message.data.video.height, message.data.video.pitch, message.data.video.ratio);
+					break;
 				case 'audio':
-					if (this.#audio)
-						AudioPlayer.queue(message.data.buffer, message.data.sample_rate, 2);
+					const view = new Float32Array(Core.#memory.buffer, message.data.audio.data, message.data.audio.frames * 2);
+					AudioPlayer.queue(view, message.data.sample_rate, 2);
 					break;
 			}
 		});
@@ -71,12 +74,11 @@ export default class Core {
 	/**
 	 * @param {Settings} settings
 	 * @param {Cheat[]} cheats
-	 * @param {HTMLCanvasElement} canvas
 	 * @returns {Promise<void>}
 	 */
-	async start(settings, cheats, canvas) {
+	async start(settings, cheats) {
 		await this.settings(settings);
-		await this.#interop.start(canvas.transferControlToOffscreen());
+		await this.#interop.start();
 		await this.cheats(cheats);
 	}
 
@@ -100,6 +102,9 @@ export default class Core {
 	/** @param {Cheat[]} cheats @returns {Promise<void>} */
 	async cheats(cheats) { await this.#interop?.cheats(cheats); }
 
+	/** @param {boolean} enable @returns {void} */
+	async audio(enable) { await this.#interop?.audio(enable); }
+
 	/** @param {number} value @returns {Promise<void>} */
 	async speed(value) { await this.#interop?.speed(value); }
 
@@ -111,9 +116,6 @@ export default class Core {
 
 	/** @returns {Promise<void>} */
 	async restore() { await this.#interop?.restore(); }
-
-	/** @param {boolean} enable @returns {void} */
-	audio(enable) { this.#audio = enable; }
 
 	static Device = class {
 		static get JOYPAD()  { return 1; }

@@ -31,6 +31,9 @@ export default class Graphics {
 	/** @type {WebGL2RenderingContext} */
 	#gl = null;
 
+	/** @type {boolean} */
+	#initialized = false;
+
 	/** @type {number} */
 	#type = 0;
 
@@ -69,6 +72,9 @@ export default class Graphics {
 	 * @returns {Promise<void>}
 	 */
 	init(format) {
+		if (this.#initialized)
+			return;
+
 		switch (format) {
 			default:
 			case 0:
@@ -111,6 +117,8 @@ export default class Graphics {
 		this.#position_buffer = this.#gl.createBuffer();
 		this.#gl.bindBuffer(this.#gl.ARRAY_BUFFER, this.#position_buffer);
 		this.#gl.bufferData(this.#gl.ARRAY_BUFFER, new Float32Array([ 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1 ]), this.#gl.STATIC_DRAW);
+
+		this.#initialized = true;
 	}
 
 	/**

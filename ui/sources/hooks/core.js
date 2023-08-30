@@ -133,10 +133,9 @@ export const useCore = (lib) => {
 
 		await load('Starting game...');
 
-		await core.create(system, rom);
+		await core.create(system, rom, canvas);
 		setVariables(await core.variables());
-		await core.start(settings, cheats, canvas);
-		await core.speed(speed);
+		await core.start(settings, cheats);
 
 		initAudio(settings);
 		initSpeed(settings);

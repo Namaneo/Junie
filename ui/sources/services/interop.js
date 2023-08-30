@@ -1,13 +1,12 @@
-import WASI from './wasi';
-import Parallel from './parallel';
-import Filesystem from './filesystem';
-import Graphics from './graphics';
 import { Settings } from '../entities/settings';
 import { Cheat } from '../entities/cheat';
 import { Native } from '../entities/native';
 import { Video } from '../entities/video';
 import { Variable } from '../entities/variable';
 import { Audio } from '../entities/audio';
+import Parallel from './parallel';
+import Filesystem from './filesystem';
+import WASI from './wasi';
 
 export default class Interop {
 	/** @type {TextEncoder} */
@@ -33,6 +32,9 @@ export default class Interop {
 
 	/** @type {WASI} */
 	#wasi = null;
+
+	/** @type {boolean} */
+	#audio = true;
 
 	/** @type {number} */
 	#speed = 1;
@@ -171,17 +173,14 @@ export default class Interop {
 		this.#data = new Native(this);
 	}
 
-	/** @param {OffscreenCanvas} canvas @returns {Promise<void>} */
-	start(canvas) {
+	/** @returns {Promise<void>} */
+	start() {
 		this.StartGame();
 
 		const memory = this.#instance.exports.memory;
-		const graphics = new Graphics(memory, canvas);
 
 		const pixel_format = this.GetPixelFormat();
 		const sample_rate = this.GetSampleRate();
-
-		graphics.init(pixel_format);
 
 		this.#stop = false;
 		this.#running = new Promise(resolve => {
@@ -192,13 +191,10 @@ export default class Interop {
 				const audio = Audio.parse(memory, this.#data.audio);
 
 				if (video.data)
-					graphics.draw(video.data, video.width, video.height, video.pitch, video.ratio);
+					postMessage({ type: 'video', video, pixel_format });
 
-				if (audio.frames) {
-					const shared = new Float32Array(memory.buffer, audio.data, audio.frames * 2);
-					const buffer = new Float32Array(shared);
-					postMessage({ type: 'audio', buffer, sample_rate: sample_rate * this.#speed }, [buffer.buffer]);
-				}
+				if (this.#audio)
+					postMessage({ type: 'audio', audio, sample_rate: sample_rate * this.#speed });
 
 				this.#stop ? resolve() : requestAnimationFrame(step);
 			}
@@ -231,6 +227,9 @@ export default class Interop {
 
 	/** @returns {Promise<Variable[]>} */
 	variables() { return Variable.parse(this.#instance.exports.memory, this.#data.variables); }
+
+	/** @param {boolean} enable @returns {Promise<void>} */
+	audio(enable) { this.#audio = enable; }
 
 	/** @param {number} value @returns {Promise<void>} */
 	speed(value) { this.#speed = value; }
