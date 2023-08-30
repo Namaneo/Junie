@@ -5,6 +5,7 @@ export function instrumentContext(context) {
 	const TYPE_NUMBER = 1;
 	const TYPE_STRING = 2;
 	const TYPE_OBJECT = 3;
+	const TYPE_ERROR  = 4;
 
 	context['-ready-'] = () => { return 0; };
 	context['-port-'] = (port) => { port.onmessage = onmessage; return 0; };
@@ -14,7 +15,12 @@ export function instrumentContext(context) {
 		const name = message.data.name;
 		const args = message.data.args;
 
-		const result = await context[name](...args);
+		let result = null;
+		try {
+			result = await context[name](...args);
+		} catch(e) {
+			result = e;
+		}
 
 		switch (typeof result) {
 			case 'number':
@@ -31,11 +37,13 @@ export function instrumentContext(context) {
 				new Uint8Array(sab.buffer).set(encoded_str, 12);
 				break;
 			case 'object':
-				const encoded_obj = new TextEncoder().encode(JSON.stringify(result));
+				const is_error = result.constructor.name == 'Error';
+				const stringified = JSON.stringify(is_error ? result.stack : result);
+				const encoded_obj = new TextEncoder().encode(stringified);
 				if (sab.buffer.byteLength < 12 + encoded_obj.byteLength)
 					sab.buffer.grow(12 + encoded_obj.byteLength);
 
-				Atomics.store(sab, 1, TYPE_OBJECT);
+				Atomics.store(sab, 1, is_error ? TYPE_ERROR : TYPE_OBJECT);
 				Atomics.store(sab, 2, encoded_obj.byteLength);
 				new Uint8Array(sab.buffer).set(encoded_obj, 12);
 				break;
@@ -54,6 +62,7 @@ export function parseMessage(sab) {
 	const TYPE_NUMBER = 1;
 	const TYPE_STRING = 2;
 	const TYPE_OBJECT = 3;
+	const TYPE_ERROR  = 4;
 
 	switch (sab[1]) {
 		case TYPE_NUMBER:
@@ -64,7 +73,12 @@ export function parseMessage(sab) {
 		case TYPE_OBJECT:
 			const obj_buf = new Uint8Array(sab.buffer, 12, sab[2]).slice();
 			return JSON.parse(new TextDecoder().decode(obj_buf));
-	}
+		case TYPE_ERROR:
+			const error = new Error();
+			const err_buf = new Uint8Array(sab.buffer, 12, sab[2]).slice();
+			error.stack = JSON.parse(new TextDecoder().decode(err_buf));;
+			throw error;
+		}
 }
 
 /**

@@ -86,9 +86,16 @@ export default class Core {
 	 * @returns {Promise<void>}
 	 */
 	async stop() {
-		await this.#interop.stop();
+		try {
+			await this.#interop?.stop();
+		} catch (e) {
+			console.error(e);
+		}
+
 		this.#threads.forEach(child => child.close());
-		this.#parallel.close();
+		this.#parallel?.close();
+		this.#threads = [];
+		this.#parallel = null;
 
 		new Uint8Array(Core.#memory.buffer).fill(0);
 	}

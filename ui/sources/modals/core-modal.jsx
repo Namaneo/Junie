@@ -131,7 +131,7 @@ export const CoreModal = ({ system, game, close }) => {
 	const [window_w, window_h] = useSize({ current: document.body });
 	const [canvas_w, canvas_h] = useSize(canvas);
 
-	const [confirm] = useIonAlert();
+	const [alert] = useIonAlert();
 
 	/** @returns {void} */
 	const resize = () => {
@@ -226,19 +226,26 @@ export const CoreModal = ({ system, game, close }) => {
 	}
 
 	/** @returns {void} */
-	const save = () => confirm('Current state will be saved.', [
+	const save = () => alert('Current state will be saved.', [
 		{ text: 'Confirm', handler: () => core.current.save() },
 		{ text: 'Cancel' },
 	]);
 
 	/** @returns {void} */
-	const restore = () => confirm('Saved state will be restored.', [
+	const restore = () => alert('Saved state will be restored.', [
 		{ text: 'Confirm', handler: () => core.current.restore() },
 		{ text: 'Cancel' },
 	]);
 
 	useEffect(() => {
-		core.init(system.name, game.rom, canvas.current).then(() => resize());
+		(async () => {
+			try {
+				await core.init(system.name, game.rom, canvas.current).then(() => resize());
+			} catch (e) {
+				alert(e.toString(), [ 'OK' ]);
+				core.current?.stop(); close();
+			}
+		})()
 
 		return () => core.current.stop();
 	}, []);

@@ -125,23 +125,26 @@ export const useCore = (lib) => {
 	const init = async (system, rom, canvas) => {
 		const game = rom.replace(/\.[^/.]+$/, '')
 
-		const settings = await Files.Settings.get();
-		const cheats = (await Files.Cheats.get()).find(x => x.system == system && x.game == game)?.cheats;
-
-		setSettings(settings);
-		setCheats(cheats);
-
 		await load('Starting game...');
 
-		await core.create(system, rom, canvas);
-		setVariables(await core.variables());
-		await core.start(settings, cheats);
+		try {
+			const settings = await Files.Settings.get();
+			const cheats = (await Files.Cheats.get()).find(x => x.system == system && x.game == game)?.cheats;
 
-		initAudio(settings);
-		initSpeed(settings);
-		initGamepad(settings);
+			setSettings(settings);
+			setCheats(cheats);
 
-		await loaded();
+			await core.create(system, rom, canvas);
+			setVariables(await core.variables());
+			await core.start(settings, cheats);
+
+			initAudio(settings);
+			initSpeed(settings);
+			initGamepad(settings);
+
+		} finally {
+			await loaded();
+		}
 	}
 
 	return [
