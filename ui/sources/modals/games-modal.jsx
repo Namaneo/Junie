@@ -1,7 +1,6 @@
 import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonItemDivider, IonItemGroup, IonLabel, IonList, IonPage, IonProgressBar, IonTitle, IonToolbar, useIonAlert, useIonModal } from '@ionic/react';
 import { add, closeOutline, cloudDownloadOutline, playOutline, trashOutline } from 'ionicons/icons';
-import { useRef, useState } from 'react';
-import { useToast } from '../hooks/toast';
+import { useEffect, useRef, useState } from 'react';
 import { CoreModal } from './core-modal';
 import { System } from '../entities/system';
 import { Game } from '../entities/game';
@@ -54,15 +53,11 @@ export const GamesModal = ({ system, close }) => {
 	const list  = useRef(/** @type {HTMLIonListElement} */ (null));
 	const input = useRef(/** @type {HTMLInputElement} */ (null));
 
-	const sort = (games) => [...games.sort((g1, g2) => g1.rom < g2.rom ? -1 : 1)];
-
 	const [game,   setGame]   = useState(null);
-	const [games,  setGames]  = useState(sort(system.games));
+	const [games,  setGames]  = useState(system.games);
 	const [status, setStatus] = useState({ game: null, progress: 0 });
 
 	const [start, stop] = useIonModal(CoreModal, { system, game, close: () => stop() });
-
-	const [present, dismiss] = useToast('Game successfully installed!');
 	const [alert] = useIonAlert();
 
 	/**
@@ -71,7 +66,31 @@ export const GamesModal = ({ system, close }) => {
 	const update = async () => {
 		const systems = await Requests.getSystems();
 		system.games = systems.find(sys => sys.name == system.name).games;
-		setGames(sort(system.games));
+		setGames([...system.games.sort((g1, g2) => g1.rom < g2.rom ? -1 : 1)]);
+	}
+
+	/**
+	 * @param {Game} rom
+	 * @param {ReadableStream<Uint8Array>} stream
+	 * @param {number} length
+	 * @returns {Promise<void>}
+	 */
+	const read = async (rom, stream, length) => {
+		setStatus({ game: rom, progress: 0 });
+
+		const data = await Requests.readStream(stream, length, progress => {
+			setStatus({ game: rom, progress });
+		});
+
+		if (!data) {
+			alert({ header: 'Install failed', message: rom, buttons: [ 'OK' ] });
+			return;
+		}
+
+		await Files.Games.add(system.name, rom, data);
+
+		system.games.find(game => game.rom == rom).installed = true;
+		setGames([...system.games]);
 	}
 
 	/**
@@ -83,23 +102,11 @@ export const GamesModal = ({ system, close }) => {
 			return;
 
 		const games = [...input].map(file => new Game(system, file.name, false));
-		setGames([...games, ...system.games]);
+		system.games = [...games, ...system.games];
+		setGames(system.games);
 
-		for (const file of input) {
-			setStatus({ game: file.name, progress: 0 });
-
-			const reader = file.stream().getReader();
-			const length = file.size;
-
-			const data = await Requests.installGame(reader, length, progress => {
-				setStatus({ game: file.name, progress });
-			});
-
-			await Files.Games.add(system.name, file.name, data);
-
-			games.find(game => game.rom == file.name).installed = true;
-			setGames([...games, ...system.games]);
-		}
+		for (const file of input)
+			await read(file.name, file.stream(), file.size);
 
 		setStatus({ game: null, progress: 0 });
 		await update();
@@ -113,28 +120,9 @@ export const GamesModal = ({ system, close }) => {
 		setStatus({ game: game.rom, progress: 0 });
 
 		const response = await fetch(`${location.origin}/games/${system.name}/${game.rom}`);
-		const reader = response.body.getReader();
-		const length = response.headers.get('Content-Length');
+		await read(game.rom, response.body, response.headers.get('Content-Length'));
 
-		const data = await Requests.installGame(reader, length, progress => {
-			setStatus({ game: game.rom, progress });
-		});
-
-		if (!data) {
-			alert({
-				header: 'Install failed',
-				message: `${game.name} (${system.name})`,
-				buttons: [ 'OK' ],
-			});
-			setStatus({ game: null, progress: 0 });
-			return;
-		}
-
-		dismiss();
-		present(`${game.name} (${system.name})`);
 		setStatus({ game: null, progress: 0 });
-
-		await Files.Games.add(system.name, game.rom, data);
 		await update();
 	}
 
@@ -167,6 +155,8 @@ export const GamesModal = ({ system, close }) => {
 		setGame(game);
 		start({ cssClass: 'fullscreen' });
 	}
+
+	useEffect(() => { update() }, []);
 
 	return (
 		<IonPage className="page">

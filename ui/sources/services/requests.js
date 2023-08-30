@@ -57,19 +57,19 @@ export default class Requests {
 	};
 
 	/**
-	 * @param {ReadableStream<Uint8Array>} reader
+	 * @param {ReadableStream<Uint8Array>} stream
 	 * @param {number} length
 	 * @param {(progress: number) => void} progress
 	 * @returns {Promise<Uint8Array>}
 	 */
-	static async installGame(reader, length, progress) {
+	static async readStream(stream, length, progress) {
 		try {
 			const buffer = new Uint8Array(length);
 
 			let offset = 0
-			return reader.read().then(function process({ done, value }) {
-				if (done)
-					return buffer;
+			const reader = stream.getReader();
+			await reader.read().then(function process({ done, value }) {
+				if (done) return;
 
 				buffer.set(value, offset);
 				offset += value.length;
@@ -78,6 +78,8 @@ export default class Requests {
 
 				return reader.read().then(process);
 			});
+
+			return buffer;
 
 		} catch (e) {
 			console.error(e);
