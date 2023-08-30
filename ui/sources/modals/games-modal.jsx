@@ -53,8 +53,10 @@ export const GamesModal = ({ system, close }) => {
 	const list  = useRef(/** @type {HTMLIonListElement} */ (null));
 	const input = useRef(/** @type {HTMLInputElement} */ (null));
 
+	const sort = (games) => [...games.sort((g1, g2) => g1.rom < g2.rom ? -1 : 1)];
+
 	const [game,   setGame]   = useState(null);
-	const [games,  setGames]  = useState(system.games);
+	const [games,  setGames]  = useState(sort(system.games));
 	const [status, setStatus] = useState({ game: null, progress: 0 });
 
 	const [start, stop] = useIonModal(CoreModal, { system, game, close: () => stop() });
@@ -65,17 +67,18 @@ export const GamesModal = ({ system, close }) => {
 	 */
 	const update = async () => {
 		const systems = await Requests.getSystems();
-		system.games = systems.find(sys => sys.name == system.name).games;
-		setGames([...system.games.sort((g1, g2) => g1.rom < g2.rom ? -1 : 1)]);
+		const games = systems.find(sys => sys.name == system.name).games;
+		setGames(sort(games));
 	}
 
 	/**
-	 * @param {Game} rom
+	 * @param {Game[]} games
+	 * @param {string} rom
 	 * @param {ReadableStream<Uint8Array>} stream
 	 * @param {number} length
 	 * @returns {Promise<void>}
 	 */
-	const read = async (rom, stream, length) => {
+	const read = async (games, rom, stream, length) => {
 		setStatus({ game: rom, progress: 0 });
 
 		const data = await Requests.readStream(stream, length, progress => {
@@ -89,25 +92,27 @@ export const GamesModal = ({ system, close }) => {
 
 		await Files.Games.add(system.name, rom, data);
 
-		system.games.find(game => game.rom == rom).installed = true;
-		setGames([...system.games]);
+		games.find(game => game.rom == rom).installed = true;
+		setGames([...games]);
 	}
 
 	/**
-	 * @param {FileList} input
+	 * @param {FileList} files
 	 * @returns {Promise<void>}
 	 */
-	const install = async (input) => {
-		if (!input?.length)
+	const install = async (files) => {
+		if (!files?.length)
 			return;
 
-		const games = [...input].map(file => new Game(system, file.name, false));
-		system.games = [...games, ...system.games];
-		setGames(system.games);
+		const pending = [...files].map(file => new Game(system, file.name, false));
+		const available = games.filter(g1 => !pending.find(g2 => g1.rom == g2.rom));
+		const updated = [...pending, ...available];
+		setGames(updated);
 
-		for (const file of input)
-			await read(file.name, file.stream(), file.size);
+		for (const file of files)
+			await read(updated, file.name, file.stream(), file.size);
 
+		input.current.value = null;
 		setStatus({ game: null, progress: 0 });
 		await update();
 	}
@@ -120,7 +125,7 @@ export const GamesModal = ({ system, close }) => {
 		setStatus({ game: game.rom, progress: 0 });
 
 		const response = await fetch(`${location.origin}/games/${system.name}/${game.rom}`);
-		await read(game.rom, response.body, response.headers.get('Content-Length'));
+		await read(games, game.rom, response.body, response.headers.get('Content-Length'));
 
 		setStatus({ game: null, progress: 0 });
 		await update();
@@ -155,8 +160,6 @@ export const GamesModal = ({ system, close }) => {
 		setGame(game);
 		start({ cssClass: 'fullscreen' });
 	}
-
-	useEffect(() => { update() }, []);
 
 	return (
 		<IonPage className="page">
