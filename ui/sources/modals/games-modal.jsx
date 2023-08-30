@@ -22,20 +22,20 @@ const GameCard = ({ game, status, download, play, remove }) => {
 	return (
 		<IonItem color="transparent">
 			<IonLabel>{Path.clean(game.name)}</IonLabel>
-			{status.game == game.name &&
+			{status.game == game.rom &&
 				<IonProgressBar value={status.progress}></IonProgressBar>
 			}
-			{status.game != game.name && !game.installed &&
+			{status.game != game.rom && !game.installed &&
 				<IonButton onClick={() => download(game)} disabled={!!status.game} fill="clear">
 					<IonIcon slot="icon-only" icon={cloudDownloadOutline} />
 				</IonButton>
 			}
-			{status.game != game.name && game.installed && game.name != '2048' &&
+			{status.game != game.rom && game.installed && game.rom != '2048' &&
 				<IonButton onClick={() => remove(game)} disabled={!!status.game} fill="clear">
 					<IonIcon slot="icon-only" icon={trashOutline} color="medium" />
 				</IonButton>
 			}
-			{status.game != game.name && game.installed &&
+			{status.game != game.rom && game.installed &&
 				<IonButton onClick={() => play(game)} disabled={!!status.game} fill="clear">
 					<IonIcon slot="icon-only" icon={playOutline} />
 				</IonButton>
@@ -54,7 +54,7 @@ export const GamesModal = ({ system, close }) => {
 	const list  = useRef(/** @type {HTMLIonListElement} */ (null));
 	const input = useRef(/** @type {HTMLInputElement} */ (null));
 
-	const sort = () => [...system.games.sort((g1, g2) => g1.rom < g2.rom ? -1 : 1)];
+	const sort = (games) => [...games.sort((g1, g2) => g1.rom < g2.rom ? -1 : 1)];
 
 	const [game,   setGame]   = useState(null);
 	const [games,  setGames]  = useState(sort(system.games));
@@ -82,10 +82,26 @@ export const GamesModal = ({ system, close }) => {
 		if (!input?.length)
 			return;
 
-		const file = input[0];
+		const games = [...input].map(file => new Game(system, file.name, false));
+		setGames(sort([...games, ...system.games]));
 
-		const buffer = new Uint8Array(await file.arrayBuffer())
-		await Files.Games.add(system.name, file.name, buffer);
+		for (const file of input) {
+			setStatus({ game: file.name, progress: 0 });
+
+			const reader = file.stream().getReader();
+			const length = file.size;
+
+			const data = await Requests.installGame(reader, length, progress => {
+				setStatus({ game: file.name, progress });
+			});
+
+			await Files.Games.add(system.name, file.name, data);
+
+			games.find(game => game.rom == file.name).installed = true;
+			setGames(sort([...games, ...system.games]));
+		}
+
+		setStatus({ game: null, progress: 0 });
 		await update();
 	}
 
@@ -94,9 +110,14 @@ export const GamesModal = ({ system, close }) => {
 	 * @returns {Promise<void>}
 	 */
 	const download = async (game) => {
-		setStatus({ game: game.name, progress: 0 });
-		const data = await Requests.fetchGame(system, game, progress => {
-			setStatus({ game: game.name, progress });
+		setStatus({ game: game.rom, progress: 0 });
+
+		const response = await fetch(`${location.origin}/games/${system.name}/${game.rom}`);
+		const reader = response.body.getReader();
+		const length = response.headers.get('Content-Length');
+
+		const data = await Requests.installGame(reader, length, progress => {
+			setStatus({ game: game.rom, progress });
 		});
 
 		if (!data) {
@@ -155,7 +176,7 @@ export const GamesModal = ({ system, close }) => {
 					<IonTitle>{system.name}</IonTitle>
 					<IonButtons slot="end">
 						<IonButton onClick={() => input.current.click()}>
-							<input type="file" ref={input} onChange={e => install(e.target.files)} hidden />
+							<input type="file" ref={input} onChange={e => install(e.target.files)} multiple hidden />
 							<IonIcon slot="icon-only" icon={add} />
 						</IonButton>
 						<IonButton onClick={close}>

@@ -57,20 +57,13 @@ export default class Requests {
 	};
 
 	/**
-	 *
-	 * @param {System} system
-	 * @param {Game} game
+	 * @param {ReadableStream<Uint8Array>} reader
+	 * @param {number} length
 	 * @param {(progress: number) => void} progress
 	 * @returns {Promise<Uint8Array>}
 	 */
-	static async fetchGame(system, game, progress) {
+	static async installGame(reader, length, progress) {
 		try {
-			const path = `${location.origin}/games/${system.name}/${game.rom}`;
-
-			const response = await fetch(path);
-			const reader = response.body.getReader();
-
-			const length = response.headers.get('Content-Length');
 			const buffer = new Uint8Array(length);
 
 			let offset = 0
