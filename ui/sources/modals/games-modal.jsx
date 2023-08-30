@@ -83,7 +83,7 @@ export const GamesModal = ({ system, close }) => {
 			return;
 
 		const games = [...input].map(file => new Game(system, file.name, false));
-		setGames(sort([...games, ...system.games]));
+		setGames([...games, ...system.games]);
 
 		for (const file of input) {
 			setStatus({ game: file.name, progress: 0 });
@@ -98,7 +98,7 @@ export const GamesModal = ({ system, close }) => {
 			await Files.Games.add(system.name, file.name, data);
 
 			games.find(game => game.rom == file.name).installed = true;
-			setGames(sort([...games, ...system.games]));
+			setGames([...games, ...system.games]);
 		}
 
 		setStatus({ game: null, progress: 0 });

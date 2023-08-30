@@ -89,10 +89,7 @@ export default class Files {
 		const fs = await this.#fs();
 
 		await Files.remove(path);
-
-		const buffer = new Uint8Array(new SharedArrayBuffer(data.byteLength));
-		buffer.set(data);
-		await fs.write(path, buffer, 0);
+		await fs.write(path, data, 0);
 	}
 
 	/**

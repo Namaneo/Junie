@@ -162,6 +162,18 @@ export default class Parallel {
 	}
 
 	/**
+	 * @param {any} obj
+	 * @returns {boolean}
+	 */
+	#transferable(obj) {
+		const instance = ArrayBuffer.isView(obj) ? obj.buffer : obj;
+		const types = [MessagePort, OffscreenCanvas, ArrayBuffer];
+		if (types.map(type => type.name).includes(instance?.constructor.name))
+			return instance;
+		return null;
+	}
+
+	/**
 	 * @param {string} name
 	 * @param {any[]} args
 	 * @param {boolean} sync
@@ -175,8 +187,7 @@ export default class Parallel {
 			: this.#buffers.pop().fill(0);
 
 		const message = { name, args: [sab, ...args] };
-		const types = [MessagePort, OffscreenCanvas];
-		const transfer = args.filter(arg => arg && types.find(type => type.name == arg.constructor.name));
+		const transfer = args.map(arg => this.#transferable(arg)).filter(Boolean);
 		this.#worker.postMessage(message, transfer);
 
 		if (sync)
