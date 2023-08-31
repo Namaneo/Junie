@@ -5,7 +5,7 @@ QUIET := > /dev/null 2>&1
 
 include ../GNUmakefile.common
 
-all: wasi-sdk emsdk libz.a libretro.a
+all: wasi-sdk emsdk libretro-common libz.a libretro.a
 
 wasi-sdk:
 	@echo Fetching wasi-sdk...
@@ -18,13 +18,9 @@ emsdk:
 	@git -C emsdk pull $(QUIET) || git clone --recurse https://github.com/emscripten-core/emsdk.git $(QUIET)
 	@cd emsdk && ./emsdk install latest $(QUIET) && ./emsdk activate latest $(QUIET)
 
-libz.a:
-	@echo Fetching zlib...
-	@git -C zlib pull $(QUIET) || git clone --recurse https://github.com/madler/zlib.git $(QUIET)
-	@cd zlib && ./configure $(QUIET)
-	@$(MAKE) -C zlib libz.a CC="$(CC)" AR="$(AR)" RANLIB="$(RANLIB)" $(QUIET)
-	@cp zlib/libz.a .
-	@$(MAKE) -C zlib distclean $(QUIET)
+libretro-common:
+	@echo Fetching libretro-common...
+	@git -C libretro-common pull $(QUIET) || git clone --recurse https://github.com/libretro/libretro-common.git $(QUIET)
 
 OBJ = \
 	libretro-common/file/file_path.o \
@@ -43,9 +39,15 @@ OBJ = \
 	libretro-common/audio/resampler/audio_resampler.o \
 	libretro-common/audio/resampler/drivers/sinc_resampler.o
 
+libz.a:
+	@echo Fetching zlib...
+	@git -C zlib pull $(QUIET) || git clone --recurse https://github.com/madler/zlib.git $(QUIET)
+	@cd zlib && ./configure $(QUIET)
+	@$(MAKE) -C zlib libz.a CC="$(CC)" AR="$(AR)" RANLIB="$(RANLIB)" $(QUIET)
+	@cp zlib/libz.a .
+	@$(MAKE) -C zlib distclean $(QUIET)
+
 libretro.a:
-	@echo Fetching libretro-common...
-	@git -C libretro-common pull $(QUIET) || git clone --recurse https://github.com/libretro/libretro-common.git $(QUIET)
 	@$(MAKE) $(OBJ)
 	@$(AR) rcs libretro.a $(OBJ)
 
