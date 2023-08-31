@@ -62,7 +62,11 @@ static struct CTX {
 	enum retro_pixel_format format;
 
 	pthread_t thread;
-	pthread_mutex_t mutex;
+	pthread_cond_t cond;
+    pthread_mutex_t mutex;
+    uint64_t queue_head;
+	uint64_t queue_tail;
+
 	uint64_t before_run;
 	uint64_t after_run;
 	double remaining_frames;
@@ -527,6 +531,23 @@ static uint32_t core_compute_framerate()
 	return pending <= 3 * CTX.speed ? pending : 3 * CTX.speed;
 }
 
+static void core_lock()
+{
+    pthread_mutex_lock(&CTX.mutex);
+    uint64_t queue_me = CTX.queue_tail++;
+    while (queue_me != CTX.queue_head)
+        pthread_cond_wait(&CTX.cond, &CTX.mutex);
+    pthread_mutex_unlock(&CTX.mutex);
+}
+
+static void core_unlock()
+{
+    pthread_mutex_lock(&CTX.mutex);
+    CTX.queue_head++;
+    pthread_cond_broadcast(&CTX.cond);
+    pthread_mutex_unlock(&CTX.mutex);
+}
+
 void *core_thread(void *opaque)
 {
 	CTX.before_run = core_get_ticks();
@@ -535,11 +556,9 @@ void *core_thread(void *opaque)
 		uint32_t count = core_compute_framerate();
 
 		for (uint32_t i = 0; i < count; ++i) {
-			pthread_mutex_lock(&CTX.mutex);
+			core_lock();
 			CTX.sym.retro_run();
-			pthread_mutex_unlock(&CTX.mutex);
-
-			sched_yield();
+			core_unlock();
 		}
 
 		CTX.after_run = core_get_ticks();
@@ -587,14 +606,14 @@ bool JUN_CoreStartGame()
 
 void JUN_CoreLock()
 {
-	pthread_mutex_lock(&CTX.mutex);
+	core_lock();
 	save_memories();
 }
 
 void JUN_CoreUnlock()
 {
 	CTX.audio.frames = 0;
-	pthread_mutex_unlock(&CTX.mutex);
+	core_unlock();
 }
 
 void JUN_CoreDestroy()
