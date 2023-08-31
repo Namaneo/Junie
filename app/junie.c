@@ -513,24 +513,6 @@ void JUN_CoreCreate(const char *system, const char *rom)
 	CTX.sym.retro_set_audio_sample_batch(audio_sample_batch);
 }
 
-static uint32_t core_compute_framerate()
-{
-	double before_run = core_get_ticks();
-
-    double total_loop = before_run - CTX.before_run;
-    double time_run = CTX.after_run - CTX.before_run;
-    double time_idle = before_run - CTX.after_run;
-	double framerate = 1000.0 / total_loop;
-
-    CTX.before_run = before_run;
-
-	CTX.remaining_frames += (CTX.av.timing.fps * CTX.speed) / framerate;
-	uint32_t pending = (uint32_t) CTX.remaining_frames;
-	CTX.remaining_frames -= (double) pending;
-
-	return pending <= 3 * CTX.speed ? pending : 3 * CTX.speed;
-}
-
 static void core_lock()
 {
     pthread_mutex_lock(&CTX.mutex);
@@ -546,6 +528,23 @@ static void core_unlock()
     CTX.queue_head++;
     pthread_cond_broadcast(&CTX.cond);
     pthread_mutex_unlock(&CTX.mutex);
+}
+
+static uint32_t core_compute_framerate()
+{
+	double before_run = core_get_ticks();
+    double total_loop = before_run - CTX.before_run;
+    CTX.before_run = before_run;
+
+	if (total_loop > 0) {
+		double expected_frames = CTX.av.timing.fps * CTX.speed;
+		CTX.remaining_frames += expected_frames / (1000.0 / total_loop);
+	}
+
+	uint32_t pending = (uint32_t) CTX.remaining_frames;
+	CTX.remaining_frames -= (double) pending;
+
+	return pending <= 3 * CTX.speed ? pending : 3 * CTX.speed;
 }
 
 void *core_thread(void *opaque)
@@ -599,27 +598,17 @@ bool JUN_CoreStartGame()
 	restore_memories();
 
 	pthread_mutex_init(&CTX.mutex, NULL);
+	pthread_cond_init(&CTX.cond, NULL);
 	pthread_create(&CTX.thread, NULL, core_thread, NULL);
 
 	return CTX.initialized;
-}
-
-void JUN_CoreLock()
-{
-	core_lock();
-	save_memories();
-}
-
-void JUN_CoreUnlock()
-{
-	CTX.audio.frames = 0;
-	core_unlock();
 }
 
 void JUN_CoreDestroy()
 {
 	CTX.destroying = true;
 	pthread_join(CTX.thread, NULL);
+	pthread_cond_destroy(&CTX.cond);
 	pthread_mutex_destroy(&CTX.mutex);
 
 	CTX.sym.retro_deinit();
@@ -643,14 +632,26 @@ void JUN_CoreDestroy()
 	CTX = (struct CTX) {0};
 }
 
+void JUN_CoreLock()
+{
+	core_lock();
+	save_memories();
+}
+
+void JUN_CoreUnlock()
+{
+	CTX.audio.frames = 0;
+	core_unlock();
+}
+
 uint32_t JUN_CoreGetPixelFormat()
 {
 	return CTX.format;
 }
 
-const void *JUN_CoreGetTiming()
+uint32_t JUN_CoreGetSampleRate()
 {
-	return &CTX.av.timing;
+	return CTX.av.timing.sample_rate * CTX.speed;
 }
 
 const void *JUN_CoreGetVideo()

@@ -6,7 +6,7 @@ JUN_CoreLock
 JUN_CoreUnlock
 
 JUN_CoreGetPixelFormat
-JUN_CoreGetTiming
+JUN_CoreGetSampleRate
 JUN_CoreGetVideo
 JUN_CoreGetAudio
 

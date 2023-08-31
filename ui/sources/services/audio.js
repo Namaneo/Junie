@@ -73,7 +73,6 @@ export default class AudioPlayer {
 
 		this.#state.offset = 0;
 		this.#state.next_time = 0;
-		this.#state.buffer = new Float32Array(sampleRate * channels);
 	}
 
 	/**
@@ -101,11 +100,8 @@ export default class AudioPlayer {
 			state.playing = false;
 		}
 
-		if (!state.flushing) {
-			const size = this.#state.sample_rate * this.#state.channels;
-			state.buffer.set(new Uint8Array(frames, 0, size), state.offset);
+		if (!state.flushing)
 			state.offset += frames.length;
-		}
 
 		if (!state.playing && !state.flushing && state.offset / state.channels > state.min_buffer) {
 			state.next_time = this.#context.currentTime;

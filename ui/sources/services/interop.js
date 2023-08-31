@@ -2,7 +2,6 @@ import { Settings } from '../entities/settings';
 import { Cheat } from '../entities/cheat';
 import { Native } from '../entities/native';
 import { Variable } from '../entities/variable';
-import { Timing } from '../entities/timing';
 import { Video } from '../entities/video';
 import { Audio } from '../entities/audio';
 import Parallel from './parallel';
@@ -158,7 +157,7 @@ export default class Interop {
 		this.#wrap('Unlock',             null,     []);
 
 		this.#wrap('GetPixelFormat',     'number', []);
-		this.#wrap('GetTiming',          'number', []);
+		this.#wrap('GetSampleRate',      'number', []);
 		this.#wrap('GetVideo',           'number', []);
 		this.#wrap('GetAudio',           'number', []);
 
@@ -185,9 +184,6 @@ export default class Interop {
 
 		const memory = this.#instance.exports.memory;
 
-		const pixel_format = this.GetPixelFormat();
-		const timing = Timing.parse(memory, this.#data.timing);
-
 		this.#stop = false;
 		this.#running = new Promise(resolve => {
 			const step = async () => {
@@ -195,7 +191,8 @@ export default class Interop {
 
 				this.Lock();
 
-				this.SetSpeed(this.#speed);
+				const pixel_format = this.GetPixelFormat();
+				const sample_rate = this.GetSampleRate();
 
 				const video = Video.parse(memory, this.#data.video);
 				const audio = Audio.parse(memory, this.#data.audio);
@@ -209,7 +206,7 @@ export default class Interop {
 
 				if (audio.frames && this.#audio) {
 					const audio_view = new Float32Array(memory.buffer, audio.data, audio.frames * 2).slice();
-					postMessage({ type: 'audio', view: audio_view, sample_rate: timing.sample_rate * this.#speed }, [audio_view.buffer]);
+					postMessage({ type: 'audio', view: audio_view, sample_rate }, [audio_view.buffer]);
 				}
 
 				this.Unlock();
@@ -248,7 +245,7 @@ export default class Interop {
 	audio(enable) { this.#audio = enable; }
 
 	/** @param {number} value @returns {Promise<void>} */
-	speed(value) { this.#speed = value; }
+	speed(value) { this.SetSpeed(value); }
 
 	/** @param {number} device @param {number} id @param {number} value @returns {Promise<void>} */
 	send(device, id, value) { this.SetInput(device, id, value); }
