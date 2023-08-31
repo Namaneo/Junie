@@ -19,7 +19,7 @@ ADD ./cores ./cores
 RUN make cores
 
 ADD ./app ./app
-RUN make app
+RUN make app QUIET=
 
 ADD ./ui ./ui
 RUN make ui
