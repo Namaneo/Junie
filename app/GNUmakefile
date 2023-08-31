@@ -1,4 +1,3 @@
-SRC_DIR := sources
 OUT_DIR := build
 
 include ../GNUmakefile.common
@@ -12,7 +11,7 @@ CORES_DIR := ../cores
 CORES     := $(shell jq -r 'keys[]' $(CORES_DIR)/cores.json)
 
 CFLAGS := \
-	-I$(SRC_DIR)
+	-I$(DEPS_DIR)/libretro-common/include
 
 LDFLAGS := \
 	-lwasi-emulated-mman -fwasm-exceptions \
@@ -35,7 +34,7 @@ MAKEFLAGS += --no-print-directory
 
 all: clean prepare
 	@echo Building objects...
-	@$(MAKE) -s $(SRC_DIR)/core.o
+	@$(MAKE) -s junie.o
 	@$(MAKE) -s $(CORES:%=$(OUT_DIR)/%.wasm)
 
 prepare:
@@ -43,10 +42,10 @@ prepare:
 
 $(OUT_DIR)/%.wasm:
 	@echo Building $*.wasm...
-	@$(CXX) -o $(OUT_DIR)/$*.wasm $(SRC_DIR)/core.o $(DEPS) $(CORES_DIR)/lib$*.a $(LDFLAGS) $(QUIET)
+	@$(CXX) -o $(OUT_DIR)/$*.wasm junie.o $(DEPS) $(CORES_DIR)/lib$*.a $(LDFLAGS) $(QUIET)
 
 clean:
-	@rm -rf $(SRC_DIR)/core.o $(OUT_DIR)
+	@rm -rf junie.o $(OUT_DIR)
 
 %.o: %.c
 	@$(CC) -c $(CFLAGS) -o $@ $^ $(QUIET)

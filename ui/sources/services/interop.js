@@ -1,8 +1,9 @@
 import { Settings } from '../entities/settings';
 import { Cheat } from '../entities/cheat';
 import { Native } from '../entities/native';
-import { Video } from '../entities/video';
 import { Variable } from '../entities/variable';
+import { Timing } from '../entities/timing';
+import { Video } from '../entities/video';
 import { Audio } from '../entities/audio';
 import Parallel from './parallel';
 import Filesystem from './filesystem';
@@ -118,21 +119,23 @@ export default class Interop {
 	 * @param {string} rom
 	 * @param {WebAssembly.Memory} memory
 	 * @param {MessagePort} port
+	 * @param {{ [fd: number]: {path: string, offset: number } }} fds
 	 * @param {string} origin
 	 * @param {number} start_arg
 	 * @returns {Promise<void>}
 	 */
-	async init(system, rom, memory, port, origin, start_arg) {
-		const filesystem = new Parallel(Filesystem, true);
-		this.#wasi = new WASI(memory, filesystem.link(port));
+	async init(system, rom, memory, port, fds, origin, start_arg) {
+		const parallel = new Parallel(Filesystem, true);
+		const filesystem = parallel.link(port);
+		this.#wasi = new WASI(memory, filesystem, fds);
 
 		const source = await WebAssembly.instantiateStreaming(fetch(`${origin}/modules/${this.#name}.wasm`), {
 			env: { memory },
 			wasi_snapshot_preview1: this.#wasi.environment,
 			wasi: { 'thread-spawn': (start_arg) => {
-				const id = ++this.#threads;
-				const port = filesystem.open();
-				postMessage({ type: 'thread', id, start_arg, port }, [port]);
+				const id = filesystem.id();
+				const port = parallel.open()
+				postMessage({ type: 'thread', id, port, fds: this.#wasi.fds, start_arg }, [port]);
 				return id;
 			}},
 		});
@@ -141,6 +144,7 @@ export default class Interop {
 
 		if (start_arg) {
 			this.#instance.exports.wasi_thread_start(this.#id, start_arg);
+			close();
 			return;
 		}
 
@@ -148,14 +152,18 @@ export default class Interop {
 
 		this.#wrap('Create',             null,     ['string', 'string']);
 		this.#wrap('StartGame',          'number', []);
-		this.#wrap('Run',                null,     ['number']);
-		this.#wrap('SetInput',           null,     ['number', 'number', 'number']);
 		this.#wrap('Destroy',            null,     []);
 
+		this.#wrap('Lock',               null,     []);
+		this.#wrap('Unlock',             null,     []);
+
 		this.#wrap('GetPixelFormat',     'number', []);
-		this.#wrap('GetSampleRate',      'number', []);
+		this.#wrap('GetTiming',          'number', []);
 		this.#wrap('GetVideo',           'number', []);
 		this.#wrap('GetAudio',           'number', []);
+
+		this.#wrap('SetSpeed',           null,     ['number']);
+		this.#wrap('SetInput',           null,     ['number', 'number', 'number']);
 
 		this.#wrap('GetVariables',       'number', []);
 		this.#wrap('SetVariable',        null,     ['string', 'string']);
@@ -165,8 +173,6 @@ export default class Interop {
 
 		this.#wrap('ResetCheats',        null,     []);
 		this.#wrap('SetCheat',           null,     ['number', 'number', 'string']);
-
-		await this.#wasi.load(system, rom);
 
 		this.Create(system, rom);
 
@@ -180,23 +186,33 @@ export default class Interop {
 		const memory = this.#instance.exports.memory;
 
 		const pixel_format = this.GetPixelFormat();
-		const sample_rate = this.GetSampleRate();
+		const timing = Timing.parse(memory, this.#data.timing);
 
 		this.#stop = false;
 		this.#running = new Promise(resolve => {
 			const step = async () => {
-				this.Run(this.#speed);
+				this.#stop ? resolve() : requestAnimationFrame(step);
+
+				this.Lock();
+
+				this.SetSpeed(this.#speed);
 
 				const video = Video.parse(memory, this.#data.video);
 				const audio = Audio.parse(memory, this.#data.audio);
 
-				if (video.data)
-					postMessage({ type: 'video', video, pixel_format });
+				if (video.data) {
+					const video_view = pixel_format == 1
+						? new Uint8Array(memory.buffer, video.data, video.pitch * video.height).slice()
+						: new Uint16Array(memory.buffer, video.data, (video.pitch * video.height) / 2).slice();
+					postMessage({ type: 'video', view: video_view, video, pixel_format }, [video_view.buffer]);
+				}
 
-				if (this.#audio)
-					postMessage({ type: 'audio', audio, sample_rate: sample_rate * this.#speed });
+				if (audio.frames && this.#audio) {
+					const audio_view = new Float32Array(memory.buffer, audio.data, audio.frames * 2).slice();
+					postMessage({ type: 'audio', view: audio_view, sample_rate: timing.sample_rate * this.#speed }, [audio_view.buffer]);
+				}
 
-				this.#stop ? resolve() : requestAnimationFrame(step);
+				this.Unlock();
 			}
 
 			requestAnimationFrame(step);

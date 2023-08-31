@@ -7,7 +7,7 @@ deps/*/
 cores/*/
 
 app/build
-app/sources/*.o
+app/*.o
 
 app/include/res_inputs.h
 

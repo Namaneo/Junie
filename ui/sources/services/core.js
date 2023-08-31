@@ -43,32 +43,31 @@ export default class Core {
 	 * @param {HTMLCanvasElement} canvas
 	 */
 	async create(system, rom, canvas) {
-		const graphics = new Graphics(Core.#memory, canvas);
+		const graphics = new Graphics(canvas);
 
 		const origin = location.origin + location.pathname.substring(0, location.pathname.lastIndexOf('/'));
 		const script = await (await fetch('worker.js')).text();
 
-		this.#parallel = new Parallel(Interop, false, async message => {
+		const handler = async message => {
 			switch (message.data.type) {
 				case 'thread':
-					const child = new Parallel(Interop, false);
+					const child = new Parallel(Interop, false, handler);
 					const core = await child.create(`${this.#name}-${message.data.id}`, script);
-					await core.init(system, rom, Core.#memory, message.data.port, origin, message.data.start_arg);
+					await core.init(system, rom, Core.#memory, message.data.port, message.data.fds, origin, message.data.start_arg);
 					this.#threads.push(child);
 					break;
 				case 'video':
-					graphics.init(message.data.pixel_format);
-					graphics.draw(message.data.video.data, message.data.video.width, message.data.video.height, message.data.video.pitch, message.data.video.ratio);
+					graphics.draw(message.data.view, message.data.video, message.data.pixel_format);
 					break;
 				case 'audio':
-					const view = new Float32Array(Core.#memory.buffer, message.data.audio.data, message.data.audio.frames * 2);
-					AudioPlayer.queue(view, message.data.sample_rate, 2);
+					AudioPlayer.queue(message.data.view, message.data.sample_rate, 2);
 					break;
 			}
-		});
+		}
 
+		this.#parallel = new Parallel(Interop, false, handler);
 		this.#interop = await this.#parallel.create(this.#name, script);
-		await this.#interop.init(system, rom, Core.#memory, await Files.clone(), origin);
+		await this.#interop.init(system, rom, Core.#memory, await Files.clone(), {}, origin);
 	}
 
 	/**

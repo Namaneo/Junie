@@ -102,7 +102,8 @@ export default class AudioPlayer {
 		}
 
 		if (!state.flushing) {
-			state.buffer.set(frames, state.offset);
+			const size = this.#state.sample_rate * this.#state.channels;
+			state.buffer.set(new Uint8Array(frames, 0, size), state.offset);
 			state.offset += frames.length;
 		}
 

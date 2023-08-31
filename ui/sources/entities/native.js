@@ -3,6 +3,9 @@ export class Native {
 	variables = 0;
 
 	/** @type {number} */
+	timing = 0;
+
+	/** @type {number} */
 	video = 0;
 
 	/** @type {number} */
@@ -13,6 +16,7 @@ export class Native {
 	 */
 	constructor(interop) {
 		this.variables = interop.GetVariables();
+		this.timing = interop.GetTiming();
 		this.video = interop.GetVideo();
 		this.audio = interop.GetAudio();
 	}

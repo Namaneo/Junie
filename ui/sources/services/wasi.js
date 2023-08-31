@@ -1,74 +1,4 @@
-import Path from './path';
 import Filesystem from './filesystem';
-
-/** @typedef {{ [path: string]: FileSystemSyncAccessHandle }} Preopens */
-
-class FS {
-	/** @type {Filesystem} */
-	#filesystem = null;
-
-	/** @type {Preopens} */
-	#preopens = {}
-
-	/**
-	 * @param {Filesystem} filesystem
-	 */
-	constructor(filesystem) {
-		this.#filesystem = filesystem;
-	}
-
-	/**
-	 * @param {string} system
-	 * @param {string} rom
-	 * @returns {Promise<void>}
-	 */
-	async load(system, rom) {
-		for (const path of this.#filesystem.list()) {
-			if (!path.startsWith(`/${system}/${Path.name(rom)}`))
-				continue;
-
-			this.#filesystem.close(path);
-			this.#preopens[path] = await Filesystem.open(path, false);
-		}
-	};
-
-	/**
-	 * @param {string} path
-	 * @returns {number}
-	 */
-	size(path) {
-		const file = Filesystem.parse(path);
-		if (this.#preopens[file.path])
-			return this.#preopens[file.path].getSize();
-		return this.#filesystem.size(file.path);
-	}
-
-	/**
-	 * @param {string} path
-	 * @param {Uint8Array} buffer
-	 * @param {number} offset
-	 * @returns {number}
-	 */
-	read(path, buffer, offset) {
-		const file = Filesystem.parse(path);
-		if (this.#preopens[file.path])
-			return this.#preopens[file.path].read(buffer, { at: offset });
-		return this.#filesystem.read(file.path, buffer, offset);
-	}
-
-	/**
-	 * @param {string} path
-	 * @param {Uint8Array} buffer
-	 * @param {number} offset
-	 * @returns {number}
-	 */
-	write(path, buffer, offset) {
-		const file = Filesystem.parse(path);
-		if (this.#preopens[file.path])
-			return this.#preopens[file.path].write(buffer, { at: offset });
-		return this.#filesystem.write(file.path, buffer, offset);
-	}
-}
 
 export default class WASI {
 	get #WASI_ERRNO_SUCCESS() { return 0; }
@@ -85,11 +15,14 @@ export default class WASI {
 	/** @type {WebAssembly.Memory} */
 	#memory = null;
 
-	/** @type {FS} */
+	/** @type {Filesystem} */
 	#filesystem = null;
 
 	/** @type {number} */
 	#preopen = 0;
+
+	/** @type {Int32Array} */
+	#sab = new Int32Array(new SharedArrayBuffer(4));
 
 	/** @type {number} */
 	#next_fd = 3;
@@ -98,24 +31,20 @@ export default class WASI {
 	#fds = {
 		1: { offset: 0 },
 		2: { offset: 0 },
-	};
+	}
+
+	/** @type {{ [fd: number]: {path: string, offset: number } }} */
+	get fds() { return this.#fds; }
 
 	/**
 	 * @param {WebAssembly.Memory} memory
 	 * @param {Filesystem} filesystem
+	 * @param {{ [fd: number]: {path: string, offset: number } }} fds
 	 */
-	constructor(memory, filesystem) {
+	constructor(memory, filesystem, fds) {
 		this.#memory = memory;
-		this.#filesystem = new FS(filesystem);
-	}
-
-	/**
-	 * @param {string} system
-	 * @param {string} rom
-	 * @returns {Promise<void>}
-	 */
-	async load(system, rom) {
-		await this.#filesystem.load(system, rom);
+		this.#filesystem = filesystem;
+		this.#fds = { ...this.#fds, ...fds };
 	}
 
 	/**

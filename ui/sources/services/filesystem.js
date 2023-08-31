@@ -1,6 +1,9 @@
 /// <reference lib="webworker" />
 
 export default class Filesystem {
+	/** @type {number} */
+	static #next_id = 1;
+
 	/** @type {{ [path: string]: FileSystemSyncAccessHandle }} */
 	static #handles = [];
 
@@ -8,7 +11,7 @@ export default class Filesystem {
 	 * @param {string} path
 	 * @returns {{ path: string, filename: string, directories: string[] }}
 	 */
-	static parse(path) {
+	static #parse(path) {
 		path = `/${path}`.replace(/^\/+/, '/');
 
 		const filename = path.substring(path.lastIndexOf('/') + 1);
@@ -25,7 +28,7 @@ export default class Filesystem {
 	 */
 	static async #directory(path, create) {
 		let directory = await navigator.storage.getDirectory();
-		for (const component of Filesystem.parse(path).directories)
+		for (const component of Filesystem.#parse(path).directories)
 			directory = await directory.getDirectoryHandle(component, { create });
 		return directory;
 	}
@@ -56,7 +59,7 @@ export default class Filesystem {
 	 * @returns {Promise<number>}
 	 */
 	static async #exec(path, create, action) {
-		const file = Filesystem.parse(path);
+		const file = Filesystem.#parse(path);
 
 		if (!Filesystem.#handles[file.path]) {
 			const directory = await Filesystem.#directory(file.path, create);
@@ -82,15 +85,10 @@ export default class Filesystem {
 	}
 
 	/**
-	 * @param {string} path
-	 * @param {boolean} create
-	 * @returns {Promise<FileSystemSyncAccessHandle>}
+	 * @returns {number | Promise<number>}
 	 */
-	static async open(path, create) {
-		const directory = await Filesystem.#directory(path, create);
-		const filename = Filesystem.parse(path).filename;
-		const handle = await directory.getFileHandle(filename, { create });
-		return await handle.createSyncAccessHandle();
+	id() {
+		return Filesystem.#next_id++;
 	}
 
 	/**
@@ -145,7 +143,7 @@ export default class Filesystem {
 			this.close(path);
 
 			const handle = await Filesystem.#directory(path);
-			await handle.removeEntry(Filesystem.parse(path).filename);
+			await handle.removeEntry(Filesystem.#parse(path).filename);
 
 			return 0;
 		}, -1);
@@ -157,7 +155,7 @@ export default class Filesystem {
 	 */
 	close(path) {
 		return Filesystem.#catch(() => {
-			path = Filesystem.parse(path).path;
+			path = Filesystem.#parse(path).path;
 
 			if (Filesystem.#handles[path]) {
 				Filesystem.#handles[path].flush();

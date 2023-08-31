@@ -1,11 +1,11 @@
-#include "core.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <unistd.h>
 #include <pthread.h>
 #include <time.h>
+#include <math.h>
 
 #include "libretro.h"
 
@@ -52,6 +52,7 @@ struct jun_core_sym {
 
 static struct CTX {
 	bool initialized;
+	bool destroying;
 
 	char *paths[JUN_PATH_MAX];
 
@@ -60,10 +61,17 @@ static struct CTX {
 	struct retro_system_av_info av;
 	enum retro_pixel_format format;
 
+	pthread_t thread;
+	pthread_mutex_t mutex;
+	uint64_t before_run;
+	uint64_t after_run;
+	double remaining_frames;
+
 	void *memory;
 	size_t memory_size;
 	uint64_t last_save;
 
+	uint8_t speed;
 	bool inputs[UINT8_MAX];
 
 	struct {
@@ -86,7 +94,6 @@ static struct CTX {
 		void *data;
 		size_t frames;
 		size_t max_size;
-		bool finalized;
 	} audio;
 
 	struct {
@@ -308,11 +315,6 @@ static void video_refresh(const void *data, unsigned width, unsigned height, siz
 
 static size_t audio_sample_batch(const int16_t *data, size_t frames)
 {
-	if (CTX.audio.finalized) {
-		CTX.audio.frames = 0;
-		CTX.audio.finalized = false;
-	}
-
 	size_t new_size = (CTX.audio.frames + frames) * 2 * sizeof(float);
 	if (new_size > CTX.audio.max_size) {
 		CTX.audio.data = realloc(CTX.audio.data, new_size);
@@ -494,6 +496,8 @@ void JUN_CoreCreate(const char *system, const char *rom)
 {
 	setbuf(stdout, NULL);
 
+	CTX.speed = 1;
+
 	create_paths(system, rom);
 	initialize_symbols();
 
@@ -503,6 +507,45 @@ void JUN_CoreCreate(const char *system, const char *rom)
 	CTX.sym.retro_set_input_state(input_state);
 	CTX.sym.retro_set_audio_sample(audio_sample);
 	CTX.sym.retro_set_audio_sample_batch(audio_sample_batch);
+}
+
+static uint32_t core_compute_framerate()
+{
+	double before_run = core_get_ticks();
+
+    double total_loop = before_run - CTX.before_run;
+    double time_run = CTX.after_run - CTX.before_run;
+    double time_idle = before_run - CTX.after_run;
+	double framerate = 1000.0 / total_loop;
+
+    CTX.before_run = before_run;
+
+	CTX.remaining_frames += (CTX.av.timing.fps * CTX.speed) / framerate;
+	uint32_t pending = (uint32_t) CTX.remaining_frames;
+	CTX.remaining_frames -= (double) pending;
+
+	return pending <= 3 * CTX.speed ? pending : 3 * CTX.speed;
+}
+
+void *core_thread(void *opaque)
+{
+	CTX.before_run = core_get_ticks();
+
+	while (!CTX.destroying) {
+		uint32_t count = core_compute_framerate();
+
+		for (uint32_t i = 0; i < count; ++i) {
+			pthread_mutex_lock(&CTX.mutex);
+			CTX.sym.retro_run();
+			pthread_mutex_unlock(&CTX.mutex);
+
+			sched_yield();
+		}
+
+		CTX.after_run = core_get_ticks();
+	}
+
+	return NULL;
 }
 
 bool JUN_CoreStartGame()
@@ -536,40 +579,30 @@ bool JUN_CoreStartGame()
 
 	restore_memories();
 
+	pthread_mutex_init(&CTX.mutex, NULL);
+	pthread_create(&CTX.thread, NULL, core_thread, NULL);
+
 	return CTX.initialized;
 }
 
-void JUN_CoreRun(uint8_t fast_forward)
+void JUN_CoreLock()
 {
-	for (size_t i = 0; i < fast_forward; i++)
-		CTX.sym.retro_run();
-
-	CTX.audio.finalized = true;
+	pthread_mutex_lock(&CTX.mutex);
 	save_memories();
 }
 
-void JUN_CoreSetInput(uint8_t device, uint8_t id, int16_t value)
+void JUN_CoreUnlock()
 {
-	if (device == RETRO_DEVICE_JOYPAD)
-		CTX.inputs[id] = value;
-
-	if (device == RETRO_DEVICE_POINTER) {
-		switch (id) {
-			case RETRO_DEVICE_ID_POINTER_PRESSED:
-				CTX.pointer.pressed = value;
-				break;
-			case RETRO_DEVICE_ID_POINTER_X:
-				CTX.pointer.x = value;
-				break;
-			case RETRO_DEVICE_ID_POINTER_Y:
-				CTX.pointer.y = value;
-				break;
-		}
-	}
+	CTX.audio.frames = 0;
+	pthread_mutex_unlock(&CTX.mutex);
 }
 
 void JUN_CoreDestroy()
 {
+	CTX.destroying = true;
+	pthread_join(CTX.thread, NULL);
+	pthread_mutex_destroy(&CTX.mutex);
+
 	CTX.sym.retro_deinit();
 
 	for (int8_t i = 0; i < INT8_MAX; i++) {
@@ -596,9 +629,9 @@ uint32_t JUN_CoreGetPixelFormat()
 	return CTX.format;
 }
 
-uint32_t JUN_CoreGetSampleRate()
+const void *JUN_CoreGetTiming()
 {
-	return (CTX.av.timing.sample_rate / CTX.av.timing.fps) * 60.0;
+	return &CTX.av.timing;
 }
 
 const void *JUN_CoreGetVideo()
@@ -609,6 +642,31 @@ const void *JUN_CoreGetVideo()
 const void *JUN_CoreGetAudio()
 {
 	return &CTX.audio;
+}
+
+void JUN_CoreSetSpeed(uint8_t speed)
+{
+	CTX.speed = speed;
+}
+
+void JUN_CoreSetInput(uint8_t device, uint8_t id, int16_t value)
+{
+	if (device == RETRO_DEVICE_JOYPAD)
+		CTX.inputs[id] = value;
+
+	if (device == RETRO_DEVICE_POINTER) {
+		switch (id) {
+			case RETRO_DEVICE_ID_POINTER_PRESSED:
+				CTX.pointer.pressed = value;
+				break;
+			case RETRO_DEVICE_ID_POINTER_X:
+				CTX.pointer.x = value;
+				break;
+			case RETRO_DEVICE_ID_POINTER_Y:
+				CTX.pointer.y = value;
+				break;
+		}
+	}
 }
 
 const void *JUN_CoreGetVariables()

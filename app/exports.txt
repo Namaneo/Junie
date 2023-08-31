@@ -1,13 +1,17 @@
 JUN_CoreCreate
 JUN_CoreStartGame
-JUN_CoreRun
-JUN_CoreSetInput
 JUN_CoreDestroy
 
+JUN_CoreLock
+JUN_CoreUnlock
+
 JUN_CoreGetPixelFormat
-JUN_CoreGetSampleRate
+JUN_CoreGetTiming
 JUN_CoreGetVideo
 JUN_CoreGetAudio
+
+JUN_CoreSetSpeed
+JUN_CoreSetInput
 
 JUN_CoreGetVariables
 JUN_CoreSetVariable

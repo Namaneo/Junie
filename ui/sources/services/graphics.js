@@ -1,3 +1,5 @@
+import { Video } from "../entities/video";
+
 const vs = () => `
 	attribute vec2 a_position;
 
@@ -24,129 +26,110 @@ const fs = (invert) => `
 	}
 `;
 
-export default class Graphics {
-	/** @type {WebAssembly.Memory} */
-	#memory = null;
+class GraphicsContext {
+	/** @type {number} */
+	type = 0;
 
+	/** @type {number} */
+	format = 0;
+
+	/** @type {number} */
+	bpp = 0;
+
+	/** @type {WebGLProgram} */
+	program = null;
+
+	/** @type {WebGLTexture} */
+	texture = null;
+
+	/** @type {WebGLBuffer} */
+	position_buffer = null;
+
+	/** @type {number} */
+	position_location = 0;
+
+	/** co@type {number} */
+	matrix_location = 0;
+
+	/**
+	 * @param {WebGL2RenderingContext} gl
+	 * @param {number} type
+	 * @param {number} format
+	 * @param {number} bpp
+	 */
+	constructor(gl, type, format, bpp) {
+		this.type = type;
+		this.format = format;
+		this.bpp = bpp;
+
+		const vertex_shader = gl.createShader(gl.VERTEX_SHADER);
+		gl.shaderSource(vertex_shader, vs());
+		gl.compileShader(vertex_shader);
+
+		const fragment_shader = gl.createShader(gl.FRAGMENT_SHADER);
+		gl.shaderSource(fragment_shader, fs(this.type != gl.UNSIGNED_SHORT_5_6_5));
+		gl.compileShader(fragment_shader);
+
+		this.program = gl.createProgram();
+		gl.attachShader(this.program, vertex_shader);
+		gl.attachShader(this.program, fragment_shader);
+		gl.linkProgram(this.program);
+
+		this.texture = gl.createTexture();
+		gl.bindTexture(gl.TEXTURE_2D, this.texture);
+		gl.texImage2D(gl.TEXTURE_2D, 0, this.format, 0, 0, 0, this.format, this.type, null);
+
+		this.position_location = gl.getAttribLocation(this.program, "a_position");
+		this.matrix_location = gl.getUniformLocation(this.program, "u_matrix");
+
+		this.position_buffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.position_buffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([ 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1 ]), gl.STATIC_DRAW);
+	}
+}
+
+export default class Graphics {
 	/** @type {WebGL2RenderingContext} */
 	#gl = null;
 
-	/** @type {boolean} */
-	#initialized = false;
-
-	/** @type {number} */
-	#type = 0;
-
-	/** @type {number} */
-	#format = 0;
-
-	/** @type {number} */
-	#bpp = 0;
-
-	/** @type {WebGLProgram} */
-	#program = null;
-
-	/** @type {WebGLTexture} */
-	#texture = null;
-
-	/** @type {WebGLBuffer} */
-	#position_buffer = null;
-
-	/** @type {number} */
-	#position_location = 0;
-
-	/** co@type {number} */
-	#matrix_location = 0;
+	/** @type {GraphicsContext[]} */
+	#contexts = [];
 
 	/**
-	 * @param {WebAssembly.Memory} memory
 	 * @param {HTMLCanvasElement | OffscreenCanvas} canvas
 	 */
-	constructor(memory, canvas) {
-		this.#memory = memory;
+	constructor(canvas) {
 		this.#gl = canvas.getContext('webgl2');
+
+		this.#contexts[0] = new GraphicsContext(this.#gl, this.#gl.UNSIGNED_SHORT_5_5_5_1, this.#gl.RGBA, 2);
+		this.#contexts[1] = new GraphicsContext(this.#gl, this.#gl.UNSIGNED_BYTE,          this.#gl.RGBA, 4);
+		this.#contexts[2] = new GraphicsContext(this.#gl, this.#gl.UNSIGNED_SHORT_5_6_5,   this.#gl.RGB,  2);
 	}
 
 	/**
+	 * @param {ArrayBufferView} view
+	 * @param {Video} video
 	 * @param {number} format
-	 * @returns {Promise<void>}
 	 */
-	init(format) {
-		if (this.#initialized)
-			return;
+	draw(view, video, format) {
+		const context = this.#contexts[format];
 
-		switch (format) {
-			default:
-			case 0:
-				this.#type = this.#gl.UNSIGNED_SHORT_5_5_5_1;
-				this.#format = this.#gl.RGBA;
-				this.#bpp = 2;
-				break;
-			case 1:
-				this.#type = this.#gl.UNSIGNED_BYTE;
-				this.#format = this.#gl.RGBA;
-				this.#bpp = 4;
-				break;
-			case 2:
-				this.#type = this.#gl.UNSIGNED_SHORT_5_6_5;
-				this.#format = this.#gl.RGB;
-				this.#bpp = 2;
-				break;
-		}
+		this.#gl.canvas.width = video.width;
+		this.#gl.canvas.height = video.width / video.ratio;
 
-		const vertex_shader = this.#gl.createShader(this.#gl.VERTEX_SHADER);
-		this.#gl.shaderSource(vertex_shader, vs());
-		this.#gl.compileShader(vertex_shader);
+		this.#gl.viewport(0, 0, video.width, video.width / video.ratio);
+		this.#gl.useProgram(context.program);
 
-		const fragment_shader = this.#gl.createShader(this.#gl.FRAGMENT_SHADER);
-		this.#gl.shaderSource(fragment_shader, fs(this.#type != this.#gl.UNSIGNED_SHORT_5_6_5));
-		this.#gl.compileShader(fragment_shader);
+		this.#gl.bindBuffer(this.#gl.ARRAY_BUFFER, context.position_buffer);
+		this.#gl.enableVertexAttribArray(context.position_location);
+		this.#gl.vertexAttribPointer(context.position_location, 2, this.#gl.FLOAT, false, 0, 0);
 
-		this.#program = this.#gl.createProgram();
-		this.#gl.attachShader(this.#program, vertex_shader);
-		this.#gl.attachShader(this.#program, fragment_shader);
-		this.#gl.linkProgram(this.#program);
-
-		this.#texture = this.#gl.createTexture();
-		this.#gl.bindTexture(this.#gl.TEXTURE_2D, this.#texture);
-		this.#gl.texImage2D(this.#gl.TEXTURE_2D, 0, this.#format, 0, 0, 0, this.#format, this.#type, null);
-
-		this.#position_location = this.#gl.getAttribLocation(this.#program, "a_position");
-		this.#matrix_location = this.#gl.getUniformLocation(this.#program, "u_matrix");
-
-		this.#position_buffer = this.#gl.createBuffer();
-		this.#gl.bindBuffer(this.#gl.ARRAY_BUFFER, this.#position_buffer);
-		this.#gl.bufferData(this.#gl.ARRAY_BUFFER, new Float32Array([ 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1 ]), this.#gl.STATIC_DRAW);
-
-		this.#initialized = true;
-	}
-
-	/**
-	 * @param {number} frame
-	 * @param {number} width
-	 * @param {number} height
-	 * @param {number} pitch
-	 */
-	draw(frame, width, height, pitch, ratio) {
-		this.#gl.canvas.width = width;
-		this.#gl.canvas.height = width / ratio;
-
-		this.#gl.viewport(0, 0, width, width / ratio);
-		this.#gl.useProgram(this.#program);
-
-		this.#gl.bindBuffer(this.#gl.ARRAY_BUFFER, this.#position_buffer);
-		this.#gl.enableVertexAttribArray(this.#position_location);
-		this.#gl.vertexAttribPointer(this.#position_location, 2, this.#gl.FLOAT, false, 0, 0);
-
-		const frame_view = this.#type == this.#gl.UNSIGNED_BYTE
-			? new Uint8Array(this.#memory.buffer, frame, (pitch / this.#bpp) * height * 4)
-			: new Uint16Array(this.#memory.buffer, frame, (pitch / this.#bpp) * height);
-		this.#gl.bindTexture(this.#gl.TEXTURE_2D, this.#texture);
-		this.#gl.pixelStorei(this.#gl.UNPACK_ROW_LENGTH, pitch / this.#bpp);
-		this.#gl.texImage2D(this.#gl.TEXTURE_2D, 0, this.#format, width, height, 0, this.#format, this.#type, frame_view);
+		this.#gl.bindTexture(this.#gl.TEXTURE_2D, context.texture);
+		this.#gl.pixelStorei(this.#gl.UNPACK_ROW_LENGTH, video.pitch / context.bpp);
+		this.#gl.texImage2D(this.#gl.TEXTURE_2D, 0, context.format, video.width, video.height, 0, context.format, context.type, view);
 		this.#gl.generateMipmap(this.#gl.TEXTURE_2D);
 
-		this.#gl.uniformMatrix3fv(this.#matrix_location, false, [ 2, 0, 0, 0, -2, 0, -1, 1, 1 ]);
+		this.#gl.uniformMatrix3fv(context.matrix_location, false, [ 2, 0, 0, 0, -2, 0, -1, 1, 1 ]);
 		this.#gl.drawArrays(this.#gl.TRIANGLES, 0, 6);
 	}
 }
