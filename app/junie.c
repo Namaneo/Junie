@@ -544,7 +544,7 @@ static uint32_t core_compute_framerate()
 	uint32_t pending = (uint32_t) CTX.remaining_frames;
 	CTX.remaining_frames -= (double) pending;
 
-	return pending <= 3 * CTX.speed ? pending : 3 * CTX.speed;
+	return pending > 0 ? 1 : 0;
 }
 
 void *core_thread(void *opaque)
