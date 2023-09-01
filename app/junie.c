@@ -715,6 +715,8 @@ void JUN_CoreSetVariable(const char *key, const char *value)
 
 void JUN_CoreSaveState()
 {
+	core_lock();
+
 	size_t size = CTX.sym.retro_serialize_size();
 
 	void *data = calloc(size, 1);
@@ -726,6 +728,30 @@ void JUN_CoreSaveState()
 	fclose(file);
 
 	free(data);
+
+	core_unlock();
+}
+
+void JUN_CoreRestoreState()
+{
+	core_lock();
+
+	size_t size = CTX.sym.retro_serialize_size();
+	if (!size)
+		return;
+
+	FILE *file = fopen(CTX.paths[JUN_PATH_STATE], "r");
+	if (!file)
+		return;
+
+	void *buffer = calloc(size, 1);
+	fread(buffer, 1, size, file);
+	CTX.sym.retro_unserialize(buffer, size);
+
+	free(buffer);
+	fclose(file);
+
+	core_unlock();
 }
 
 void JUN_CoreResetCheats()
@@ -743,24 +769,6 @@ void JUN_CoreSetCheat(uint32_t index, bool enabled, const char *code)
 	CTX.sym.retro_cheat_set(index, enabled, value);
 
 	free(value);
-}
-
-void JUN_CoreRestoreState()
-{
-	size_t size = CTX.sym.retro_serialize_size();
-	if (!size)
-		return;
-
-	FILE *file = fopen(CTX.paths[JUN_PATH_STATE], "r");
-	if (!file)
-		return;
-
-	void *buffer = calloc(size, 1);
-	fread(buffer, 1, size, file);
-	CTX.sym.retro_unserialize(buffer, size);
-
-	free(buffer);
-	fclose(file);
 }
 
 

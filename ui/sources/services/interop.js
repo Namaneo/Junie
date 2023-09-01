@@ -226,16 +226,20 @@ export default class Interop {
 
 	/** @param {Settings} settings @returns {Promise<void>} */
 	settings(settings) {
+		this.Lock();
 		for (const key in settings)
 			this.SetVariable(key, settings[key]);
+		this.Unlock();
 	}
 
 	/** @param {Cheat[]} cheats @returns {Promise<void>} */
 	cheats(cheats) {
+		this.Lock();
 		this.ResetCheats();
 		const filtered = cheats?.filter(x => x.enabled).sort((x, y) => x.order - y.order);
 		for (const cheat of filtered ?? [])
 			this.SetCheat(cheat.order, true, cheat.value);
+		this.Unlock();
 	}
 
 	/** @returns {Promise<Variable[]>} */

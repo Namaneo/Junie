@@ -1,5 +1,3 @@
-/// <reference lib="webworker" />
-
 class AudioProcessor extends AudioWorkletProcessor {
 	/** @type {Float32Array[]} */
 	#buffers = []
@@ -13,8 +11,9 @@ class AudioProcessor extends AudioWorkletProcessor {
 		this.#channels = options.outputChannelCount[0];
 		this.port.onmessage = message => {
 			this.#buffers.push(message.data.frames);
-			while (this.#buffers.length > 3)
-				this.#buffers.shift();
+			let size = this.#buffers.reduce((size, buffer) => size + buffer.length, 0);
+			while (size > 150 * Math.round(sampleRate / 1000.0))
+				size -= this.#buffers.shift().length;
 		}
 	}
 
@@ -42,6 +41,6 @@ class AudioProcessor extends AudioWorkletProcessor {
 
 		return true;
 	}
-  }
+}
 
-  registerProcessor('audio-processor', AudioProcessor);
+registerProcessor('audio-processor', AudioProcessor);
