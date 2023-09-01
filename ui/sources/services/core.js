@@ -60,7 +60,7 @@ export default class Core {
 					graphics.draw(message.data.view, message.data.video, message.data.pixel_format);
 					break;
 				case 'audio':
-					AudioPlayer.queue(message.data.view, message.data.sample_rate, 2);
+					AudioPlayer.queue(message.data.view, message.data.sample_rate);
 					break;
 			}
 		}

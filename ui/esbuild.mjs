@@ -40,7 +40,7 @@ function plugin_html(html, sw) {
 			const outdir = build.initialOptions.outdir;
 			build.onEnd(() => {
 				const resources = [
-					'./', './index.js', './index.css', './manifest.json', './cores.json', './worker.js',
+					'./', './index.js', './index.css', './manifest.json', './cores.json', './worker.js', './audio-worker.js',
 					...glob.sync(`./${outdir}/modules/**/*.js`).map(x => x.replace(`${outdir}/`, '')),
 					...glob.sync(`./${outdir}/modules/**/*.wasm`).map(x => x.replace(`${outdir}/`, '')),
 					...glob.sync(`./${outdir}/assets/**/*.png`).map(x => x.replace(`${outdir}/`, ''))
@@ -75,7 +75,7 @@ function plugin_html(html, sw) {
 }
 
 const context = await esbuild.context({
-	entryPoints: ['sources/index.jsx', 'sources/worker.js'],
+	entryPoints: ['sources/index.jsx', 'sources/worker.js', 'sources/audio-worker.js'],
 	outdir: 'build',
 	bundle: true,
 	format: 'esm',
@@ -133,7 +133,6 @@ if (existsSync('development.key') && existsSync('development.cert')) {
 const watched = [
 	'index.html',
 	'service-worker.js',
-	'worker.js',
 	'manifest.json',
 	'sources/**',
 	'../cores/cores.json',
