@@ -530,7 +530,7 @@ static void core_unlock()
     pthread_mutex_unlock(&CTX.mutex);
 }
 
-static uint32_t core_compute_framerate()
+static bool core_should_run()
 {
 	double before_run = core_get_ticks();
     double total_loop = before_run - CTX.before_run;
@@ -544,7 +544,7 @@ static uint32_t core_compute_framerate()
 	uint32_t pending = (uint32_t) CTX.remaining_frames;
 	CTX.remaining_frames -= (double) pending;
 
-	return pending > 0 ? 1 : 0;
+	return pending > 0;
 }
 
 void *core_thread(void *opaque)
@@ -552,13 +552,14 @@ void *core_thread(void *opaque)
 	CTX.before_run = core_get_ticks();
 
 	while (!CTX.destroying) {
-		uint32_t count = core_compute_framerate();
+		if (!core_should_run())
+			continue;
 
-		for (uint32_t i = 0; i < count; ++i) {
-			core_lock();
-			CTX.sym.retro_run();
-			core_unlock();
-		}
+		core_lock();
+		CTX.sym.retro_run();
+		core_unlock();
+
+		sched_yield();
 
 		CTX.after_run = core_get_ticks();
 	}
