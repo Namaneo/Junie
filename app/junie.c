@@ -516,17 +516,17 @@ void JUN_CoreCreate(const char *system, const char *rom)
 static void core_lock()
 {
     pthread_mutex_lock(&CTX.mutex);
-    // uint64_t queue_me = CTX.queue_tail++;
-    // while (queue_me != CTX.queue_head)
-    //     pthread_cond_wait(&CTX.cond, &CTX.mutex);
-    // pthread_mutex_unlock(&CTX.mutex);
+    uint64_t queue_me = CTX.queue_tail++;
+    while (queue_me != CTX.queue_head)
+        pthread_cond_wait(&CTX.cond, &CTX.mutex);
+    pthread_mutex_unlock(&CTX.mutex);
 }
 
 static void core_unlock()
 {
-    // pthread_mutex_lock(&CTX.mutex);
-    // CTX.queue_head++;
-    // pthread_cond_broadcast(&CTX.cond);
+    pthread_mutex_lock(&CTX.mutex);
+    CTX.queue_head++;
+    pthread_cond_broadcast(&CTX.cond);
     pthread_mutex_unlock(&CTX.mutex);
 }
 
