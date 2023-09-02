@@ -541,10 +541,10 @@ static bool core_should_run()
 		CTX.remaining_frames += expected_frames / (1000.0 / total_loop);
 	}
 
-	uint32_t pending = (uint32_t) CTX.remaining_frames;
-	CTX.remaining_frames -= (double) pending;
+	double pending = 0;
+	CTX.remaining_frames = modf(CTX.remaining_frames, &pending);
 
-	return pending > 0;
+	return pending >= 1;
 }
 
 void *core_thread(void *opaque)
