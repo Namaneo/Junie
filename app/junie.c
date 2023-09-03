@@ -67,10 +67,6 @@ static struct CTX {
     uint64_t queue_head;
 	uint64_t queue_tail;
 
-	uint64_t before_run;
-	uint64_t after_run;
-	double remaining_frames;
-
 	void *memory;
 	size_t memory_size;
 	uint64_t last_save;
@@ -141,6 +137,14 @@ static uint64_t core_get_ticks()
 	struct timespec now = {0};
 	clock_gettime(CLOCK_REALTIME, &now);
 	return now.tv_sec * 1000.0 + now.tv_nsec / 1000000.0;
+}
+
+static uint64_t core_sleep(uint32_t timeout)
+{
+	nanosleep(& (struct timespec) {
+		.tv_sec = timeout / 1000,
+		.tv_nsec = (timeout % 1000) * 1000 * 1000,
+	}, NULL);
 }
 
 static char *core_strfmt(const char *fmt, ...)
@@ -532,34 +536,40 @@ static void core_unlock()
 
 static bool core_should_run()
 {
-	double before_run = core_get_ticks();
-    double total_loop = before_run - CTX.before_run;
-    CTX.before_run = before_run;
+	static double timestamp = 0;
+	static double remaining_frames = 0;
+
+	if (timestamp == 0) {
+		timestamp = core_get_ticks();
+		return true;
+	}
+
+	double current = core_get_ticks();
+    double total_loop = current - timestamp;
+    timestamp = current;
 
 	if (total_loop > 0) {
 		double expected_frames = CTX.av.timing.fps * CTX.speed;
-		CTX.remaining_frames += expected_frames / (1000.0 / total_loop);
+		remaining_frames += expected_frames / (1000.0 / total_loop);
 	}
 
 	double pending = 0;
-	CTX.remaining_frames = modf(CTX.remaining_frames, &pending);
+	remaining_frames = modf(remaining_frames, &pending);
 
 	return pending >= 1;
 }
 
 void *core_thread(void *opaque)
 {
-	CTX.before_run = core_get_ticks();
-
 	while (!CTX.destroying) {
-		if (!core_should_run())
+		if (!core_should_run()) {
+			core_sleep(1);
 			continue;
+		}
 
 		core_lock();
 		CTX.sym.retro_run();
 		core_unlock();
-
-		CTX.after_run = core_get_ticks();
 	}
 
 	return NULL;

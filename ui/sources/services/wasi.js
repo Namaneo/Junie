@@ -6,6 +6,8 @@ export default class WASI {
 	get #WASI_ERRNO_INVAL()   { return 28; }
 	get #WASI_ERRNO_NOENT()   { return 44; }
 
+	get #WASI_EVENTTYPE_CLOCK() { return 0; }
+
 	get #WHENCE_SET() { return 0; }
 	get #WHENCE_CUR() { return 1; }
 	get #WHENCE_END() { return 2; }
@@ -61,6 +63,14 @@ export default class WASI {
 	 */
 	#set_uint32(ptr, value) {
 		new DataView(this.#memory.buffer).setUint32(ptr, value, true);
+	}
+
+	/**
+	 * @param {number} ptr
+	 * @returns {number}
+	 */
+	#get_uint64(ptr) {
+		return new DataView(this.#memory.buffer).getBigUint64(ptr, true);
 	}
 
 	/**
@@ -261,6 +271,9 @@ export default class WASI {
 				return this.#WASI_ERRNO_SUCCESS;
 			},
 			poll_oneoff: (in_, out_, nsubscriptions, nevents) => {
+				if (this.#get_uint32(in_ + 8) == this.#WASI_EVENTTYPE_CLOCK)
+					Atomics.wait(this.#sab, 0, 0, Number(this.#get_uint64(in_ + 24)) / 1000000);
+				this.#set_uint32(out_ + 8, 0);
 				return this.#WASI_ERRNO_SUCCESS;
 			},
 			proc_exit: (code) => {
