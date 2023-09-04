@@ -53,7 +53,7 @@ export default class Core {
 				case 'thread':
 					const child = new Parallel(Interop, false, handler);
 					const core = await child.create(`${this.#name}-${message.data.id}`, script);
-					await core.init(system, rom, Core.#memory, message.data.port, message.data.fds, origin, message.data.start_arg);
+					await core.init(system, rom, Core.#memory, await Files.clone(), message.data.fds, origin, message.data.start_arg);
 					this.#threads.push(child);
 					break;
 				case 'video':
@@ -67,7 +67,7 @@ export default class Core {
 
 		this.#parallel = new Parallel(Interop, false, handler);
 		this.#interop = await this.#parallel.create(this.#name, script);
-		await this.#interop.init(system, rom, Core.#memory, await Files.clone(), {}, origin);
+		await this.#interop.init(system, rom, Core.#memory, await Files.clone(), [], origin);
 	}
 
 	/**

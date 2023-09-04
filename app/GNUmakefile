@@ -1,7 +1,5 @@
 OUT_DIR := build
 
-include ../GNUmakefile.common
-
 EXPORTS := $(addprefix -Wl$(shell echo ,)--export=, $(shell cat `pwd`/exports.txt))
 
 DEPS_DIR := ../deps
@@ -10,7 +8,7 @@ DEPS     := $(DEPS_DIR)/libz.a $(DEPS_DIR)/libretro.a
 CORES_DIR := ../cores
 CORES     := $(shell jq -r 'keys[]' $(CORES_DIR)/cores.json)
 
-CFLAGS := \
+DEFINES := \
 	-I$(DEPS_DIR)/libretro-common/include
 
 LDFLAGS := \
@@ -21,16 +19,7 @@ LDFLAGS := \
 	-Wl,--max-memory=$$((600 * 1024 * 1024)) \
 	-Wl,--import-memory,--export-memory
 
-ifeq ($(DEBUG), 1)
-CFLAGS  += -O0 -ferror-limit=0 -DDEBUG
-LDFLAGS += -O0 -g -Wl,--error-limit=0
-else
-CFLAGS  += -O3 -flto -msimd128
-LDFLAGS += -O3 -flto -mavx -mfpu=neon
-endif
-
-QUIET := > /dev/null 2>&1
-MAKEFLAGS += --no-print-directory
+include ../GNUmakefile.common
 
 all: clean prepare
 	@echo Building objects...
@@ -48,4 +37,4 @@ clean:
 	@rm -rf junie.o $(OUT_DIR)
 
 %.o: %.c
-	@$(CC) -c $(CFLAGS) -o $@ $^ $(QUIET)
+	@$(CC) -c -o $@ $^ $(QUIET)

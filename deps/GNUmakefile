@@ -1,11 +1,9 @@
 WASI_VERSION = 20.0
 
-MAKEFLAGS += --no-print-directory
-QUIET := > /dev/null 2>&1
-
+DEFINES := -I$(DEPS_DIR)/libretro-common/include
 include ../GNUmakefile.common
 
-all: wasi-sdk emsdk libretro-common libz.a libretro.a
+all: wasi-sdk emsdk zlib libretro-common libz.a libretro.a
 
 wasi-sdk:
 	@echo Fetching wasi-sdk...
@@ -21,6 +19,10 @@ emsdk:
 libretro-common:
 	@echo Fetching libretro-common...
 	@git -C libretro-common pull $(QUIET) || git clone --recurse https://github.com/libretro/libretro-common.git $(QUIET)
+
+zlib:
+	@echo Fetching zlib...
+	@git -C zlib pull $(QUIET) || git clone --recurse https://github.com/madler/zlib.git $(QUIET)
 
 OBJ = \
 	libretro-common/file/file_path.o \
@@ -40,14 +42,14 @@ OBJ = \
 	libretro-common/audio/resampler/drivers/sinc_resampler.o
 
 libz.a:
-	@echo Fetching zlib...
-	@git -C zlib pull $(QUIET) || git clone --recurse https://github.com/madler/zlib.git $(QUIET)
+	@echo Building libz.a...
 	@cd zlib && ./configure $(QUIET)
 	@$(MAKE) -C zlib libz.a CC="$(CC)" AR="$(AR)" RANLIB="$(RANLIB)" $(QUIET)
 	@cp zlib/libz.a .
 	@$(MAKE) -C zlib distclean $(QUIET)
 
 libretro.a:
+	@echo Building libretro.a...
 	@$(MAKE) $(OBJ)
 	@$(AR) rcs libretro.a $(OBJ)
 
@@ -55,4 +57,4 @@ clean:
 	@rm -f $(OBJ) libretro.a libz.a
 
 %.o: %.c
-	@$(CC) -c $(CFLAGS) -o $@ -Ilibretro-common/include $^ $(QUIET)
+	@$(CC) -c -o $@ -Ilibretro-common/include $^ $(QUIET)

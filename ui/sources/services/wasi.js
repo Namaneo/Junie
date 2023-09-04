@@ -29,19 +29,20 @@ export default class WASI {
 	/** @type {number} */
 	#next_fd = 3;
 
-	/** @type {{ [fd: number]: {path: string, offset: number } }} */
-	#fds = {
-		1: { offset: 0 },
-		2: { offset: 0 },
-	}
+	/** @type {{path: string, offset: number}[]} */
+	#fds = [
+		{ path: 'stdin',  offset: 0 },
+		{ path: 'stdout', offset: 0 },
+		{ path: 'stderr', offset: 0 },
+	];
 
-	/** @type {{ [fd: number]: {path: string, offset: number } }} */
+	/** @type {{path: string, offset: number}[]} */
 	get fds() { return this.#fds; }
 
 	/**
 	 * @param {WebAssembly.Memory} memory
 	 * @param {Filesystem} filesystem
-	 * @param {{ [fd: number]: {path: string, offset: number } }} fds
+	 * @param {{path: string, offset: number}[]} fds
 	 */
 	constructor(memory, filesystem, fds) {
 		this.#memory = memory;

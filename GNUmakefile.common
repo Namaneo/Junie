@@ -1,5 +1,9 @@
 WASI_SDK   := $(shell pwd)/../deps/wasi-sdk
 EMSCRIPTEN := $(shell pwd)/../deps/emsdk/upstream/emscripten
+LIBRETRO   := $(shell pwd)/../deps/libretro-common
+
+MAKEFLAGS += --no-print-directory
+QUIET := > /dev/null 2>&1
 
 DEFINES += \
 	--sysroot=$(WASI_SDK)/share/wasi-sysroot \
@@ -7,6 +11,14 @@ DEFINES += \
 	-I$(EMSCRIPTEN)/cache/sysroot/include/c++/v1 \
 	-I$(EMSCRIPTEN)/cache/sysroot/include/compat \
 	-I$(EMSCRIPTEN)/cache/sysroot/include
+
+ifeq ($(DEBUG), 1)
+DEFINES += -O0 -ferror-limit=0 -DDEBUG
+LDFLAGS += -O0 -g -Wl,--error-limit=0
+else
+DEFINES += -O3 -flto -msimd128
+LDFLAGS += -O3 -flto -mavx -mfpu=neon
+endif
 
 CC     := $(WASI_SDK)/bin/clang $(DEFINES)
 CXX    := $(WASI_SDK)/bin/clang++ $(DEFINES)

@@ -118,7 +118,7 @@ export default class Interop {
 	 * @param {string} rom
 	 * @param {WebAssembly.Memory} memory
 	 * @param {MessagePort} port
-	 * @param {{ [fd: number]: {path: string, offset: number } }} fds
+	 * @param {{path: string, offset: number}[]} fds
 	 * @param {string} origin
 	 * @param {number} start_arg
 	 * @returns {Promise<void>}
@@ -133,8 +133,7 @@ export default class Interop {
 			wasi_snapshot_preview1: this.#wasi.environment,
 			wasi: { 'thread-spawn': (start_arg) => {
 				const id = filesystem.id();
-				const port = parallel.open()
-				postMessage({ type: 'thread', id, port, fds: this.#wasi.fds, start_arg }, [port]);
+				postMessage({ type: 'thread', id, fds: this.#wasi.fds, start_arg });
 				return id;
 			}},
 		});
