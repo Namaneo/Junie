@@ -1,13 +1,13 @@
+#include "junie.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
-#include <unistd.h>
-#include <pthread.h>
 #include <time.h>
 #include <math.h>
 
-#include "libretro.h"
+#include "rthreads/rthreads.h"
 
 #define LOG(msg, ...) core_log_params(__FUNCTION__, msg, __VA_ARGS__)
 
@@ -59,11 +59,10 @@ static struct CTX {
 	struct retro_game_info game;
 	struct retro_system_info system;
 	struct retro_system_av_info av;
-	enum retro_pixel_format format;
 
-	pthread_t thread;
-	pthread_cond_t cond;
-    pthread_mutex_t mutex;
+	sthread_t *thread;
+	scond_t *cond;
+    slock_t *mutex;
     uint64_t queue_head;
 	uint64_t queue_tail;
 
@@ -73,34 +72,17 @@ static struct CTX {
 
 	uint8_t speed;
 	bool inputs[UINT8_MAX];
-
-	struct {
-		char *key;
-		char *name;
-		char *options;
-		char *value;
-	} variables[INT8_MAX];
 	bool variables_update;
-
-	struct {
-		const void *data;
-		uint32_t width;
-		uint32_t height;
-		uint32_t pitch;
-		float ratio;
-	} video;
-
-	struct {
-		void *data;
-		size_t frames;
-		size_t max_size;
-	} audio;
 
 	struct {
 		bool pressed;
 		int16_t x;
 		int16_t y;
 	} pointer;
+
+	JUN_CoreVariable variables[INT8_MAX];
+	JUN_CoreVideo video;
+	JUN_CoreAudio audio;
 
 	struct jun_core_sym sym;
 } CTX;
@@ -139,7 +121,7 @@ static uint64_t core_get_ticks()
 	return now.tv_sec * 1000.0 + now.tv_nsec / 1000000.0;
 }
 
-static uint64_t core_sleep(uint32_t timeout)
+static void core_sleep(uint32_t timeout)
 {
 	nanosleep(& (struct timespec) {
 		.tv_sec = timeout / 1000,
@@ -185,7 +167,7 @@ static bool environment(unsigned cmd, void *data)
 		case RETRO_ENVIRONMENT_SET_PIXEL_FORMAT: {
 			enum retro_pixel_format *format = data;
 
-			CTX.format = *format;
+			CTX.video.format = *format;
 
 			return true;
 		}
@@ -310,7 +292,7 @@ static void video_refresh(const void *data, unsigned width, unsigned height, siz
 	if (!data)
 		return;
 
-	CTX.video.data = data;
+	CTX.video.data = (void *) data;
 	CTX.video.width = width;
 	CTX.video.height = height;
 	CTX.video.pitch = (uint32_t) pitch;
@@ -324,9 +306,9 @@ static void video_refresh(const void *data, unsigned width, unsigned height, siz
 static size_t audio_sample_batch(const int16_t *data, size_t frames)
 {
 	size_t new_size = (CTX.audio.frames + frames) * 2 * sizeof(float);
-	if (new_size > CTX.audio.max_size) {
+	if (new_size > CTX.audio.size) {
 		CTX.audio.data = realloc(CTX.audio.data, new_size);
-		CTX.audio.max_size = new_size;
+		CTX.audio.size = new_size;
 	}
 
 	size_t offset = CTX.audio.frames * 2 * sizeof(float);
@@ -519,19 +501,19 @@ void JUN_CoreCreate(const char *system, const char *rom)
 
 static void core_lock()
 {
-    pthread_mutex_lock(&CTX.mutex);
+    slock_lock(CTX.mutex);
     uint64_t queue_me = CTX.queue_tail++;
     while (queue_me != CTX.queue_head)
-        pthread_cond_wait(&CTX.cond, &CTX.mutex);
-    pthread_mutex_unlock(&CTX.mutex);
+        scond_wait(CTX.cond, CTX.mutex);
+    slock_unlock(CTX.mutex);
 }
 
 static void core_unlock()
 {
-    pthread_mutex_lock(&CTX.mutex);
+    slock_lock(CTX.mutex);
     CTX.queue_head++;
-    pthread_cond_broadcast(&CTX.cond);
-    pthread_mutex_unlock(&CTX.mutex);
+    scond_broadcast(CTX.cond);
+    slock_unlock(CTX.mutex);
 }
 
 static bool core_should_run()
@@ -559,7 +541,7 @@ static bool core_should_run()
 	return pending >= 1;
 }
 
-void *core_thread(void *opaque)
+void core_thread(void *opaque)
 {
 	while (!CTX.destroying) {
 		if (!core_should_run()) {
@@ -571,8 +553,6 @@ void *core_thread(void *opaque)
 		CTX.sym.retro_run();
 		core_unlock();
 	}
-
-	return NULL;
 }
 
 bool JUN_CoreStartGame()
@@ -606,9 +586,9 @@ bool JUN_CoreStartGame()
 
 	restore_memories();
 
-	pthread_mutex_init(&CTX.mutex, NULL);
-	pthread_cond_init(&CTX.cond, NULL);
-	pthread_create(&CTX.thread, NULL, core_thread, NULL);
+	CTX.mutex = slock_new();
+	CTX.cond = scond_new();
+	CTX.thread = sthread_create(core_thread, NULL);
 
 	return CTX.initialized;
 }
@@ -616,9 +596,9 @@ bool JUN_CoreStartGame()
 void JUN_CoreDestroy()
 {
 	CTX.destroying = true;
-	pthread_join(CTX.thread, NULL);
-	pthread_cond_destroy(&CTX.cond);
-	pthread_mutex_destroy(&CTX.mutex);
+	sthread_join(CTX.thread);
+	scond_free(CTX.cond);
+	slock_free(CTX.mutex);
 
 	CTX.sym.retro_deinit();
 
@@ -645,6 +625,7 @@ void JUN_CoreLock()
 {
 	core_lock();
 	save_memories();
+	CTX.audio.rate = (float) CTX.av.timing.sample_rate * CTX.speed;
 }
 
 void JUN_CoreUnlock()
@@ -653,22 +634,12 @@ void JUN_CoreUnlock()
 	core_unlock();
 }
 
-uint32_t JUN_CoreGetPixelFormat()
-{
-	return CTX.format;
-}
-
-uint32_t JUN_CoreGetSampleRate()
-{
-	return CTX.av.timing.sample_rate * CTX.speed;
-}
-
-const void *JUN_CoreGetVideo()
+const JUN_CoreVideo *JUN_CoreGetVideo()
 {
 	return &CTX.video;
 }
 
-const void *JUN_CoreGetAudio()
+const JUN_CoreAudio *JUN_CoreGetAudio()
 {
 	return &CTX.audio;
 }
@@ -698,7 +669,7 @@ void JUN_CoreSetInput(uint8_t device, uint8_t id, int16_t value)
 	}
 }
 
-const void *JUN_CoreGetVariables()
+const JUN_CoreVariable *JUN_CoreGetVariables()
 {
 	return &CTX.variables;
 }
@@ -780,6 +751,7 @@ void JUN_CoreSetCheat(uint32_t index, bool enabled, const char *code)
 	free(value);
 }
 
+#if defined(__wasi__)
 
 // socket.h
 
@@ -812,3 +784,5 @@ void longjmp(jmp_buf env, int val) { abort(); }
 
 void *__cxa_allocate_exception(size_t thrown_size) { abort(); }
 void __cxa_throw(void *thrown_object, void *tinfo, void (*dest)(void *)) { abort(); }
+
+#endif

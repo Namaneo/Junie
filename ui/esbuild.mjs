@@ -138,6 +138,7 @@ const watched = [
 	'../cores/cores.json',
 	'../app/GNUmakefile*',
 	'../app/*.c',
+	'../app/*.h',
 ];
 
 let rebuilding = false;

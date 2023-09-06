@@ -3,7 +3,13 @@ export class Audio {
 	data;
 
 	/** @type {number} */
+	rate;
+
+	/** @type {number} */
 	frames;
+
+	/** @type {number} */
+	size;
 
 	/**
 	 * @param {WebAssembly.Memory} memory
@@ -15,7 +21,9 @@ export class Audio {
 
 		return {
 			data:   view.getUint32(0, true),
-			frames: view.getUint32(4, true),
+			rate:   view.getFloat32(4, true),
+			frames: view.getUint32(8, true),
+			size:   view.getUint32(12, true),
 		}
 	}
 }

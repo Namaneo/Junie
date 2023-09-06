@@ -1,6 +1,5 @@
 import { Settings } from '../entities/settings';
 import { Cheat } from '../entities/cheat';
-import { Native } from '../entities/native';
 import { Variable } from '../entities/variable';
 import { Video } from '../entities/video';
 import { Audio } from '../entities/audio';
@@ -24,26 +23,28 @@ export default class Interop {
 	/** @type {WebAssembly.Instance} */
 	#instance = null;
 
-	/** @type {number} */
-	#threads = 0;
-
-	/** @type {Native} */
-	#data = null;
-
 	/** @type {WASI} */
 	#wasi = null;
 
 	/** @type {boolean} */
 	#audio = true;
 
-	/** @type {number} */
-	#speed = 1;
-
 	/** @type {Promise} */
 	#running = null;
 
 	/** @type {boolean} */
 	#stop = false;
+
+	#data = {
+		/** @type {number} */
+		variables: 0,
+
+		/** @type {number} */
+		video: 0,
+
+		/** @type {number} */
+		audio: 0,
+	};
 
 	/**
 	 * @param {string} name
@@ -155,8 +156,6 @@ export default class Interop {
 		this.#wrap('Lock',               null,     []);
 		this.#wrap('Unlock',             null,     []);
 
-		this.#wrap('GetPixelFormat',     'number', []);
-		this.#wrap('GetSampleRate',      'number', []);
 		this.#wrap('GetVideo',           'number', []);
 		this.#wrap('GetAudio',           'number', []);
 
@@ -174,7 +173,9 @@ export default class Interop {
 
 		this.Create(system, rom);
 
-		this.#data = new Native(this);
+		this.#data.variables = this.GetVariables();
+		this.#data.video = this.GetVideo();
+		this.#data.audio = this.GetAudio();
 	}
 
 	/** @returns {Promise<void>} */
@@ -190,22 +191,19 @@ export default class Interop {
 
 				this.Lock();
 
-				const pixel_format = this.GetPixelFormat();
-				const sample_rate = this.GetSampleRate();
-
 				const video = Video.parse(memory, this.#data.video);
 				const audio = Audio.parse(memory, this.#data.audio);
 
 				if (video.data) {
-					const video_view = pixel_format == 1
+					const video_view = video.format == 1
 						? new Uint8Array(memory.buffer, video.data, video.pitch * video.height).slice()
 						: new Uint16Array(memory.buffer, video.data, (video.pitch * video.height) / 2).slice();
-					postMessage({ type: 'video', view: video_view, video, pixel_format }, [video_view.buffer]);
+					postMessage({ type: 'video', view: video_view, video }, [video_view.buffer]);
 				}
 
 				if (audio.frames && this.#audio) {
 					const audio_view = new Float32Array(memory.buffer, audio.data, audio.frames * 2).slice();
-					postMessage({ type: 'audio', view: audio_view, sample_rate }, [audio_view.buffer]);
+					postMessage({ type: 'audio', view: audio_view, sample_rate: audio.rate }, [audio_view.buffer]);
 				}
 
 				this.Unlock();

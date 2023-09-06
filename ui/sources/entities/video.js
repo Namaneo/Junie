@@ -3,6 +3,9 @@ export class Video {
 	data;
 
 	/** @type {number} */
+	format;
+
+	/** @type {number} */
 	width;
 
 	/** @type {number} */
@@ -24,10 +27,11 @@ export class Video {
 
 		return {
 			data:   view.getUint32(0, true),
-			width:  view.getUint32(4, true),
-			height: view.getUint32(8, true),
-			pitch:  view.getUint32(12, true),
-			ratio:  view.getFloat32(16, true),
+			format: view.getUint32(4, true),
+			width:  view.getUint32(8, true),
+			height: view.getUint32(12, true),
+			pitch:  view.getUint32(16, true),
+			ratio:  view.getFloat32(20, true),
 		}
 	}
 }

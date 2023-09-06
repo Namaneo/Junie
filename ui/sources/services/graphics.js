@@ -109,10 +109,9 @@ export default class Graphics {
 	/**
 	 * @param {ArrayBufferView} view
 	 * @param {Video} video
-	 * @param {number} format
 	 */
-	draw(view, video, format) {
-		const context = this.#contexts[format];
+	draw(view, video) {
+		const context = this.#contexts[video.format];
 
 		this.#gl.canvas.width = video.width;
 		this.#gl.canvas.height = video.width / video.ratio;

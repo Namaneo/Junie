@@ -57,7 +57,7 @@ export default class Core {
 					this.#threads.push(child);
 					break;
 				case 'video':
-					graphics.draw(message.data.view, message.data.video, message.data.pixel_format);
+					graphics.draw(message.data.view, message.data.video);
 					break;
 				case 'audio':
 					AudioPlayer.queue(message.data.view, message.data.sample_rate);

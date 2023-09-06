@@ -35,6 +35,7 @@ OBJ = \
 	libretro-common/string/stdstring.o \
 	libretro-common/lists/string_list.o \
 	libretro-common/compat/compat_strl.o \
+	libretro-common/rthreads/rthreads.o \
 	libretro-common/features/features_cpu.o \
 	libretro-common/audio/conversion/float_to_s16.o \
 	libretro-common/audio/conversion/s16_to_float.o \
