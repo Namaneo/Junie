@@ -2,12 +2,12 @@
 
 #include "libretro.h"
 
-typedef enum retro_pixel_format JUN_CorePixelFormat;
+typedef enum retro_pixel_format JuniePixelFormat;
 
 typedef enum {
     JUN_DEVICE_JOYPAD  = RETRO_DEVICE_JOYPAD,
     JUN_DEVICE_POINTER = RETRO_DEVICE_POINTER,
-} JUN_CoreInputDevice;
+} JunieInputDevice;
 
 typedef enum {
     JUN_DEVICE_ID_JOYPAD_B      = RETRO_DEVICE_ID_JOYPAD_B,
@@ -31,52 +31,52 @@ typedef enum {
     JUN_DEVICE_ID_POINTER_Y       = RETRO_DEVICE_ID_POINTER_Y,      
     JUN_DEVICE_ID_POINTER_PRESSED = RETRO_DEVICE_ID_POINTER_PRESSED,
     JUN_DEVICE_ID_POINTER_COUNT   = RETRO_DEVICE_ID_POINTER_COUNT,  
-} JUN_CoreInputID;
+} JunieInputID;
 
 typedef struct {
     void *data;
-    JUN_CorePixelFormat format;
+    JuniePixelFormat format;
     uint32_t width;
     uint32_t height;
     uint32_t pitch;
     float ratio;
-} JUN_CoreVideo;
+} JunieVideo;
 
 typedef struct {
     void *data;
     float rate;
     size_t frames;
     size_t size;
-} JUN_CoreAudio;
+} JunieAudio;
 
 typedef struct {
     char *key;
     char *value;
     char *name;
     char *options;
-} JUN_CoreVariable;
+} JunieVariable;
 
 typedef struct {
     uint32_t index;
     bool enabled;
     char *code;
-} JUN_CoreCheat;
+} JunieCheat;
 
-void JUN_CoreCreate(const char *system, const char *rom);
-bool JUN_CoreStartGame();
-void JUN_CoreDestroy();
+void JunieCreate(const char *system, const char *rom);
+bool JunieStartGame();
+void JunieDestroy();
 
-void JUN_CoreLock();
-void JUN_CoreUnlock();
+void JunieLock();
+void JunieUnlock();
 
-const JUN_CoreVideo *JUN_CoreGetVideo();
-const JUN_CoreAudio *JUN_CoreGetAudio();
-const JUN_CoreVariable *JUN_CoreGetVariables();
+const JunieVideo *JunieGetVideo();
+const JunieAudio *JunieGetAudio();
+const JunieVariable *JunieGetVariables();
 
-void JUN_CoreSetSpeed(uint8_t speed);
-void JUN_CoreSetInput(JUN_CoreInputDevice device, JUN_CoreInputID id, int16_t value);
-void JUN_CoreSetVariables(const JUN_CoreVariable *variables);
-void JUN_CoreSetCheats(const JUN_CoreCheat *cheats);
+void JunieSetSpeed(uint8_t speed);
+void JunieSetInput(JunieInputDevice device, JunieInputID id, int16_t value);
+void JunieSetVariables(const JunieVariable *variables);
+void JunieSetCheats(const JunieCheat *cheats);
 
-void JUN_CoreSaveState();
-void JUN_CoreRestoreState();
+void JunieSaveState();
+void JunieRestoreState();

@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
-import { useIonLoading } from "@ionic/react";
-import { Variable } from "../entities/variable";
-import { Cheat } from "../entities/cheat";
-import { Settings } from "../entities/settings";
-import Core from "../services/core";
-import Files from "../services/files";
+import { useEffect, useState } from ' { useEffect, useState } ';
+import { useIonLoading } from ' { useIonLoading } ';
+import { Variable } from ' { Variable } ';
+import { Cheat } from ' { Cheat } ';
+import { Settings } from ' { Settings } ';
+import Core from ' Core ';
+import Files from ' Files ';
 
 /**
  * @template T

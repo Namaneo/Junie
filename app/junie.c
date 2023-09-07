@@ -80,9 +80,9 @@ static struct CTX {
 		int16_t y;
 	} pointer;
 
-	JUN_CoreVariable variables[INT8_MAX];
-	JUN_CoreVideo video;
-	JUN_CoreAudio audio;
+	JunieVariable variables[INT8_MAX];
+	JunieVideo video;
+	JunieAudio audio;
 
 	struct jun_core_sym sym;
 } CTX;
@@ -482,7 +482,7 @@ static void create_paths(const char *system, const char *rom)
 	free(game);
 }
 
-void JUN_CoreCreate(const char *system, const char *rom)
+void JunieCreate(const char *system, const char *rom)
 {
 	setbuf(stdout, NULL);
 
@@ -555,7 +555,7 @@ void core_thread(void *opaque)
 	}
 }
 
-bool JUN_CoreStartGame()
+bool JunieStartGame()
 {
 	CTX.sym.retro_init();
 	CTX.sym.retro_get_system_info(&CTX.system);
@@ -593,7 +593,7 @@ bool JUN_CoreStartGame()
 	return CTX.initialized;
 }
 
-void JUN_CoreDestroy()
+void JunieDestroy()
 {
 	CTX.destroying = true;
 	sthread_join(CTX.thread);
@@ -621,35 +621,35 @@ void JUN_CoreDestroy()
 	CTX = (struct CTX) {0};
 }
 
-void JUN_CoreLock()
+void JunieLock()
 {
 	core_lock();
 	save_memories();
 	CTX.audio.rate = (float) CTX.av.timing.sample_rate * CTX.speed;
 }
 
-void JUN_CoreUnlock()
+void JunieUnlock()
 {
 	CTX.audio.frames = 0;
 	core_unlock();
 }
 
-const JUN_CoreVideo *JUN_CoreGetVideo()
+const JunieVideo *JunieGetVideo()
 {
 	return &CTX.video;
 }
 
-const JUN_CoreAudio *JUN_CoreGetAudio()
+const JunieAudio *JunieGetAudio()
 {
 	return &CTX.audio;
 }
 
-const JUN_CoreVariable *JUN_CoreGetVariables()
+const JunieVariable *JunieGetVariables()
 {
 	return CTX.variables;
 }
 
-void JUN_CoreSetSpeed(uint8_t speed)
+void JunieSetSpeed(uint8_t speed)
 {
 	core_lock();
 
@@ -658,7 +658,7 @@ void JUN_CoreSetSpeed(uint8_t speed)
 	core_unlock();
 }
 
-void JUN_CoreSetInput(JUN_CoreInputDevice device, JUN_CoreInputID id, int16_t value)
+void JunieSetInput(JunieInputDevice device, JunieInputID id, int16_t value)
 {
 	core_lock();
 
@@ -684,7 +684,7 @@ void JUN_CoreSetInput(JUN_CoreInputDevice device, JUN_CoreInputID id, int16_t va
 	core_unlock();
 }
 
-void JUN_CoreSetVariables(const JUN_CoreVariable *variables)
+void JunieSetVariables(const JunieVariable *variables)
 {
 	core_lock();
 
@@ -711,7 +711,7 @@ void JUN_CoreSetVariables(const JUN_CoreVariable *variables)
 	core_unlock();
 }
 
-void JUN_CoreSetCheats(const JUN_CoreCheat *cheats)
+void JunieSetCheats(const JunieCheat *cheats)
 {
 	core_lock();
 
@@ -732,7 +732,7 @@ void JUN_CoreSetCheats(const JUN_CoreCheat *cheats)
 	core_unlock();
 }
 
-void JUN_CoreSaveState()
+void JunieSaveState()
 {
 	core_lock();
 
@@ -751,7 +751,7 @@ void JUN_CoreSaveState()
 	core_unlock();
 }
 
-void JUN_CoreRestoreState()
+void JunieRestoreState()
 {
 	core_lock();
 

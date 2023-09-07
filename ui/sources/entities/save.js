@@ -1,5 +1,5 @@
-import Path from "../services/path";
-import { System } from "./system";
+import Path from ' Path ';
+import { System } from ' { System } ';
 
 export class Save {
 	/** @type {string[]} */

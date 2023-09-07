@@ -1,18 +1,18 @@
-JUN_CoreCreate
-JUN_CoreStartGame
-JUN_CoreDestroy
+JunieCreate
+JunieStartGame
+JunieDestroy
 
-JUN_CoreLock
-JUN_CoreUnlock
+JunieLock
+JunieUnlock
 
-JUN_CoreGetVideo
-JUN_CoreGetAudio
-JUN_CoreGetVariables
+JunieGetVideo
+JunieGetAudio
+JunieGetVariables
 
-JUN_CoreSetSpeed
-JUN_CoreSetInput
-JUN_CoreSetVariables
-JUN_CoreSetCheats
+JunieSetSpeed
+JunieSetInput
+JunieSetVariables
+JunieSetCheats
 
-JUN_CoreSaveState
-JUN_CoreRestoreState
+JunieSaveState
+JunieRestoreState

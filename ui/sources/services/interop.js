@@ -107,7 +107,7 @@ export default class Interop {
 	#wrap(name, type, types) {
 		this[name] = (...parameters) => {
 			parameters = parameters.map((parameter, i) => Interop.serialize(this.#instance, types[i], parameter));
-			const result = this.#instance.exports[`JUN_Core${name}`](...parameters);
+			const result = this.#instance.exports[`Junie${name}`](...parameters);
 			parameters.forEach((parameter, i) => Interop.free(this.#instance, types[i], parameter));
 
 			return Interop.deserialize(this.#instance, type, result);

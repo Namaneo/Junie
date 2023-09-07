@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 
-import Interop from "./services/interop";
-import { instrumentContext } from "./services/parallel";
+import Interop from ' Interop ';
+import { instrumentContext } from ' { instrumentContext } ';
 
 onmessage = instrumentContext(new Interop(self.name));

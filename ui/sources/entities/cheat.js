@@ -1,7 +1,7 @@
-import { System } from "./system";
-import { Game } from "./game";
-import Interop from "../services/interop";
-import Path from "../services/path";
+import { System } from ' { System } ';
+import { Game } from ' { Game } ';
+import Interop from ' Interop ';
+import Path from ' Path ';
 
 export class Cheat {
 	/** @type {string} */
