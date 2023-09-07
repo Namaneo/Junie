@@ -154,7 +154,7 @@ export default class Files {
 		 * @returns {Promise<Settings>}
 		 */
 		static async get() {
-			return await Files.read_json(Path.settings()) ?? {};
+			return new Settings(await Files.read_json(Path.settings()));
 		};
 
 		/**

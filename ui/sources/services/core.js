@@ -41,6 +41,7 @@ export default class Core {
 	 * @param {string} system
 	 * @param {string} rom
 	 * @param {HTMLCanvasElement} canvas
+	 * @returns {Promise<Variable[]>}
 	 */
 	async create(system, rom, canvas) {
 		const graphics = new Graphics(canvas);
@@ -67,7 +68,7 @@ export default class Core {
 
 		this.#parallel = new Parallel(Interop, false, handler);
 		this.#interop = await this.#parallel.create(this.#name, script);
-		await this.#interop.init(system, rom, Core.#memory, await Files.clone(), [], origin);
+		return await this.#interop.init(system, rom, Core.#memory, await Files.clone(), [], origin);
 	}
 
 	/**
@@ -99,11 +100,8 @@ export default class Core {
 		new Uint8Array(Core.#memory.buffer).fill(0);
 	}
 
-	/** @returns {Promise<Variable[]>} */
-	async variables() { return this.#interop?.variables(); }
-
 	/** @param {Settings} settings @returns {Promise<void>} */
-	async settings(settings) { await this.#interop?.settings(settings); }
+	async settings(settings) { await this.#interop?.variables(settings.variables); }
 
 	/** @param {Cheat[]} cheats @returns {Promise<void>} */
 	async cheats(cheats) { await this.#interop?.cheats(cheats); }

@@ -107,7 +107,7 @@ export const useCore = (lib) => {
 		const updated = variables.reduce((object, variable) => {
 			object[variable.key] = settings[variable.key] ?? variable.options[0];
 			return object;
-		}, {});
+		}, new Settings());
 
 		await core.settings(updated);
 	}
@@ -129,13 +129,12 @@ export const useCore = (lib) => {
 
 		try {
 			const settings = await Files.Settings.get();
-			const cheats = (await Files.Cheats.get()).find(x => x.system == system && x.game == game)?.cheats;
+			const cheats = (await Files.Cheats.get()).find(x => x.system == system && x.game == game)?.cheats ?? [];
 
 			setSettings(settings);
 			setCheats(cheats);
 
-			await core.create(system, rom, canvas);
-			setVariables(await core.variables());
+			setVariables(await core.create(system, rom, canvas));
 			await core.start(settings, cheats);
 
 			initAudio(settings);

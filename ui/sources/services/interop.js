@@ -35,16 +35,11 @@ export default class Interop {
 	/** @type {boolean} */
 	#stop = false;
 
-	#data = {
-		/** @type {number} */
-		variables: 0,
+	/** @type {number} */
+	#video = 0;
 
-		/** @type {number} */
-		video: 0,
-
-		/** @type {number} */
-		audio: 0,
-	};
+	/** @type {number} */
+	#audio = 0;
 
 	/**
 	 * @param {string} name
@@ -55,47 +50,52 @@ export default class Interop {
 	}
 
 	/**
-	 * @param {(number | string)} parameter
-	 * @param {('number' | 'string' | null)} type
+	 * @param {WebAssembly.Instance} instance
+	 * @param {('number' | 'string' | 'boolean' | null)} type
+	 * @param {(number | string | boolean)} parameter
 	 * @returns {number}
 	 */
-	#serialize(parameter, type) {
-		if (type == null || type == 'number')
+	static serialize(instance, type, parameter) {
+		if (type != 'string' || parameter == null)
 			return parameter;
 
-		const pointer = this.#instance.exports.calloc(parameter.length + 1, 1);
-		const view = new Uint8Array(this.#instance.exports.memory.buffer, pointer, parameter.length);
-		view.set(Interop.#encoder.encode(parameter));
+		const memory = instance.exports.memory;
+		const pointer = instance.exports.calloc(parameter.length + 1, 1);
+		const view = new Uint8Array(memory.buffer, pointer, parameter.length);
+		view.set(this.#encoder.encode(parameter));
 
 		return pointer;
 	}
 
 	/**
+	 * @param {WebAssembly.Instance} instance
+	 * @param {('number' | 'string' | 'boolean' | null)} type
 	 * @param {number} parameter
-	 * @param {('number' | 'string' | null)} type
-	 * @returns {(number | string)}
+	 * @returns {(number | string | boolean)}
 	 */
-	#deserialize(parameter, type) {
-		if (type == null || type == 'number')
+	static deserialize(instance, type, parameter) {
+		if (type != 'string' || parameter == null)
 			return parameter;
 
-		let view = new Uint8Array(this.#instance.exports.memory.buffer, parameter);
+		const memory = instance.exports.memory;
+		let view = new Uint8Array(memory.buffer, parameter);
 		let length = 0; for (; view[length] != 0; length++);
-		view = new Uint8Array(this.#instance.exports.memory.buffer, parameter, length);
+		view = new Uint8Array(memory.buffer, parameter, length);
 
-		return Interop.#decoder.decode(new Uint8Array(view));
+		return this.#decoder.decode(new Uint8Array(view));
 	}
 
 	/**
+	 * @param {WebAssembly.Instance} instance
+	 * @param {('number' | 'string' | 'boolean' | null)} type
 	 * @param {number} parameter
-	 * @param {('number' | 'string' | null)} type
 	 * @returns {void}
 	 */
-	#free(parameter, type) {
-		if (type == null || type == 'number')
+	static free(instance, type, parameter) {
+		if (type != 'string' || parameter == null)
 			return;
 
-		this.#instance.exports.free(parameter);
+		instance.exports.free(parameter);
 	}
 
 	/**
@@ -106,11 +106,11 @@ export default class Interop {
 	 */
 	#wrap(name, type, types) {
 		this[name] = (...parameters) => {
-			parameters = parameters.map((parameter, i) => this.#serialize(parameter, types[i]));
+			parameters = parameters.map((parameter, i) => Interop.serialize(this.#instance, types[i], parameter));
 			const result = this.#instance.exports[`JUN_Core${name}`](...parameters);
-			parameters.forEach((parameter, i) => this.#free(parameter, types[i]));
+			parameters.forEach((parameter, i) => Interop.free(this.#instance, types[i], parameter));
 
-			return this.#deserialize(result, type);
+			return Interop.deserialize(this.#instance, type, result);
 		}
 	};
 
@@ -122,7 +122,7 @@ export default class Interop {
 	 * @param {{path: string, offset: number}[]} fds
 	 * @param {string} origin
 	 * @param {number} start_arg
-	 * @returns {Promise<void>}
+	 * @returns {Promise<Variable[]>}
 	 */
 	async init(system, rom, memory, port, fds, origin, start_arg) {
 		const parallel = new Parallel(Filesystem, true);
@@ -158,24 +158,22 @@ export default class Interop {
 
 		this.#wrap('GetVideo',           'number', []);
 		this.#wrap('GetAudio',           'number', []);
+		this.#wrap('GetVariables',       'number', []);
 
 		this.#wrap('SetSpeed',           null,     ['number']);
 		this.#wrap('SetInput',           null,     ['number', 'number', 'number']);
-
-		this.#wrap('GetVariables',       'number', []);
-		this.#wrap('SetVariable',        null,     ['string', 'string']);
+		this.#wrap('SetVariables',       null,     ['number']);
+		this.#wrap('SetCheats',          null,     ['number']);
 
 		this.#wrap('SaveState',          null,     []);
 		this.#wrap('RestoreState',       null,     []);
 
-		this.#wrap('ResetCheats',        null,     []);
-		this.#wrap('SetCheat',           null,     ['number', 'number', 'string']);
-
 		this.Create(system, rom);
 
-		this.#data.variables = this.GetVariables();
-		this.#data.video = this.GetVideo();
-		this.#data.audio = this.GetAudio();
+		this.#video = this.GetVideo();
+		this.#audio = this.GetAudio();
+
+		return Variable.parse(this.#instance, this.GetVariables());
 	}
 
 	/** @returns {Promise<void>} */
@@ -191,8 +189,8 @@ export default class Interop {
 
 				this.Lock();
 
-				const video = Video.parse(memory, this.#data.video);
-				const audio = Audio.parse(memory, this.#data.audio);
+				const video = Video.parse(memory, this.#video);
+				const audio = Audio.parse(memory, this.#audio);
 
 				if (video.data) {
 					const video_view = video.format == 1
@@ -221,26 +219,19 @@ export default class Interop {
 		this.Destroy();
 	}
 
-	/** @param {Settings} settings @returns {Promise<void>} */
-	settings(settings) {
-		this.Lock();
-		for (const key in settings)
-			this.SetVariable(key, settings[key]);
-		this.Unlock();
+	/** @param {Variable[]} variables @returns {Promise<void>} */
+	variables(variables) {
+		const variables_ptr = Variable.serialize(this.#instance, variables)
+		this.SetVariables(variables_ptr);
+		Variable.free(this.#instance, variables_ptr);
 	}
 
 	/** @param {Cheat[]} cheats @returns {Promise<void>} */
 	cheats(cheats) {
-		this.Lock();
-		this.ResetCheats();
-		const filtered = cheats?.filter(x => x.enabled).sort((x, y) => x.order - y.order);
-		for (const cheat of filtered ?? [])
-			this.SetCheat(cheat.order, true, cheat.value);
-		this.Unlock();
+		const cheats_ptr = Cheat.serialize(this.#instance, cheats)
+		this.SetCheats(cheats_ptr);
+		Cheat.free(this.#instance, cheats_ptr);
 	}
-
-	/** @returns {Promise<Variable[]>} */
-	variables() { return Variable.parse(this.#instance.exports.memory, this.#data.variables); }
 
 	/** @param {boolean} enable @returns {Promise<void>} */
 	audio(enable) { this.#audio = enable; }

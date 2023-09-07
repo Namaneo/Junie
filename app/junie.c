@@ -644,13 +644,24 @@ const JUN_CoreAudio *JUN_CoreGetAudio()
 	return &CTX.audio;
 }
 
-void JUN_CoreSetSpeed(uint8_t speed)
+const JUN_CoreVariable *JUN_CoreGetVariables()
 {
-	CTX.speed = speed;
+	return CTX.variables;
 }
 
-void JUN_CoreSetInput(uint8_t device, uint8_t id, int16_t value)
+void JUN_CoreSetSpeed(uint8_t speed)
 {
+	core_lock();
+
+	CTX.speed = speed;
+
+	core_unlock();
+}
+
+void JUN_CoreSetInput(JUN_CoreInputDevice device, JUN_CoreInputID id, int16_t value)
+{
+	core_lock();
+
 	if (device == RETRO_DEVICE_JOYPAD)
 		CTX.inputs[id] = value;
 
@@ -665,32 +676,60 @@ void JUN_CoreSetInput(uint8_t device, uint8_t id, int16_t value)
 			case RETRO_DEVICE_ID_POINTER_Y:
 				CTX.pointer.y = value;
 				break;
+			default:
+				break;
 		}
 	}
+
+	core_unlock();
 }
 
-const JUN_CoreVariable *JUN_CoreGetVariables()
+void JUN_CoreSetVariables(const JUN_CoreVariable *variables)
 {
-	return &CTX.variables;
-}
+	core_lock();
 
-void JUN_CoreSetVariable(const char *key, const char *value)
-{
-	for (int8_t i = 0; i < INT8_MAX; i++) {
-		if (!CTX.variables[i].key)
+	while (variables->key != NULL) {
+		for (int8_t i = 0; i < INT8_MAX; i++) {
+			if (!CTX.variables[i].key)
+				break;
+
+			if (strcmp(CTX.variables[i].key, variables->key))
+				continue;
+
+			if (strcmp(CTX.variables[i].value, variables->value)) {
+				free(CTX.variables[i].value);
+				CTX.variables[i].value = strdup(variables->value);
+				CTX.variables_update = true;
+			}
+
 			break;
-
-		if (strcmp(CTX.variables[i].key, key))
-			continue;
-
-		if (strcmp(CTX.variables[i].value, value)) {
-			free(CTX.variables[i].value);
-			CTX.variables[i].value = strdup(value);
-			CTX.variables_update = true;
 		}
 
-		break;
+		variables++;
 	}
+
+	core_unlock();
+}
+
+void JUN_CoreSetCheats(const JUN_CoreCheat *cheats)
+{
+	core_lock();
+
+	CTX.sym.retro_cheat_reset();
+
+	while (cheats->code != NULL) {
+		char *value = strdup(cheats->code);
+		for (size_t i = 0; i < strlen(value); i++)
+			if (value[i] == ' ' || value[i] == '\n')
+				value[i] = '+';
+
+		CTX.sym.retro_cheat_set(cheats->index, cheats->enabled, value);
+		free(value);
+
+		cheats++;
+	}
+
+	core_unlock();
 }
 
 void JUN_CoreSaveState()
@@ -732,23 +771,6 @@ void JUN_CoreRestoreState()
 	fclose(file);
 
 	core_unlock();
-}
-
-void JUN_CoreResetCheats()
-{
-	CTX.sym.retro_cheat_reset();
-}
-
-void JUN_CoreSetCheat(uint32_t index, bool enabled, const char *code)
-{
-	char *value = strdup(code);
-	for (size_t i = 0; i < strlen(value); i++)
-		if (value[i] == ' ' || value[i] == '\n')
-			value[i] = '+';
-
-	CTX.sym.retro_cheat_set(index, enabled, value);
-
-	free(value);
 }
 
 #if defined(__wasi__)

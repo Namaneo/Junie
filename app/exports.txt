@@ -7,15 +7,12 @@ JUN_CoreUnlock
 
 JUN_CoreGetVideo
 JUN_CoreGetAudio
+JUN_CoreGetVariables
 
 JUN_CoreSetSpeed
 JUN_CoreSetInput
-
-JUN_CoreGetVariables
-JUN_CoreSetVariable
+JUN_CoreSetVariables
+JUN_CoreSetCheats
 
 JUN_CoreSaveState
 JUN_CoreRestoreState
-
-JUN_CoreResetCheats
-JUN_CoreSetCheat
