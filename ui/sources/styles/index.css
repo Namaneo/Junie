@@ -2,17 +2,17 @@
  * Pages
  */
 #root .page {
-    align-items: center;
+	align-items: center;
 }
 
 #root .page ion-content {
-    max-width: 768px;
+	max-width: 768px;
 }
 
 #root ion-content:not(.core) {
-    overflow: auto;
-    --overflow: hidden;
-    --offset-bottom: auto !important;
+	overflow: auto;
+	--overflow: hidden;
+	--offset-bottom: auto !important;
 	scrollbar-width: none;
 }
 
@@ -29,8 +29,8 @@
  * Systems
  */
  #root .home ion-card {
-    text-align: center;
-    cursor: pointer;
+	text-align: center;
+	cursor: pointer;
 }
 
 
@@ -43,22 +43,22 @@
 
 #root .games .empty {
 	text-align: center;
-    font-style: italic;
-    color: var(--ion-color-step-400);
+	font-style: italic;
+	color: var(--ion-color-step-400);
 }
 
 #root .games ion-list {
-    padding: 0;
-    background: transparent;
+	padding: 0;
+	background: transparent;
 }
 
 #root .games ion-card {
-    display: flex;
-    cursor: pointer;
+	display: flex;
+	cursor: pointer;
 }
 
 #root .games ion-progress-bar {
-    max-width: 50px;
+	max-width: 50px;
 }
 
 
@@ -78,7 +78,7 @@
 
 #root .core .controls {
 	position: absolute;
-    inset: 0;
+	inset: 0;
 	padding-left: var(--ion-safe-area-left);
 	padding-right: var(--ion-safe-area-right);
 }
@@ -93,8 +93,8 @@
 	position: absolute;
 	padding: 0;
 	color: var(--ion-color-dark);
-    background: rgba(var(--ion-color-light-rgb), 0.3);
-    border: 2px solid var(--ion-color-dark);
+	background: rgba(var(--ion-color-light-rgb), 0.3);
+	border: 2px solid var(--ion-color-dark);
 	pointer-events: none;
 }
 
@@ -116,8 +116,8 @@
  * Saves
  */
 #root .saves ion-list {
-    padding: 0;
-    background: transparent;
+	padding: 0;
+	background: transparent;
 }
 
 
@@ -125,8 +125,8 @@
  * Cheats
  */
 #root .cheats ion-list {
-    padding: 0;
-    background: transparent;
+	padding: 0;
+	background: transparent;
 }
 
 
@@ -134,48 +134,48 @@
  * Modals
  */
 #root .modal {
-    --height: auto;
+	--height: auto;
 }
 
 #root ion-modal.fullscreen {
 	--width: 100%;
 	--height: 100%;
 	--border-radius: 0;
-    --ion-background-color: unset;
-    --ion-toolbar-background: unset;
-    --ion-toolbar-border-color: unset;
+	--ion-background-color: unset;
+	--ion-toolbar-background: unset;
+	--ion-toolbar-border-color: unset;
 }
 
 #root .modal ion-list {
-    padding-top: 16px;
-    padding-bottom: 32px;
-    background: var(--ion-color-light-shade);
+	padding-top: 16px;
+	padding-bottom: 32px;
+	background: var(--ion-color-light-shade);
 }
 
 #root .modal ion-item {
-    margin-top: 8px;
+	margin-top: 8px;
 	margin-bottom: 8px;
-    --background: var(--ion-color-light-shade);
+	--background: var(--ion-color-light-shade);
 }
 
 #root .modal ion-label {
-    min-width: 60px;
+	min-width: 60px;
 }
 
 #root .modal ion-select {
-    max-width: unset;
+	max-width: unset;
 }
 
 #root .modal ion-input {
-    text-align: right;
+	text-align: right;
 }
 
 #root .modal textarea {
-    font-family: monospace;
-    text-align: right;
+	font-family: monospace;
+	text-align: right;
 }
 
 #root .modal ion-button {
 	width: 100%;
-    height: 100%;
+	height: 100%;
 }

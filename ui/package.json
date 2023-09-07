@@ -3,17 +3,17 @@
   "version": "0.0.0",
   "license": "MIT",
   "devDependencies": {
-    "@ionic/react": "^7.0.0",
-    "@ionic/react-router": "^7.0.0",
-    "@pkgjs/parseargs": "^0.11.0",
-    "chokidar": "^3.5.3",
-    "esbuild": "^0.18.18",
-    "esbuild-plugin-copy": "^2.1.1",
-    "glob": "^8.1.0",
-    "jszip": "^3.10.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router": "^5.0.1",
-    "react-router-dom": "^5.0.1"
+	"@ionic/react": "^7.0.0",
+	"@ionic/react-router": "^7.0.0",
+	"@pkgjs/parseargs": "^0.11.0",
+	"chokidar": "^3.5.3",
+	"esbuild": "^0.18.18",
+	"esbuild-plugin-copy": "^2.1.1",
+	"glob": "^8.1.0",
+	"jszip": "^3.10.1",
+	"react": "^18.2.0",
+	"react-dom": "^18.2.0",
+	"react-router": "^5.0.1",
+	"react-router-dom": "^5.0.1"
   }
 }

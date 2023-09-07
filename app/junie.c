@@ -62,8 +62,8 @@ static struct CTX {
 
 	sthread_t *thread;
 	scond_t *cond;
-    slock_t *mutex;
-    uint64_t queue_head;
+	slock_t *mutex;
+	uint64_t queue_head;
 	uint64_t queue_tail;
 
 	void *memory;
@@ -501,19 +501,19 @@ void JunieCreate(const char *system, const char *rom)
 
 static void core_lock()
 {
-    slock_lock(CTX.mutex);
-    uint64_t queue_me = CTX.queue_tail++;
-    while (queue_me != CTX.queue_head)
-        scond_wait(CTX.cond, CTX.mutex);
-    slock_unlock(CTX.mutex);
+	slock_lock(CTX.mutex);
+	uint64_t queue_me = CTX.queue_tail++;
+	while (queue_me != CTX.queue_head)
+		scond_wait(CTX.cond, CTX.mutex);
+	slock_unlock(CTX.mutex);
 }
 
 static void core_unlock()
 {
-    slock_lock(CTX.mutex);
-    CTX.queue_head++;
-    scond_broadcast(CTX.cond);
-    slock_unlock(CTX.mutex);
+	slock_lock(CTX.mutex);
+	CTX.queue_head++;
+	scond_broadcast(CTX.cond);
+	slock_unlock(CTX.mutex);
 }
 
 static bool core_should_run()
@@ -527,8 +527,8 @@ static bool core_should_run()
 	}
 
 	double current = core_get_ticks();
-    double total_loop = current - timestamp;
-    timestamp = current;
+	double total_loop = current - timestamp;
+	timestamp = current;
 
 	if (total_loop > 0) {
 		double expected_frames = CTX.av.timing.fps * CTX.speed;

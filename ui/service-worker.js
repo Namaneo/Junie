@@ -20,7 +20,7 @@ const fetchEx = async (request) => {
 }
 
 const cacheResources = async () => {
-    const cache = await caches.open(version);
+	const cache = await caches.open(version);
 
 	const requests = [];
 	for (const resource of resources) {
@@ -54,7 +54,7 @@ const fetchResource = async (request, internal) => {
 
 sw.addEventListener('install', (event) => {
 	sw.skipWaiting();
-    event.waitUntil(cacheResources());
+	event.waitUntil(cacheResources());
 });
 
 sw.addEventListener('activate', (event) => {
