@@ -1,4 +1,4 @@
-import { Variable } from ' { Variable } ';
+import { Variable } from './variable';
 
 export class Settings {
 	/** @type {Variable[]} */

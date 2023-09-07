@@ -9,6 +9,7 @@ JunieGetVideo
 JunieGetAudio
 JunieGetVariables
 
+JunieSetAudio
 JunieSetSpeed
 JunieSetInput
 JunieSetVariables

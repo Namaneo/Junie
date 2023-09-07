@@ -305,6 +305,9 @@ static void video_refresh(const void *data, unsigned width, unsigned height, siz
 
 static size_t audio_sample_batch(const int16_t *data, size_t frames)
 {
+	if (!CTX.audio.enable)
+		return frames;
+
 	size_t new_size = (CTX.audio.frames + frames) * 2 * sizeof(float);
 	if (new_size > CTX.audio.size) {
 		CTX.audio.data = realloc(CTX.audio.data, new_size);
@@ -647,6 +650,15 @@ const JunieAudio *JunieGetAudio()
 const JunieVariable *JunieGetVariables()
 {
 	return CTX.variables;
+}
+
+void JunieSetAudio(bool enable)
+{
+	core_lock();
+
+	CTX.audio.enable = enable;
+
+	core_unlock();
 }
 
 void JunieSetSpeed(uint8_t speed)

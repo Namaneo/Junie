@@ -1,4 +1,4 @@
-import { Video } from ' { Video } ';
+import { Video } from '../entities/video';
 
 const vs = () => `
 	attribute vec2 a_position;

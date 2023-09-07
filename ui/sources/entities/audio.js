@@ -11,6 +11,9 @@ export class Audio {
 	/** @type {number} */
 	size;
 
+	/** @type {boolean} */
+	enable;
+
 	/**
 	 * @param {WebAssembly.Memory} memory
 	 * @param {number} ptr
@@ -24,6 +27,7 @@ export class Audio {
 			rate:   view.getFloat32(4, true),
 			frames: view.getUint32(8, true),
 			size:   view.getUint32(12, true),
+			enable: view.getUint32(16, true),
 		}
 	}
 }

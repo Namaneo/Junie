@@ -1,10 +1,10 @@
-import { useEffect, useState } from ' { useEffect, useState } ';
-import { useIonLoading } from ' { useIonLoading } ';
-import { Variable } from ' { Variable } ';
-import { Cheat } from ' { Cheat } ';
-import { Settings } from ' { Settings } ';
-import Core from ' Core ';
-import Files from ' Files ';
+import { useEffect, useState } from 'react';
+import { useIonLoading } from '@ionic/react';
+import { Variable } from '../entities/variable';
+import { Cheat } from '../entities/cheat';
+import { Settings } from '../entities/settings';
+import Core from '../services/core';
+import Files from '../services/files';
 
 /**
  * @template T
@@ -28,11 +28,12 @@ const useStatus = (lib, type, value, update, callback) => {
 		if (!settings.hasOwnProperty(name))
 			settings[name] = value;
 		setState(settings[name]);
+		callback && callback(settings[name]);
 	}
 
 	useEffect(() => {
 		update(name, state);
-		if (callback) callback(state);
+		callback && callback(state);
 	}, [state]);
 
 	return [state, init, setState];

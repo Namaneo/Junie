@@ -47,6 +47,7 @@ typedef struct {
 	float rate;
 	size_t frames;
 	size_t size;
+	bool enable;
 } JunieAudio;
 
 typedef struct {

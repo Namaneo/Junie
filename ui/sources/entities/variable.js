@@ -1,4 +1,4 @@
-import Interop from ' Interop ';
+import Interop from '../services/interop';
 
 export class Variable {
 	/** @type {string} */

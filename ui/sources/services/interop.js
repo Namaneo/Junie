@@ -1,4 +1,3 @@
-import { Settings } from '../entities/settings';
 import { Cheat } from '../entities/cheat';
 import { Variable } from '../entities/variable';
 import { Video } from '../entities/video';
@@ -25,9 +24,6 @@ export default class Interop {
 
 	/** @type {WASI} */
 	#wasi = null;
-
-	/** @type {boolean} */
-	#audio = true;
 
 	/** @type {Promise} */
 	#running = null;
@@ -149,24 +145,25 @@ export default class Interop {
 
 		this.#instance.exports._initialize();
 
-		this.#wrap('Create',             null,     ['string', 'string']);
-		this.#wrap('StartGame',          'number', []);
-		this.#wrap('Destroy',            null,     []);
+		this.#wrap('Create',             null,      ['string', 'string']);
+		this.#wrap('StartGame',          'boolean', []);
+		this.#wrap('Destroy',            null,      []);
 
-		this.#wrap('Lock',               null,     []);
-		this.#wrap('Unlock',             null,     []);
+		this.#wrap('Lock',               null,      []);
+		this.#wrap('Unlock',             null,      []);
 
-		this.#wrap('GetVideo',           'number', []);
-		this.#wrap('GetAudio',           'number', []);
-		this.#wrap('GetVariables',       'number', []);
+		this.#wrap('GetVideo',           'number',  []);
+		this.#wrap('GetAudio',           'number',  []);
+		this.#wrap('GetVariables',       'number',  []);
 
-		this.#wrap('SetSpeed',           null,     ['number']);
-		this.#wrap('SetInput',           null,     ['number', 'number', 'number']);
-		this.#wrap('SetVariables',       null,     ['number']);
-		this.#wrap('SetCheats',          null,     ['number']);
+		this.#wrap('SetAudio',           null,      ['boolean']);
+		this.#wrap('SetSpeed',           null,      ['number']);
+		this.#wrap('SetInput',           null,      ['number', 'number', 'number']);
+		this.#wrap('SetVariables',       null,      ['number']);
+		this.#wrap('SetCheats',          null,      ['number']);
 
-		this.#wrap('SaveState',          null,     []);
-		this.#wrap('RestoreState',       null,     []);
+		this.#wrap('SaveState',          null,      []);
+		this.#wrap('RestoreState',       null,      []);
 
 		this.Create(system, rom);
 
@@ -199,7 +196,7 @@ export default class Interop {
 					postMessage({ type: 'video', view: video_view, video }, [video_view.buffer]);
 				}
 
-				if (audio.frames && this.#audio) {
+				if (audio.frames) {
 					const audio_view = new Float32Array(memory.buffer, audio.data, audio.frames * 2).slice();
 					postMessage({ type: 'audio', view: audio_view, sample_rate: audio.rate }, [audio_view.buffer]);
 				}
@@ -234,7 +231,7 @@ export default class Interop {
 	}
 
 	/** @param {boolean} enable @returns {Promise<void>} */
-	audio(enable) { this.#audio = enable; }
+	audio(enable) { this.SetAudio(enable); }
 
 	/** @param {number} value @returns {Promise<void>} */
 	speed(value) { this.SetSpeed(value); }
