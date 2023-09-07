@@ -654,26 +654,16 @@ const JunieVariable *JunieGetVariables()
 
 void JunieSetAudio(bool enable)
 {
-	core_lock();
-
 	CTX.audio.enable = enable;
-
-	core_unlock();
 }
 
 void JunieSetSpeed(uint8_t speed)
 {
-	core_lock();
-
 	CTX.speed = speed;
-
-	core_unlock();
 }
 
 void JunieSetInput(JunieInputDevice device, JunieInputID id, int16_t value)
 {
-	core_lock();
-
 	if (device == RETRO_DEVICE_JOYPAD)
 		CTX.inputs[id] = value;
 
@@ -692,8 +682,6 @@ void JunieSetInput(JunieInputDevice device, JunieInputID id, int16_t value)
 				break;
 		}
 	}
-
-	core_unlock();
 }
 
 void JunieSetVariables(const JunieVariable *variables)
