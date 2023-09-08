@@ -5,6 +5,27 @@ import { Audio } from '../entities/audio';
 import Parallel from './parallel';
 import Filesystem from './filesystem';
 import WASI from './wasi';
+import Core from './core';
+
+class InteropConfig {
+	/** @type {string} */
+	system = null;
+
+	/** @type {string} */
+	rom = null;
+
+	/** @type {WebAssembly.Memory} */
+	memory = null;
+
+	/** @type {{path: string, offset: number}[]} */
+	fds = null;
+
+	/** @type {string} */
+	origin = null;
+
+	/** @type {number} */
+	start_arg = null;
+}
 
 export default class Interop {
 	/** @type {TextEncoder} */
@@ -18,6 +39,9 @@ export default class Interop {
 
 	/** @type {string} */
 	#name = null;
+
+	/** @type {Core} */
+	#core = null;
 
 	/** @type {WebAssembly.Instance} */
 	#instance = null;
@@ -111,36 +135,35 @@ export default class Interop {
 	};
 
 	/**
-	 * @param {string} system
-	 * @param {string} rom
-	 * @param {WebAssembly.Memory} memory
-	 * @param {MessagePort} port
-	 * @param {{path: string, offset: number}[]} fds
-	 * @param {string} origin
-	 * @param {number} start_arg
+	 * @param {MessagePort} core_port
+	 * @param {MessagePort} fs_port
+	 * @param {InteropConfig} config
 	 * @returns {Promise<Variable[]>}
 	 */
-	async init(system, rom, memory, port, fds, origin, start_arg) {
-		const parallel = new Parallel(Filesystem, true);
-		const filesystem = parallel.link(port);
-		this.#wasi = new WASI(memory, filesystem, fds);
+	async init(core_port, fs_port, config) {
+		const fs_parallel = new Parallel(Filesystem, true);
+		const filesystem = fs_parallel.link(fs_port);
+		this.#wasi = new WASI(config.memory, filesystem, config.fds);
 
-		const source = await WebAssembly.instantiateStreaming(fetch(`${origin}/modules/${this.#name}.wasm`), {
-			env: { memory },
+		const core_parallel = new Parallel(Core, true);
+		this.#core = core_parallel.link(core_port);
+
+		const source = await WebAssembly.instantiateStreaming(fetch(`${config.origin}/modules/${this.#name}.wasm`), {
+			env: { memory: config.memory },
 			wasi_snapshot_preview1: this.#wasi.environment,
 			wasi: { 'thread-spawn': (start_arg) => {
 				const id = filesystem.id();
-				postMessage({ type: 'thread', id, fds: this.#wasi.fds, start_arg });
+				postMessage({ id, fds: this.#wasi.fds, start_arg });
 				return id;
 			}},
 		});
 
 		this.#instance = source.instance;
 
-		if (start_arg) {
-			this.#instance.exports.wasi_thread_start(this.#id, start_arg);
+		if (config.start_arg) {
+			this.#instance.exports.wasi_thread_start(this.#id, config.start_arg);
 			close();
-			return;
+			return [];
 		}
 
 		this.#instance.exports._initialize();
@@ -165,7 +188,7 @@ export default class Interop {
 		this.#wrap('SaveState',          null,      []);
 		this.#wrap('RestoreState',       null,      []);
 
-		this.Create(system, rom);
+		this.Create(config.system, config.rom);
 
 		this.#video = this.GetVideo();
 		this.#audio = this.GetAudio();
@@ -189,17 +212,8 @@ export default class Interop {
 				const video = Video.parse(memory, this.#video);
 				const audio = Audio.parse(memory, this.#audio);
 
-				if (video.data) {
-					const video_view = video.format == 1
-						? new Uint8Array(memory.buffer, video.data, video.pitch * video.height).slice()
-						: new Uint16Array(memory.buffer, video.data, (video.pitch * video.height) / 2).slice();
-					postMessage({ type: 'video', view: video_view, video }, [video_view.buffer]);
-				}
-
-				if (audio.frames) {
-					const audio_view = new Float32Array(memory.buffer, audio.data, audio.frames * 2).slice();
-					postMessage({ type: 'audio', view: audio_view, sample_rate: audio.rate }, [audio_view.buffer]);
-				}
+				if (video.data) this.#core.draw(video);
+				if (audio.frames) this.#core.play(audio);
 
 				this.Unlock();
 			}

@@ -47,7 +47,7 @@ export default class WASI {
 	constructor(memory, filesystem, fds) {
 		this.#memory = memory;
 		this.#filesystem = filesystem;
-		this.#fds = { ...this.#fds, ...fds };
+		this.#fds = { ...this.#fds, ...(fds ?? []) };
 	}
 
 	/**
