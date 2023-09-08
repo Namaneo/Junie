@@ -1,5 +1,5 @@
 TARGET  := junie
-VERSION := 0.6.0-$(shell date +%s)
+VERSION := 0.7.0-$(shell date +%s)
 
 ifeq ($(DEBUG), 1)
 BUILD := development
