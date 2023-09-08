@@ -76,7 +76,7 @@ docker run \
 # Credits
 
 - [Libretro](https://github.com/libretro/) for all emulation cores.
-- [glif.app](https://glif.app)/ for the AI generated icons.
+- [glif.app](https://glif.app/) for the AI generated icons.
 
 # License
 
