@@ -75,8 +75,8 @@ docker run \
 
 # Credits
 
-- [Libretro](https://github.com/libretro/gambatte-libretro) for all emulation cores.
-- [glif.app](glif.app) for the AI generated icons.
+- [Libretro](https://github.com/libretro/) for all emulation cores.
+- [glif.app](https://glif.app)/ for the AI generated icons.
 
 # License
 
