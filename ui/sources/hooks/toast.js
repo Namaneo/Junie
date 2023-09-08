@@ -24,7 +24,6 @@ export const useToast = (header) => {
 			message: queue[0],
 			duration: 5000,
 			position: 'top',
-			color: 'medium',
 			buttons: [{ icon: checkmarkSharp, role: 'cancel' }],
 			onDidDismiss: () => {
 				queue.shift();

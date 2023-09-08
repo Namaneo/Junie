@@ -37,14 +37,10 @@
 /*
  * Games
  */
-#root .games {
-	--background: var(--ion-background-color);
-}
-
 #root .games .empty {
 	text-align: center;
 	font-style: italic;
-	color: var(--ion-color-step-400);
+	opacity: 0.5;
 }
 
 #root .games ion-list {
@@ -92,14 +88,10 @@
 #root .core button {
 	position: absolute;
 	padding: 0;
-	color: var(--ion-color-dark);
-	background: rgba(var(--ion-color-light-rgb), 0.3);
-	border: 2px solid var(--ion-color-dark);
+	opacity: 0.5;
+	border-width: 2px;
+	border-style: solid;
 	pointer-events: none;
-}
-
-#root .core button:active {
-	background: rgba(var(--ion-color-light-rgb), 0.1)
 }
 
 #root .core-settings {
@@ -149,13 +141,11 @@
 #root .modal ion-list {
 	padding-top: 16px;
 	padding-bottom: 32px;
-	background: var(--ion-color-light-shade);
 }
 
 #root .modal ion-item {
 	margin-top: 8px;
 	margin-bottom: 8px;
-	--background: var(--ion-color-light-shade);
 }
 
 #root .modal ion-label {

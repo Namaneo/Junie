@@ -14,7 +14,10 @@ export const HomePage = () => {
 	const [system,  setSystem]  = useState(/** @type {System}   */ (null)   );
 	const [loading, setLoading] = useState(/** @type {boolean}  */ (false));
 
-	const [open, close] = useIonModal(GamesModal, { system, close: () => close() });
+	const [open, close] = useIonModal(GamesModal, { system, close: async () => {
+		setSystems(await Requests.getSystems());
+		close();
+	}});
 
 	const version = window.junie_build.split('-')[0];
 	const build = window.junie_build.split('-')[1];
@@ -52,12 +55,10 @@ export const HomePage = () => {
 			<IonHeader>
 				<IonToolbar>
 					<IonTitle>Junie</IonTitle>
-					<IonButtons slot="start">
+					<IonButtons slot="end">
 						<IonButton onClick={() => present(date)}>
 							<IonIcon slot="icon-only" icon={informationCircleOutline} />
 						</IonButton>
-					</IonButtons>
-					<IonButtons slot="end">
 						<IonButton onClick={refreshLibrary}>
 							<IonIcon slot="icon-only" icon={refreshOutline} />
 						</IonButton>

@@ -129,7 +129,7 @@ export const SavesPage = () => {
 					{saves.map(save =>
 						<IonCard key={save.game}>
 							<IonItemSliding>
-								<IonItem color="light">
+								<IonItem>
 									{
 										save.mapped ?
 											<IonIcon color="success" icon={checkmarkCircleOutline} slot="start"></IonIcon> :

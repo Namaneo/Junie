@@ -98,7 +98,7 @@ export const CheatsPage = () => {
 					{lists.map(list => list.cheats.map(cheat =>
 						<IonCard key={list.system + list.game + cheat.name}>
 							<IonItemSliding>
-								<IonItem color="light">
+								<IonItem>
 									{
 										cheat.enabled ?
 											<IonIcon color="success" icon={checkmarkCircleOutline} slot="start"></IonIcon> :
