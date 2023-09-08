@@ -1,4 +1,4 @@
-<p align="center"><img src="ui/assets/favicon.png" /></p>
+<p align="center"><img src="ui/assets/icon-round.png" width="150" /></p>
 
 # <p align="center">Junie</p>
 
@@ -6,7 +6,7 @@ Junie is a libretro frontend that aims to run entirely in your browser, desktop 
 * No installation on the end-devices.
 * Near-native performances thanks to WebAssembly.
 * Wide range of supported/compatible cores (... soon).
-* Progressive Web Application fully accessible offline.
+* Progressive Web Application entirely accessible offline.
 
 Junie currently runs on most recent browsers, but your experience will probably be better on Chrome and Safari.
 
