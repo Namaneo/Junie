@@ -1,6 +1,8 @@
-# Junie
+<p align="center"><img src="ui/assets/favicon.png" /></p>
 
-Junie is a [Libretro](https://www.libretro.com/index.php/home-2/) frontend that aims to run entirely in your browser, desktop or mobile!
+# <p align="center">Junie</p>
+
+Junie is a libretro frontend that aims to run entirely in your browser, desktop or mobile!
 * No installation on the end-devices.
 * Near-native performances thanks to WebAssembly.
 * Wide range of supported/compatible cores (... soon).
@@ -17,12 +19,12 @@ Junie currently runs on most recent browsers, but your experience will probably 
 - [x] All the systems described in the [Folder structure](#folder-structure).
 - [x] Save files and cheats (stored inside your browser's storage).
 - [x] Core-specific configurations override.
-- [x] Multi-touch controller, with either a D-pad or a Joystick.
+- [x] Multi-touch controller with either a D-pad.
 - [x] Touch inputs for the Nintendo DS, when the gamepad is hidden.
 - [x] Save and restore states, backup and restore save files.
 - [x] Fast-forward up to 4 times the original speed.
-- [x] Nice platform-specific user interface.
-- [x] Fully working offline from your homescreen.
+- [x] Minimalistic platform-specific user interface.
+- [x] Entirely running offline from your homescreen.
 
 # Folder structure
 
@@ -31,36 +33,22 @@ Games must be organized as follows, inside a `games` folder next to the applicat
 ```
 games
 ├── Game Boy
-├── Game Boy Advance
 ├── Game Boy Color
-├── Master System
-├── Mega Drive
-├── NES
+├── Game Boy Advance
 ├── Nintendo DS
-└── SNES
+├── Master System
+├── NES
+├── SNES
+├── Mega Drive
+├── Nintendo 64
+└── PlayStation
 ```
 
 # Build & Run
 
-## Prerequisites
-
-Junie is composed of 3 main components:
-* The **Cores**: the libretro cores that are being pulled and built.
-* The **Frontend**: developed in C, located in the [app](app) folder.
-* The **UI**: developed in JSX using React and Ionic, located in the [ui](ui) folder.
-
 ## Build
 
-First install the following dependencies: **yarn**, **make** and **zip**.
-
-Then extract the latest [WASI-SDK](https://github.com/WebAssembly/wasi-sdk) to you home directory:
-```bash
-cd ~
-wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-20/wasi-sdk-20.0-linux.tar.gz
-tar xvf wasi-sdk-20.0-linux.tar.gz
-```
-
-Finally you can build the application:
+Install the following dependencies: **yarn**, **make** and **zip**, and build the application:
 ```bash
 make       # Build cores, libraries and the application
 make pack  # Same as `make`, but also outputs binaries in a zip file
@@ -87,13 +75,9 @@ docker run \
 
 # Credits
 
-- [Gambatte](https://github.com/libretro/gambatte-libretro) for Game Boy and Game Boy Color emulation.
-- [VBA-M](https://github.com/libretro/vbam-libretro) for Game Boy Advance emulation.
-- [DeSmuME](https://github.com/libretro/desmume) for Nintendo DS emulation.
-- [Nestopia](https://github.com/libretro/Nestopia) for NES emulation.
-- [Snes9x](https://github.com/libretro/snes9x) for SNES emulation.
-- [Genesis Plus GX](https://github.com/libretro/Genesis-Plus-GX) for Master System and Mega Drive emulation.
+- [Libretro](https://github.com/libretro/gambatte-libretro) for all emulation cores.
+- [glif.app](glif.app) for the AI generated icons.
 
 # License
 
-Junie is licensed under the [GNU General Public License v3.0](https://github.com/Namaneo/Junie/blob/main/LICENSE.md). When applicable, dependencies listed in the [Credits](#credits) section retain their original licenses.
+Junie is licensed under the [GNU General Public License v3.0](https://github.com/Namaneo/Junie/blob/main/LICENSE.md).
