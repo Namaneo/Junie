@@ -49,6 +49,6 @@ export default class AudioPlayer {
 	 * @returns {void}
 	 */
 	static queue(frames, sample_rate) {
-		this.#order = this.#order.then(() => this.#queue(frames.slice(), sample_rate));
+		this.#order = this.#order.then(() => this.#queue(frames, sample_rate));
 	}
 }

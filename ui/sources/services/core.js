@@ -101,7 +101,7 @@ export default class Core {
 			return;
 
 		const audio_view = new Float32Array(Core.#memory.buffer, audio.data, audio.frames * 2);
-		AudioPlayer.queue(audio_view, audio.rate);
+		AudioPlayer.queue(audio_view.slice(), audio.rate);
 	}
 
 	/**
