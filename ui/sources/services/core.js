@@ -1,8 +1,6 @@
 import { Cheat } from '../entities/cheat';
 import { Settings } from '../entities/settings';
 import { Variable } from '../entities/variable';
-import { Video } from '../entities/video';
-import { Audio } from '../entities/audio';
 import Files from './files';
 import Parallel from './parallel';
 import AudioPlayer from './audio';
@@ -26,9 +24,6 @@ export default class Core {
 	/** @type {Interop} */
 	#interop = null;
 
-	/** @type {Graphics} */
-	#graphics = null;
-
 	/** @type {string} */
 	#name = null;
 
@@ -49,22 +44,32 @@ export default class Core {
 	 * @returns {Promise<Variable[]>}
 	 */
 	async create(system, rom, canvas) {
-		this.#graphics = new Graphics(canvas);
+		const graphics = new Graphics(canvas);
 
 		const origin = location.origin + location.pathname.substring(0, location.pathname.lastIndexOf('/'));
 		const config = { core: this.#name, system, rom, origin, memory: Core.#memory };
 		const script = await (await fetch('worker.js')).text();
 
 		const handler = async message => {
-			const thread = new Parallel(Interop, false, handler);
-			const core = await thread.create(this.#name, script);
-			await core.init(Parallel.instrument(this), await Files.clone(), { ...config, ...message.data });
-			this.#threads.push(thread);
-		};
+			switch (message.data.type) {
+				case 'thread':
+					const thread = new Parallel(Interop, false, handler);
+					const core = await thread.create(this.#name, script);
+					await core.init(await Files.clone(), { ...config, ...message.data });
+					this.#threads.push(thread);
+					break;
+				case 'video':
+					graphics.draw(message.data.view, message.data.video);
+					break;
+				case 'audio':
+					AudioPlayer.queue(message.data.view, message.data.sample_rate);
+					break;
+			}
+		}
 
 		this.#parallel = new Parallel(Interop, false, handler);
 		this.#interop = await this.#parallel.create(this.#name, script);
-		return await this.#interop.init(Parallel.instrument(this), await Files.clone(), config);
+		return await this.#interop.init(await Files.clone(), config);
 	}
 
 	/**
@@ -76,32 +81,6 @@ export default class Core {
 		await this.settings(settings);
 		await this.#interop.start();
 		await this.cheats(cheats);
-	}
-
-	/**
-	 * @param {Video} video
-	 * @returns {Promise<void>}
-	 */
-	async draw(video) {
-		if (!video.data)
-			return;
-
-		const video_view = video.format == 1
-			? new Uint8Array(Core.#memory.buffer, video.data, video.pitch * video.height)
-			: new Uint16Array(Core.#memory.buffer, video.data, (video.pitch * video.height) / 2);
-		this.#graphics.draw(video_view, video);
-	}
-
-	/**
-	 * @param {Audio} audio
-	 * @returns {Promise<void>}
-	 */
-	async play(audio) {
-		if (!audio.frames)
-			return;
-
-		const audio_view = new Float32Array(Core.#memory.buffer, audio.data, audio.frames * 2);
-		AudioPlayer.queue(audio_view.slice(), audio.rate);
 	}
 
 	/**

@@ -5,7 +5,6 @@ import { Audio } from '../entities/audio';
 import Parallel from './parallel';
 import Filesystem from './filesystem';
 import WASI from './wasi';
-import Core from './core';
 
 class InteropConfig {
 	/** @type {string} */
@@ -36,9 +35,6 @@ export default class Interop {
 
 	/** @type {TextDecoder} */
 	static #decoder = new TextDecoder();
-
-	/** @type {Core} */
-	#core = null;
 
 	/** @type {WASI} */
 	#wasi = null;
@@ -124,15 +120,11 @@ export default class Interop {
 	};
 
 	/**
-	 * @param {MessagePort} core_port
 	 * @param {MessagePort} fs_port
 	 * @param {InteropConfig} config
 	 * @returns {Promise<Variable[]>}
 	 */
-	async init(core_port, fs_port, config) {
-		const core_parallel = new Parallel(Core, true);
-		this.#core = core_parallel.link(core_port);
-
+	async init(fs_port, config) {
 		const fs_parallel = new Parallel(Filesystem, true);
 		const filesystem = fs_parallel.link(fs_port);
 		this.#wasi = new WASI(config.memory, filesystem, config.fds);
@@ -142,7 +134,7 @@ export default class Interop {
 			wasi_snapshot_preview1: this.#wasi.environment,
 			wasi: { 'thread-spawn': (start_arg) => {
 				const id = filesystem.id();
-				postMessage({ id, fds: this.#wasi.fds, start_arg });
+				postMessage({ type: 'thread', id, fds: this.#wasi.fds, start_arg });
 				return id;
 			}},
 		});
@@ -197,8 +189,22 @@ export default class Interop {
 				this.#stop ? resolve() : requestAnimationFrame(step);
 
 				this.Lock();
-				this.#core.draw(Video.parse(memory, this.#video));
-				this.#core.play(Audio.parse(memory, this.#audio));
+
+				const video = Video.parse(memory, this.#video);
+				const audio = Audio.parse(memory, this.#audio);
+
+				if (video.data) {
+					const video_view = video.format == 1
+						? new Uint8Array(memory.buffer, video.data, video.pitch * video.height).slice()
+						: new Uint16Array(memory.buffer, video.data, (video.pitch * video.height) / 2).slice();
+					postMessage({ type: 'video', view: video_view, video }, [video_view.buffer]);
+				}
+
+				if (audio.frames) {
+					const audio_view = new Float32Array(memory.buffer, audio.data, audio.frames * 2).slice();
+					postMessage({ type: 'audio', view: audio_view, sample_rate: audio.rate }, [audio_view.buffer]);
+				}
+
 				this.Unlock();
 			}
 
