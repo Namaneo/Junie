@@ -40,8 +40,7 @@ export default class AudioPlayer {
 			this.#nodes[sample_rate] = node;
 		}
 
-		const message = { frames: frames.slice() };
-		this.#nodes[sample_rate].port.postMessage(message, [message.frames.buffer]);
+		this.#nodes[sample_rate].port.postMessage({ frames: frames }, [frames.buffer]);
 	}
 
 	/**
@@ -50,6 +49,6 @@ export default class AudioPlayer {
 	 * @returns {void}
 	 */
 	static queue(frames, sample_rate) {
-		this.#order = this.#order.then(() => this.#queue(frames, sample_rate));
+		this.#order = this.#order.then(() => this.#queue(frames.slice(), sample_rate));
 	}
 }

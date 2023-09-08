@@ -9,6 +9,9 @@ import Core from './core';
 
 class InteropConfig {
 	/** @type {string} */
+	core = null;
+
+	/** @type {string} */
 	system = null;
 
 	/** @type {string} */
@@ -34,20 +37,14 @@ export default class Interop {
 	/** @type {TextDecoder} */
 	static #decoder = new TextDecoder();
 
-	/** @type {number} */
-	#id = 0;
-
-	/** @type {string} */
-	#name = null;
-
 	/** @type {Core} */
 	#core = null;
 
-	/** @type {WebAssembly.Instance} */
-	#instance = null;
-
 	/** @type {WASI} */
 	#wasi = null;
+
+	/** @type {WebAssembly.Instance} */
+	#instance = null;
 
 	/** @type {Promise} */
 	#running = null;
@@ -60,14 +57,6 @@ export default class Interop {
 
 	/** @type {number} */
 	#audio = 0;
-
-	/**
-	 * @param {string} name
-	 */
-	constructor(name) {
-		this.#id = Number(name?.split('-')[1] ?? 0);
-		this.#name = name?.split('-')[0];
-	}
 
 	/**
 	 * @param {WebAssembly.Instance} instance
@@ -141,14 +130,14 @@ export default class Interop {
 	 * @returns {Promise<Variable[]>}
 	 */
 	async init(core_port, fs_port, config) {
+		const core_parallel = new Parallel(Core, true);
+		this.#core = core_parallel.link(core_port);
+
 		const fs_parallel = new Parallel(Filesystem, true);
 		const filesystem = fs_parallel.link(fs_port);
 		this.#wasi = new WASI(config.memory, filesystem, config.fds);
 
-		const core_parallel = new Parallel(Core, true);
-		this.#core = core_parallel.link(core_port);
-
-		const source = await WebAssembly.instantiateStreaming(fetch(`${config.origin}/modules/${this.#name}.wasm`), {
+		const source = await WebAssembly.instantiateStreaming(fetch(`${config.origin}/modules/${config.core}.wasm`), {
 			env: { memory: config.memory },
 			wasi_snapshot_preview1: this.#wasi.environment,
 			wasi: { 'thread-spawn': (start_arg) => {
@@ -161,7 +150,7 @@ export default class Interop {
 		this.#instance = source.instance;
 
 		if (config.start_arg) {
-			this.#instance.exports.wasi_thread_start(this.#id, config.start_arg);
+			this.#instance.exports.wasi_thread_start(config.id, config.start_arg);
 			close();
 			return [];
 		}
@@ -208,13 +197,8 @@ export default class Interop {
 				this.#stop ? resolve() : requestAnimationFrame(step);
 
 				this.Lock();
-
-				const video = Video.parse(memory, this.#video);
-				const audio = Audio.parse(memory, this.#audio);
-
-				if (video.data) this.#core.draw(video);
-				if (audio.frames) this.#core.play(audio);
-
+				this.#core.draw(Video.parse(memory, this.#video));
+				this.#core.play(Audio.parse(memory, this.#audio));
 				this.Unlock();
 			}
 

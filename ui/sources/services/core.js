@@ -52,12 +52,12 @@ export default class Core {
 		this.#graphics = new Graphics(canvas);
 
 		const origin = location.origin + location.pathname.substring(0, location.pathname.lastIndexOf('/'));
-		const config = { system, rom, origin, memory: Core.#memory };
+		const config = { core: this.#name, system, rom, origin, memory: Core.#memory };
 		const script = await (await fetch('worker.js')).text();
 
 		const handler = async message => {
 			const thread = new Parallel(Interop, false, handler);
-			const core = await thread.create(`${this.#name}-${message.data.id}`, script);
+			const core = await thread.create(this.#name, script);
 			await core.init(Parallel.instrument(this), await Files.clone(), { ...config, ...message.data });
 			this.#threads.push(thread);
 		};
@@ -83,6 +83,9 @@ export default class Core {
 	 * @returns {Promise<void>}
 	 */
 	async draw(video) {
+		if (!video.data)
+			return;
+
 		const video_view = video.format == 1
 			? new Uint8Array(Core.#memory.buffer, video.data, video.pitch * video.height)
 			: new Uint16Array(Core.#memory.buffer, video.data, (video.pitch * video.height) / 2);
@@ -94,6 +97,9 @@ export default class Core {
 	 * @returns {Promise<void>}
 	 */
 	async play(audio) {
+		if (!audio.frames)
+			return;
+
 		const audio_view = new Float32Array(Core.#memory.buffer, audio.data, audio.frames * 2);
 		AudioPlayer.queue(audio_view, audio.rate);
 	}
