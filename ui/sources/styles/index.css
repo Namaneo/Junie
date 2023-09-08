@@ -88,9 +88,9 @@
 #root .core button {
 	position: absolute;
 	padding: 0;
-	opacity: 0.5;
-	border-width: 2px;
-	border-style: solid;
+	color: var(--ion-text-color);
+	background-color: rgba(var(--ion-background-color-rgb), 0.3);
+	border: 2px solid var(--ion-text-color);
 	pointer-events: none;
 }
 

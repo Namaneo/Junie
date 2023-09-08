@@ -40,7 +40,7 @@ export default class AudioPlayer {
 			this.#nodes[sample_rate] = node;
 		}
 
-		this.#nodes[sample_rate].port.postMessage({ frames: frames }, [frames.buffer]);
+		this.#nodes[sample_rate].port.postMessage(frames, [frames.buffer]);
 	}
 
 	/**

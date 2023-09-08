@@ -10,7 +10,7 @@ class AudioProcessor extends AudioWorkletProcessor {
 
 		this.#channels = options.outputChannelCount[0];
 		this.port.onmessage = message => {
-			this.#buffers.push(message.data.frames);
+			this.#buffers.push(message.data);
 			let size = this.#buffers.reduce((size, buffer) => size + buffer.length, 0);
 			while (size > 150 * Math.round(sampleRate / 1000.0))
 				size -= this.#buffers.shift().length;
