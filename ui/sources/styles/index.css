@@ -86,12 +86,13 @@
 }
 
 #root .core button {
-	position: absolute;
 	padding: 0;
+	position: absolute;
+	user-select: none;
+	pointer-events: none;
 	color: var(--ion-text-color);
 	background-color: rgba(var(--ion-background-color-rgb), 0.3);
 	border: 2px solid var(--ion-text-color);
-	pointer-events: none;
 }
 
 #root .core-settings {

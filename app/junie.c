@@ -60,7 +60,8 @@ static struct CTX {
 	struct retro_system_info system;
 	struct retro_system_av_info av;
 
-	sthread_t *thread;
+	sthread_t *core_thread;
+	sthread_t *memory_thread;
 	scond_t *cond;
 	slock_t *mutex;
 	uint64_t queue_head;
@@ -68,7 +69,6 @@ static struct CTX {
 
 	void *memory;
 	size_t memory_size;
-	uint64_t last_save;
 
 	uint8_t speed;
 	bool inputs[UINT8_MAX];
@@ -356,69 +356,6 @@ static int16_t input_state(unsigned port, unsigned device, unsigned index, unsig
 	return 0;
 }
 
-static void save_memory(uint32_t type, const char *path)
-{
-	void *buffer = CTX.sym.retro_get_memory_data(type);
-	if (!buffer)
-		return;
-
-	size_t size = CTX.sym.retro_get_memory_size(type);
-	if (!size)
-		return;
-
-	if (CTX.memory == NULL || CTX.memory_size != size || memcmp(CTX.memory, buffer, size)) {
-		FILE *file = fopen(path, "w+");
-		fwrite(buffer, 1, size, file);
-		fclose(file);
-
-		free(CTX.memory);
-		CTX.memory = calloc(size, 1);
-		CTX.memory_size = size;
-		memcpy(CTX.memory, buffer, size);
-	}
-}
-
-static void save_memories()
-{
-	if (core_get_ticks() - CTX.last_save < 1000)
-		return;
-
-	CTX.last_save = core_get_ticks();
-
-	const char *sram_path = CTX.paths[JUN_PATH_SRAM];
-	const char *rtc_path = CTX.paths[JUN_PATH_RTC];
-
-	save_memory(RETRO_MEMORY_SAVE_RAM, sram_path);
-	save_memory(RETRO_MEMORY_RTC, rtc_path);
-}
-
-static void restore_memory(uint32_t type, const char *path)
-{
-	void *buffer = CTX.sym.retro_get_memory_data(type);
-	if (!buffer)
-		return;
-
-	size_t size = CTX.sym.retro_get_memory_size(type);
-	if (!size)
-		return;
-
-	FILE *file = fopen(path, "r");
-	if (!file)
-		return;
-
-	fread(buffer, 1, size, file);
-	fclose(file);
-}
-
-static void restore_memories()
-{
-	const char *sram_path = CTX.paths[JUN_PATH_SRAM];
-	const char *rtc_path = CTX.paths[JUN_PATH_RTC];
-
-	restore_memory(RETRO_MEMORY_SAVE_RAM, sram_path);
-	restore_memory(RETRO_MEMORY_RTC, rtc_path);
-}
-
 static void initialize_symbols()
 {
 	if (CTX.sym.initialized)
@@ -544,7 +481,65 @@ static bool core_should_run()
 	return pending >= 1;
 }
 
-void core_thread(void *opaque)
+static void save_memory(uint32_t type, const char *path)
+{
+	void *buffer = CTX.sym.retro_get_memory_data(type);
+	if (!buffer)
+		return;
+
+	size_t size = CTX.sym.retro_get_memory_size(type);
+	if (!size)
+		return;
+
+	if (CTX.memory == NULL || CTX.memory_size != size || memcmp(CTX.memory, buffer, size)) {
+		FILE *file = fopen(path, "w+");
+		fwrite(buffer, 1, size, file);
+		fclose(file);
+
+		free(CTX.memory);
+		CTX.memory = calloc(size, 1);
+		CTX.memory_size = size;
+		memcpy(CTX.memory, buffer, size);
+	}
+}
+
+static void save_memories()
+{
+	const char *sram_path = CTX.paths[JUN_PATH_SRAM];
+	const char *rtc_path = CTX.paths[JUN_PATH_RTC];
+
+	save_memory(RETRO_MEMORY_SAVE_RAM, sram_path);
+	save_memory(RETRO_MEMORY_RTC, rtc_path);
+}
+
+static void restore_memory(uint32_t type, const char *path)
+{
+	void *buffer = CTX.sym.retro_get_memory_data(type);
+	if (!buffer)
+		return;
+
+	size_t size = CTX.sym.retro_get_memory_size(type);
+	if (!size)
+		return;
+
+	FILE *file = fopen(path, "r");
+	if (!file)
+		return;
+
+	fread(buffer, 1, size, file);
+	fclose(file);
+}
+
+static void restore_memories()
+{
+	const char *sram_path = CTX.paths[JUN_PATH_SRAM];
+	const char *rtc_path = CTX.paths[JUN_PATH_RTC];
+
+	restore_memory(RETRO_MEMORY_SAVE_RAM, sram_path);
+	restore_memory(RETRO_MEMORY_RTC, rtc_path);
+}
+
+static void core_thread(void *opaque)
 {
 	while (!CTX.destroying) {
 		if (!core_should_run()) {
@@ -556,6 +551,15 @@ void core_thread(void *opaque)
 		CTX.sym.retro_run();
 		core_unlock();
 	}
+}
+
+static void memory_thread(void *opaque)
+{
+	while (!CTX.destroying) {
+		save_memories();
+		core_sleep(1000);
+	}
+	save_memories();
 }
 
 bool JunieStartGame()
@@ -591,7 +595,8 @@ bool JunieStartGame()
 
 	CTX.mutex = slock_new();
 	CTX.cond = scond_new();
-	CTX.thread = sthread_create(core_thread, NULL);
+	CTX.core_thread = sthread_create(core_thread, NULL);
+	CTX.memory_thread = sthread_create(memory_thread, NULL);
 
 	return CTX.initialized;
 }
@@ -599,7 +604,8 @@ bool JunieStartGame()
 void JunieDestroy()
 {
 	CTX.destroying = true;
-	sthread_join(CTX.thread);
+	sthread_join(CTX.core_thread);
+	sthread_join(CTX.memory_thread);
 	scond_free(CTX.cond);
 	slock_free(CTX.mutex);
 
@@ -627,7 +633,6 @@ void JunieDestroy()
 void JunieLock()
 {
 	core_lock();
-	save_memories();
 	CTX.audio.rate = (float) CTX.av.timing.sample_rate * CTX.speed;
 }
 
