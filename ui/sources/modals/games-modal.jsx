@@ -158,7 +158,7 @@ export const GamesModal = ({ system, close }) => {
 	 */
 	const play = (game) => {
 		setGame(game);
-		start();
+		start({ cssClass: 'fullscreen' });
 	}
 
 	return (

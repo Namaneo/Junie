@@ -42,7 +42,7 @@ export const HomePage = () => {
 	 */
 	const showModal = (system) => {
 		setSystem(system);
-		open();
+		open({ cssClass: 'fullscreen' });
 	}
 
 	useIonViewWillEnter(async () => {
