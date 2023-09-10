@@ -18,6 +18,12 @@ export default class Core {
 		shared: true,
 	});
 
+	/** @type {Promise} */
+	static #running = Promise.resolve();
+
+	/** @type {() => void} */
+	static #stop = () => {};
+
 	/** @type {Parallel<Interop>} */
 	#parallel = null;
 
@@ -45,6 +51,9 @@ export default class Core {
 	 * @returns {Promise<void>}
 	 */
 	async create(system, rom, canvas, on_variables) {
+		await Core.#running;
+		Core.#running = new Promise(resolve => Core.#stop = resolve);
+
 		const graphics = new Graphics(canvas);
 
 		const origin = location.origin + location.pathname.substring(0, location.pathname.lastIndexOf('/'));
@@ -98,11 +107,16 @@ export default class Core {
 		}
 
 		this.#threads.forEach(child => child.close());
-		this.#parallel?.close();
 		this.#threads = [];
+
+		this.#parallel?.close();
 		this.#parallel = null;
 
+		this.#interop = null;
+
 		new Uint8Array(Core.#memory.buffer).fill(0);
+
+		Core.#stop();
 	}
 
 	/** @param {Settings} settings @returns {Promise<void>} */
