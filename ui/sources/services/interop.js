@@ -42,18 +42,6 @@ export default class Interop {
 	/** @type {WebAssembly.Instance} */
 	#instance = null;
 
-	/** @type {Promise} */
-	#running = null;
-
-	/** @type {boolean} */
-	#stop = false;
-
-	/** @type {number} */
-	#video = 0;
-
-	/** @type {number} */
-	#audio = 0;
-
 	/**
 	 * @param {WebAssembly.Instance} instance
 	 * @param {('number' | 'string' | 'boolean' | null)} type
@@ -122,15 +110,40 @@ export default class Interop {
 	/**
 	 * @param {MessagePort} fs_port
 	 * @param {InteropConfig} config
-	 * @returns {Promise<Variable[]>}
+	 * @returns {Promise<void>}
 	 */
 	async init(fs_port, config) {
 		const fs_parallel = new Parallel(Filesystem, true);
 		const filesystem = fs_parallel.link(fs_port);
 		this.#wasi = new WASI(config.memory, filesystem, config.fds);
 
+		const junie_interop_video = (video_c) => {
+			const video = Video.parse(config.memory, video_c);
+			if (!video.data)
+				return;
+
+			const video_view = video.format == 1
+				? new Uint8Array(config.memory.buffer, video.data, video.pitch * video.height).slice()
+				: new Uint16Array(config.memory.buffer, video.data, (video.pitch * video.height) / 2).slice();
+			postMessage({ type: 'video', view: video_view, video }, [video_view.buffer]);
+		};
+
+		const junie_interop_audio = (audio_c) => {
+			const audio = Audio.parse(config.memory, audio_c);
+			if (!audio.frames)
+				return;
+
+			const audio_view = new Float32Array(config.memory.buffer, audio.data, audio.frames * 2).slice();
+			postMessage({ type: 'audio', view: audio_view, sample_rate: audio.rate }, [audio_view.buffer]);
+		};
+
+		const junie_interop_variables = (variables_c) => {
+			const variables = Variable.parse(this.#instance, variables_c);
+			postMessage({ type: 'variables', variables });
+		}
+
 		const source = await WebAssembly.instantiateStreaming(fetch(`${config.origin}/modules/${config.core}.wasm`), {
-			env: { memory: config.memory },
+			env: { memory: config.memory, junie_interop_video, junie_interop_audio, junie_interop_variables },
 			wasi_snapshot_preview1: this.#wasi.environment,
 			wasi: { 'thread-spawn': (start_arg) => {
 				const id = filesystem.id();
@@ -153,13 +166,6 @@ export default class Interop {
 		this.#wrap('StartGame',          'boolean', []);
 		this.#wrap('Destroy',            null,      []);
 
-		this.#wrap('Lock',               null,      []);
-		this.#wrap('Unlock',             null,      []);
-
-		this.#wrap('GetVideo',           'number',  []);
-		this.#wrap('GetAudio',           'number',  []);
-		this.#wrap('GetVariables',       'number',  []);
-
 		this.#wrap('SetAudio',           null,      ['boolean']);
 		this.#wrap('SetSpeed',           null,      ['number']);
 		this.#wrap('SetInput',           null,      ['number', 'number', 'number']);
@@ -170,54 +176,6 @@ export default class Interop {
 		this.#wrap('RestoreState',       null,      []);
 
 		this.Create(config.system, config.rom);
-
-		this.#video = this.GetVideo();
-		this.#audio = this.GetAudio();
-
-		return Variable.parse(this.#instance, this.GetVariables());
-	}
-
-	/** @returns {Promise<void>} */
-	start() {
-		this.StartGame();
-
-		const memory = this.#instance.exports.memory;
-
-		this.#stop = false;
-		this.#running = new Promise(resolve => {
-			const step = async () => {
-				this.#stop ? resolve() : requestAnimationFrame(step);
-
-				this.Lock();
-
-				const video = Video.parse(memory, this.#video);
-				const audio = Audio.parse(memory, this.#audio);
-
-				if (video.data) {
-					const video_view = video.format == 1
-						? new Uint8Array(memory.buffer, video.data, video.pitch * video.height).slice()
-						: new Uint16Array(memory.buffer, video.data, (video.pitch * video.height) / 2).slice();
-					postMessage({ type: 'video', view: video_view, video }, [video_view.buffer]);
-				}
-
-				if (audio.frames) {
-					const audio_view = new Float32Array(memory.buffer, audio.data, audio.frames * 2).slice();
-					postMessage({ type: 'audio', view: audio_view, sample_rate: audio.rate }, [audio_view.buffer]);
-				}
-
-				this.Unlock();
-			}
-
-			requestAnimationFrame(step);
-		});
-	}
-
-	/** @returns {Promise<void>} */
-	async stop() {
-		this.#stop = true;
-		await this.#running;
-
-		this.Destroy();
 	}
 
 	/** @param {Variable[]} variables @returns {Promise<void>} */
@@ -233,6 +191,12 @@ export default class Interop {
 		this.SetCheats(cheats_ptr);
 		Cheat.free(this.#instance, cheats_ptr);
 	}
+
+	/** @returns {Promise<void>} */
+	start() { this.StartGame(); }
+
+	/** @returns {Promise<void>} */
+	stop() { this.Destroy(); }
 
 	/** @param {boolean} enable @returns {Promise<void>} */
 	audio(enable) { this.SetAudio(enable); }

@@ -14,7 +14,7 @@ DEFINES := \
 LDFLAGS := \
 	-lwasi-emulated-mman -fwasm-exceptions \
 	-mexec-model=reactor -Wl,--no-entry \
-	$(EXPORTS) -Wl,--export=calloc,--export=free \
+	-Wl,--export=calloc,--export=free \
 	-Wl,--initial-memory=$$((200 * 1024 * 1024)) \
 	-Wl,--max-memory=$$((600 * 1024 * 1024)) \
 	-Wl,--import-memory,--export-memory
@@ -31,7 +31,7 @@ prepare:
 
 $(OUT_DIR)/%.wasm:
 	@echo Building $*.wasm...
-	@$(CXX) -o $(OUT_DIR)/$*.wasm junie.o $(DEPS) $(CORES_DIR)/lib$*.a $(LDFLAGS) $(QUIET)
+	@$(CXX) -o $(OUT_DIR)/$*.wasm junie.o $(DEPS) $(CORES_DIR)/lib$*.a $(LDFLAGS) $(EXPORTS) $(QUIET)
 
 clean:
 	@rm -rf junie.o $(OUT_DIR)

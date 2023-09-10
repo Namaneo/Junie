@@ -22,6 +22,23 @@ typedef enum {
 	JUN_PATH_MAX    = 7,
 } JUN_PathType;
 
+typedef struct {
+	void *data;
+	enum retro_pixel_format format;
+	uint32_t width;
+	uint32_t height;
+	uint32_t pitch;
+	float ratio;
+} JunieVideo;
+
+typedef struct {
+	void *data;
+	float rate;
+	size_t frames;
+	size_t size;
+	bool enable;
+} JunieAudio;
+
 struct jun_core_sym {
 	void *library;
 	bool initialized;
@@ -422,23 +439,6 @@ static void create_paths(const char *system, const char *rom)
 	free(game);
 }
 
-void JunieCreate(const char *system, const char *rom)
-{
-	setbuf(stdout, NULL);
-
-	CTX.speed = 1;
-
-	create_paths(system, rom);
-	initialize_symbols();
-
-	CTX.sym.retro_set_environment(environment);
-	CTX.sym.retro_set_video_refresh(video_refresh);
-	CTX.sym.retro_set_input_poll(input_poll);
-	CTX.sym.retro_set_input_state(input_state);
-	CTX.sym.retro_set_audio_sample(audio_sample);
-	CTX.sym.retro_set_audio_sample_batch(audio_sample_batch);
-}
-
 static void core_lock()
 {
 	slock_lock(CTX.mutex);
@@ -539,6 +539,11 @@ static void restore_memories()
 	restore_memory(RETRO_MEMORY_RTC, rtc_path);
 }
 
+#define IMPORT(name) __attribute__((import_module("env"), import_name(#name))) name
+void IMPORT(junie_interop_video)(const JunieVideo *video);
+void IMPORT(junie_interop_audio)(const JunieAudio *audio);
+void IMPORT(junie_interop_variables)(const JunieVariable *variables);
+
 static void core_thread(void *opaque)
 {
 	while (!CTX.destroying) {
@@ -550,6 +555,13 @@ static void core_thread(void *opaque)
 		core_lock();
 		CTX.sym.retro_run();
 		core_unlock();
+
+		CTX.audio.rate = (float) CTX.av.timing.sample_rate * CTX.speed;
+
+		junie_interop_video(&CTX.video);
+		junie_interop_audio(&CTX.audio);
+
+		CTX.audio.frames = 0;
 	}
 }
 
@@ -560,6 +572,25 @@ static void memory_thread(void *opaque)
 		core_sleep(1000);
 	}
 	save_memories();
+}
+
+void JunieCreate(const char *system, const char *rom)
+{
+	setbuf(stdout, NULL);
+
+	CTX.speed = 1;
+
+	create_paths(system, rom);
+	initialize_symbols();
+
+	CTX.sym.retro_set_environment(environment);
+	CTX.sym.retro_set_video_refresh(video_refresh);
+	CTX.sym.retro_set_input_poll(input_poll);
+	CTX.sym.retro_set_input_state(input_state);
+	CTX.sym.retro_set_audio_sample(audio_sample);
+	CTX.sym.retro_set_audio_sample_batch(audio_sample_batch);
+
+	junie_interop_variables(CTX.variables);
 }
 
 bool JunieStartGame()
@@ -628,33 +659,6 @@ void JunieDestroy()
 	free((void *) CTX.game.data);
 
 	CTX = (struct CTX) {0};
-}
-
-void JunieLock()
-{
-	core_lock();
-	CTX.audio.rate = (float) CTX.av.timing.sample_rate * CTX.speed;
-}
-
-void JunieUnlock()
-{
-	CTX.audio.frames = 0;
-	core_unlock();
-}
-
-const JunieVideo *JunieGetVideo()
-{
-	return &CTX.video;
-}
-
-const JunieAudio *JunieGetAudio()
-{
-	return &CTX.audio;
-}
-
-const JunieVariable *JunieGetVariables()
-{
-	return CTX.variables;
 }
 
 void JunieSetAudio(bool enable)

@@ -41,9 +41,10 @@ export default class Core {
 	 * @param {string} system
 	 * @param {string} rom
 	 * @param {HTMLCanvasElement} canvas
-	 * @returns {Promise<Variable[]>}
+	 * @param {(variables: Variable[]) => void} on_variables
+	 * @returns {Promise<void>}
 	 */
-	async create(system, rom, canvas) {
+	async create(system, rom, canvas, on_variables) {
 		const graphics = new Graphics(canvas);
 
 		const origin = location.origin + location.pathname.substring(0, location.pathname.lastIndexOf('/'));
@@ -64,12 +65,15 @@ export default class Core {
 				case 'audio':
 					AudioPlayer.queue(message.data.view, message.data.sample_rate);
 					break;
+				case 'variables':
+					on_variables(message.data.variables);
+					break;
 			}
 		}
 
 		this.#parallel = new Parallel(Interop, false, handler);
 		this.#interop = await this.#parallel.create(this.#name, script);
-		return await this.#interop.init(await Files.clone(), config);
+		await this.#interop.init(await Files.clone(), config);
 	}
 
 	/**

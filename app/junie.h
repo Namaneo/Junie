@@ -2,8 +2,6 @@
 
 #include "libretro.h"
 
-typedef enum retro_pixel_format JuniePixelFormat;
-
 typedef enum {
 	JUN_DEVICE_JOYPAD  = RETRO_DEVICE_JOYPAD,
 	JUN_DEVICE_POINTER = RETRO_DEVICE_POINTER,
@@ -34,23 +32,6 @@ typedef enum {
 } JunieInputID;
 
 typedef struct {
-	void *data;
-	JuniePixelFormat format;
-	uint32_t width;
-	uint32_t height;
-	uint32_t pitch;
-	float ratio;
-} JunieVideo;
-
-typedef struct {
-	void *data;
-	float rate;
-	size_t frames;
-	size_t size;
-	bool enable;
-} JunieAudio;
-
-typedef struct {
 	char *key;
 	char *value;
 	char *name;
@@ -70,8 +51,6 @@ void JunieDestroy();
 void JunieLock();
 void JunieUnlock();
 
-const JunieVideo *JunieGetVideo();
-const JunieAudio *JunieGetAudio();
 const JunieVariable *JunieGetVariables();
 
 void JunieSetSpeed(uint8_t speed);

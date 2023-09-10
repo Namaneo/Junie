@@ -135,7 +135,7 @@ export const useCore = (lib) => {
 			setSettings(settings);
 			setCheats(cheats);
 
-			setVariables(await core.create(system, rom, canvas));
+			await core.create(system, rom, canvas, setVariables);
 			await core.start(settings, cheats);
 
 			initAudio(settings);

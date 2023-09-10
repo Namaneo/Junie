@@ -2,13 +2,6 @@ JunieCreate
 JunieStartGame
 JunieDestroy
 
-JunieLock
-JunieUnlock
-
-JunieGetVideo
-JunieGetAudio
-JunieGetVariables
-
 JunieSetAudio
 JunieSetSpeed
 JunieSetInput

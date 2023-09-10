@@ -37,7 +37,7 @@ export function instrumentContext(context) {
 				new Uint8Array(sab.buffer).set(encoded_str, 12);
 				break;
 			case 'object':
-				const is_error = result.constructor.name.endsWith('Error');
+				const is_error = result?.constructor.name.endsWith('Error');
 				const stringified = JSON.stringify(is_error ? result.stack : result);
 				const encoded_obj = new TextEncoder().encode(stringified);
 				if (sab.buffer.byteLength < 12 + encoded_obj.byteLength)
