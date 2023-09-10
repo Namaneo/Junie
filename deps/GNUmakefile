@@ -51,7 +51,7 @@ libz.a:
 
 libretro.a:
 	@echo Building libretro.a...
-	@$(MAKE) $(OBJ)
+	@$(MAKE) $(OBJ) $(QUIET)
 	@$(AR) rcs libretro.a $(OBJ)
 
 clean:
