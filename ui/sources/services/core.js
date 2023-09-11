@@ -1,4 +1,4 @@
-import { Button, Touch } from '../entities/input';
+import { InputButton, InputTouch } from '../entities/input';
 import { Cheat } from '../entities/cheat';
 import { Settings } from '../entities/settings';
 import { Variable } from '../entities/variable';
@@ -139,19 +139,6 @@ export default class Core {
 		this.#on_variables(variables);
 	}
 
-	/**
-	 * @param {Button[]} buttons
-	 * @param {Touch[]} touches
-	 * @param {boolean} gamepad
-	 * @param {DOMRect} canvas
-	 * @param {number} width
-	 * @param {number} height
-	 * @returns {Promise<void>}
-	 */
-	async input(buttons, touches, gamepad, canvas, width, height) {
-		await this.#interop?.input(buttons, touches, gamepad, canvas, width, height);
-	}
-
 	/** @param {Settings} settings @returns {Promise<void>} */
 	async settings(settings) { await this.#interop?.variables(settings.variables); }
 
@@ -163,6 +150,12 @@ export default class Core {
 
 	/** @param {number} value @returns {Promise<void>} */
 	async speed(value) { await this.#interop?.speed(value); }
+
+	/** @param {InputTouch[]} touches @param {InputButton[]} buttons @returns {Promise<void>} */
+	async press(touches, buttons) { await this.#interop?.press(touches, buttons); }
+
+	/** @param {InputTouch} touch @param {DOMRect} rect @param {number} width @param {number} height @returns {Promise<void>} */
+	async touch(touch, rect, width, height) { await this.#interop?.touch(touch, rect, width, height); }
 
 	/** @returns {Promise<void>} */
 	async save() { await this.#interop?.save(); }

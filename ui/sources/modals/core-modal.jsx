@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import { checkmarkOutline } from 'ionicons/icons';
 import { useSize } from '../hooks/size';
 import { useCore } from '../hooks/core';
+import { InputButton, InputTouch } from '../entities/input';
 import { System } from '../entities/system';
 import { Game } from '../entities/game';
 import { Variable } from '../entities/variable';
@@ -150,23 +151,19 @@ export const CoreModal = ({ system, game, close }) => {
 
 	/** @param {Event} event @returns {void} */
 	const touch = (event) => {
-		const buttons = [...event.target.children].map(button => ({
-			id: button.dataset.id,
-			rect: button.getBoundingClientRect(),
-		}), []);
-
-		const map_touch = (touch) => ({
-			type: event.type,
-			id: touch.identifier ?? 0,
-			x: touch.clientX,
-			y: touch.clientY,
-		});
 		const touches =
-			event.type.startsWith('mouse') ? [map_touch(event)] :
-			event.type.startsWith('touch') ? [...event.changedTouches].map(map_touch):
+			event.type.startsWith('mouse') ? [new InputTouch(event.type, event)] :
+			event.type.startsWith('touch') ? [...event.changedTouches].map(touch => new InputTouch(event.type, touch)):
 			[];
 
-		core.current.input(buttons, touches, gamepad.value, canvas.current.getBoundingClientRect(), canvas.current.width, canvas.current.height);
+		const buttons = [...event.target.children].map(button => new InputButton(button));
+		const rect = canvas.current.getBoundingClientRect();
+		const width = canvas.current.width;
+		const height = canvas.current.height;
+
+		gamepad.value
+			? core.current.press(touches, buttons)
+			: core.current.touch(touches[0], rect, width, height);
 	}
 
 	/** @returns {void} */

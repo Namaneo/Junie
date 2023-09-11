@@ -1,4 +1,4 @@
-import { Button, InputMessage, Touch } from '../entities/input';
+import { InputButton, InputMessage, InputTouch } from '../entities/input';
 
 export default class Input {
 	/** @type {Touch[]} */
@@ -22,11 +22,11 @@ export default class Input {
 	}
 
 	/**
-	 * @param {Button[]} buttons
-	 * @param {Touch} touch
+	 * @param {InputTouch} touch
+	 * @param {InputButton[]} buttons
 	 * @returns {InputMessage[]}
 	 */
-	#click(buttons, touch) {
+	press(touch, buttons) {
 		const messages = [];
 
 		const button = buttons.reduce((value, current) => {
@@ -39,7 +39,7 @@ export default class Input {
 				return null;
 
 			return curr_dist < prev_dist ? current : value;
-		}, null);
+		}, /** @type {InputButton} */ (null));
 
 		const prev_touch = this.#touches[touch.identifier];
 		if (prev_touch && prev_touch.id != button?.id)
@@ -49,22 +49,25 @@ export default class Input {
 		const move = !!['mousemove', 'touchmove'].find(type => type == touch.type);
 		const pressed = start || (move && prev_touch && prev_touch.pressed);
 
-		if (button?.id)
+		if (button?.id) {
 			messages.push({ device: Input.Device.JOYPAD, id: button.id, value: pressed });
+			this.#touches[touch.identifier] = { id: button?.id, pressed };
 
-		this.#touches[touch.identifier] = { id: button?.id, pressed };
+		} else {
+			delete this.#touches[touch.identifier];
+		}
 
 		return messages;
 	}
 
 	/**
-	 * @param {Touch} touch
+	 * @param {InputTouch} touch
 	 * @param {DOMRect} canvas
 	 * @param {number} width
 	 * @param {number} height
 	 * @returns {InputMessage[]}
 	 */
-	#touch(touch, canvas, width, height) {
+	touch(touch, canvas, width, height) {
 		const scaled_x = (touch.x - canvas.left) / (canvas.right  - canvas.left) * width;
 		const scaled_y = (touch.y - canvas.top ) / (canvas.bottom - canvas.top ) * height;
 
@@ -79,27 +82,6 @@ export default class Input {
 			{ device: Input.Device.POINTER, id: Input.Pointer.PRESSED, value: pressed  },
 			{ device: Input.Device.POINTER, id: Input.Pointer.COUNT,   value: 1        },
 		];
-	}
-
-	/**
-	 * @param {Button[]} buttons
-	 * @param {Touch[]} touches
-	 * @param {boolean} gamepad
-	 * @param {DOMRect} canvas
-	 * @param {number} width
-	 * @param {number} height
-	 * @returns {InputMessage[]}
-	 */
-	process(buttons, touches, gamepad, canvas, width, height) {
-		if (gamepad) {
-			const messages = [];
-			for (const touch of touches)
-				messages.push(...this.#click(buttons, touch));
-			return messages;
-
-		} else {
-			return this.#touch(touches[0], canvas, width, height);
-		}
 	}
 
 	static Device = class {

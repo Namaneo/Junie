@@ -1,3 +1,4 @@
+import { InputButton, InputTouch } from '../entities/input';
 import { Cheat } from '../entities/cheat';
 import { Variable } from '../entities/variable';
 import { Video } from '../entities/video';
@@ -196,17 +197,25 @@ export default class Interop {
 	}
 
 	/**
-	 * @param {Button[]} buttons
-	 * @param {Touch[]} touches
-	 * @param {boolean} gamepad
-	 * @param {DOMRect} canvas
+	 * @param {InputTouch[]} touches
+	 * @param {InputButton[]} buttons
+	 * @returns {Promise<void>}
+	 */
+	press(touches, buttons) {
+		for (const touch of touches)
+			for (const message of this.#input.press(touch, buttons))
+				this.SetInput(message.device, message.id, message.value);
+	}
+
+	/**
+	 * @param {InputTouch} touch
+	 * @param {DOMRect} rect
 	 * @param {number} width
 	 * @param {number} height
 	 * @returns {Promise<void>}
 	 */
-	input(buttons, touches, gamepad, canvas, width, height) {
-		const messages = this.#input.process(buttons, touches, gamepad, canvas, width, height);
-		for (const message of messages)
+	touch(touch, rect, width, height) {
+		for (const message of this.#input.touch(touch, rect, width, height))
 			this.SetInput(message.device, message.id, message.value);
 	}
 
