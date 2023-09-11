@@ -70,6 +70,25 @@ class CoreState {
 	set;
 }
 
+class Memory {
+	/** @type {number} */
+	static get #INITIAL_MEMORY() { return 100 * 1024 * 1024; }
+
+	/** @type {WebAssembly.Memory} */
+	static #memory = null;
+
+	/** @returns {WebAssembly.Memory} */
+	static get() {
+		if (!this.#memory)
+			this.#memory = new WebAssembly.Memory({
+				initial: (Memory.#INITIAL_MEMORY * 2) / 65536,
+				maximum: (Memory.#INITIAL_MEMORY * 6) / 65536,
+				shared: true,
+			});
+		return this.#memory;
+	}
+}
+
 /**
  * @param {string} lib
  * @returns {[
@@ -80,7 +99,7 @@ class CoreState {
  * ]}
  */
 export const useCore = (lib) => {
-	const [core] = useState(new Core(lib));
+	const [core] = useState(new Core(lib, Memory.get()));
 
 	const [variables, setVariables] = useState(/** @type {Variable[]} */ (null));
 	const [settings,  setSettings]  = useState(/** @type {Settings}   */ (null));
