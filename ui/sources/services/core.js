@@ -144,7 +144,7 @@ export default class Core {
 	/** @param {Cheat[]} cheats @returns {Promise<void>} */
 	async cheats(cheats) { await this.#interop?.cheats(cheats); }
 
-	/** @param {boolean} enable @returns {void} */
+	/** @param {boolean} enable @returns {Promise<void>} */
 	async audio(enable) { await this.#interop?.audio(enable); }
 
 	/** @param {number} value @returns {Promise<void>} */
