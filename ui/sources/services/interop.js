@@ -4,7 +4,6 @@ import { Video } from '../entities/video';
 import { Audio } from '../entities/audio';
 import Parallel from './parallel';
 import Filesystem from './filesystem';
-import Core from './core';
 import WASI from './wasi';
 
 class InteropConfig {
@@ -36,9 +35,6 @@ export default class Interop {
 
 	/** @type {TextDecoder} */
 	static #decoder = new TextDecoder();
-
-	/** @type {Core} */
-	#core = null;
 
 	/** @type {WASI} */
 	#wasi = null;
@@ -112,15 +108,11 @@ export default class Interop {
 	};
 
 	/**
-	 * @param {CorePort} core_port
 	 * @param {MessagePort} fs_port
 	 * @param {InteropConfig} config
 	 * @returns {Promise<void>}
 	 */
-	async init(core_port, fs_port, config) {
-		const core_parallel = new Parallel(Core, true);
-		this.#core = core_parallel.link(core_port);
-
+	async init(fs_port, config) {
 		const fs_parallel = new Parallel(Filesystem, true);
 		const filesystem = fs_parallel.link(fs_port);
 		this.#wasi = new WASI(config.memory, filesystem, config.fds);
@@ -130,7 +122,10 @@ export default class Interop {
 			if (!video.data)
 				return;
 
-			this.#core.draw(video);
+			const video_view = video.format == 1
+				? new Uint8Array(config.memory.buffer, video.data, video.pitch * video.height).slice()
+				: new Uint16Array(config.memory.buffer, video.data, (video.pitch * video.height) / 2).slice();
+			postMessage({ type: 'video', view: video_view, video }, [video_view.buffer]);
 		};
 
 		const junie_interop_audio = (audio_c) => {
@@ -138,7 +133,8 @@ export default class Interop {
 			if (!audio.frames)
 				return;
 
-			this.#core.play(audio);
+			const audio_view = new Float32Array(config.memory.buffer, audio.data, audio.frames * 2).slice();
+			postMessage({ type: 'audio', view: audio_view, sample_rate: audio.rate }, [audio_view.buffer]);
 		};
 
 		const junie_interop_variables = (variables_c) => {

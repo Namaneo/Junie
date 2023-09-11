@@ -176,16 +176,6 @@ export default class Parallel {
 	}
 
 	/**
-	 * @param {any} context
-	 * @returns {MessagePort}
-	 */
-	static instrument(context) {
-		const channel = new MessageChannel();
-		channel.port1.onmessage = instrumentContext(context);
-		return channel.port2;
-	}
-
-	/**
 	 * @param {any} obj
 	 * @returns {boolean}
 	 */
