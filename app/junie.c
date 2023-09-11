@@ -11,6 +11,11 @@
 
 #define LOG(msg, ...) core_log_params(__FUNCTION__, msg, __VA_ARGS__)
 
+#define IMPORT(name) __attribute__((import_module("env"), import_name(#name))) name
+void IMPORT(junie_interop_video)(const JunieVideo *video);
+void IMPORT(junie_interop_audio)(const JunieAudio *audio);
+void IMPORT(junie_interop_variables)(const JunieVariable *variables);
+
 typedef enum {
 	JUN_PATH_GAME   = 0,
 	JUN_PATH_STATE  = 1,
@@ -538,11 +543,6 @@ static void restore_memories()
 	restore_memory(RETRO_MEMORY_SAVE_RAM, sram_path);
 	restore_memory(RETRO_MEMORY_RTC, rtc_path);
 }
-
-#define IMPORT(name) __attribute__((import_module("env"), import_name(#name))) name
-void IMPORT(junie_interop_video)(const JunieVideo *video);
-void IMPORT(junie_interop_audio)(const JunieAudio *audio);
-void IMPORT(junie_interop_variables)(const JunieVariable *variables);
 
 static void core_thread(void *opaque)
 {
