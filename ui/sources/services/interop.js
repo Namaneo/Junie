@@ -6,6 +6,7 @@ import Parallel from './parallel';
 import Filesystem from './filesystem';
 import Core from './core';
 import WASI from './wasi';
+import Input from './input';
 
 class InteropConfig {
 	/** @type {string} */
@@ -45,6 +46,9 @@ export default class Interop {
 
 	/** @type {WebAssembly.Instance} */
 	#instance = null;
+
+	/** @type {Input} */
+	#input = new Input();
 
 	/**
 	 * @param {WebAssembly.Instance} instance
@@ -191,6 +195,21 @@ export default class Interop {
 		Cheat.free(this.#instance, cheats_ptr);
 	}
 
+	/**
+	 * @param {Button[]} buttons
+	 * @param {Touch[]} touches
+	 * @param {boolean} gamepad
+	 * @param {DOMRect} canvas
+	 * @param {number} width
+	 * @param {number} height
+	 * @returns {Promise<void>}
+	 */
+	input(buttons, touches, gamepad, canvas, width, height) {
+		const messages = this.#input.process(buttons, touches, gamepad, canvas, width, height);
+		for (const message of messages)
+			this.SetInput(message.device, message.id, message.value);
+	}
+
 	/** @returns {Promise<void>} */
 	start() { this.StartGame(); }
 
@@ -202,9 +221,6 @@ export default class Interop {
 
 	/** @param {number} value @returns {Promise<void>} */
 	speed(value) { this.SetSpeed(value); }
-
-	/** @param {number} device @param {number} id @param {number} value @returns {Promise<void>} */
-	send(device, id, value) { this.SetInput(device, id, value); }
 
 	/** @returns {Promise<void>} */
 	save() { this.SaveState(); }

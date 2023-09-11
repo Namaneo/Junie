@@ -1,5 +1,5 @@
 import { IonAccordion, IonAccordionGroup, IonButton, IonButtons, IonCheckbox, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonMenu, IonMenuButton, IonPage, IonSegment, IonSegmentButton, IonSelect, IonSelectOption, IonTitle, IonToolbar, useIonAlert } from '@ionic/react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { checkmarkOutline } from 'ionicons/icons';
 import { useSize } from '../hooks/size';
 import { useCore } from '../hooks/core';
@@ -8,7 +8,7 @@ import { Game } from '../entities/game';
 import { Variable } from '../entities/variable';
 import { Settings } from '../entities/settings';
 import { Cheat } from '../entities/cheat';
-import Core from '../services/core';
+import Input from '../services/input';
 
 /**
  * @param {Object} parameters
@@ -126,8 +126,6 @@ export const CoreModal = ({ system, game, close }) => {
 	const canvas  = useRef(/** @type {HTMLCanvasElement}     */ (null));
 
 	const [core, audio, speed, gamepad] = useCore(system.lib_name);
-	const [pointer, setPointer] = useState(false);
-	const [touches, setTouches] = useState({});
 	const [window_w, window_h] = useSize({ current: document.body });
 	const [canvas_w, canvas_h] = useSize(canvas);
 
@@ -150,79 +148,25 @@ export const CoreModal = ({ system, game, close }) => {
 		}
 	};
 
-
-	/** @param {HTMLElement} element @param {number} x @param {number} y @returns {number} */
-	const distance = (element, x, y) => {
-		const rect = element.getBoundingClientRect();
-		const center_x = rect.left + rect.width  / 2;
-		const center_y = rect.top  + rect.height / 2;
-		const dist_x = Math.max(Math.abs(x - center_x) - rect.width  / 2, 0);
-		const dist_y = Math.max(Math.abs(y - center_y) - rect.height / 2, 0);
-		return Math.sqrt(Math.pow(dist_x, 2) + Math.pow(dist_y, 2));
-	}
-
-	/** @param {HTMLButtonElement[]} @param {number} identifier @param {number} x @param {number} y @param {string} type @returns {void} */
-	const send = (buttons, identifier, x, y, type) => {
-		const button = buttons.reduce((value, current) => {
-			const curr_dist = distance(current, x, y);
-			if (!value)
-				return curr_dist < 25 ? current : null;
-
-			const prev_dist = distance(value, x, y);
-			if (prev_dist > 25 && curr_dist > 25)
-				return null;
-
-			return curr_dist < prev_dist ? current : value;
-		}, null);
-
-		const touch = touches[identifier];
-		if (touch && touch?.id != button?.dataset.id)
-			core.current.send(Core.Device.JOYPAD, touch.id, false);
-
-		const start = !!['mousedown', 'touchstart'].find(t => t == type);
-		const move = !!['mousemove', 'touchmove'].find(t => t == type);
-		const pressed = start || (move && touch && touch.pressed);
-
-		if (button?.dataset.id)
-			core.current.send(Core.Device.JOYPAD, button?.dataset.id, pressed);
-
-		setTouches({ ...touches, [identifier]: { id: button?.dataset.id, pressed } });
-	}
-
 	/** @param {Event} event @returns {void} */
 	const touch = (event) => {
-		if (event.type == 'mousemove' && event.buttons == 0)
-			return;
+		const buttons = [...event.target.children].map(button => ({
+			id: button.dataset.id,
+			rect: button.getBoundingClientRect(),
+		}), []);
 
-		if (gamepad.value) {
-			const buttons = [...event.target.children];
+		const map_touch = (touch) => ({
+			type: event.type,
+			id: touch.identifier ?? 0,
+			x: touch.clientX,
+			y: touch.clientY,
+		});
+		const touches =
+			event.type.startsWith('mouse') ? [map_touch(event)] :
+			event.type.startsWith('touch') ? [...event.changedTouches].map(map_touch):
+			[];
 
-			if (event.type.startsWith('mouse'))
-				send(buttons, 0, event.clientX, event.clientY, event.type);
-
-			if (event.type.startsWith('touch'))
-				for (const touch of event.changedTouches)
-					send(buttons, touch.identifier, touch.clientX, touch.clientY, event.type);
-
-		} else {
-			const x = event.clientX || (event.changedTouches && event.changedTouches[0].clientX);
-			const y = event.clientY || (event.changedTouches && event.changedTouches[0].clientY);
-
-			const rect = canvas.current.getBoundingClientRect();
-			const scaled_x = (x - rect.left) / (rect.right  - rect.left) * canvas.current.width;
-			const scaled_y = (y - rect.top ) / (rect.bottom - rect.top ) * canvas.current.height;
-
-			const start = !!['mousedown', 'touchstart'].find(t => t == event.type);
-			const move = !!['mousemove', 'touchmove'].find(t => t == event.type);
-			const pressed = start || (move && pointer);
-
-			core.current.send(Core.Device.POINTER, Core.Pointer.X,       scaled_x);
-			core.current.send(Core.Device.POINTER, Core.Pointer.Y,       scaled_y);
-			core.current.send(Core.Device.POINTER, Core.Pointer.PRESSED, pressed);
-			core.current.send(Core.Device.POINTER, Core.Pointer.COUNT,   1);
-
-			setPointer(pressed);
-		}
+		core.current.input(buttons, touches, gamepad.value, canvas.current.getBoundingClientRect(), canvas.current.width, canvas.current.height);
 	}
 
 	/** @returns {void} */
@@ -313,19 +257,19 @@ export const CoreModal = ({ system, game, close }) => {
 					<canvas ref={canvas} />
 
 					{gamepad.value && <div className="controls"><div>
-						<Control name="A"        device={Core.Device.JOYPAD} id={Core.Joypad.A}     type='generic'  inset={{bottom: 30, right: 4 }} />
-						<Control name="B"        device={Core.Device.JOYPAD} id={Core.Joypad.B}     type='generic'  inset={{bottom: 18, right: 16}} />
-						<Control name="X"        device={Core.Device.JOYPAD} id={Core.Joypad.X}     type='generic'  inset={{bottom: 42, right: 16}} />
-						<Control name="Y"        device={Core.Device.JOYPAD} id={Core.Joypad.Y}     type='generic'  inset={{bottom: 30, right: 28}} />
-						<Control name="R"        device={Core.Device.JOYPAD} id={Core.Joypad.R}     type='shoulder' inset={{bottom: 48, right: 34}} />
-						<Control name="&#x00B7;" device={Core.Device.JOYPAD} id={Core.Joypad.START} type='special'  inset={{bottom: 18, right: 37}} />
+						<Control name="A"        device={Input.Device.JOYPAD} id={Input.Joypad.A}     type='generic'  inset={{bottom: 30, right: 4 }} />
+						<Control name="B"        device={Input.Device.JOYPAD} id={Input.Joypad.B}     type='generic'  inset={{bottom: 18, right: 16}} />
+						<Control name="X"        device={Input.Device.JOYPAD} id={Input.Joypad.X}     type='generic'  inset={{bottom: 42, right: 16}} />
+						<Control name="Y"        device={Input.Device.JOYPAD} id={Input.Joypad.Y}     type='generic'  inset={{bottom: 30, right: 28}} />
+						<Control name="R"        device={Input.Device.JOYPAD} id={Input.Joypad.R}     type='shoulder' inset={{bottom: 48, right: 34}} />
+						<Control name="&#x00B7;" device={Input.Device.JOYPAD} id={Input.Joypad.START} type='special'  inset={{bottom: 18, right: 37}} />
 
-						<Control name="&#x140A;" device={Core.Device.JOYPAD} id={Core.Joypad.LEFT}   type='arrow'    inset={{bottom: 30, left: 4 }} />
-						<Control name="&#x1401;" device={Core.Device.JOYPAD} id={Core.Joypad.DOWN}   type='arrow'    inset={{bottom: 18, left: 16}} />
-						<Control name="&#x1403;" device={Core.Device.JOYPAD} id={Core.Joypad.UP}     type='arrow'    inset={{bottom: 42, left: 16}} />
-						<Control name="&#x1405;" device={Core.Device.JOYPAD} id={Core.Joypad.RIGHT}  type='arrow'    inset={{bottom: 30, left: 28}} />
-						<Control name="L"        device={Core.Device.JOYPAD} id={Core.Joypad.L}      type='shoulder' inset={{bottom: 48, left: 34}} />
-						<Control name="&#x00B7;" device={Core.Device.JOYPAD} id={Core.Joypad.SELECT} type='special'  inset={{bottom: 18, left: 37}} />
+						<Control name="&#x140A;" device={Input.Device.JOYPAD} id={Input.Joypad.LEFT}   type='arrow'    inset={{bottom: 30, left: 4 }} />
+						<Control name="&#x1401;" device={Input.Device.JOYPAD} id={Input.Joypad.DOWN}   type='arrow'    inset={{bottom: 18, left: 16}} />
+						<Control name="&#x1403;" device={Input.Device.JOYPAD} id={Input.Joypad.UP}     type='arrow'    inset={{bottom: 42, left: 16}} />
+						<Control name="&#x1405;" device={Input.Device.JOYPAD} id={Input.Joypad.RIGHT}  type='arrow'    inset={{bottom: 30, left: 28}} />
+						<Control name="L"        device={Input.Device.JOYPAD} id={Input.Joypad.L}      type='shoulder' inset={{bottom: 48, left: 34}} />
+						<Control name="&#x00B7;" device={Input.Device.JOYPAD} id={Input.Joypad.SELECT} type='special'  inset={{bottom: 18, left: 37}} />
 					</div></div>}
 				</IonContent>
 			</IonPage>

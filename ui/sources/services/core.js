@@ -1,3 +1,4 @@
+import { Button, Touch } from '../entities/input';
 import { Cheat } from '../entities/cheat';
 import { Settings } from '../entities/settings';
 import { Variable } from '../entities/variable';
@@ -138,6 +139,19 @@ export default class Core {
 		this.#on_variables(variables);
 	}
 
+	/**
+	 * @param {Button[]} buttons
+	 * @param {Touch[]} touches
+	 * @param {boolean} gamepad
+	 * @param {DOMRect} canvas
+	 * @param {number} width
+	 * @param {number} height
+	 * @returns {Promise<void>}
+	 */
+	async input(buttons, touches, gamepad, canvas, width, height) {
+		await this.#interop?.input(buttons, touches, gamepad, canvas, width, height);
+	}
+
 	/** @param {Settings} settings @returns {Promise<void>} */
 	async settings(settings) { await this.#interop?.variables(settings.variables); }
 
@@ -150,39 +164,9 @@ export default class Core {
 	/** @param {number} value @returns {Promise<void>} */
 	async speed(value) { await this.#interop?.speed(value); }
 
-	/** @param {number} device @param {number} id @param {number} value @returns {Promise<void>} */
-	async send(device, id, value) { await this.#interop?.send(device, id, value); }
-
 	/** @returns {Promise<void>} */
 	async save() { await this.#interop?.save(); }
 
 	/** @returns {Promise<void>} */
 	async restore() { await this.#interop?.restore(); }
-
-	static Device = class {
-		static get JOYPAD()  { return 1; }
-		static get POINTER() { return 6; }
-	}
-
-	static Joypad = class {
-		static get B()      { return 0;  }
-		static get Y()      { return 1;  }
-		static get SELECT() { return 2;  }
-		static get START()  { return 3;  }
-		static get UP()     { return 4;  }
-		static get DOWN()   { return 5;  }
-		static get LEFT()   { return 6;  }
-		static get RIGHT()  { return 7;  }
-		static get A()      { return 8;  }
-		static get X()      { return 9;  }
-		static get L()      { return 10; }
-		static get R()      { return 11; }
-	}
-
-	static Pointer = class {
-		static get X()       { return 0; }
-		static get Y()       { return 1; }
-		static get PRESSED() { return 2; }
-		static get COUNT()   { return 3; }
-	}
 }
