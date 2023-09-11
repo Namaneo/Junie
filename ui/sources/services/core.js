@@ -1,6 +1,8 @@
 import { Cheat } from '../entities/cheat';
 import { Settings } from '../entities/settings';
 import { Variable } from '../entities/variable';
+import { Video } from '../entities/video';
+import { Audio } from '../entities/audio';
 import Files from './files';
 import Parallel from './parallel';
 import AudioPlayer from './audio';
@@ -36,6 +38,9 @@ export default class Core {
 	/** @type {Parallel[]} */
 	#threads = [];
 
+	/** @type {Graphics} */
+	#graphics = null;
+
 	/**
 	 * @param {string} name
 	 */
@@ -54,7 +59,7 @@ export default class Core {
 		await Core.#running;
 		Core.#running = new Promise(resolve => Core.#stop = resolve);
 
-		const graphics = new Graphics(canvas);
+		this.#graphics = new Graphics(canvas);
 
 		const origin = location.origin + location.pathname.substring(0, location.pathname.lastIndexOf('/'));
 		const config = { core: this.#name, system, rom, origin, memory: Core.#memory };
@@ -65,14 +70,8 @@ export default class Core {
 				case 'thread':
 					const thread = new Parallel(Interop, false, handler);
 					const core = await thread.create(this.#name, script);
-					await core.init(await Files.clone(), { ...config, ...message.data });
+					await core.init(Parallel.instrument(this), await Files.clone(), { ...config, ...message.data });
 					this.#threads.push(thread);
-					break;
-				case 'video':
-					graphics.draw(message.data.view, message.data.video);
-					break;
-				case 'audio':
-					AudioPlayer.queue(message.data.view, message.data.sample_rate);
 					break;
 				case 'variables':
 					on_variables(message.data.variables);
@@ -82,7 +81,7 @@ export default class Core {
 
 		this.#parallel = new Parallel(Interop, false, handler);
 		this.#interop = await this.#parallel.create(this.#name, script);
-		await this.#interop.init(await Files.clone(), config);
+		await this.#interop.init(Parallel.instrument(this), await Files.clone(), config);
 	}
 
 	/**
@@ -117,6 +116,26 @@ export default class Core {
 		new Uint8Array(Core.#memory.buffer).fill(0);
 
 		Core.#stop();
+	}
+
+	/**
+	 * @param {Video} video
+	 * @returns {void}
+	 */
+	draw(video) {
+		const video_view = video.format == 1
+			? new Uint8Array(Core.#memory.buffer, video.data, video.pitch * video.height)
+			: new Uint16Array(Core.#memory.buffer, video.data, (video.pitch * video.height) / 2);
+		this.#graphics.draw(video_view, video);
+	}
+
+	/**
+	 * @param {Audio} audio
+	 * @returns
+	 */
+	play(audio) {
+		const audio_view = new Float32Array(Core.#memory.buffer, audio.data, audio.frames * 2);
+		AudioPlayer.queue(audio_view.slice(), audio.rate);
 	}
 
 	/** @param {Settings} settings @returns {Promise<void>} */
