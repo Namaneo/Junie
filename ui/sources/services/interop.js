@@ -127,23 +127,18 @@ export default class Interop {
 
 		const junie_interop_video = (video_c) => {
 			const video = Video.parse(config.memory, video_c);
-			if (!video.data)
-				return;
-
-			this.#core.draw(video);
+			if (video.data)
+				this.#core.draw(video);
 		};
 
 		const junie_interop_audio = (audio_c) => {
 			const audio = Audio.parse(config.memory, audio_c);
-			if (!audio.frames)
-				return;
-
-			this.#core.play(audio);
+			if (audio.frames)
+				this.#core.play(audio);
 		};
 
 		const junie_interop_variables = (variables_c) => {
-			const variables = Variable.parse(this.#instance, variables_c);
-			postMessage({ type: 'variables', variables });
+			this.#core.variables(Variable.parse(this.#instance, variables_c));
 		}
 
 		const source = await WebAssembly.instantiateStreaming(fetch(`${config.origin}/modules/${config.core}.wasm`), {
@@ -151,7 +146,7 @@ export default class Interop {
 			wasi_snapshot_preview1: this.#wasi.environment,
 			wasi: { 'thread-spawn': (start_arg) => {
 				const id = filesystem.id();
-				postMessage({ type: 'thread', id, fds: this.#wasi.fds, start_arg });
+				postMessage({ id, fds: this.#wasi.fds, start_arg });
 				return id;
 			}},
 		});

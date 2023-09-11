@@ -34,6 +34,9 @@ export default class Core {
 	/** @type {Graphics} */
 	#graphics = null;
 
+	/** @type {(variables: Variable[]) => void} */
+	#on_variables = null;
+
 	/**
 	 * @param {string} name
 	 * @param {WebAssembly.Memory} memory
@@ -55,23 +58,17 @@ export default class Core {
 		Core.#running = new Promise(resolve => Core.#stop = resolve);
 
 		this.#graphics = new Graphics(canvas);
+		this.#on_variables = on_variables
 
 		const origin = location.origin + location.pathname.substring(0, location.pathname.lastIndexOf('/'));
 		const config = { core: this.#name, system, rom, origin, memory: this.#memory };
 		const script = await (await fetch('worker.js')).text();
 
 		const handler = async message => {
-			switch (message.data.type) {
-				case 'thread':
-					const thread = new Parallel(Interop, false, handler);
-					const core = await thread.create(this.#name, script);
-					await core.init(Parallel.instrument(this), await Files.clone(), { ...config, ...message.data });
-					this.#threads.push(thread);
-					break;
-				case 'variables':
-					on_variables(message.data.variables);
-					break;
-			}
+			const thread = new Parallel(Interop, false, handler);
+			const core = await thread.create(this.#name, script);
+			await core.init(Parallel.instrument(this), await Files.clone(), { ...config, ...message.data });
+			this.#threads.push(thread);
 		}
 
 		this.#parallel = new Parallel(Interop, false, handler);
@@ -126,11 +123,19 @@ export default class Core {
 
 	/**
 	 * @param {Audio} audio
-	 * @returns
+	 * @returns {void}
 	 */
 	play(audio) {
 		const audio_view = new Float32Array(this.#memory.buffer, audio.data, audio.frames * 2);
 		AudioPlayer.queue(audio_view.slice(), audio.rate);
+	}
+
+	/**
+	 * @param {Variable[]} variables
+	 * @returns {void}
+	 */
+	variables(variables) {
+		this.#on_variables(variables);
 	}
 
 	/** @param {Settings} settings @returns {Promise<void>} */
