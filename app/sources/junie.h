@@ -69,6 +69,7 @@ typedef struct {
 	const int16_t *data;
 	float rate;
 	size_t frames;
+	size_t size;
 	bool enable;
 } JunieAudio;
 

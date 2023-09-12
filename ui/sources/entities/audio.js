@@ -8,6 +8,9 @@ export class Audio {
 	/** @type {number} */
 	frames;
 
+	/** @type {number} */
+	size;
+
 	/** @type {boolean} */
 	enable;
 
@@ -23,7 +26,8 @@ export class Audio {
 			data:   view.getUint32(0, true),
 			rate:   view.getFloat32(4, true),
 			frames: view.getUint32(8, true),
-			enable: view.getUint32(12, true),
+			size:   view.getUint32(12, true),
+			enable: view.getUint32(16, true),
 		}
 	}
 }

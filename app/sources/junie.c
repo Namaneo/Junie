@@ -282,11 +282,22 @@ static size_t audio_sample_batch(const int16_t *data, size_t frames)
 	if (!CTX.audio.enable)
 		return frames;
 
-	CTX.audio.data = data;
-	CTX.audio.rate = CTX.av.timing.sample_rate * CTX.speed;
-	CTX.audio.frames = frames;
+	size_t new_size = (CTX.audio.frames + frames) * 2 * sizeof(int16_t);
+	if (new_size > CTX.audio.size) {
+		CTX.audio.data = realloc((void *) CTX.audio.data, new_size);
+		CTX.audio.size = new_size;
+	}
 
-	JunieInteropAudio(&CTX.audio);
+	const int16_t *current = &CTX.audio.data[CTX.audio.frames * 2];
+	memcpy((void *) current, (void *) data, frames * 2 * sizeof(int16_t));
+
+	CTX.audio.frames += frames;
+	CTX.audio.rate = CTX.av.timing.sample_rate * CTX.speed;
+
+	if (CTX.audio.frames >= CTX.audio.rate / 100) {
+		JunieInteropAudio(&CTX.audio);
+		CTX.audio.frames = 0;
+	}
 
 	return frames;
 }
