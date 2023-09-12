@@ -23,7 +23,7 @@ export default class AudioPlayer {
 	}
 
 	/**
-	 * @param {Float32Array} frames
+	 * @param {Int16Array} frames
 	 * @param {number} sample_rate
 	 * @returns {Promise<void>}
 	 */
@@ -44,7 +44,7 @@ export default class AudioPlayer {
 	}
 
 	/**
-	 * @param {Float32Array} frames
+	 * @param {Int16Array} frames
 	 * @param {number} sample_rate
 	 * @returns {void}
 	 */

@@ -7,6 +7,7 @@
 #include <time.h>
 #include <math.h>
 
+#include "interop.h"
 #include "rthreads/rthreads.h"
 
 #define LOG(msg, ...) core_log_params(__FUNCTION__, msg, __VA_ARGS__)
@@ -20,52 +21,7 @@ typedef enum {
 	JUN_PATH_SAVES  = 5,
 	JUN_PATH_SYSTEM = 6,
 	JUN_PATH_MAX    = 7,
-} JUN_PathType;
-
-typedef struct {
-	void *data;
-	enum retro_pixel_format format;
-	uint32_t width;
-	uint32_t height;
-	uint32_t pitch;
-	float ratio;
-} JunieVideo;
-
-typedef struct {
-	void *data;
-	float rate;
-	size_t frames;
-	size_t size;
-	bool enable;
-} JunieAudio;
-
-struct jun_core_sym {
-	void *library;
-	bool initialized;
-
-	void (*retro_init)(void);
-	bool (*retro_load_game)(const struct retro_game_info *game);
-	void (*retro_get_system_info)(struct retro_system_info *info);
-	void (*retro_get_system_av_info)(struct retro_system_av_info *info);
-	void (*retro_set_environment)(retro_environment_t);
-	void (*retro_set_video_refresh)(retro_video_refresh_t);
-	void (*retro_set_input_poll)(retro_input_poll_t);
-	void (*retro_set_input_state)(retro_input_state_t);
-	void (*retro_set_audio_sample)(retro_audio_sample_t);
-	void (*retro_set_audio_sample_batch)(retro_audio_sample_batch_t);
-	void (*retro_set_controller_port_device)(unsigned port, unsigned device);
-	size_t (*retro_get_memory_size)(unsigned type);
-	void *(*retro_get_memory_data)(unsigned type);
-	size_t (*retro_serialize_size)(void);
-	bool (*retro_serialize)(void *data, size_t size);
-	bool (*retro_unserialize)(const void *data, size_t size);
-	void (*retro_cheat_reset)();
-	void (*retro_cheat_set)(unsigned index, bool enabled, const char *code);
-	void (*retro_run)(void);
-	void (*retro_reset)(void);
-	void (*retro_unload_game)(void);
-	void (*retro_deinit)(void);
-};
+} JuniePatchType;
 
 static struct CTX {
 	bool initialized;
@@ -97,17 +53,11 @@ static struct CTX {
 		int16_t y;
 	} pointer;
 
-	JunieVariable variables[INT8_MAX];
+	JunieSymbols sym;
 	JunieVideo video;
 	JunieAudio audio;
-
-	struct jun_core_sym sym;
+	JunieVariable variables[INT8_MAX];
 } CTX;
-
-#define IMPORT(name) __attribute__((import_module("env"), import_name(#name))) name
-void IMPORT(junie_interop_video)(const JunieVideo *video);
-void IMPORT(junie_interop_audio)(const JunieAudio *audio);
-void IMPORT(junie_interop_variables)(const JunieVariable *variables);
 
 static void core_log_params(const char *func, const char *fmt, ...)
 {
@@ -258,6 +208,8 @@ static bool environment(unsigned cmd, void *data)
 				free(value);
 			}
 
+			JunieInteropVariables(CTX.variables);
+
 			return true;
 		}
 		case RETRO_ENVIRONMENT_GET_VARIABLE: {
@@ -313,15 +265,16 @@ static void video_refresh(const void *data, unsigned width, unsigned height, siz
 	if (!data)
 		return;
 
-	CTX.video.data = (void *) data;
+	CTX.video.data = data;
 	CTX.video.width = width;
 	CTX.video.height = height;
-	CTX.video.pitch = (uint32_t) pitch;
+	CTX.video.pitch = pitch;
 
 	CTX.video.ratio = CTX.av.geometry.aspect_ratio <= 0
 		? (float) width / (float) height
 		: CTX.av.geometry.aspect_ratio;
 
+	JunieInteropVideo(&CTX.video);
 }
 
 static size_t audio_sample_batch(const int16_t *data, size_t frames)
@@ -329,18 +282,11 @@ static size_t audio_sample_batch(const int16_t *data, size_t frames)
 	if (!CTX.audio.enable)
 		return frames;
 
-	size_t new_size = (CTX.audio.frames + frames) * 2 * sizeof(float);
-	if (new_size > CTX.audio.size) {
-		CTX.audio.data = realloc(CTX.audio.data, new_size);
-		CTX.audio.size = new_size;
-	}
+	CTX.audio.data = data;
+	CTX.audio.rate = CTX.av.timing.sample_rate * CTX.speed;
+	CTX.audio.frames = frames;
 
-	size_t offset = CTX.audio.frames * 2 * sizeof(float);
-	float *converted = &CTX.audio.data[offset];
-	for (size_t i = 0; i < frames * 2; i++)
-		converted[i] = data[i] / 32768.0f;
-
-	CTX.audio.frames += frames;
+	JunieInteropAudio(&CTX.audio);
 
 	return frames;
 }
@@ -375,41 +321,6 @@ static int16_t input_state(unsigned port, unsigned device, unsigned index, unsig
 	}
 
 	return 0;
-}
-
-static void initialize_symbols()
-{
-	if (CTX.sym.initialized)
-		return;
-
-	#define MAP_SYMBOL(function) CTX.sym.function = function
-
-	MAP_SYMBOL(retro_init);
-	MAP_SYMBOL(retro_load_game);
-	MAP_SYMBOL(retro_get_system_info);
-	MAP_SYMBOL(retro_get_system_av_info);
-	MAP_SYMBOL(retro_set_environment);
-	MAP_SYMBOL(retro_set_video_refresh);
-	MAP_SYMBOL(retro_set_input_poll);
-	MAP_SYMBOL(retro_set_input_state);
-	MAP_SYMBOL(retro_set_audio_sample);
-	MAP_SYMBOL(retro_set_audio_sample_batch);
-	MAP_SYMBOL(retro_set_controller_port_device);
-	MAP_SYMBOL(retro_get_memory_size);
-	MAP_SYMBOL(retro_get_memory_data);
-	MAP_SYMBOL(retro_serialize_size);
-	MAP_SYMBOL(retro_serialize);
-	MAP_SYMBOL(retro_unserialize);
-	MAP_SYMBOL(retro_cheat_reset);
-	MAP_SYMBOL(retro_cheat_set);
-	MAP_SYMBOL(retro_run);
-	MAP_SYMBOL(retro_reset);
-	MAP_SYMBOL(retro_unload_game);
-	MAP_SYMBOL(retro_deinit);
-
-	#undef MAP_SYMBOL
-
-	CTX.sym.initialized = true;
 }
 
 static char *remove_extension(const char *str)
@@ -554,13 +465,6 @@ static void core_thread(void *opaque)
 		core_lock();
 		CTX.sym.retro_run();
 		core_unlock();
-
-		CTX.audio.rate = (float) CTX.av.timing.sample_rate * CTX.speed;
-
-		junie_interop_video(&CTX.video);
-		junie_interop_audio(&CTX.audio);
-
-		CTX.audio.frames = 0;
 	}
 }
 
@@ -580,7 +484,7 @@ void JunieCreate(const char *system, const char *rom)
 	CTX.speed = 1;
 
 	create_paths(system, rom);
-	initialize_symbols();
+	JunieInteropInit(&CTX.sym);
 
 	CTX.sym.retro_set_environment(environment);
 	CTX.sym.retro_set_video_refresh(video_refresh);
@@ -588,8 +492,6 @@ void JunieCreate(const char *system, const char *rom)
 	CTX.sym.retro_set_input_state(input_state);
 	CTX.sym.retro_set_audio_sample(audio_sample);
 	CTX.sym.retro_set_audio_sample_batch(audio_sample_batch);
-
-	junie_interop_variables(CTX.variables);
 }
 
 bool JunieStartGame()
@@ -780,39 +682,3 @@ void JunieRestoreState()
 
 	core_unlock();
 }
-
-#if defined(__wasi__)
-
-// socket.h
-
-#include <sys/socket.h>
-
-int socket(int domain, int type, int protocol) { return -1; }
-int setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t optlen) { return -1; }
-int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen) { return -1; }
-ssize_t sendto(int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen) { return -1; }
-ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen) { return -1; }
-
-
-// thread.h
-
-#include <pthread.h>
-
-int pthread_attr_setschedpolicy(pthread_attr_t *attr, int policy) { return -1; }
-int pthread_attr_setschedparam(pthread_attr_t *attr, const struct sched_param *param) { return -1; }
-
-
-// setjmp.h
-
-#include <setjmp.h>
-
-int setjmp(jmp_buf env) { return 0; }
-void longjmp(jmp_buf env, int val) { abort(); }
-
-
-// WASI
-
-void *__cxa_allocate_exception(size_t thrown_size) { abort(); }
-void __cxa_throw(void *thrown_object, void *tinfo, void (*dest)(void *)) { abort(); }
-
-#endif

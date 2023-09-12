@@ -1,5 +1,5 @@
 class AudioProcessor extends AudioWorkletProcessor {
-	/** @type {Float32Array[]} */
+	/** @type {Int16Array[]} */
 	#buffers = []
 
 	/** @type {number} */
@@ -31,8 +31,8 @@ class AudioProcessor extends AudioWorkletProcessor {
 					break;
 			}
 
-			left[sample]  = buffer[index + 0];
-			right[sample] = buffer[index + 1];
+			left[sample]  = buffer[index + 0] / 32768;
+			right[sample] = buffer[index + 1] / 32768;
 			index += this.#channels;
 		}
 

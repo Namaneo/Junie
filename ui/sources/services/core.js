@@ -127,7 +127,7 @@ export default class Core {
 	 * @returns {void}
 	 */
 	play(audio) {
-		const audio_view = new Float32Array(this.#memory.buffer, audio.data, audio.frames * 2);
+		const audio_view = new Int16Array(this.#memory.buffer, audio.data, audio.frames * 2);
 		AudioPlayer.queue(audio_view.slice(), audio.rate);
 	}
 

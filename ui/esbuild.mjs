@@ -135,10 +135,13 @@ const watched = [
 	'service-worker.js',
 	'manifest.json',
 	'sources/**',
+	'../GNUmakefile*',
+	'../deps/GNUmakefile',
+	'../cores/GNUmakefile',
 	'../cores/cores.json',
-	'../app/GNUmakefile*',
-	'../app/*.c',
-	'../app/*.h',
+	'../app/GNUmakefile',
+	'../app/exports.txt',
+	'../app/sources/**',
 ];
 
 let rebuilding = false;

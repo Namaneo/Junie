@@ -130,24 +130,20 @@ export default class Interop {
 		const filesystem = fs_parallel.link(fs_port);
 		this.#wasi = new WASI(config.memory, filesystem, config.fds);
 
-		const junie_interop_video = (video_c) => {
-			const video = Video.parse(config.memory, video_c);
-			if (video.data)
-				this.#core.draw(video);
+		const web_video = (video_c) => {
+			this.#core.draw(Video.parse(config.memory, video_c));
 		};
 
-		const junie_interop_audio = (audio_c) => {
-			const audio = Audio.parse(config.memory, audio_c);
-			if (audio.frames)
-				this.#core.play(audio);
+		const web_audio = (audio_c) => {
+			this.#core.play(Audio.parse(config.memory, audio_c));
 		};
 
-		const junie_interop_variables = (variables_c) => {
+		const web_variables = (variables_c) => {
 			this.#core.variables(Variable.parse(this.#instance, variables_c));
 		}
 
 		const source = await WebAssembly.instantiateStreaming(fetch(`${config.origin}/modules/${config.core}.wasm`), {
-			env: { memory: config.memory, junie_interop_video, junie_interop_audio, junie_interop_variables },
+			env: { memory: config.memory, web_video, web_audio, web_variables },
 			wasi_snapshot_preview1: this.#wasi.environment,
 			wasi: { 'thread-spawn': (start_arg) => {
 				const id = filesystem.id();

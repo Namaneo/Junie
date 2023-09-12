@@ -2,6 +2,7 @@ OUT_DIR := build
 
 EXPORTS := $(addprefix -Wl$(shell echo ,)--export=, $(shell cat `pwd`/exports.txt))
 
+SRC_DIR  := sources
 DEPS_DIR := ../deps
 DEPS     := $(DEPS_DIR)/libz.a $(DEPS_DIR)/libretro.a
 
@@ -19,11 +20,15 @@ LDFLAGS := \
 	-Wl,--max-memory=$$((600 * 1024 * 1024)) \
 	-Wl,--import-memory,--export-memory
 
+OBJ := \
+	$(SRC_DIR)/junie.o \
+	$(SRC_DIR)/interop-web.o
+
 include ../GNUmakefile.common
 
 all: clean prepare
 	@echo Building objects...
-	@$(MAKE) -s junie.o
+	@$(MAKE) -s $(OBJ)
 	@$(MAKE) -s $(CORES:%=$(OUT_DIR)/%.wasm)
 
 prepare:
@@ -31,10 +36,10 @@ prepare:
 
 $(OUT_DIR)/%.wasm:
 	@echo Building $*.wasm...
-	@$(CXX) -o $(OUT_DIR)/$*.wasm junie.o $(DEPS) $(CORES_DIR)/lib$*.a $(LDFLAGS) $(EXPORTS) $(QUIET)
+	@$(CXX) -o $(OUT_DIR)/$*.wasm $(OBJ) $(DEPS) $(CORES_DIR)/lib$*.a $(LDFLAGS) $(EXPORTS) $(QUIET)
 
 clean:
-	@rm -rf junie.o $(OUT_DIR)
+	@rm -rf $(OBJ) $(OUT_DIR)
 
 %.o: %.c
 	@$(CC) -c -o $@ $^ $(QUIET)
