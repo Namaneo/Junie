@@ -294,7 +294,7 @@ static size_t audio_sample_batch(const int16_t *data, size_t frames)
 	CTX.audio.frames += frames;
 	CTX.audio.rate = CTX.av.timing.sample_rate * CTX.speed;
 
-	if (CTX.audio.frames >= CTX.audio.rate / 100) {
+	if (CTX.audio.frames >= CTX.audio.rate / (CTX.av.timing.fps * CTX.speed)) {
 		JunieInteropAudio(&CTX.audio);
 		CTX.audio.frames = 0;
 	}
