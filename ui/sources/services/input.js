@@ -41,7 +41,7 @@ export default class Input {
 			return curr_dist < prev_dist ? current : value;
 		}, /** @type {InputButton} */ (null));
 
-		const prev_touch = this.#touches[touch.identifier];
+		const prev_touch = this.#touches[touch.id];
 		if (prev_touch && prev_touch.id != button?.id)
 			messages.push({ device: Input.Device.JOYPAD, id: prev_touch.id, value: false });
 
@@ -51,10 +51,10 @@ export default class Input {
 
 		if (button?.id) {
 			messages.push({ device: Input.Device.JOYPAD, id: button.id, value: pressed });
-			this.#touches[touch.identifier] = { id: button?.id, pressed };
+			this.#touches[touch.id] = { id: button?.id, pressed };
 
 		} else {
-			delete this.#touches[touch.identifier];
+			delete this.#touches[touch.id];
 		}
 
 		return messages;
