@@ -49,9 +49,9 @@ export default class Input {
 		const move = !!['mousemove', 'touchmove'].find(type => type == touch.type);
 		const pressed = start || (move && prev_touch && prev_touch.pressed);
 
-		if (button?.id) {
+		if (button) {
 			messages.push({ device: Input.Device.JOYPAD, id: button.id, value: pressed });
-			this.#touches[touch.id] = { id: button?.id, pressed };
+			this.#touches[touch.id] = { id: button.id, pressed };
 
 		} else {
 			delete this.#touches[touch.id];
