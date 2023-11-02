@@ -124,6 +124,9 @@ export default class WASI {
 			fd_fdstat_set_flags: (fd, flags) => {
 				return this.#WASI_ERRNO_SUCCESS;
 			},
+			fd_filestat_get: (fd, buf) => {
+				return this.#WASI_ERRNO_SUCCESS;
+			},
 			fd_filestat_set_size: (fd, st_size) => {
 				return this.#WASI_ERRNO_SUCCESS;
 			},

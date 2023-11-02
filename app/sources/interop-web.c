@@ -80,6 +80,13 @@ int setjmp(jmp_buf env) { return 0; }
 void longjmp(jmp_buf env, int val) { abort(); }
 
 
+// mman.h
+
+#include <sys/mman.h>
+
+int madvise(void *addr, size_t length, int advice) { return 0; }
+
+
 // WASI
 
 void *__cxa_allocate_exception(size_t thrown_size) { abort(); }
