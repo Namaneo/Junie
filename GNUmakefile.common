@@ -1,16 +1,15 @@
-WASI_SDK   := $(shell pwd)/../deps/wasi-sdk
-EMSCRIPTEN := $(shell pwd)/../deps/emsdk/upstream/emscripten
-LIBRETRO   := $(shell pwd)/../deps/libretro-common
+INCLUDE  := $(shell pwd)/../app/include
+WASI_SDK := $(shell pwd)/../deps/wasi-sdk
+LIBRETRO := $(shell pwd)/../deps/libretro-common
 
 MAKEFLAGS += --no-print-directory
 QUIET := > /dev/null 2>&1
 
 DEFINES += \
 	--sysroot=$(WASI_SDK)/share/wasi-sysroot \
-	--target=wasm32-wasi-threads -pthread \
-	-I$(EMSCRIPTEN)/cache/sysroot/include/c++/v1 \
-	-I$(EMSCRIPTEN)/cache/sysroot/include/compat \
-	-I$(EMSCRIPTEN)/cache/sysroot/include
+	--target=wasm32-wasi-threads -pthread -I$(INCLUDE) \
+	-D_WASI_EMULATED_MMAN -D_WASI_EMULATED_SIGNAL
+
 
 ifeq ($(DEBUG), 1)
 DEFINES += -O0 -ferror-limit=0 -DDEBUG

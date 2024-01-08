@@ -13,9 +13,9 @@ DEFINES := \
 	-I$(DEPS_DIR)/libretro-common/include
 
 LDFLAGS := \
-	-lwasi-emulated-mman -fwasm-exceptions \
-	-mexec-model=reactor -Wl,--no-entry \
-	-Wl,--export=calloc,--export=free \
+	-lwasi-emulated-mman -lwasi-emulated-signal \
+	-fwasm-exceptions -mexec-model=reactor \
+	-Wl,--no-entry -Wl,--export=calloc,--export=free \
 	-Wl,--initial-memory=$$((200 * 1024 * 1024)) \
 	-Wl,--max-memory=$$((600 * 1024 * 1024)) \
 	-Wl,--import-memory,--export-memory

@@ -23,14 +23,14 @@
 		"directory": "desmume/src/frontend/libretro",
 		"systems": ["Nintendo DS"]
 	},
-	"nestopia": {
-		"name": "Nestopia",
-		"directory": "libretro",
+	"fceumm": {
+		"name": "FCEUmm",
+		"repository": "libretro-fceumm",
 		"systems": ["NES"]
 	},
 	"snes9x": {
 		"name": "Snes9x",
-		"directory": "libretro",
+		"repository": "snes9x2010",
 		"systems": ["SNES"]
 	},
 	"genesis": {

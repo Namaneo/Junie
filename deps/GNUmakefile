@@ -1,20 +1,15 @@
-WASI_VERSION = 20.0
+WASI_VERSION = 21
 
 DEFINES := -I$(DEPS_DIR)/libretro-common/include
 include ../GNUmakefile.common
 
-all: wasi-sdk emsdk zlib libretro-common libz.a libretro.a
+all: wasi-sdk zlib libretro-common libz.a libretro.a
 
 wasi-sdk:
 	@echo Fetching wasi-sdk...
-	@wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-20/wasi-sdk-$(WASI_VERSION)-linux.tar.gz $(QUIET)
-	@mkdir wasi-sdk && tar xvf wasi-sdk-$(WASI_VERSION)-linux.tar.gz -C wasi-sdk --strip-components 1 $(QUIET)
-	@rm wasi-sdk-$(WASI_VERSION)-linux.tar.gz
-
-emsdk:
-	@echo Fetching emscripten...
-	@git -C emsdk pull $(QUIET) || git clone --recurse https://github.com/emscripten-core/emsdk.git $(QUIET)
-	@cd emsdk && ./emsdk install latest $(QUIET) && ./emsdk activate latest $(QUIET)
+	@wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-$(WASI_VERSION)/wasi-sdk-$(WASI_VERSION).0-linux.tar.gz $(QUIET)
+	@mkdir wasi-sdk && tar xvf wasi-sdk-$(WASI_VERSION).0-linux.tar.gz -C wasi-sdk --strip-components 1 $(QUIET)
+	@rm wasi-sdk-$(WASI_VERSION).0-linux.tar.gz
 
 libretro-common:
 	@echo Fetching libretro-common...
@@ -31,6 +26,7 @@ OBJ = \
 	libretro-common/file/config_file_userdata.o \
 	libretro-common/streams/file_stream.o \
 	libretro-common/streams/file_stream_transforms.o \
+	libretro-common/streams/memory_stream.o \
 	libretro-common/vfs/vfs_implementation.o \
 	libretro-common/string/stdstring.o \
 	libretro-common/lists/string_list.o \
