@@ -4,7 +4,9 @@
 /build
 
 deps/*/
+deps/*.a
 cores/*/
+cores/*.a
 
 app/build
 app/sources/*.o
