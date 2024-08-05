@@ -286,6 +286,11 @@ export default class WASI {
 			sched_yield: () => {
 				return this.#WASI_ERRNO_SUCCESS;
 			},
+			random_get: (buf, buf_len, a) => {
+				const values = crypto.getRandomValues(new Uint8Array(buf_len));
+				new Uint8Array(this.#memory.buffer, buf, buf_len).set(values);
+				return this.#WASI_ERRNO_SUCCESS;
+			},
 		};
 	}
 }

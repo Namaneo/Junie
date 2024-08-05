@@ -16,8 +16,8 @@ ifeq ($(DEBUG), 1)
 DEFINES += -O0 -ferror-limit=0 -DDEBUG
 LDFLAGS += -O0 -g -Wl,--error-limit=0
 else
-DEFINES += -O3 -flto -msimd128
-LDFLAGS += -O3 -flto -mavx -mfpu=neon
+DEFINES += -O3 -msimd128
+LDFLAGS += -O3 -mavx -mfpu=neon
 endif
 
 CC     := $(WASI_SDK)/bin/clang $(DEFINES)
