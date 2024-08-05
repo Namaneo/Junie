@@ -1,4 +1,5 @@
-WASI_VERSION = 22
+WASI_VERSION = wasi-sdk-24
+WASI_BUILD = $(WASI_VERSION).0-x86_64-linux
 
 DEFINES := -I$(DEPS_DIR)/libretro-common/include
 include ../GNUmakefile.common
@@ -7,9 +8,9 @@ all: wasi-sdk emsdk zlib libretro-common libz.a libretro.a
 
 wasi-sdk:
 	@echo Fetching wasi-sdk...
-	@wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-$(WASI_VERSION)/wasi-sdk-$(WASI_VERSION).0-linux.tar.gz $(QUIET)
-	@mkdir wasi-sdk && tar xvf wasi-sdk-$(WASI_VERSION).0-linux.tar.gz -C wasi-sdk --strip-components 1 $(QUIET)
-	@rm wasi-sdk-$(WASI_VERSION).0-linux.tar.gz
+	@wget https://github.com/WebAssembly/wasi-sdk/releases/download/$(WASI_VERSION)/$(WASI_BUILD).tar.gz $(QUIET)
+	@mkdir wasi-sdk && tar xvf $(WASI_BUILD).tar.gz -C wasi-sdk --strip-components 1 $(QUIET)
+	@rm $(WASI_BUILD).tar.gz
 
 emsdk:
 	@echo Fetching emscripten...

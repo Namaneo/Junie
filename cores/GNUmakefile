@@ -28,6 +28,7 @@ lib%.a: fetch-%
 	$(MAKE) -C $$name/$$makedir -f $$makefile TARGET=$$target $(BUILD_FLAGS) $(QUIET)
 
 clean-%:
+	@rm -f `pwd`/lib$*.a
 	@target=`pwd`/lib$*.a && \
 	name=`jq -r '."$*".repository // "$*"' cores.json` && \
 	makedir=`jq -r '."$*".directory // ""' cores.json` && \
