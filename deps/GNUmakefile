@@ -1,5 +1,28 @@
 WASI_VERSION = wasi-sdk-24
-WASI_BUILD = $(WASI_VERSION).0-x86_64-linux
+
+# Detect the OS and architecture, and set the WASI_BUILD variable accordingly
+UNAME_S := $(shell uname -s)
+UNAME_M := $(shell uname -m)
+
+ifeq ($(UNAME_S), Linux)
+    ifeq ($(UNAME_M), x86_64)
+        WASI_BUILD = $(WASI_VERSION).0-x86_64-linux
+    else ifeq ($(UNAME_M), arm64)
+        WASI_BUILD = $(WASI_VERSION).0-arm64-linux
+    else
+        $(error Unsupported architecture: $(UNAME_M))
+    endif
+else ifeq ($(UNAME_S), Darwin)
+    ifeq ($(UNAME_M), x86_64)
+        WASI_BUILD = $(WASI_VERSION).0-x86_64-macos
+    else ifeq ($(UNAME_M), arm64)
+        WASI_BUILD = $(WASI_VERSION).0-arm64-macos
+    else
+        $(error Unsupported architecture: $(UNAME_M))
+    endif
+else
+    $(error Unsupported OS: $(UNAME_S))
+endif
 
 DEFINES := -I$(DEPS_DIR)/libretro-common/include
 include ../GNUmakefile.common

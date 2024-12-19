@@ -17,3 +17,4 @@ ui/build
 ui/node_modules
 ui/development.key
 ui/development.cert
+.DS_Store
